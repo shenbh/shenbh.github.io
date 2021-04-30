@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="gradle" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Gradle相关构建的生命周期 12345678910111213141516&#x2F;&#x2F;在构建项目前调用的钩子函数gradle.beforeProject&amp;#123;    project -&gt;    	println &quot;---beforeProject---&quot;&amp;#125;&#x2F;&#x2F;配置解析前回调gradle.taskGraph.whenReady&amp;#123;    graph -&amp;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Gradle 笔记">
+<meta property="og:url" content="http://shenbh.github.io/posts/1944865462/index.html">
+<meta property="og:site_name" content="ABing">
+<meta property="og:description" content="Gradle相关构建的生命周期 12345678910111213141516&#x2F;&#x2F;在构建项目前调用的钩子函数gradle.beforeProject&amp;#123;    project -&gt;    	println &quot;---beforeProject---&quot;&amp;#125;&#x2F;&#x2F;配置解析前回调gradle.taskGraph.whenReady&amp;#123;    graph -&amp;">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/shen_bh/pic-bed/raw/master/img/gradle%E6%9E%84%E5%BB%BA%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F.jpg">
+<meta property="og:image" content="https://tvax2.sinaimg.cn/large/981009fdgy1ge4m23rhc2j20u209ewff.jpg">
+<meta property="article:published_time" content="2019-12-25T01:54:00.000Z">
+<meta property="article:modified_time" content="2021-04-23T06:31:11.182Z">
+<meta property="article:author" content="shenbh@qq.com">
+<meta property="article:tag" content="groovy">
+<meta property="article:tag" content="gradle">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/shen_bh/pic-bed/raw/master/img/gradle%E6%9E%84%E5%BB%BA%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":true},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/1944865462/"/>
+
+
+
+
+
+  <title>Gradle 笔记 | ABing</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ABing</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Just do IT Now.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/1944865462/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ABing">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Gradle 笔记</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-12-25T09:54:00+08:00">
+                2019-12-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/gradle%E7%9F%A5%E8%AF%86/" itemprop="url" rel="index">
+                    <span itemprop="name">gradle知识</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/posts/1944865462/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/posts/1944865462/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/posts/1944865462/" class="leancloud_visitors" data-flag-title="Gradle 笔记">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">Visitors&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Gradle相关"><a href="#Gradle相关" class="headerlink" title="Gradle相关"></a>Gradle相关</h1><h2 id="构建的生命周期"><a href="#构建的生命周期" class="headerlink" title="构建的生命周期"></a>构建的生命周期</h2><p><img src="https://gitee.com/shen_bh/pic-bed/raw/master/img/gradle%E6%9E%84%E5%BB%BA%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F.jpg" alt="gradle构建的生命周期"></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//在构建项目前调用的钩子函数</span></span><br><span class="line">gradle.beforeProject&#123;</span><br><span class="line">    project -&gt;</span><br><span class="line">    	println <span class="string">&quot;---beforeProject---&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//配置解析前回调</span></span><br><span class="line">gradle.taskGraph.whenReady&#123;</span><br><span class="line">    graph -&gt;</span><br><span class="line">    	println <span class="string">&quot;---whenReady---&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">gradle.buildFinished&#123;</span><br><span class="line">    result -&gt;</span><br><span class="line">    	println <span class="string">&quot;---buildFinished---&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/innost/article/details/48228651">groovy学习链接</a></p>
+<p>gradle 不单单是一个配置脚本，背后有语言：</p>
+<ul>
+<li>Groovy Language</li>
+<li>Gradle DSL</li>
+<li>Android DSL<br>DSL：Domain Specific Language，即领域特定语言</li>
+</ul>
+<p>groovy 是一门 jvm 语言（动态语言、脚本语言）。可以混写 Java 和 Groovy。是 Java 的扩展，执行时先编译成 Java 字节码<br>Gradle 是基于 Groovy语言的构建工具</p>
+<p>函数定义的时候最后一个参数 Closure，那么调用的时候闭包的参数可以省略掉括号”()”直接用“{}”</p>
+<p><code>函数名&#123;-&gt; code&#125;</code>这是无参的，没有 it<br>Groovy 中函数的最后一行是函数的返回值<br>变量加 def 或类型修饰，则变量是局部变量。不加修饰是成员变量</p>
+<ul>
+<li>‘hello’      不对$进行转义</li>
+<li>“hello $x”   有$会先对$表达式求值</li>
+<li>‘’’hello<br>  line 1<br>  world’’’   三个引号中的字符串支持任意换行</li>
+</ul>
+<h2 id="理解与配置Android-Studio中的gradle"><a href="#理解与配置Android-Studio中的gradle" class="headerlink" title="理解与配置Android Studio中的gradle"></a><a target="_blank" rel="noopener" href="https://blog.csdn.net/u011913612/article/details/51732632">理解与配置Android Studio中的gradle</a></h2><p>一个项目至少有一个project（工程），一个project至少有一个task（任务），一个任务由一些action（行为）组成。</p>
+<p>可这么理解：一个build.gradle对应一个project，action对应java中方法。</p>
+<h1 id="Groovy"><a href="#Groovy" class="headerlink" title="Groovy"></a>Groovy</h1><h2 id="Groovy-的变量和方法声明"><a href="#Groovy-的变量和方法声明" class="headerlink" title="Groovy 的变量和方法声明"></a>Groovy 的变量和方法声明</h2><figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> a = <span class="number">1</span>;</span><br><span class="line"><span class="keyword">def</span> b = “hello world”;</span><br><span class="line"><span class="keyword">def</span> <span class="keyword">int</span> c = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> hello()&#123;</span><br><span class="line">    <span class="keyword">println</span>(“hello world”);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>语句后分号可省略</li>
+<li>变量类型和方法的返回值可省略</li>
+<li>方法调用时，括号可省略</li>
+<li>语句中 return 可省略<br>上面的代码可写成</li>
+</ul>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">def a = <span class="number">1</span></span><br><span class="line">def b = “hello world”</span><br><span class="line">def <span class="keyword">int</span> c = <span class="number">1</span></span><br><span class="line">def hello()&#123;</span><br><span class="line">    println “hello world” <span class="comment">//方法调用可省略括号</span></span><br><span class="line">    <span class="number">1</span>;                    <span class="comment">//方法返回值可省略 return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">def hello(<span class="keyword">String</span> msg)&#123;</span><br><span class="line">    println(msg)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//方法省略参数类型</span></span><br><span class="line"><span class="keyword">int</span> hello(msg)&#123;</span><br><span class="line">    println(msg)</span><br><span class="line">    <span class="keyword">return</span> <span class="number">1</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//方法省略参数类型</span></span><br><span class="line"><span class="keyword">int</span> hello(msg)&#123;</span><br><span class="line">    println msg</span><br><span class="line">    <span class="keyword">return</span> <span class="number">1</span>    <span class="comment">//这个 return 不能省略</span></span><br><span class="line">    println “done<span class="string">&quot;</span></span><br><span class="line"><span class="string">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>总结</strong></p>
+<ul>
+<li>在Groovy 中，类型是弱化的，所有的类型都可以动态推断，但是 Groovy 仍然是强类型的语言，类型不匹配仍然会报错；</li>
+<li>在 Groovy 中很多东西都可以省略，所以寻找一种自己喜欢的写法；</li>
+<li>Groovy 中的注释和 Java 中相同。</li>
+</ul>
+<h2 id="Groovy-数据类型"><a href="#Groovy-数据类型" class="headerlink" title="Groovy 数据类型"></a>Groovy 数据类型</h2><p>Groovy 数据类型有：</p>
+<ul>
+<li>Java 中基本数据类型</li>
+<li>Java 中对象（Groovy 默认对象是 public）</li>
+<li>Closure（闭包）</li>
+<li>加强的 List、Map 等集合类型</li>
+<li>加强的 File、Stream 等IO类型<br>类型可以显式声明，也可用 def 来声明，用 def 声明的类型 Groovy 将会进行类型推断。</li>
+</ul>
+<h3 id="String"><a href="#String" class="headerlink" title="String"></a>String</h3><p>String 特色在于字符串拼接</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> a = <span class="number">1</span></span><br><span class="line"><span class="keyword">def</span> b = <span class="string">&quot;hello&quot;</span></span><br><span class="line"><span class="keyword">def</span> c = <span class="string">&quot;a=$&#123;a&#125;, b=$&#123;b&#125;&quot;</span></span><br><span class="line">println c</span><br><span class="line"></span><br><span class="line"><span class="attr">outputs:</span></span><br><span class="line">a=<span class="number">1</span>,b=hello</span><br></pre></td></tr></table></figure>
+
+<h3 id="闭包-Closure"><a href="#闭包-Closure" class="headerlink" title="闭包(Closure)"></a>闭包(Closure)</h3><p>类似 C语言中函数指针的东西。闭包是中特殊数据类型，可作为方法的参数和返回值，也可作为一个变量而存在<br>声明闭包</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123; parameters -&gt;</span><br><span class="line">    code</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>闭包可有返回值和参数也可没有<br>具体例子：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> closure = &#123; <span class="keyword">int</span> a, String b -&gt;</span><br><span class="line">    println <span class="string">&quot;a=$&#123;a&#125;, b=$&#123;b&#125;, I am a closure!&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//这里省略了闭包的参数类型</span></span><br><span class="line"><span class="keyword">def</span> test = &#123; a, b -&gt;</span><br><span class="line">    println <span class="string">&quot;a=$&#123;a&#125;, b=$&#123;b&#125;, I am a closure!&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> ryg = &#123; a, b -&gt;</span><br><span class="line">    a + b</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">closure(<span class="number">100</span>, <span class="string">&quot;shenbh&quot;</span>)</span><br><span class="line">test.call(<span class="number">100</span>, <span class="number">200</span>)</span><br><span class="line"><span class="comment">//闭包可以当做函数一样使用</span></span><br><span class="line"><span class="keyword">def</span> c = ryg(<span class="number">100</span>, <span class="number">200</span>)</span><br><span class="line">println c</span><br><span class="line"></span><br><span class="line"><span class="attr">outputs:</span></span><br><span class="line">a=<span class="number">100</span>, b=shenbh, I am a closure!</span><br><span class="line">a=<span class="number">100</span>, b=<span class="number">200</span>, I am a closure!</span><br><span class="line"><span class="number">300</span></span><br></pre></td></tr></table></figure>
+
+<p>另外，闭包不指定参数会有一个隐含的参数 it</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//这里省略了闭包的参数类型</span></span><br><span class="line"><span class="keyword">def</span> test = &#123;</span><br><span class="line">    println <span class="string">&quot;find $&#123;it&#125;, I am a closure!&quot;</span></span><br><span class="line">&#125;</span><br><span class="line">test(<span class="number">100</span>)</span><br><span class="line"></span><br><span class="line"><span class="attr">outputs:</span></span><br><span class="line">find <span class="number">100</span>, I am a closure!</span><br></pre></td></tr></table></figure>
+
+<p>闭包的一个难题是如何确定闭包的参数，尤其当我们调用 Groovy 的 API 时，这个时候只能查询 Groovy 文档<br><a target="_blank" rel="noopener" href="http://www.groovy-lang.org/api.html">groovy-lang.org/api.htm…</a><br><a target="_blank" rel="noopener" href="http://docs.groovy-lang.org/latest/html/groovy-jdk/index-all.html">docs.groovy-lang.org/la…</a></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//statements的例子</span></span><br><span class="line">apply <span class="attr">plugin:</span><span class="string">&#x27;com.android.application&#x27;</span></span><br><span class="line"><span class="comment">//写全的是：</span></span><br><span class="line">project.apply([<span class="attr">plugin:</span> <span class="string">&#x27;com.android.application&#x27;</span>])</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//script block的例子</span></span><br><span class="line">dependencies&#123;</span><br><span class="line">    compile fileTree(<span class="attr">dir:</span> <span class="string">&#x27;libs&#x27;</span>, <span class="attr">include:</span> [<span class="string">&#x27;*.jar&#x27;</span>])</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//写全的是：</span></span><br><span class="line">project.dependencies(&#123;</span><br><span class="line">    add(<span class="string">&#x27;compile&#x27;</span>, <span class="string">&#x27;com.android.tools.build:gradle:2.0.&#x27;</span>,&#123;</span><br><span class="line">        <span class="comment">//Configuration statements</span></span><br><span class="line">    &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>gradle中有以下顶层<code>build script block</code>：</p>
+<table>
+<thead>
+<tr>
+<th>Block</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>allprojects{}</td>
+<td>Configures this project and each of its sub-projects.</td>
+</tr>
+<tr>
+<td>artifacts{}</td>
+<td>Configures the published artifacts for this project.</td>
+</tr>
+<tr>
+<td>buildscript{}</td>
+<td>Configures the build script classpath for this project.</td>
+</tr>
+<tr>
+<td>configurations{}</td>
+<td>Configures the dependency configurations for this project</td>
+</tr>
+<tr>
+<td>dependencies{}</td>
+<td>Configures the dependencies for this project.</td>
+</tr>
+<tr>
+<td>repositories{}</td>
+<td>Configures the repositories for this project.</td>
+</tr>
+<tr>
+<td>sourceSets{}</td>
+<td>Configures the source sets of this project.</td>
+</tr>
+<tr>
+<td>subprojects{}</td>
+<td>Configures the sub-projects of this project.</td>
+</tr>
+<tr>
+<td>publishing{}</td>
+<td>Configures the PublishingExtension added by the publishing plugin.</td>
+</tr>
+</tbody></table>
+<h3 id="集合"><a href="#集合" class="headerlink" title="集合"></a>集合</h3><p>Groovy加强了 Java 中的集合类，比如 List、Map、Set 等<br>List 使用如下：</p>
+<figure class="highlight subunit"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">def emptyList = []</span><br><span class="line">def test = [100, &quot;hello&quot;, true]</span><br><span class="line">test[1] = &quot;world&quot;</span><br><span class="line">println test[0]</span><br><span class="line">println test[1]</span><br><span class="line"><span class="keyword">test </span>&lt;&lt; 200</span><br><span class="line">println test.size</span><br><span class="line"></span><br><span class="line">outputs:</span><br><span class="line">100</span><br><span class="line">world</span><br><span class="line">4</span><br></pre></td></tr></table></figure>
+
+<p><code>&lt;&lt;</code>表示向集合中添加新元素。例子中是往集合中添加数字 200</p>
+<p>Map 的使用如下：</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> emptyMap = [:]</span><br><span class="line"><span class="keyword">def</span> test = [<span class="string">&quot;id&quot;</span>:<span class="number">1</span>, <span class="string">&quot;name&quot;</span>:<span class="string">&quot;shenbh&quot;</span>, <span class="string">&quot;isMale&quot;</span>:<span class="keyword">true</span>]</span><br><span class="line">test[<span class="string">&quot;id&quot;</span>] = <span class="number">2</span></span><br><span class="line">test.id = <span class="number">900</span></span><br><span class="line"><span class="keyword">println</span> test.id</span><br><span class="line"><span class="keyword">println</span> test.isMale</span><br><span class="line"></span><br><span class="line">test.<span class="keyword">each</span>&#123;key, value-&gt;</span><br><span class="line">    <span class="keyword">println</span> <span class="string">&quot;two parameters, find [$&#123;key&#125;:$&#123;value&#125;]&quot;</span></span><br><span class="line">&#125;</span><br><span class="line">test.<span class="keyword">each</span>&#123;</span><br><span class="line">    <span class="keyword">println</span> <span class="string">&quot;one parameters, find [$&#123;it.key&#125;:$&#123;it.value&#125;]&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">outputs:</span><br><span class="line"><span class="number">900</span></span><br><span class="line"><span class="keyword">true</span></span><br><span class="line">two parameters, <span class="keyword">find</span> [id:<span class="number">900</span>]</span><br><span class="line">two parameters, <span class="keyword">find</span> [name:shenbh]</span><br><span class="line">two parameters, <span class="keyword">find</span> [isMale:<span class="keyword">true</span>]</span><br><span class="line">one parameters, <span class="keyword">find</span> [id:<span class="number">900</span>]</span><br><span class="line">one parameters, <span class="keyword">find</span> [name:shenbh]</span><br><span class="line">one parameters, <span class="keyword">find</span> [isMale:<span class="keyword">true</span>]</span><br></pre></td></tr></table></figure>
+
+<p>map也有<code>&lt;&lt;</code>，如果指定 key 存在则添加到这个 key 对应的 value 内（替换掉值）</p>
+<h3 id="加强的IO"><a href="#加强的IO" class="headerlink" title="加强的IO"></a>加强的IO</h3><figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="keyword">file</span> = <span class="keyword">new</span> <span class="keyword">File</span>(<span class="string">&quot;a.txt&quot;</span>)</span><br><span class="line"><span class="keyword">println</span> <span class="string">&quot;read file using two parameters&quot;</span></span><br><span class="line"><span class="keyword">file</span>.<span class="keyword">eachLine</span> &#123; line, lineNo -&gt;</span><br><span class="line">   <span class="keyword">println</span> <span class="string">&quot;$&#123;lineNo&#125; $&#123;line&#125;&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">println</span> <span class="string">&quot;read file using one parameters&quot;</span></span><br><span class="line"><span class="keyword">file</span>.<span class="keyword">eachLine</span> &#123; line -&gt;</span><br><span class="line">   <span class="keyword">println</span> <span class="string">&quot;$&#123;line&#125;&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">outputs:</span><br><span class="line"><span class="keyword">read</span> <span class="keyword">file</span> using two parameters</span><br><span class="line"><span class="number">1</span> 欢迎</span><br><span class="line"><span class="number">2</span> 关注</span><br><span class="line"><span class="number">3</span> 炳洪说</span><br><span class="line"></span><br><span class="line"><span class="keyword">read</span> <span class="keyword">file</span> using one parameters</span><br><span class="line">欢迎</span><br><span class="line">关注</span><br><span class="line">炳洪说</span><br></pre></td></tr></table></figure>
+
+<p>groovy 需要看文档再去用<br><a target="_blank" rel="noopener" href="http://docs.groovy-lang.org/docs/latest/html/api/">docs.groovy-lang.org/do…</a></p>
+<p>访问xml文件，也是比Java中简单多了。<br>Groovy访问xml有两个类：XmlParser和XmlSlurper，二者几乎一样，在性能上有细微的差别<br>有一个xml，attrs.xml</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">resources</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">declare-styleable</span> <span class="attr">name</span>=<span class="string">&quot;CircleView&quot;</span>&gt;</span></span><br><span class="line"></span><br><span class="line">   <span class="tag">&lt;<span class="name">attr</span> <span class="attr">name</span>=<span class="string">&quot;circle_color&quot;</span> <span class="attr">format</span>=<span class="string">&quot;color&quot;</span>&gt;</span>#98ff02<span class="tag">&lt;/<span class="name">attr</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">attr</span> <span class="attr">name</span>=<span class="string">&quot;circle_size&quot;</span> <span class="attr">format</span>=<span class="string">&quot;integer&quot;</span>&gt;</span>100<span class="tag">&lt;/<span class="name">attr</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">attr</span> <span class="attr">name</span>=<span class="string">&quot;circle_title&quot;</span> <span class="attr">format</span>=<span class="string">&quot;string&quot;</span>&gt;</span>shenbh<span class="tag">&lt;/<span class="name">attr</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">declare-styleable</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">resources</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>遍历</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> xml = <span class="keyword">new</span> XmlParser().parse(<span class="keyword">new</span> <span class="keyword">File</span>(<span class="string">&quot;attrs.xml&quot;</span>))</span><br><span class="line"><span class="comment">//访问 declare-styleable 节点的 name 属性</span></span><br><span class="line"><span class="keyword">println</span> xml[<span class="string">&#x27;declare-styleable&#x27;</span>].@name[<span class="number">0</span>]</span><br><span class="line"></span><br><span class="line"><span class="comment">//访问declare-styleable 的第三个子节点的内容</span></span><br><span class="line"><span class="keyword">println</span> xml[<span class="string">&#x27;declare-styleable&#x27;</span>].attr[<span class="number">2</span>].text()</span><br><span class="line"></span><br><span class="line">outputs:</span><br><span class="line">CircleView</span><br><span class="line">shenbh</span><br></pre></td></tr></table></figure>
+
+<h2 id="其他特性"><a href="#其他特性" class="headerlink" title="其他特性"></a>其他特性</h2><ul>
+<li><strong>Class 是一等公民</strong><br>在 Groovy 中，所有 Class 类型，都可以省略<code>.class</code></li>
+</ul>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span>(<span class="type">File</span>.class)</span></span><br><span class="line"><span class="function"><span class="keyword">func</span>(<span class="type">File</span>)</span></span><br><span class="line"></span><br><span class="line">def <span class="function"><span class="keyword">func</span>(<span class="type">Class</span> clazz)</span>&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>Getter 和 Setter</strong><br>在 Groovy 中，Getter/Setter 和属性是默认关联的</li>
+</ul>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Book</span></span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="built_in">String</span> name</span><br><span class="line">    <span class="built_in">String</span> <span class="function"><span class="title">getName</span>(<span class="params"></span>)</span>&#123;<span class="keyword">return</span> name&#125;</span><br><span class="line">    <span class="built_in">void</span> <span class="function"><span class="title">setName</span>(<span class="params"><span class="built_in">String</span> name</span>)</span>&#123;<span class="built_in">this</span>.name = name&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Book</span></span>&#123;</span><br><span class="line">    <span class="built_in">String</span> name</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上述两个类完全一致，只要有属性就有 Getter/Setter；同理，只要有 Getter/Setter，那么它就有隐含属性。</p>
+<ul>
+<li><strong>with 操作符</strong><br>在 Groovy 中，当对同一个对象进行操作时，可以使用 with</li>
+</ul>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">Book </span><span class="keyword">bk </span>= new <span class="keyword">Book()</span></span><br><span class="line"><span class="keyword">bk.id </span>= <span class="number">1</span></span><br><span class="line"><span class="keyword">bk.name </span>= <span class="string">&quot;android art&quot;</span></span><br><span class="line"><span class="keyword">bk.press </span>= <span class="string">&quot;china press&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>可简写为：</p>
+<figure class="highlight nix"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Book <span class="attr">bk</span> = new Book()</span><br><span class="line">bk.<span class="keyword">with</span>&#123;</span><br><span class="line">    <span class="attr">id</span> = <span class="number">1</span></span><br><span class="line">    <span class="attr">name</span> = <span class="string">&quot;android art&quot;</span></span><br><span class="line">    <span class="attr">press</span> = <span class="string">&quot;china press&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>判定是否为真</strong><br>在 Groovy 中，判定是否为真可以更简洁</li>
+</ul>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(<span class="built_in">name</span> != null &amp;&amp; <span class="built_in">name</span>.<span class="built_in">length</span> &gt; <span class="number">0</span>)&#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可替换为</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">if</span><span class="params">(name)</span></span>&#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>简洁的三元表达式</strong></li>
+</ul>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">def <span class="literal">result</span> = <span class="built_in">name</span> != null ? <span class="built_in">name</span> : <span class="string">&quot;Unknown&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>可简写成(省略了 name)</p>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">def resutl = <span class="built_in">name</span> ?: <span class="string">&quot;Unknown&quot;</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>简洁的非空判断</strong></li>
+</ul>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(<span class="keyword">order</span> != <span class="keyword">null</span>)&#123;</span><br><span class="line">    <span class="keyword">if</span>(<span class="keyword">order</span>.getCustomer() != <span class="keyword">null</span>)&#123;</span><br><span class="line">        <span class="keyword">if</span>(<span class="keyword">order</span>.getCustomer().getAddress() != <span class="keyword">null</span>)&#123;</span><br><span class="line">            <span class="keyword">System</span>.<span class="keyword">out</span>.println(<span class="keyword">order</span>.getCustomer().getAddress());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可简写成</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">println order?<span class="string">.customer</span>?<span class="string">.address</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>使用断言</strong><br>在 Groovy 中使用 assert 设置断言，端条件为 false 则会抛出异常</li>
+</ul>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">def <span class="keyword">check</span>(String <span class="type">name</span>)&#123;</span><br><span class="line">    //<span class="type">name</span> non-<span class="keyword">null</span> <span class="keyword">and</span> non-empty according <span class="keyword">to</span> Groovy Truth <span class="keyword">assert</span> <span class="type">name</span></span><br><span class="line">    //safe navigation + Groovy Truth <span class="keyword">to</span> <span class="keyword">check</span></span><br><span class="line">    <span class="keyword">assert</span> <span class="type">name</span>?.size() &gt; <span class="number">3</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>switch 方法</strong></li>
+</ul>
+<figure class="highlight nim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">def x = <span class="number">1</span>.<span class="number">23</span></span><br><span class="line">def <span class="literal">result</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">switch (x) &#123;</span><br><span class="line">   <span class="keyword">case</span> <span class="string">&quot;foo&quot;</span>: <span class="literal">result</span> = <span class="string">&quot;found foo&quot;</span></span><br><span class="line">   // lets fall through</span><br><span class="line">   <span class="keyword">case</span> <span class="string">&quot;bar&quot;</span>: <span class="literal">result</span> += <span class="string">&quot;bar&quot;</span></span><br><span class="line">   <span class="keyword">case</span> [<span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, &#x27;inList&#x27;]: <span class="literal">result</span> = <span class="string">&quot;list&quot;</span></span><br><span class="line">   <span class="keyword">break</span></span><br><span class="line">   <span class="keyword">case</span> <span class="number">12</span>..<span class="number">30</span>: <span class="literal">result</span> = <span class="string">&quot;range&quot;</span></span><br><span class="line">   <span class="keyword">break</span></span><br><span class="line">   <span class="keyword">case</span> <span class="type">Integer</span>: <span class="literal">result</span> = <span class="string">&quot;integer&quot;</span></span><br><span class="line">   <span class="keyword">break</span></span><br><span class="line">   <span class="keyword">case</span> <span class="type">Number</span>: <span class="literal">result</span> = <span class="string">&quot;number&quot;</span></span><br><span class="line">   <span class="keyword">break</span></span><br><span class="line">   <span class="keyword">case</span> &#123; it &gt; <span class="number">3</span> &#125;: <span class="literal">result</span> = <span class="string">&quot;number &gt; 3&quot;</span></span><br><span class="line">   <span class="keyword">break</span></span><br><span class="line">   default: <span class="literal">result</span> = <span class="string">&quot;default&quot;</span></span><br><span class="line">&#125;</span><br><span class="line">assert <span class="literal">result</span> == <span class="string">&quot;number&quot;</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>==和 equals</strong><br>在 Groovy 中，==相当于 Java 的 equals，如果需要比较对象是否同一个，需要使用<code>.is()</code></li>
+</ul>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Object <span class="selector-tag">a</span> = new Object()</span><br><span class="line">Object <span class="selector-tag">b</span> = <span class="selector-tag">a</span><span class="selector-class">.clone</span>()</span><br><span class="line"></span><br><span class="line">assert <span class="selector-tag">a</span> == b</span><br><span class="line">assert !<span class="selector-tag">a</span><span class="selector-class">.is</span>(b)</span><br></pre></td></tr></table></figure>
+
+<h2 id="编译、运行-Groovy"><a href="#编译、运行-Groovy" class="headerlink" title="编译、运行 Groovy"></a>编译、运行 Groovy</h2><p>可以安装 Groovy sdk 来编译和运行。但我们只是为了学习 Gradle 可以通过以下方式来编译和运行 Grrovy<br>在当前目录下创建 build.gradle 文件，里面创建一个 task，在 task 中编写 Groovy 代码即可，如：</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">task</span>(shenbhshuo).<span class="keyword">doLast</span>&#123;</span><br><span class="line">    <span class="keyword">println</span> <span class="string">&quot;start execute shenbhshuo&quot;</span></span><br><span class="line">    haveFun()</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">def</span> haveFun()&#123;</span><br><span class="line">    <span class="keyword">println</span> <span class="string">&quot;have fun!&quot;</span></span><br><span class="line">    System.out.<span class="keyword">println</span>(<span class="string">&quot;have fun!&quot;</span>);</span><br><span class="line">    <span class="number">1</span></span><br><span class="line">    <span class="keyword">def</span> file1 = <span class="keyword">new</span> <span class="keyword">File</span>(<span class="string">&quot;a.txt&quot;</span>)</span><br><span class="line">    <span class="keyword">def</span> file2 = <span class="keyword">new</span> <span class="keyword">File</span>(<span class="string">&quot;a.txt&quot;</span>)</span><br><span class="line">    assert file1 == file2</span><br><span class="line">    assert !file1.is(file2)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> Book&#123;</span><br><span class="line">    <span class="keyword">private</span> String name</span><br><span class="line">    String getName()&#123; <span class="keyword">return</span> name &#125;</span><br><span class="line">    <span class="keyword">void</span> setName(String name)&#123; <span class="keyword">this</span>.name = name&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如下命令即可运行</p>
+<figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">gradle shenbhshuo</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="DSL"><a href="#DSL" class="headerlink" title="DSL"></a>DSL</h1><p>Android 也遵循约定大于配置的设计思想<br>约定：可理解成程序员与计算机的约定，按照约定好的规范写代码计算机就能识别，这就降低了写代码的难度</p>
+<h2 id="DSL几个特点："><a href="#DSL几个特点：" class="headerlink" title="DSL几个特点："></a>DSL几个特点：</h2><h3 id="Command-chains-链式命令"><a href="#Command-chains-链式命令" class="headerlink" title="Command chains - 链式命令"></a>Command chains - 链式命令</h3><p>Groovy的脚本具有链式命令(Command chains)的特性，根据这个特性，当你在Groovy脚本中写出a b c d的时候，Groovy会翻译成a(b).c(d)执行，也就是将b作为a函数的形参调用，然后将d作为形参再次调用返回的实例(Instance)中的c方法。其中当做形参的b和d可以作为一个闭包(Closure)传递过去。<br>下面是一些简单的实例：</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">// equivalent <span class="keyword">to</span>: turn(<span class="keyword">left</span>).then(<span class="keyword">right</span>)</span><br><span class="line">turn <span class="keyword">left</span> then <span class="keyword">right</span></span><br><span class="line"></span><br><span class="line">// equivalent <span class="keyword">to</span>: take(<span class="number">2</span>.pills).of(chloroquinine).after(<span class="number">6</span>.hours)</span><br><span class="line">take <span class="number">2</span>.pills of chloroquinine after <span class="number">6</span>.hours</span><br><span class="line"></span><br><span class="line">// equivalent <span class="keyword">to</span>: paint(<span class="keyword">wall</span>).with(<span class="keyword">red</span>, green).<span class="built_in">and</span>(yellow)</span><br><span class="line">paint <span class="keyword">wall</span> with <span class="keyword">red</span>, green <span class="built_in">and</span> yellow</span><br><span class="line"></span><br><span class="line">// with named parameters too</span><br><span class="line">// equivalent <span class="keyword">to</span>: check(tha<span class="variable">t:</span> margarita).tastes(good)</span><br><span class="line">check tha<span class="variable">t:</span> margarita tastes good</span><br><span class="line"></span><br><span class="line">// with closures <span class="keyword">as</span> parameters</span><br><span class="line">// equivalent <span class="keyword">to</span>: given(&#123;&#125;).when(&#123;&#125;).then(&#123;&#125;)</span><br><span class="line">given &#123; &#125; when &#123; &#125; then &#123; &#125;</span><br></pre></td></tr></table></figure>
+
+<p>Groovy也支持某个方法传入空参数，但需要为该空参数的方法加上圆括号</p>
+<figure class="highlight n1ql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">// equivalent to: <span class="keyword">select</span>(<span class="keyword">all</span>).<span class="keyword">unique</span>().<span class="keyword">from</span>(names)</span><br><span class="line"><span class="keyword">select</span> <span class="keyword">all</span> <span class="keyword">unique</span>() <span class="keyword">from</span> names</span><br></pre></td></tr></table></figure>
+
+<p>如果链式命令(Command chains)的参数是奇数，则最后一个参数会被当成属性值(Property)访问。</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="regexp">//</span> equivalent to: take(<span class="number">3</span>).cookies</span><br><span class="line"><span class="regexp">//</span> and also this: take(<span class="number">3</span>).getCookies()</span><br><span class="line">take <span class="number">3</span> cookies</span><br></pre></td></tr></table></figure>
+
+<h3 id="Operator-overloading-操作符重载"><a href="#Operator-overloading-操作符重载" class="headerlink" title="Operator overloading - 操作符重载"></a>Operator overloading - 操作符重载</h3><p><code>==</code>会被Groovy转换成<code>equals</code>方法,这样你就可以放心大胆地使用==来比较两个字符串是否相等了</p>
+<table>
+<thead>
+<tr>
+<th>Operator</th>
+<th>Method</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>a + b</code></td>
+<td><code>a.plus(b)</code></td>
+</tr>
+<tr>
+<td><code>a - b</code></td>
+<td><code>a.minus(b)</code></td>
+</tr>
+<tr>
+<td><code>a * b</code></td>
+<td><code>a.multiply(b)</code></td>
+</tr>
+<tr>
+<td><code>a ** b</code></td>
+<td><code>a.power(b)</code></td>
+</tr>
+<tr>
+<td><code>a / b</code></td>
+<td><code>a.div(b)</code></td>
+</tr>
+<tr>
+<td><code>a % b</code></td>
+<td><code>a.mod(b)</code></td>
+</tr>
+<tr>
+<td><code>a | b</code></td>
+<td><code>a.or(b)</code></td>
+</tr>
+<tr>
+<td><code>a &amp; b</code></td>
+<td><code>a.and(b)</code></td>
+</tr>
+<tr>
+<td><code>a ^ b</code></td>
+<td><code>a.xor(b)</code></td>
+</tr>
+<tr>
+<td><code>a++ or ++a</code></td>
+<td><code>a.next()</code></td>
+</tr>
+<tr>
+<td><code>a-- or --a</code></td>
+<td><code>a.previous()</code></td>
+</tr>
+<tr>
+<td><code>a[b]</code></td>
+<td><code>a.getAt(b)</code></td>
+</tr>
+<tr>
+<td><code>a[b] = c</code></td>
+<td><code>a.putAt(b, c)</code></td>
+</tr>
+<tr>
+<td><code>a &lt;&lt; b</code></td>
+<td><code>a.leftShift(b)</code></td>
+</tr>
+<tr>
+<td><code>a &gt;&gt; b</code></td>
+<td><code>a.rightShift(b)</code></td>
+</tr>
+<tr>
+<td><code>a &gt;&gt;&gt; b</code></td>
+<td><code>a.rightShiftUnsigned(b)</code></td>
+</tr>
+<tr>
+<td><code>switch(a) &#123; case(b) : &#125;</code></td>
+<td><code>b.isCase(a)</code></td>
+</tr>
+<tr>
+<td><code>if(a)</code></td>
+<td><code>a.asBoolean()</code></td>
+</tr>
+<tr>
+<td><code>~a</code></td>
+<td><code>a.bitwiseNegate()</code></td>
+</tr>
+<tr>
+<td><code>-a</code></td>
+<td><code>a.negative()</code></td>
+</tr>
+<tr>
+<td><code>+a</code></td>
+<td><code>a.positive()</code></td>
+</tr>
+<tr>
+<td><code>a as b</code></td>
+<td><code>a.asType(b)</code></td>
+</tr>
+<tr>
+<td><code>a == b</code></td>
+<td><code>a.equals(b)</code></td>
+</tr>
+<tr>
+<td><code>a != b</code></td>
+<td>! <code>a.equals(b)</code></td>
+</tr>
+<tr>
+<td><code>a &lt;=&gt; b</code></td>
+<td><code>a.compareTo(b)</code></td>
+</tr>
+<tr>
+<td><code>a &gt; b</code></td>
+<td><code>a.compareTo(b) &gt; 0</code></td>
+</tr>
+<tr>
+<td><code>a &gt;= b</code></td>
+<td><code>a.compareTo(b) &gt;= 0</code></td>
+</tr>
+<tr>
+<td><code>a &lt; b</code></td>
+<td><code>a.compareTo(b) &lt; 0</code></td>
+</tr>
+<tr>
+<td><code>a &lt;= b</code></td>
+<td><code>a.compareTo(b) &lt;= 0</code></td>
+</tr>
+</tbody></table>
+<h3 id="DelegatesTo-委托"><a href="#DelegatesTo-委托" class="headerlink" title="DelegatesTo - 委托"></a>DelegatesTo - 委托</h3><p>通过委托(DelegatesTo)可以很简单的定制一个控制结构体(Custom control structures)<br>例子：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">email</span> &#123;</span><br><span class="line">    <span class="attribute">from</span> <span class="string">&#x27;dsl-guru@mycompany.com&#x27;</span></span><br><span class="line">    to <span class="string">&#x27;john.doe@waitaminute.com&#x27;</span></span><br><span class="line">    subject <span class="string">&#x27;The pope has resigned!&#x27;</span></span><br><span class="line">    body &#123;</span><br><span class="line">        <span class="attribute">p</span> <span class="string">&#x27;Really, the pope has resigned!&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面这段代码便是我们自己定义的DSL语言了，当然这也是一段脚本，我们可以结合上文讲到的Groovy的链式命令(Command chains)来手动解析一下这段脚本含义，拆分下这些步骤：</p>
+<ol>
+<li>首先<code>email &#123;...&#125;</code>这段被执行，其执行方式等效于<code>email(&#123;...&#125;)</code>, Groovy调用<code>email</code>方法，然后将<code>&#123;...&#125;</code>这个闭包(Closure)作为参数传递进去；</li>
+<li><code>from &#39;dsl-guru@mycompany.com&#39;</code>等效于<code>from(&#39;dsl-guru@mycompany.com&#39;)</code>解析执行；</li>
+<li><code>subject &#39;The pope has resigned!&#39;</code>等效于<code>subject(&#39;The pope has resigned!&#39;)</code>解析执行；</li>
+<li><code>body &#123;...&#125;</code>同步骤1一样，<code>&#123;...&#125;</code>这个闭包作为body方法的参数，等效于<code>body(&#123;...&#125;)</code>解释执行；</li>
+<li><code>p &#39;Really, the pope has resigned!&#39;</code>等效于<code>p(&#39;Really, the pope has resigned!&#39;)</code>解释执行。<br>当然，有个问题我们需要清楚，当我们调用<code>email &#123;...&#125;</code>这种方法的时候，<code>&#123;...&#125;</code>闭包中的方法比如<code>from &#39;dsl-guru@mycompany.com&#39;</code>等不是Groovy Shell自动去调用执行的，而是通过Groovy的委托(DelegatesTo)方式来完成，这块后文会讲到。<br>解析上述DSL语言的代码：</li>
+</ol>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> email(Closure cl) &#123;</span><br><span class="line">    <span class="keyword">def</span> email = <span class="keyword">new</span> EmailSpec()</span><br><span class="line">    <span class="keyword">def</span> code = cl.rehydrate(email, <span class="keyword">this</span>, <span class="keyword">this</span>)</span><br><span class="line">    code.resolveStrategy = Closure.DELEGATE_ONLY</span><br><span class="line">    code()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们先定义了一个<code>email(Closure)</code>的方法，当执行上述步骤1的时候就会进入该方法内执行，<code>EmailSpec</code>是一个继承了参数中<code>cl</code>闭包里所有方法比如<code>from</code>、<code>to</code>等等的一个类(Class)，通过<code>rehydrate</code>方法将<code>cl</code>拷贝成一份新的实例(Instance)并赋值给<code>code</code>，<code>code</code>实例(Instance)通过<code>rehydrate</code>方法中设置<code>delegate</code>、<code>owner</code>和<code>thisObject</code>的三个属性将<code>cl</code>和<code>email</code>两者关联起来被赋予了一种委托关系，这种委托关系可以这样理解：<code>cl</code>闭包中的<code>from</code>、<code>to</code>等方法会调用到<code>email</code>委托类实例(Instance)中的方法，并可以访问到<code>email</code>中的实例变量(Field)。<code>DELEGATE_ONLY</code>表示闭包(Closure)方法调用只会委托给它的委托者(The delegate of closure)，最后使用<code>code()</code>开始执行闭包中的方法。<br>当然，Groovy提供了很多灵活的委托(DelegatesTo)方式，这块可以通过阅读官方文档了解。</p>
+<h2 id="Android-DSL-解读"><a href="#Android-DSL-解读" class="headerlink" title="Android DSL 解读"></a>Android DSL 解读</h2><figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Top-level build file where you can add configuration options common to all sub-projects/modules.</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">buildscript</span> &#123;</span><br><span class="line">    <span class="keyword">repositories</span> &#123;</span><br><span class="line">        jcenter()</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">dependencies</span> &#123;</span><br><span class="line">        <span class="keyword">classpath</span> <span class="string">&#x27;com.android.tools.build:gradle:1.5.0&#x27;</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// <span class="doctag">NOTE:</span> Do not place your application dependencies here; they belong</span></span><br><span class="line">        <span class="comment">// in the individual module build.gradle files</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">allprojects</span> &#123;</span><br><span class="line">    <span class="keyword">repositories</span> &#123;</span><br><span class="line">        jcenter()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">task</span> clean(type: <span class="keyword">Delete</span>) &#123;</span><br><span class="line">    <span class="keyword">delete</span> rootProject.buildDir</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到这份build.gradle依次执行了buildscript({…})、all projects{…}、all projects{…}和task…方法。通过Android Studio点击某个方法我们可以发现buildscript、allprojects和task都指向了Project类，由此可以看出Project类是整个build.gradle脚本文件的委托类，其中必然有一个Project的实例(Instance)在管理这些类，当我们执行诸如biuldscript、allprojects和task这些方法的时候，就能够对这个Project实例进行配置。由此最后Gradle基于Project类的实例(Instance)进行整个项目的构建流程。<br>接下来描述下这份grade脚本文件的执行步骤，为了描述方便，我将buildscript方法中的闭包(Closure)称为C1，然后其他闭包(Closure)对应关系依次为repositories-&gt;C2、dependencies-&gt;C3、all projects-&gt;C4，repositories-&gt;C5，最后一个task…这一部分闭包(Closure)就不定义了，至于原因，你可以猜下~接下来按照步骤来说吧：</p>
+<ol>
+<li>执行<code>buildscript</code>方法，并把<code>C1</code>作为形参传递进去，进行构建脚本的一些配置，此时<code>C1</code>的委托者(The delegate of closure)是<code>Project</code>类中的<code>ScriptHandler</code>的实例(Instance)；</li>
+<li>执行<code>C1</code>中的方法，此时执行<code>repositories</code>方法并以<code>C2</code>作为形参，配置仓库地址，<code>C2</code>的委托者(The delegate of closure)是<code>RepositoryHandler</code>类的实例(Instance)，负责相关仓库的配置；</li>
+<li>执行<code>C2</code>中的方法，由于<code>C2</code>的委托者(The delegate of closure)是<code>RepositoryHandler</code>的实例(Instance)，因此执行了<code>RepositoryHandler</code>的<code>jcenter</code>方法，将它配置成我们项目的远程仓库；</li>
+<li>执行<code>dependencies</code>方法并将<code>C3</code>作为形参，配置一些相关的构建依赖，<code>C3</code>的委托者(The delegate of closure)是<code>DependencyHandler</code>类的实例(Instance)；</li>
+<li>执行<code>C3</code>中的方法，同步骤3一样，调用委托者(The delegate of closure)<code>DependencyHandler</code>的方法classpath并把相关依赖作为形参传递过去，不过这里你会发现用IDE进去却是对应<code>add(String configurationName, Object dependencyNotation)</code>这个方法，这里一定有玄机，感兴趣的朋友可以自个探索下；</li>
+<li>同上面原理一样，执行<code>all projects</code>、<code>C4</code>、<code>repositories</code>和<code>C5</code>等这类方法，配置了所有项目工程的仓库为<code>jcenter</code>，这里不再赘述；</li>
+<li>接下来是<code>task clean ...</code>这部分DSL了，这块的逻辑存在一个比较奇怪的问题，根据Groovy的链式命令(Command chains)，此处执行的顺序应该是<code>clean([type: Delete], &#123;delete rootProject.buildDir&#125;)</code> -&gt; <code>task(...)</code>，然而实际上并非如此，其实际执行应该是<code>task([type: Delete], &#39;clean&#39;, &#123;delte rootProject.buildDir&#125;)</code>(此处仅个人理解，感谢@花京院典明 指正，之后有时间把这块 DSL 解析过程完善下)，由此完成一个Task的创建，由于指定了<code>type</code>为<code>Delete</code>，所以<code>&#123;delete rootProject.buildDir&#125;</code>这个闭包(Closure)的委托者(The delegate of closure)就是<code>Delete</code>类的实例(Instance)，具体实现方式可以参考Gradle的源码。</li>
+</ol>
+<p>ps:<code>task clean(type:delete)&#123;...&#125;</code>理解成<code>task[type:delete],clean&#123;&#125;</code>，只能用 Gradle 特有 DSL 来解释</p>
+<h2 id="关于-Groovy-闭包"><a href="#关于-Groovy-闭包" class="headerlink" title="关于 Groovy 闭包"></a>关于 Groovy 闭包</h2><h1 id="Gradle依赖相关"><a href="#Gradle依赖相关" class="headerlink" title="Gradle依赖相关"></a>Gradle依赖相关</h1><h2 id="查看项目依赖"><a href="#查看项目依赖" class="headerlink" title="查看项目依赖"></a>查看项目依赖</h2><p>Terminal中输入：</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gradlew <span class="symbol">:app</span><span class="symbol">:dependencies</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="依赖多次（如果是同一个版本）没有问题"><a href="#依赖多次（如果是同一个版本）没有问题" class="headerlink" title="依赖多次（如果是同一个版本）没有问题"></a>依赖多次（如果是同一个版本）没有问题</h2><p>场景：moduleA依赖moduleB（B的libs中有个B.jar），moduleC依赖moduleA也依赖moduleB。moduleC调用这个B.jar，没有版本冲突等问题（因为是同一个版本的jar）</p>
+<h2 id="exclude排除依赖中的某个group"><a href="#exclude排除依赖中的某个group" class="headerlink" title="exclude排除依赖中的某个group"></a>exclude排除依赖中的某个group</h2><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 单独排除某个模块中的依赖  </span></span><br><span class="line">compile(<span class="string">&#x27;com.h6ah4i.android.widget.advrecyclerview:advrecyclerview:0.11.0@aar&#x27;</span>) &#123;</span><br><span class="line">    exclude <span class="attr">group:</span> <span class="string">&#x27;com.android.support&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 排除所有子依赖中的support依赖，统一使用主项目中的版本</span></span><br><span class="line">configurations &#123;</span><br><span class="line">    all*.exclude <span class="attr">group:</span> <span class="string">&#x27;com.android.support&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>用法：exclude group:’ ‘, module: ‘ ‘ 【group和module两个参数可分别单独使用】</p>
+<p>说明：排除某个依赖，可解决部分传递依赖。</p>
+<p>使用场景：</p>
+<ul>
+<li>解决依赖冲突。若两个模块使用相同jar包的不同版本，gradle默认会使用最新版本的jar包，此时可通过exclude排除冲突。（版本冲突带来的问题最主要是API类或方法移除）</li>
+<li>运行期无需此模块。</li>
+<li>依赖传递无法找到时，可通过exclude排除。</li>
+<li>版权原因需排除。</li>
+</ul>
+<h2 id="transitive是否传递本身的依赖给宿主程序"><a href="#transitive是否传递本身的依赖给宿主程序" class="headerlink" title="transitive是否传递本身的依赖给宿主程序"></a>transitive是否传递本身的依赖给宿主程序</h2><p>用法：transitive = true | false</p>
+<p>说明：是否传递本身的依赖给宿主程序（使用传递依赖时，Gradle会将传递依赖一起下载下来。compile默认时开启传递依赖）</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">compile</span>(<span class="params"><span class="string">&#x27;com.alibaba.android:ultraviewpager:1.0.4@aar&#x27;</span></span>)</span> &#123;</span><br><span class="line">    transitive = <span class="literal">false</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>@aar表示只下载该aar包，而不下该aar包所依赖的其他库。如果还不想使用@aar前提下的其依赖库，需要加transitive=false（默认是true开启传递依赖）。其中transitive表示传递依赖（间接依赖）。</p>
+<p>transitive=true，等同于没有使用exclude排除依赖，每个包的依赖项都会被递归分析并添加进来。</p>
+<p>transitive=false，等同于用exclude排除依赖。</p>
+<h2 id="force强制使用某版本"><a href="#force强制使用某版本" class="headerlink" title="force强制使用某版本"></a>force强制使用某版本</h2><p>用法：force = true<br>作用：强制使用某个版本。出现冲突时，优先使用该版本解决。</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 强制使用 support-v4 26.1.0版本</span></span><br><span class="line">compile(<span class="string">&#x27;com.android.support:support-v4:26.1.0&#x27;</span>) &#123;</span><br><span class="line">   force = <span class="literal">true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="综合例子"><a href="#综合例子" class="headerlink" title="综合例子"></a>综合例子</h2><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">compile(<span class="string">&#x27;org.hibernate:hibernate:3.1&#x27;</span>) &#123;</span><br><span class="line">    <span class="comment">// 冲突时优先使用该版本</span></span><br><span class="line">    force = <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 依据构建名称排除</span></span><br><span class="line">    exclude <span class="attr">module:</span> <span class="string">&#x27;cglib&#x27;</span> </span><br><span class="line">    <span class="comment">// 依据组织名称排除</span></span><br><span class="line">    exclude <span class="attr">group:</span> <span class="string">&#x27;org.jmock&#x27;</span> </span><br><span class="line">    <span class="comment">// 依据组织名称+构件名称排除</span></span><br><span class="line">    exclude <span class="attr">group:</span> <span class="string">&#x27;org.unwanted&#x27;</span>, <span class="attr">module:</span> <span class="string">&#x27;iAmBuggy&#x27;</span> </span><br><span class="line"></span><br><span class="line">    <span class="comment">// 为本依赖关闭依赖传递特性</span></span><br><span class="line">    transitive = <span class="literal">false</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="api、implementation、compile、compileOnly、provided"><a href="#api、implementation、compile、compileOnly、provided" class="headerlink" title="api、implementation、compile、compileOnly、provided"></a><a target="_blank" rel="noopener" href="https://blog.csdn.net/yuzhiqiang_1993/article/details/78366985">api、implementation、compile、compileOnly、provided</a></h2><ul>
+<li><strong>implementation</strong>所依赖的库不会传递，只会在当前module中生效</li>
+</ul>
+<blockquote>
+<p> 比如：moduleA 用implementation依赖了 base库，moduleB依赖moduleA后想调用base库内方法是不行的。</p>
+</blockquote>
+<ul>
+<li><strong>api</strong>跟2.x版本的<strong>compile</strong>一样，具有“穿透性”，对其他module是<strong>可见的</strong></li>
+<li><strong>compileOnly</strong>跟2.x版本的<strong>provided</strong>一样。只在编译时有效，不会参与打包</li>
+</ul>
+<blockquote>
+<p>如果是自己创建的library给别人使用时，需要依赖 com.android.support的话，建议使用compileOnly，避免给使用者带来不便。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>2.x的gradle</th>
+<th></th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>compile</td>
+<td>api</td>
+<td>传递。对其他module可见</td>
+</tr>
+<tr>
+<td>porovided</td>
+<td>compileOnly</td>
+<td>不传递。不参与打包，只在编译时有效</td>
+</tr>
+<tr>
+<td></td>
+<td>implementation</td>
+<td>不传递。在当前module中生效</td>
+</tr>
+<tr>
+<td></td>
+<td>runtimeOnly</td>
+<td>会打到包中，运行时才有效。</td>
+</tr>
+<tr>
+<td></td>
+<td>testImplementation</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>androidTestImplementation</td>
+<td></td>
+</tr>
+<tr>
+<td>apt（在gradle2.2已过时）</td>
+<td>annotationProcessor</td>
+<td>自动化构建</td>
+</tr>
+</tbody></table>
+<h3 id="APK"><a href="#APK" class="headerlink" title="APK"></a>APK</h3><p>只会打包到apk文件中，而不参与编译，所以不能在代码中直接调用jar中的类或方法，否则在编译时会报错</p>
+<h3 id="Test-compile"><a href="#Test-compile" class="headerlink" title="Test compile"></a>Test compile</h3><p>Test compile 仅仅是针对单元<a target="_blank" rel="noopener" href="http://lib.csdn.net/base/softwaretest">测试</a>代码的编译编译以及最终打包测试apk时有效，而对正常的debug或者release apk包不起作用。</p>
+<h3 id="Debug-compile"><a href="#Debug-compile" class="headerlink" title="Debug compile"></a>Debug compile</h3><p>Debug compile 仅仅针对debug模式的编译和最终的debug apk打包。</p>
+<h3 id="Release-compile"><a href="#Release-compile" class="headerlink" title="Release compile"></a>Release compile</h3><p>Release compile 仅仅针对Release 模式的编译和最终的Release apk打包。</p>
+<h1 id="编译相关"><a href="#编译相关" class="headerlink" title="编译相关"></a>编译相关</h1><h2 id="命令行编译"><a href="#命令行编译" class="headerlink" title="命令行编译"></a>命令行编译</h2><figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">./gradlew</span> build</span><br></pre></td></tr></table></figure>
+
+<h2 id="加快gradle编译速度"><a href="#加快gradle编译速度" class="headerlink" title="加快gradle编译速度"></a>加快gradle编译速度</h2><h3 id="法1：更改AS配置"><a href="#法1：更改AS配置" class="headerlink" title="法1：更改AS配置"></a>法1：更改AS配置</h3><ol>
+<li><p>配置.gradle文件夹目录（开启Gradle单独守护线程）</p>
+<ul>
+<li><p>在windows系统的C:\Users\用户名.gradle目录下创建gradle.properties文件（有直接用），然后添加以下内容，添加之后会在所有的项目中生效（有内容则并入），添加后全局生效</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">org.gradle.daemon</span>=<span class="literal">true</span>  // 开启线程守护，第一次编译时开线程，之后就不会再开了</span><br><span class="line"><span class="attr">org.gradle.jvmargs</span>=-Xmx2048m -XX:MaxPermSize=<span class="number">512</span>m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-<span class="number">8</span>  // 配置编译时的虚拟机大小</span><br><span class="line"><span class="attr">org.gradle.parallel</span>=<span class="literal">true</span>  // 开启并行编译，相当于多条线程再走</span><br><span class="line"><span class="attr">org.gradle.configureondemand</span>=<span class="literal">true</span>   启用新的孵化模式</span><br></pre></td></tr></table></figure></li>
+<li><p>还可以在当前项目中的gradle.properties文件中添加以上内容，则只会在当前项目生效</p>
+</li>
+</ul>
+</li>
+<li><p>修改android studio配置</p>
+<ul>
+<li><p>Ctrl+Alt+S打开设置选项卡，找到Gradle选项，选中offline work，点击apply，如下</p>
+<p><code>Build，execution,Deploment--&gt;Gradle</code></p>
+<ol>
+<li><p>勾选Use local gradle distribution (Gradle home: 填入gradle本地路径)</p>
+</li>
+<li><p>勾选Offline work</p>
+</li>
+</ol>
+</li>
+<li><p><code>Build,execution,Deploment--&gt;Compiler</code></p>
+<ol>
+<li>勾选Compile independent modules in parallel…</li>
+<li>Command-line Options：–offline</li>
+<li>勾选Configure on demand</li>
+</ol>
+</li>
+<li><p>设置网络代理，增加访问网络速度</p>
+</li>
+<li><p>在具体开发module的build.gradle 文件中添加</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">dexOptions &#123;</span><br><span class="line">  <span class="regexp">//</span>使用增量模式构建</span><br><span class="line">  incremental true</span><br><span class="line">  <span class="regexp">//</span>最大堆内存</span><br><span class="line">  javaMaxHeapSize <span class="string">&quot;8g&quot;</span></span><br><span class="line">  <span class="regexp">//</span>是否支持大工程模式</span><br><span class="line">  jumboMode = true</span><br><span class="line">  <span class="regexp">//</span>预编译</span><br><span class="line">  preDexLibraries = true</span><br><span class="line">  <span class="regexp">//</span>线程数</span><br><span class="line">  threadCount = <span class="number">8</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p>如果编译还是很慢的话，那只能添加内存条和固态硬盘了</p>
+</li>
+</ol>
+<h3 id="法2：利用命令行脚本的方式编译（推荐）"><a href="#法2：利用命令行脚本的方式编译（推荐）" class="headerlink" title="法2：利用命令行脚本的方式编译（推荐）"></a>法2：利用命令行脚本的方式编译（推荐）</h3><ol>
+<li>在目标项目的根节点下创建文件c.bat（名字尽量短）–&gt;构建脚本，内容：</li>
+</ol>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">@Echo</span> Off</span><br><span class="line"></span><br><span class="line">if /i <span class="string">&quot;%1&quot;</span>==<span class="string">&quot;&quot;</span> goto <span class="symbol">:default</span></span><br><span class="line">if /i <span class="string">&quot;%1&quot;</span>==<span class="string">&quot;i&quot;</span> goto <span class="symbol">:install</span></span><br><span class="line">if /i <span class="string">&quot;%1&quot;</span>==<span class="string">&quot;u&quot;</span> goto <span class="symbol">:uninstall</span></span><br><span class="line"></span><br><span class="line">::执行实际的命令</span><br><span class="line">goto <span class="symbol">:raw</span></span><br><span class="line"></span><br><span class="line">::无参数情况下的默认执行命令</span><br><span class="line"><span class="symbol">:default</span></span><br><span class="line">gradlew iD</span><br><span class="line">goto <span class="symbol">:eof</span></span><br><span class="line"></span><br><span class="line">::实际命令</span><br><span class="line"><span class="symbol">:raw</span></span><br><span class="line">gradlew %<span class="number">1</span></span><br><span class="line">goto <span class="symbol">:eof</span></span><br><span class="line"></span><br><span class="line">::安装所有Debug版本的APK</span><br><span class="line"><span class="symbol">:install</span></span><br><span class="line">gradlew iD</span><br><span class="line">goto <span class="symbol">:eof</span></span><br><span class="line"></span><br><span class="line">::卸载所有版本的APK</span><br><span class="line"><span class="symbol">:uninstall</span></span><br><span class="line">gradlew uA</span><br><span class="line">goto <span class="symbol">:eof</span></span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>在AS控制台的命令行Terminal窗口输入刚才的文件名，回车，编译成功，然后打开应用（双击这个bat文件也可以运行）</li>
+</ol>
+<h1 id="Gradle打包的一些设置"><a href="#Gradle打包的一些设置" class="headerlink" title="Gradle打包的一些设置"></a>Gradle打包的一些设置</h1><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">buildTypes&#123;</span><br><span class="line">    xdm &#123;</span><br><span class="line">        minifyEnabled !debug_able <span class="comment">//是否开启混淆。true开启</span></span><br><span class="line">        zipAlignEnabled <span class="literal">true</span><span class="comment">//zipAlign优化</span></span><br><span class="line">        shrinkResources <span class="literal">false</span></span><br><span class="line">        debuggable debug_able <span class="comment">//是否开启断点模式。true开启</span></span><br><span class="line">        proguardFiles getDefaultProguardFile(<span class="string">&#x27;proguard-android.txt&#x27;</span>), <span class="string">&#x27;proguard-project.txt&#x27;</span>,</span><br><span class="line">            <span class="string">&#x27;../Pldroidplayer/proguard-rules.pro&#x27;</span>, <span class="string">&#x27;../AmapCenter/proguard-rules.pro&#x27;</span>,</span><br><span class="line">            <span class="string">&#x27;../AliSDK/proguard-rules.pro&#x27;</span>, <span class="string">&#x27;../UmengCenter/proguard-rules.pro&#x27;</span>,</span><br><span class="line">            <span class="string">&#x27;../RongCloudSDK/proguard-rules.pro&#x27;</span>, <span class="string">&#x27;../UdeskSDK/proguard-rules.pro&#x27;</span></span><br><span class="line">        <span class="comment">// 跑正式版/测试版的时候记得注意isAssembleOfficial 以免签名错误</span></span><br><span class="line">        signingConfig isAssembleOfficial?signingConfigs.xdmReleaseConfig:signingConfigs.xdmDebugConfig</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="打包时动态更改versionName、versionCode、apk名称"><a href="#打包时动态更改versionName、versionCode、apk名称" class="headerlink" title="打包时动态更改versionName、versionCode、apk名称"></a>打包时动态更改versionName、versionCode、apk名称</h2><p>app的<code>build.gradle</code>中：</p>
+<figure class="highlight qml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//在buildTypes中调用动态修改的方法--》在android&#123;这里&#125; 内调用即可</span></span><br><span class="line"><span class="title">applicationVariants.all</span>&#123;<span class="built_in">variant</span> -&gt;</span><br><span class="line">    setVersionNameAndFileName(<span class="built_in">variant</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//与buildTypes并列，创建动态修改的方法</span></span><br><span class="line"><span class="comment">//在打包的时候自动更改versionName和versionCode --begin</span></span><br><span class="line"><span class="keyword">def</span> setVersionNameAndFileName(variant) &#123;</span><br><span class="line">    <span class="comment">//更改apk名称</span></span><br><span class="line">    variant.outputs.each &#123; output -&gt;</span><br><span class="line">        <span class="keyword">def</span> outputFile = output.outputFile</span><br><span class="line">        <span class="keyword">if</span> (outputFile != <span class="literal">null</span></span><br><span class="line">                &amp;&amp; (outputFile.name.contains(<span class="string">&quot;release&quot;</span>) || outputFile.name.contains(<span class="string">&quot;Release&quot;</span>))) &#123;</span><br><span class="line">            <span class="keyword">def</span> name = variant.mergedFlavor.name</span><br><span class="line">            <span class="keyword">if</span> (<span class="string">&quot;main&quot;</span>.equals(name) || <span class="string">&quot;&quot;</span>.equals(name)) &#123;</span><br><span class="line">                name = <span class="string">&quot;ldy&quot;</span></span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">def</span> fileName = <span class="string">&quot;$&#123;name&#125;_v$&#123;variant.mergedFlavor.versionName&#125;.$&#123;getBuildTime(&quot;</span>MMdd<span class="string">&quot;)&#125;_$&#123;variant.buildType.getName()&#125;.apk&quot;</span></span><br><span class="line">            output.outputFile = <span class="keyword">new</span> File(output.outputFile.parent, fileName)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//设置versionName</span></span><br><span class="line">    variant.mergedFlavor.versionName = variant.mergedFlavor.versionName  + <span class="string">&quot;.&quot;</span> + getBuildTime(<span class="string">&quot;MMdd&quot;</span>)</span><br><span class="line">    <span class="comment">//设置versionCode</span></span><br><span class="line">    variant.mergedFlavor.versionCode = variant.mergedFlavor.versionCode * <span class="number">10000</span> + getBuildTime(<span class="string">&quot;MMdd&quot;</span>).toInteger()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> getBuildTime(String formatStr) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> Date().format(formatStr)</span><br><span class="line">&#125;<span class="comment">//在打包的时候自动更改versionName和versionCode --end</span></span><br></pre></td></tr></table></figure>
+
+<p>升级后=》gradle4.4，build gradle 3.1.3</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">applicationVariants.all &#123; variant -&gt;</span><br><span class="line">    variant.outputs.all &#123; output -&gt;</span><br><span class="line">        <span class="keyword">def</span> outputFile = output.outputFile</span><br><span class="line">         <span class="keyword">if</span> (outputFile != <span class="literal">null</span></span><br><span class="line">                &amp;&amp; (outputFile.name.contains(<span class="string">&quot;release&quot;</span>) || outputFile.name.contains(<span class="string">&quot;Release&quot;</span>))) &#123;</span><br><span class="line">            <span class="keyword">def</span> name = variant.mergedFlavor.name</span><br><span class="line">            <span class="keyword">if</span> (<span class="string">&quot;main&quot;</span>.equals(name) || <span class="string">&quot;&quot;</span>.equals(name)) &#123;</span><br><span class="line">                name = <span class="string">&quot;ldy&quot;</span></span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">def</span> fileName = <span class="string">&quot;$&#123;name&#125;_v$&#123;variant.mergedFlavor.versionName&#125;.$&#123;getBuildTime(&quot;</span>MMdd<span class="string">&quot;)&#125;_$&#123;variant.buildType.getName()&#125;.apk&quot;</span></span><br><span class="line">            outputFileName = fileName</span><br><span class="line">        &#125;</span><br><span class="line">        output.versionNameOverride = variant.mergedFlavor.versionName + <span class="string">&quot;.&quot;</span> + getBuildTime(<span class="string">&quot;MMdd&quot;</span>)</span><br><span class="line">        output.versionCodeOverride = variant.mergedFlavor.versionCode * <span class="number">10000</span> + getBuildTime(<span class="string">&quot;MMdd&quot;</span>).toInteger()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="打包时动态更改aar名称"><a href="#打包时动态更改aar名称" class="headerlink" title="打包时动态更改aar名称"></a>打包时动态更改aar名称</h2><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> view_versionCode = <span class="number">1</span></span><br><span class="line"><span class="keyword">def</span> view_versionName = <span class="string">&quot;1.0.1$&#123;new Date().format(&quot;</span>YYYYMMdd<span class="string">&quot;)&#125;&quot;</span></span><br><span class="line">android.libraryVariants.all&#123; variant -&gt;</span><br><span class="line">	variant.outputs.all&#123; output -&gt;</span><br><span class="line">		<span class="keyword">def</span> f = output.outputFileName</span><br><span class="line">		<span class="keyword">if</span>(f != <span class="literal">null</span> &amp;&amp; f.endsWith(<span class="string">&#x27;.aar&#x27;</span>))&#123;</span><br><span class="line">			<span class="keyword">def</span> fileName = <span class="string">&quot;$&#123;variant.name&#125;Tool-v$&#123;view_versionName&#125;.aar&quot;</span></span><br><span class="line">			output.outputFileName = fileName</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="打包时动态更改jar包"><a href="#打包时动态更改jar包" class="headerlink" title="打包时动态更改jar包"></a>打包时动态更改jar包</h2><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">task makeJar(<span class="attr">type:</span> Copy)&#123;</span><br><span class="line">	android.libraryVariants.all&#123;variant-&gt;</span><br><span class="line">		<span class="comment">//删除旧的jar包</span></span><br><span class="line">		delete <span class="string">&#x27;build/libs/&#x27;</span>+<span class="string">&quot;$&#123;variant.name&#125;Tool_v$&#123;view_versionName&#125;&quot;</span>+<span class="string">&#x27;.jar&#x27;</span></span><br><span class="line">		<span class="comment">//原地址</span></span><br><span class="line">		from(<span class="string">&#x27;build/intermediates/packaged-classes/release/&#x27;</span>)</span><br><span class="line">		<span class="comment">//导出jar包的地址</span></span><br><span class="line">		into(<span class="string">&#x27;build/libs/&#x27;</span>)</span><br><span class="line">		<span class="comment">//包含的jar包</span></span><br><span class="line">		include(<span class="string">&#x27;classes.jar&#x27;</span>)</span><br><span class="line">		<span class="comment">//重命名jar包为mysdk</span></span><br><span class="line">		rename(<span class="string">&#x27;classes.jar&#x27;</span>, <span class="string">&quot;$&#123;variant.name&#125;Tool_v$&#123;view_versionName&#125;&quot;</span>+<span class="string">&#x27;.jar&#x27;</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="不同buildType使用不同applicationId"><a href="#不同buildType使用不同applicationId" class="headerlink" title="不同buildType使用不同applicationId"></a>不同buildType使用不同applicationId</h2><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/fly_yuge/article/details/52163983">参考链接</a></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">defaultConfig &#123;</span><br><span class="line">　　applicationId <span class="string">&quot;cn.ks.yun&quot;</span></span><br><span class="line">&#125;</span><br><span class="line">buildTypes &#123;</span><br><span class="line">　　release &#123;</span><br><span class="line">　　　　minifyEnabled <span class="literal">true</span></span><br><span class="line">　　　　shrinkResources <span class="literal">true</span></span><br><span class="line">　　　　proguardFile <span class="string">&#x27;proguard-rules.pro&#x27;</span></span><br><span class="line">   &#125;</span><br><span class="line">　　debug &#123;</span><br><span class="line">　　　　 applicationIdSuffix <span class="string">&quot;test&quot;</span></span><br><span class="line">   &#125;</span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+<p>其中“test”加不加“.”最终debug的applicationId都会是”cn.ks.yun.test“</p>
+<p>即也可以写成</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">buildTypes&#123;</span><br><span class="line">	...</span><br><span class="line">	debug&#123;</span><br><span class="line">		applicationIdSuffix <span class="string">&quot;.test&quot;</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="为了减少渠道在productFlavors和buildTypes中可加开关"><a href="#为了减少渠道在productFlavors和buildTypes中可加开关" class="headerlink" title="为了减少渠道在productFlavors和buildTypes中可加开关"></a>为了减少渠道在productFlavors和buildTypes中可加开关</h2><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//app的build.gradle最上方</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//加载资源.在本地的 product.properties 文件设置了一些参数，从这里获取</span></span><br><span class="line">Properties properties = <span class="keyword">new</span> Properties()</span><br><span class="line">InputStream inputStream = project.rootProject.file(<span class="string">&#x27;laiDianYi/ldy_product.properties&#x27;</span>).newDataInputStream()</span><br><span class="line">properties.load(inputStream)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> isReleaseParam = properties.getProperty(<span class="string">&quot;isReleaseParam&quot;</span>);</span><br><span class="line">isReleaseParam = Boolean.parseBoolean(isReleaseParam);</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//ldy_product.properties中</span></span><br><span class="line"><span class="comment">//这个参数决定使用的是release参数还是test参数</span></span><br><span class="line">isReleaseParam = <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//app的build.gradle的android&#123;&#125;内</span></span><br><span class="line">productFlavors &#123;</span><br><span class="line">    client &#123;</span><br><span class="line">        versionCode Integer.parseInt(properties.getProperty(<span class="string">&#x27;APP_VERSION_CODE&#x27;</span>))</span><br><span class="line">        versionName properties.getProperty(<span class="string">&#x27;APP_VERSION&#x27;</span>)</span><br><span class="line">        resValue <span class="string">&quot;string&quot;</span>, <span class="string">&quot;BUSINESS_ID&quot;</span>, properties.getProperty(<span class="string">&#x27;BUSINESS_ID&#x27;</span>)</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 动态修改 常量 字段</span></span><br><span class="line">        buildConfigField <span class="string">&quot;String&quot;</span>, <span class="string">&quot;LDY_APP_VERSION&quot;</span>, properties.getProperty(<span class="string">&#x27;LDY_APP_VERSION&#x27;</span>)</span><br><span class="line">        buildConfigField <span class="string">&quot;boolean&quot;</span>, <span class="string">&quot;DEBUG_RELEASE&quot;</span>, properties.getProperty(<span class="string">&#x27;DEBUG_RELEASE&#x27;</span>)</span><br><span class="line">        buildConfigField <span class="string">&quot;int&quot;</span>, <span class="string">&quot;API_SETTING&quot;</span>, properties.getProperty(<span class="string">&#x27;API_SETTING&#x27;</span>)</span><br><span class="line">        buildConfigField <span class="string">&quot;int&quot;</span>, <span class="string">&quot;H5_SETTING&quot;</span>, properties.getProperty(<span class="string">&#x27;H5_SETTING&#x27;</span>)</span><br><span class="line">        buildConfigField <span class="string">&quot;boolean&quot;</span>, <span class="string">&quot;UPDATE_RELEASE&quot;</span>, properties.getProperty(<span class="string">&#x27;UPDATE_RELEASE&#x27;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 每个环境包名不同release</span></span><br><span class="line">        applicationId properties.getProperty(isReleaseParam ? <span class="string">&#x27;APPLICATION_ID&#x27;</span>: <span class="string">&#x27;APPLICATION_ID_DEBUG&#x27;</span>)</span><br><span class="line">        println(<span class="string">&quot;applicationId == $&#123;isReleaseParam&#125; + $&#123;applicationId&#125;&quot;</span>)</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 动态添加 string.xml 字段；</span></span><br><span class="line">        <span class="comment">// 注意，这里是添加，在 string.xml 不能有这个字段，会重名！！！</span></span><br><span class="line">        resValue <span class="string">&quot;string&quot;</span>, <span class="string">&quot;app_name&quot;</span>, <span class="keyword">new</span> String(properties.getProperty(isReleaseParam ? <span class="string">&#x27;LDY_APP_NAME&#x27;</span> : <span class="string">&#x27;LDY_APP_NAME_DEBUG&#x27;</span>).getBytes(<span class="string">&quot;ISO8859-1&quot;</span>), <span class="string">&quot;UTF-8&quot;</span>)</span><br><span class="line"></span><br><span class="line">        manifestPlaceholders =</span><br><span class="line">            [<span class="attr">app_icon            :</span> <span class="string">&quot;@mipmap/ic_launcher&quot;</span>,</span><br><span class="line">             <span class="attr">UMENG_CHANNEL_VALUE :</span> name,</span><br><span class="line">             <span class="attr">WEICHAT_APPKEY      :</span> <span class="string">&quot;\\&quot;</span> + properties.getProperty(isReleaseParam ? <span class="string">&#x27;WEICHAT_APPKEY&#x27;</span> : <span class="string">&#x27;WEICHAT_APPKEY_DEBUG&#x27;</span>),</span><br><span class="line">             <span class="attr">WEICHAT_SECRET      :</span> <span class="string">&quot;\\&quot;</span> + properties.getProperty(isReleaseParam ? <span class="string">&#x27;WEICHAT_SECRET&#x27;</span> : <span class="string">&#x27;WEICHAT_SECRET_DEBUG&#x27;</span>),</span><br><span class="line">             <span class="attr">QQ_APPKEY           :</span> <span class="string">&quot;\\&quot;</span> + properties.getProperty(isReleaseParam ? <span class="string">&#x27;QQ_APPKEY&#x27;</span> : <span class="string">&#x27;QQ_APPKEY_DEBUG&#x27;</span>),</span><br><span class="line">             <span class="attr">QZ_APPID            :</span> <span class="string">&quot;\\&quot;</span> + properties.getProperty(isReleaseParam ? <span class="string">&#x27;QZ_APPID&#x27;</span> : <span class="string">&#x27;QZ_APPID_DEBUG&#x27;</span>),</span><br><span class="line">             <span class="attr">XL_APPKEY           :</span> <span class="string">&quot;\\&quot;</span> + properties.getProperty(isReleaseParam ? <span class="string">&#x27;XL_APPKEY&#x27;</span> : <span class="string">&#x27;XL_APPKEY_DEBUG&#x27;</span>),</span><br><span class="line">             <span class="attr">XL_SECRET           :</span> <span class="string">&quot;\\&quot;</span> + properties.getProperty(isReleaseParam ? <span class="string">&#x27;XL_SECRET&#x27;</span> : <span class="string">&#x27;XL_SECRET_DEBUG&#x27;</span>),</span><br><span class="line">             <span class="symbol">OPEN_GUIDE_IMAGE_NUM:</span> <span class="string">&quot;\\&quot;</span> + properties.getProperty(<span class="string">&#x27;OPEN_GUIDE_IMAGE_NUM&#x27;</span>),</span><br><span class="line">             <span class="attr">UMENG_APPKEY        :</span> <span class="string">&quot;\\&quot;</span> + properties.getProperty(isReleaseParam ? <span class="string">&#x27;UMENG_APPKEY&#x27;</span> : <span class="string">&#x27;UMENG_APPKEY_DEBUG&#x27;</span>),</span><br><span class="line">             <span class="symbol">UMENG_MESSAGE_SECRET:</span> <span class="string">&quot;\\&quot;</span> + properties.getProperty(isReleaseParam ? <span class="string">&#x27;UMENG_MESSAGE_SECRET&#x27;</span> : <span class="string">&#x27;UMENG_MESSAGE_SECRET_DEBUG&#x27;</span>),</span><br><span class="line">             <span class="attr">ALIAS_TYPE          :</span> <span class="string">&quot;\\&quot;</span> + properties.getProperty(isReleaseParam ? <span class="string">&#x27;ALIAS_TYPE&#x27;</span> : <span class="string">&#x27;ALIAS_TYPE_DEBUG&#x27;</span>),</span><br><span class="line">             <span class="attr">GAODE_KEY           :</span> <span class="string">&quot;\\&quot;</span> + properties.getProperty(isReleaseParam ? <span class="string">&#x27;GAODE_KEY&#x27;</span> : <span class="string">&#x27;GAODE_KEY_DEBUG&#x27;</span>),</span><br><span class="line">             <span class="attr">BAIDU_MOB_AD_KEY    :</span> <span class="string">&quot;\\&quot;</span> + properties.getProperty(isReleaseParam ? <span class="string">&#x27;BAIDU_MOB_AD_KEY&#x27;</span> : <span class="string">&#x27;BAIDU_MOB_AD_KEY_DEBUG&#x27;</span>)</span><br><span class="line">            ]</span><br><span class="line">        <span class="comment">//这四种输出语句，输出的结果一样</span></span><br><span class="line">        println (<span class="string">&quot;ALIAS_TYPE===============$&#123;properties.getProperty(&#x27;ALIAS_TYPE&#x27;)&#125;&quot;</span>)</span><br><span class="line">        println <span class="string">&quot;ALIAS_TYPE===============$&#123;properties.getProperty(&#x27;ALIAS_TYPE&#x27;)&#125;&quot;</span></span><br><span class="line">        println(<span class="string">&quot;ALIAS_TYPE===============&quot;</span> +properties.getProperty(<span class="string">&#x27;ALIAS_TYPE&#x27;</span>))</span><br><span class="line">        println <span class="string">&quot;ALIAS_TYPE===============&quot;</span> +properties.getProperty(<span class="string">&#x27;ALIAS_TYPE&#x27;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//app的build.gradle的android&#123;&#125;内</span></span><br><span class="line">buildTypes&#123;</span><br><span class="line">    release &#123;</span><br><span class="line">        ...</span><br><span class="line">        signingConfig isReleaseParam ? signingConfigs.releaseConfig : signingConfigs.zczgtestConfig</span><br><span class="line">    &#125;</span><br><span class="line">    debug &#123;</span><br><span class="line">        debuggable <span class="literal">true</span></span><br><span class="line">        ...</span><br><span class="line">        signingConfig isReleaseParam ? signingConfigs.debugConfig : signingConfigs.zczgtestConfig</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="自动打包上传蒲公英"><a href="#自动打包上传蒲公英" class="headerlink" title="自动打包上传蒲公英"></a><a target="_blank" rel="noopener" href="https://juejin.im/post/6844903798717022216">自动打包上传蒲公英</a></h1><p>目标是一行命令完成：</p>
+<ol>
+<li>自动编译API上传到蒲公英</li>
+<li>上传完成后输出二维码地址和版本号</li>
+<li>支持多环境包上传</li>
+</ol>
+<h2 id="自动上传蒲公英"><a href="#自动上传蒲公英" class="headerlink" title="自动上传蒲公英"></a>自动上传蒲公英</h2><p>直接使用蒲公英的上传<a target="_blank" rel="noopener" href="https://www.pgyer.com/doc/view/api#uploadApp">API</a>，在Gradle中封装如下方法：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">def</span> uploadPGY(String filePath) &#123;</span><br><span class="line">    <span class="keyword">def</span> stdout = <span class="keyword">new</span> ByteArrayOutputStream()</span><br><span class="line">    exec &#123;</span><br><span class="line">        <span class="comment">//curl是一种命令行工具，作用是发出网络请求，然后得到和提取数据，显示在“标准输出”（stdout）上面</span></span><br><span class="line">        executable = <span class="string">&#x27;curl&#x27;</span></span><br><span class="line">        args = [<span class="string">&#x27;-F&#x27;</span>, <span class="string">&quot;file=@$&#123;filePath&#125;&quot;</span>, <span class="string">&#x27;-F&#x27;</span>, <span class="string">&quot;_api_key=$&#123;rootProject.ext.pgy[&quot;</span>apiKey<span class="string">&quot;]&#125;&quot;</span>, rootProject.ext.pgy[<span class="string">&quot;uploadUrl&quot;</span>]]</span><br><span class="line">        standardOutput = stdout</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//stout用来获取网络请求返回的数据流，我们解析成JSON对象后打印出二维码地址和版本号信息。</span></span><br><span class="line">    String output = stdout.toString()</span><br><span class="line">    <span class="keyword">def</span> parsedJson = <span class="keyword">new</span> groovy.json.JsonSlurper().parseText(output)</span><br><span class="line">    println parsedJson.data.buildQRCodeURL</span><br><span class="line">    println <span class="string">&quot;版本号：&quot;</span> + parsedJson.data.buildVersion</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>将蒲公英的<code>apiKey</code>和<code>uploadUrl</code>放在<code>config.gradle</code>中统一管理</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">ext&#123;</span><br><span class="line">    pgy = [</span><br><span class="line">        <span class="symbol">apiKey:</span> <span class="string">&quot;xxxxxxxxxxx&quot;</span>,</span><br><span class="line">        <span class="symbol">uploadUrl:</span> <span class="string">&quot;https://www.pgyer.com/apiv2/app/upload&quot;</span></span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="实现不同环境包上传"><a href="#实现不同环境包上传" class="headerlink" title="实现不同环境包上传"></a>实现不同环境包上传</h2><p>正式环境、测试环境和超管环境。每个环境的apk文件名不同。</p>
+<h3 id="统一文件命名规则"><a href="#统一文件命名规则" class="headerlink" title="统一文件命名规则"></a>统一文件命名规则</h3><p><code>config.gradle</code>中增加版本信息</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">ext&#123;</span><br><span class="line">    pgy = [<span class="attr">apiKey   :</span> <span class="string">&quot;xxxxxxxxxxx&quot;</span>,</span><br><span class="line">           <span class="symbol">uploadUrl:</span> <span class="string">&quot;https://www.pgyer.com/apiv2/app/upload&quot;</span></span><br><span class="line">          ]</span><br><span class="line"></span><br><span class="line">    android = [<span class="attr">compileSdkVersion:</span> <span class="number">28</span>,</span><br><span class="line">               <span class="symbol">buildToolsVersion:</span> <span class="string">&quot;28.0.3&quot;</span>,</span><br><span class="line">               <span class="attr">minSdkVersion    :</span> <span class="number">16</span>,</span><br><span class="line">               <span class="attr">targetSdkVersion :</span> <span class="number">28</span>,</span><br><span class="line">               <span class="attr">versionCode      :</span> <span class="number">1</span>,</span><br><span class="line">               <span class="attr">versionName      :</span> <span class="string">&quot;1.0.0&quot;</span></span><br><span class="line">              ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在根目录<code>build.gradle</code>中增加获取<code>getApkName</code>方法</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> getTestVersionName(String suffix) &#123;</span><br><span class="line">    <span class="keyword">def</span> testVersion = <span class="string">&quot;001&quot;</span></span><br><span class="line">    <span class="keyword">if</span> (suffix == <span class="literal">null</span> || suffix.isEmpty()) &#123;</span><br><span class="line">        <span class="keyword">return</span> String.format(<span class="string">&quot;%s.%s&quot;</span>, rootProject.ext.android[<span class="string">&quot;versionName&quot;</span>], testVersion)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> String.format(<span class="string">&quot;%s.%s.%s&quot;</span>, rootProject.ext.android[<span class="string">&quot;versionName&quot;</span>], testVersion, suffix)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> getApkName(String versionName) &#123;</span><br><span class="line">    <span class="keyword">return</span> String.format(<span class="string">&quot;我是一个包-v%s.apk&quot;</span>, versionName)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在Application工程的<code>build.gradle</code>中修改apk文件名</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">productFlavors &#123;</span><br><span class="line">    offline &#123;</span><br><span class="line">        buildConfigField <span class="string">&quot;String&quot;</span>, <span class="string">&quot;DOMAIN_NAME&quot;</span>, <span class="string">&quot;\&quot;https://offline.domain.com/\&quot;&quot;</span></span><br><span class="line">        versionName getTestVersionName(<span class="string">&quot;offline&quot;</span>) <span class="comment">//修改 versionName</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    online &#123;</span><br><span class="line">        buildConfigField <span class="string">&quot;String&quot;</span>, <span class="string">&quot;DOMAIN_NAME&quot;</span>, <span class="string">&quot;\&quot;https://online.domain.com/\&quot;&quot;</span></span><br><span class="line">        versionName rootProject.ext.android[<span class="string">&quot;versionName&quot;</span>]</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    admin &#123;</span><br><span class="line">        buildConfigField <span class="string">&quot;String&quot;</span>, <span class="string">&quot;DOMAIN_NAME&quot;</span>, <span class="string">&quot;\&quot;https://admin.domain.com/\&quot;&quot;</span></span><br><span class="line">        versionName versionName getTestVersionName(<span class="string">&quot;管理员&quot;</span>) <span class="comment">//修改 versionName</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">android.applicationVariants.all &#123; variant -&gt;</span><br><span class="line">    variant.outputs.all &#123;</span><br><span class="line">        outputFileName = getApkName(variant.versionName)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="实现多环境上传"><a href="#实现多环境上传" class="headerlink" title="实现多环境上传"></a>实现多环境上传</h3><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> offlineFile = <span class="string">&quot;$&#123;projectDir.absolutePath&#125;/build/outputs/apk/offline/release/$&#123;getApkName(getTestVersionName(&quot;</span>offline<span class="string">&quot;))&#125;&quot;</span></span><br><span class="line"><span class="keyword">def</span> adminFile = <span class="string">&quot;$&#123;projectDir.absolutePath&#125;/build/outputs/apk/admin/release/$&#123;getApkName(getTestVersionName(&quot;</span>管理员<span class="string">&quot;))&#125;&quot;</span></span><br><span class="line"><span class="keyword">def</span> onlineFile = <span class="string">&quot;$&#123;projectDir.absolutePath&#125;/build/outputs/apk/online/release/$&#123;getApkName(rootProject.ext.android[&quot;</span>versionName<span class="string">&quot;])&#125;&quot;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 执行 “uploadOfflineApk” 命令自动打测试服包，并上传到蒲公英</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">task uploadOfflineApk(<span class="attr">dependsOn:</span> <span class="string">&#x27;assembleOfflineRelease&#x27;</span>) &#123;</span><br><span class="line">    group = <span class="string">&quot;publish&quot;</span></span><br><span class="line">    doLast &#123;</span><br><span class="line">        uploadPGY(offlineFile)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 执行 “uploadOnlineApk” 命令自动打正式服包，并上传到蒲公英</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">task uploadOnlineApk(<span class="attr">dependsOn:</span> <span class="string">&#x27;assembleOnlineRelease&#x27;</span>) &#123;</span><br><span class="line">    group = <span class="string">&quot;publish&quot;</span></span><br><span class="line">    doLast &#123;</span><br><span class="line">        uploadPGY(onlineFile)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 执行 “uploadAdminApk” 命令自动打超管服包，并上传到蒲公英</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">task uploadAdminApk(<span class="attr">dependsOn:</span> <span class="string">&#x27;assembleAdminRelease&#x27;</span>) &#123;</span><br><span class="line">    group = <span class="string">&quot;publish&quot;</span></span><br><span class="line">    doLast &#123;</span><br><span class="line">        uploadPGY(adminFile)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>一行命令打3个包上传：</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">./gradlew</span> uploadOfflineApk uploadOnlineApk uploadAdminApk</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="对apk包进行加固再上传到蒲公英"><a href="#对apk包进行加固再上传到蒲公英" class="headerlink" title="对apk包进行加固再上传到蒲公英"></a><a target="_blank" rel="noopener" href="https://juejin.im/post/6844903805901881357">对apk包进行加固再上传到蒲公英</a></h1><h2 id="自动加固"><a href="#自动加固" class="headerlink" title="自动加固"></a>自动加固</h2><p>我们的目标是全自动化，并且在每个团队成员的电脑上都能够实现一行命令执行，不需要做额外的配置。</p>
+<h3 id="自动下载360加固程序"><a href="#自动下载360加固程序" class="headerlink" title="自动下载360加固程序"></a>自动下载360加固程序</h3><p>完整的<code>config.gradle</code>配置：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">ext &#123;</span><br><span class="line">    <span class="comment">//签名文件配置</span></span><br><span class="line">    signing = [<span class="attr">keyAlias     :</span> <span class="string">&#x27;xxxxx&#x27;</span>,</span><br><span class="line">               <span class="attr">keyPassword  :</span> <span class="string">&#x27;xxxxx&#x27;</span>,</span><br><span class="line">               <span class="attr">storeFile    :</span> <span class="string">&#x27;../sign.keystore&#x27;</span>,</span><br><span class="line">               <span class="symbol">storePassword:</span> <span class="string">&#x27;xxxxxx&#x27;</span>]</span><br><span class="line"></span><br><span class="line">    <span class="comment">//蒲公英配置</span></span><br><span class="line">    pgy = [<span class="attr">apiKey   :</span> <span class="string">&quot;xxxx&quot;</span>,</span><br><span class="line">           <span class="symbol">uploadUrl:</span> <span class="string">&quot;https://www.pgyer.com/apiv2/app/upload&quot;</span>]</span><br><span class="line"></span><br><span class="line">    <span class="comment">//360加固配置</span></span><br><span class="line">    jiagu = [<span class="attr">name             :</span> <span class="string">&#x27;xxxxx&#x27;</span>,</span><br><span class="line">             <span class="attr">password         :</span> <span class="string">&#x27;xxxxx&#x27;</span>,</span><br><span class="line">             <span class="attr">zipPath          :</span> <span class="string">&quot;../jiagu/360jiagu.zip&quot;</span>,</span><br><span class="line">             <span class="attr">unzipPath        :</span> <span class="string">&quot;../jiagu/360jiagubao/&quot;</span>,</span><br><span class="line">             <span class="attr">jarPath          :</span> <span class="string">&#x27;../jiagu/360jiagubao/jiagu/jiagu.jar&#x27;</span>,</span><br><span class="line">             <span class="symbol">channelConfigPath:</span> <span class="string">&#x27;../jiagu/Channel.txt&#x27;</span>,</span><br><span class="line">             <span class="attr">jiagubao_mac     :</span> <span class="string">&quot;http://down.360safe.com/360Jiagu/360jiagubao_mac.zip&quot;</span>,</span><br><span class="line">             <span class="attr">jiagubao_windows :</span> <span class="string">&quot;http://down.360safe.com/360Jiagu/360jiagubao_windows_64.zip&quot;</span>,</span><br><span class="line">            ]</span><br><span class="line"></span><br><span class="line">    android = [<span class="attr">compileSdkVersion:</span> <span class="number">28</span>,</span><br><span class="line">               <span class="attr">minSdkVersion    :</span> <span class="number">19</span>,</span><br><span class="line">               <span class="attr">targetSdkVersion :</span> <span class="number">28</span>]</span><br><span class="line"></span><br><span class="line">    <span class="comment">//版本号管理</span></span><br><span class="line">    APP1_VERSION_NAME = <span class="string">&quot;2.0.2&quot;</span></span><br><span class="line">    APP1_TEST_NUM = <span class="string">&quot;0001&quot;</span></span><br><span class="line">    APP2_VERSION_NAME = <span class="string">&quot;1.0.5&quot;</span></span><br><span class="line">    APP2_TEST_NUM = <span class="string">&quot;0005&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>新建<code>jiagu.gradle</code>文件</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> org.apache.tools.ant.taskdefs.condition.Os</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> downloadUrl = Os.isFamily(Os.FAMILY_WINDOWS) ? rootProject.ext.jiagu[<span class="string">&quot;jiagubao_windows&quot;</span>] : rootProject.ext.jiagu[<span class="string">&quot;jiagubao_mac&quot;</span>]</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> zipPath = rootProject.ext.jiagu[<span class="string">&quot;zipPath&quot;</span>]</span><br><span class="line"><span class="keyword">def</span> unzipPath = rootProject.ext.jiagu[<span class="string">&quot;unzipPath&quot;</span>]</span><br><span class="line"></span><br><span class="line">task download360jiagu() &#123;</span><br><span class="line">    doFirst &#123;</span><br><span class="line">        <span class="comment">//如果 Zip 文件不存在就进行下载</span></span><br><span class="line">        File zipFile = file(zipPath)</span><br><span class="line">        <span class="keyword">if</span> (!zipFile.exists()) &#123;</span><br><span class="line">            <span class="keyword">if</span> (!zipFile.parentFile.exists()) &#123;</span><br><span class="line">                zipFile.parentFile.mkdirs()</span><br><span class="line">            &#125;</span><br><span class="line">            exec &#123;</span><br><span class="line">                executable = <span class="string">&#x27;curl&#x27;</span></span><br><span class="line">                args = [<span class="string">&#x27;-o&#x27;</span>, zipPath, downloadUrl]</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    doLast &#123;</span><br><span class="line">        <span class="comment">//解压 Zip 文件</span></span><br><span class="line">        ant.unzip(<span class="attr">src:</span> zipPath, <span class="attr">dest:</span> unzipPath, <span class="attr">encoding:</span> <span class="string">&quot;GBK&quot;</span>)</span><br><span class="line">        <span class="comment">//将解压后的文件开启读写权限，防止执行 Jar 文件没有权限执行</span></span><br><span class="line">        exec &#123;</span><br><span class="line">            executable = <span class="string">&#x27;chmod&#x27;</span></span><br><span class="line">            args = [<span class="string">&#x27;-R&#x27;</span>, <span class="string">&#x27;777&#x27;</span>, unzipPath]</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>执行<code>download360jiagu</code>就可以自动下载并解压360的加固程序。</p>
+<h3 id="根据多渠道文件进行加固"><a href="#根据多渠道文件进行加固" class="headerlink" title="根据多渠道文件进行加固"></a>根据多渠道文件进行加固</h3><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br>
