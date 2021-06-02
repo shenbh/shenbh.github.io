@@ -258,8 +258,7 @@
 
 
 
-<h1 id="HashMap遍历"><a href="#HashMap遍历" class="headerlink" title="HashMap遍历"></a>HashMap遍历</h1><p><a target="_blank" rel="noopener" href="http://www.javaweb.cc/language/java/032291.shtml">原文地址</a></p>
-<p>第一种:</p>
+<h1 id="HashMap遍历"><a href="#HashMap遍历" class="headerlink" title="HashMap遍历"></a>HashMap遍历</h1>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/posts/4145629133/#more" rel="contents">
@@ -356,9 +355,6 @@
       
           <h1 id="多线程列表删除的解决方案"><a href="#多线程列表删除的解决方案" class="headerlink" title="多线程列表删除的解决方案"></a>多线程列表删除的解决方案</h1><p>第一种：<code>Collections.synchronizedList</code><br>最常用的方法是通过 Collections 的 synchronizedList 方法将 ArrayList 转换成线程安全的容器后再使用。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">List&lt;Object&gt; list =Collections.synchronizedList(<span class="keyword">new</span> ArrayList&lt;Object&gt;);</span><br></pre></td></tr></table></figure>
-
-<p>第二种： <code>CopyOnWriteArrayList</code><br>使用线程安全的 <code>CopyOnWriteArrayList</code> 代替线程不安全的 <code>ArrayList</code>。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">List&lt;Object&gt; list1 = <span class="keyword">new</span> CopyOnWriteArrayList&lt;Object&gt;();</span><br></pre></td></tr></table></figure>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/posts/2516116413/#more" rel="contents">
@@ -454,7 +450,6 @@
 
       
           <h1 id="Hook"><a href="#Hook" class="headerlink" title="Hook"></a>Hook</h1><h2 id="基本流程"><a href="#基本流程" class="headerlink" title="基本流程"></a>基本流程</h2><p>1、根据需求确定 要hook的对象<br>2、寻找要hook的对象的持有者，拿到要hook的对象<br>3、定义“要hook的对象”的代理类，并且创建该类的对象<br>4、使用上一步创建出来的对象，替换掉要hook的对象</p>
-<h2 id="使用示例"><a href="#使用示例" class="headerlink" title="使用示例"></a>使用示例</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* hook的核心代码</span></span><br><span class="line"><span class="comment">* 这个方法的唯一目的：用自己的点击事件，替换掉 View 原来的点击事件</span></span><br><span class="line"><span class="comment">*</span></span><br><span class="line"><span class="comment">* <span class="doctag">@param</span> view hook的范围仅限于这个view</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="meta">@SuppressLint(&#123;&quot;DiscouragedPrivateApi&quot;, &quot;PrivateApi&quot;&#125;)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">hook</span><span class="params">(Context context, <span class="keyword">final</span> View view)</span> </span>&#123;<span class="comment">//</span></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 反射执行View类的getListenerInfo()方法，拿到v的mListenerInfo对象，这个对象就是点击事件的持有者</span></span><br><span class="line">        Method method = View.class.getDeclaredMethod(<span class="string">&quot;getListenerInfo&quot;</span>);</span><br><span class="line">        method.setAccessible(<span class="keyword">true</span>);<span class="comment">//由于getListenerInfo()方法并不是public的，所以要加这个代码来保证访问权限</span></span><br><span class="line">        Object mListenerInfo = method.invoke(view);<span class="comment">//这里拿到的就是mListenerInfo对象，也就是点击事件的持有者</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 要从这里面拿到当前的点击事件对象</span></span><br><span class="line">        Class&lt;?&gt; listenerInfoClz = Class.forName(<span class="string">&quot;android.view.View$ListenerInfo&quot;</span>);<span class="comment">// 这是内部类的表示方法</span></span><br><span class="line">        Field field = listenerInfoClz.getDeclaredField(<span class="string">&quot;mOnClickListener&quot;</span>);</span><br><span class="line">        <span class="keyword">final</span> View.OnClickListener onClickListenerInstance = (View.OnClickListener) field.get(mListenerInfo);<span class="comment">//取得真实的mOnClickListener对象</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 2. 创建我们自己的点击事件代理类</span></span><br><span class="line">        <span class="comment">//   方式1：自己创建代理类</span></span><br><span class="line">        <span class="comment">//   ProxyOnClickListener proxyOnClickListener = new ProxyOnClickListener(onClickListenerInstance);</span></span><br><span class="line">        <span class="comment">//   方式2：由于View.OnClickListener是一个接口，所以可以直接用动态代理模式</span></span><br><span class="line">        <span class="comment">// Proxy.newProxyInstance的3个参数依次分别是：</span></span><br><span class="line">        <span class="comment">// 本地的类加载器;</span></span><br><span class="line">        <span class="comment">// 代理类的对象所继承的接口（用Class数组表示，支持多个接口）</span></span><br><span class="line">        <span class="comment">// 代理类的实际逻辑，封装在new出来的InvocationHandler内</span></span><br><span class="line">        Object proxyOnClickListener = Proxy.newProxyInstance(context.getClass().getClassLoader(), <span class="keyword">new</span> Class[]&#123;View.OnClickListener.class&#125;, <span class="keyword">new</span> InvocationHandler() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(Object proxy, Method method, Object[] args)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">                Log.d(<span class="string">&quot;HookSetOnClickListener&quot;</span>, <span class="string">&quot;点击事件被hook到了&quot;</span>);<span class="comment">//加入自己的逻辑</span></span><br><span class="line">                <span class="keyword">return</span> method.invoke(onClickListenerInstance, args);<span class="comment">//执行被代理的对象的逻辑</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        <span class="comment">// 3. 用我们自己的点击事件代理类，设置到&quot;持有者&quot;中</span></span><br><span class="line">        field.set(mListenerInfo, proxyOnClickListener);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 自定义代理类</span></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">ProxyOnClickListener</span> <span class="keyword">implements</span> <span class="title">View</span>.<span class="title">OnClickListener</span> </span>&#123;</span><br><span class="line">    View.OnClickListener oriLis;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ProxyOnClickListener</span><span class="params">(View.OnClickListener oriLis)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.oriLis = oriLis;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(View v)</span> </span>&#123;</span><br><span class="line">        Log.d(<span class="string">&quot;HookSetOnClickListener&quot;</span>, <span class="string">&quot;点击事件被hook到了&quot;</span>);</span><br><span class="line">        <span class="keyword">if</span> (oriLis != <span class="keyword">null</span>) &#123;</span><br><span class="line">            oriLis.onClick(v);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/posts/2958164413/#more" rel="contents">
@@ -550,8 +545,7 @@
 
       
           <h1 id="Andorid进阶之路–软技能"><a href="#Andorid进阶之路–软技能" class="headerlink" title="Andorid进阶之路–软技能"></a>Andorid进阶之路–软技能</h1><p><img src="https://gitee.com/shen_bh/pic-bed/raw/master/img/%E5%AE%89%E5%8D%93/Andorid%E8%BF%9B%E9%98%B6%E4%B9%8B%E8%B7%AF--%E8%BD%AF%E6%8A%80%E8%83%BD.jpg" alt="Andorid进阶之路--软技能.png"></p>
-<h1 id="Android进阶之路–学习方向"><a href="#Android进阶之路–学习方向" class="headerlink" title="Android进阶之路–学习方向"></a>Android进阶之路–学习方向</h1><p><img src="https://gitee.com/shen_bh/pic-bed/raw/master/img/%E5%AE%89%E5%8D%93/Android%E8%BF%9B%E9%98%B6%E4%B9%8B%E8%B7%AF--%E5%AD%A6%E4%B9%A0%E6%96%B9%E5%90%91.jpg" alt="Android进阶之路--学习方向.png"></p>
-<p>挑些图中几个点简单来谈谈自己的一些想法。</p>
+<h1 id="Android进阶之路–学习方向"><a href="#Android进阶之路–学习方向" class="headerlink" title="Android进阶之路–学习方向"></a>Android进阶之路–学习方向</h1>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/posts/2247155331/#more" rel="contents">
@@ -646,9 +640,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="多渠道"><a href="#多渠道" class="headerlink" title="多渠道"></a>多渠道</h1><h2 id="多渠道设置"><a href="#多渠道设置" class="headerlink" title="多渠道设置"></a>多渠道设置</h2><h2 id="项目结构"><a href="#项目结构" class="headerlink" title="项目结构"></a>项目结构</h2><figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">项目名</span><br><span class="line"><span class="bullet"> -</span> app</span><br><span class="line"><span class="bullet">  -</span> src 主渠道名称</span><br><span class="line"><span class="bullet">  	-</span> main</span><br><span class="line"><span class="bullet">  		-</span> assets</span><br><span class="line"><span class="bullet">  		-</span> java 代码</span><br><span class="line"><span class="bullet">  		-</span> jniLibs 一些jar和so包</span><br><span class="line"><span class="bullet">  		-</span> res 资源文件</span><br><span class="line">  		AndroidManifest.xml 项目配置文件</span><br><span class="line"><span class="bullet">  -</span> yangu 子渠道名称</span><br><span class="line"><span class="bullet">  	-</span> res 资源文件</span><br><span class="line"><span class="bullet">  	-</span> src 代码</span><br><span class="line">  build.gradle</span><br></pre></td></tr></table></figure>
-
-<h2 id="其中build-gradle的设置"><a href="#其中build-gradle的设置" class="headerlink" title="其中build.gradle的设置"></a>其中build.gradle的设置</h2>
+          <h1 id="多渠道"><a href="#多渠道" class="headerlink" title="多渠道"></a>多渠道</h1><h2 id="多渠道设置"><a href="#多渠道设置" class="headerlink" title="多渠道设置"></a>多渠道设置</h2><h2 id="项目结构"><a href="#项目结构" class="headerlink" title="项目结构"></a>项目结构</h2>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/posts/3358148673/#more" rel="contents">
@@ -744,24 +736,6 @@
 
       
           <h1 id="自学Android"><a href="#自学Android" class="headerlink" title="自学Android"></a><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/20708611">自学Android</a></h1><h2 id="一、基础篇"><a href="#一、基础篇" class="headerlink" title="一、基础篇"></a>一、基础篇</h2><p>1.1 Java篇</p>
-<ul>
-<li><p><strong>Java书籍</strong></p>
-<ul>
-<li><strong>Thinking in Java</strong>： 中文版《Java编程思想 》，这是一本非常经典的Java书籍，很多人都说这个书不适合初学者，我记得自己当初看的第一本Java书便是这本书。看完第一遍对Java有了整体的理解，但很多细节没有完全理解，查了资源又看了第二遍，对Java有了更深地理解。再后来一段时间后，能力也有所提升，再拿起这本书又看了第三遍，发现对面向对象有了更深一步的理解，这本书就是适合反复的阅读。</li>
-<li><strong>Effective Java</strong>：Java进阶书，这本书采用“条目”的方式来展开的，总提出了78条Java具体的建议，对Java平台精妙之处的独到见解，还提供优秀的代码范例。作为Java进阶之书，对Java水平的提升大有裨益。</li>
-<li><strong>Java concurrency in Practice</strong>：中文版《Java并发编程实战》，本书采用循序渐进的讲解方式，从并发编程的基本理论讲起，再讲述了结构化并发应用，性能与测试，最后将显式锁、原子变量、非阻塞算法这些高级主题。对于Java并发这一块算得上是一本很棒的书。</li>
-<li><strong>Java Performance</strong>：中文版《Java性能优化权威指南》，Java之父James Gosling推荐的一本Java应用性能优化的经典之作，包含算法结构、内存、I/O、磁盘使用方式，内容通俗易懂，还介绍了大量的监控和测量工具。关于优化都是属于较深的领域，对Java有一定基础后，很有必要了解看看。</li>
-</ul>
-</li>
-<li><p><strong>Java虚拟机</strong>，这是作为进阶Java高手必需有所了解：</p>
-<ul>
-<li><a href="https://link.zhihu.com/?target=https://docs.oracle.com/javase/specs/jls/se7/html/index.html">The Java Language Specification</a>，官方Java文档（英文版）</li>
-<li><a href="https://link.zhihu.com/?target=https://docs.oracle.com/javase/specs/jvms/se7/html/">The Java® Virtual Machine Specification</a>，官方Jvm文档（英文版）</li>
-<li>深入理解java虚拟机：这是国内关于Java虚拟机讲得非常全面的一本书，从Java GC到Java虚拟机内部实现以及优化策略，作为Java高手非常值得一看的书籍。</li>
-</ul>
-</li>
-</ul>
-<p>1.2 Android基础篇</p>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/posts/819643930/#more" rel="contents">
@@ -876,9 +850,7 @@
 <td>责任链模式（Chain of Responsibility Pattern）<br>命令模式（Command Pattern）<br>解释器模式（Interpreter Pattern）<br>迭代器模式（Iterator Pattern）<br>中介者模式（Mediator Pattern）<br>备忘录模式（Memento Pattern）<br>观察者模式（Observer Pattern）<br>状态模式（State Pattern）<br>空对象模式（Null Object Pattern）<br><a href="#%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F">策略模式</a>（Strategy Pattern）<br>模板模式（Template Pattern）<br>访问者模式（Visitor Pattern）</td>
 </tr>
 </tbody></table>
-<h2 id="工厂模式"><a href="#工厂模式" class="headerlink" title="工厂模式"></a>工厂模式</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.demo);</span><br></pre></td></tr></table></figure>
-
-<p><code>BitmapFactory.java</code></p>
+<h2 id="工厂模式"><a href="#工厂模式" class="headerlink" title="工厂模式"></a>工厂模式</h2>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/posts/404819208/#more" rel="contents">
@@ -974,8 +946,6 @@
 
       
           <h1 id="架构"><a href="#架构" class="headerlink" title="架构"></a>架构</h1><h2 id="MVC"><a href="#MVC" class="headerlink" title="MVC"></a>MVC</h2><p><img src="https://gitee.com/shen_bh/pic-bed/raw/master/img/%E5%AE%89%E5%8D%93/MVC%E6%A8%A1%E5%9E%8B" alt="安卓/MVC模型"></p>
-<p>在 Android 中，三者的关系如下：</p>
-<p><img src="https://gitee.com/shen_bh/pic-bed/raw/master/img/%E5%AE%89%E5%8D%93/%E5%AE%89%E5%8D%93%E4%B8%ADMVC%E6%A8%A1%E5%9E%8B" alt="安卓中MVC模型"></p>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/posts/516930697/#more" rel="contents">
@@ -1072,7 +1042,6 @@
       
           <h1 id="组件化"><a href="#组件化" class="headerlink" title="组件化"></a>组件化</h1><p><a target="_blank" rel="noopener" href="https://github.com/Blankj/AucFrameTemplate">AucFrameTemplate</a></p>
 <p><a target="_blank" rel="noopener" href="https://github.com/alibaba/ARouter">ARouter</a></p>
-<h2 id="组件化和插件化最大区别"><a href="#组件化和插件化最大区别" class="headerlink" title="组件化和插件化最大区别"></a>组件化和插件化最大区别</h2><p>组件化在编译期可以动态添加和修改，运行期则不行。<br>插件化在编译期和运行期都可以动态添加和修改。</p>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/posts/4132485684/#more" rel="contents">
