@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"shenbh.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="幕布笔记：安卓复习 Android 系统架构（5 层）">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安卓知识点">
+<meta property="og:url" content="http://shenbh.github.io/posts/1736361658/index.html">
+<meta property="og:site_name" content="ABing">
+<meta property="og:description" content="幕布笔记：安卓复习 Android 系统架构（5 层）">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/shen_bh/pic-bed/raw/master/img/%E5%AE%89%E5%8D%93/%E5%AE%89%E5%8D%93%E7%B3%BB%E7%BB%9F5%E5%B1%82%E6%9E%B6%E6%9E%84.png">
+<meta property="og:image" content="https://gitee.com/shen_bh/pic-bed/raw/master/img/%E5%AE%89%E5%8D%93/context%E7%B1%BB%E5%9B%BE.jpg">
+<meta property="og:image" content="https://gitee.com/shen_bh/pic-bed/raw/master/img/%E5%AE%89%E5%8D%93/gradle%E7%9A%84tool%E7%89%88%E6%9C%AC%E4%B8%8Egradle%E7%89%88%E6%9C%AC.jpg">
+<meta property="article:published_time" content="2020-03-16T02:18:58.000Z">
+<meta property="article:modified_time" content="2021-05-07T03:28:09.919Z">
+<meta property="article:author" content="shenbh@qq.com">
+<meta property="article:tag" content="安卓知识点">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/shen_bh/pic-bed/raw/master/img/%E5%AE%89%E5%8D%93/%E5%AE%89%E5%8D%93%E7%B3%BB%E7%BB%9F5%E5%B1%82%E6%9E%B6%E6%9E%84.png">
+
+<link rel="canonical" href="http://shenbh.github.io/posts/1736361658/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>安卓知识点 | ABing</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">ABing</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Just do IT Now.</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/shenbh" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/1736361658/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="shenbh@qq.com">
+      <meta itemprop="description" content="嗨，我是阿炳，欢迎来交流。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ABing">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          安卓知识点
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-03-16 10:18:58" itemprop="dateCreated datePublished" datetime="2020-03-16T10:18:58+08:00">2020-03-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-05-07 11:28:09" itemprop="dateModified" datetime="2021-05-07T11:28:09+08:00">2021-05-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AE%89%E5%8D%93/" itemprop="url" rel="index"><span itemprop="name">安卓</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><a target="_blank" rel="noopener" href="https://share.mubu.com/doc/6A5KBE44C9Q">幕布笔记：安卓复习</a></p>
+<h1 id="Android-系统架构（5-层）"><a href="#Android-系统架构（5-层）" class="headerlink" title="Android 系统架构（5 层）"></a>Android 系统架构（5 层）</h1><p><img src="https://gitee.com/shen_bh/pic-bed/raw/master/img/%E5%AE%89%E5%8D%93/%E5%AE%89%E5%8D%93%E7%B3%BB%E7%BB%9F5%E5%B1%82%E6%9E%B6%E6%9E%84.png" alt="安卓/安卓系统5层架构"></p>
+<h1 id="编译型语言、解释型语言"><a href="#编译型语言、解释型语言" class="headerlink" title="编译型语言、解释型语言"></a>编译型语言、解释型语言</h1><p>编译型语言将源代码一次性编译成计算机可识别的二进制文件，然后计算机直接执行，如 C 和 C++都属于编译型语言。</p>
+<p>解释型语言，有一个解释器，在程序运行时，解释器会一行行读取源代码，然后实时将这些代码解释成计算机可识别的二进制数据后再执行，故通常效率会差一些，像 Python 和 JavaScript 都是解释型语言。</p>
+<p>Java先编译成特殊的 class 文件（不是计算机可识别的二进制文件），此 class 只有在 Java 虚拟机（Android 中叫 ART，一种移动优化版的虚拟机）才能识别，而这个虚拟机就是担当解释器的角色，它会在程序运行时将编译后的 class 解释成计算机可识别的二进制数据后再执行，因此，准确来讲，Java 属于解释型语言。</p>
+<p><strong>Kotlin 工作原理</strong>：Kotlin 就是编译成 class 文件，Java 虚拟机不关心 class 是 Java 编译来的还是 Kotlin 编译来的，只要符合规格的 class 文件即可识别。</p>
+<h1 id="Dalvik-和-ART"><a href="#Dalvik-和-ART" class="headerlink" title="Dalvik 和 ART"></a>Dalvik 和 ART</h1><p>ART代表Android Runtime，其处理应用程序执行的方式完全不同于Dalvik，Dalvik是依靠一个Just-In-Time (JIT)编译器去解释字节码。开发者编译后的应用代码需要通过一个解释器在用户的设备上运行，这一机制并不高效，但让应用能更容易在不同硬件和架构上运 行。ART则完全改变了这套做法，在应用安装时就预编译字节码到机器语言，这一机制叫Ahead-Of-Time (AOT）编译。在移除解释代码这一过程后，应用程序执行将更有效率，启动更快。</p>
+<h1 id="Serializable-Parcelable"><a href="#Serializable-Parcelable" class="headerlink" title="Serializable/Parcelable"></a>Serializable/Parcelable</h1><ul>
+<li>Serializable 使用 I/O 读写存储在硬盘上，而 Parcelable 是直接 在内存中读写</li>
+<li>Serializable 会使用反射，序列化和反序列化过程需要大量 I/O 操作， Parcelable 自已实现封送和解封（marshalled &amp;unmarshalled）操作不需要用反射，数据也存放在 Native 内存中，效率要快很多</li>
+</ul>
+<h1 id="手机按下电源"><a href="#手机按下电源" class="headerlink" title="手机按下电源"></a>手机按下电源</h1><p>Linux内核启动–》Init进程（第一个用户级进程）–》加载配置脚本（启动关键服务）</p>
+<p>Init进程定义：它是Linux内核启动的第一个用户级进程。Init进程主要任务为启动Android关键服务，守护关键服务进程，确保不被杀死。</p>
+<p>Init与Andorid关系：当Linux内核启动之后通过启动用户级程序init来完成引导Android Framework的建立。因此，init总是第一个进程（它的<strong>进程号总是1</strong>）</p>
+<p>Zygote孵化出app进程，若zygote进程被杀掉那么手机会重启</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">adb <span class="keyword">shell</span></span><br><span class="line"><span class="keyword">ls</span> <span class="comment">//列出所有进程，可以看到init进程</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h1 id="SDK版本对应名称"><a href="#SDK版本对应名称" class="headerlink" title="SDK版本对应名称"></a>SDK版本对应名称</h1><table>
+<thead>
+<tr>
+<th>Android版本</th>
+<th>API Level</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Android 10.0+（R）</td>
+<td>30</td>
+</tr>
+<tr>
+<td>Android 10.0（Q）</td>
+<td>29</td>
+</tr>
+<tr>
+<td>Android 9.0（Pie）</td>
+<td>28</td>
+</tr>
+<tr>
+<td>Android 8.1（Oreo）</td>
+<td>27</td>
+</tr>
+<tr>
+<td>Android 8.0（Oreo）</td>
+<td>26</td>
+</tr>
+<tr>
+<td>Android 7.1.1（Nougat）</td>
+<td>25</td>
+</tr>
+<tr>
+<td>Android 7.0（Nougat）</td>
+<td>24</td>
+</tr>
+<tr>
+<td>Android 6.0（Marshmallow）</td>
+<td>23</td>
+</tr>
+<tr>
+<td>Android 5.1（Lollipop）</td>
+<td>22</td>
+</tr>
+<tr>
+<td>Android 5.0（Lollipop）</td>
+<td>21</td>
+</tr>
+<tr>
+<td>Andorid 4.4W（KitKat Wear）</td>
+<td>20</td>
+</tr>
+<tr>
+<td>Android 4.4（KitKat）</td>
+<td>19</td>
+</tr>
+<tr>
+<td>Android 4.3（Jelly Bean）</td>
+<td>18</td>
+</tr>
+<tr>
+<td>Android 4.2（Jelly Bean）</td>
+<td>17</td>
+</tr>
+<tr>
+<td>Android 4.1（Jelly Bean）</td>
+<td>16</td>
+</tr>
+<tr>
+<td>Android 4.0.3（IceCreamSandwich）</td>
+<td>15</td>
+</tr>
+<tr>
+<td>Android 4.0（IceCreamSandwich）</td>
+<td>14</td>
+</tr>
+<tr>
+<td>Android 3.2（Honeycomb）</td>
+<td>13</td>
+</tr>
+<tr>
+<td>Android 3.1（Honeycomb）</td>
+<td>12</td>
+</tr>
+<tr>
+<td>Android 3.0（Honeycomb）</td>
+<td>11</td>
+</tr>
+<tr>
+<td>Android 2.3.3（Gingerbread）</td>
+<td>10</td>
+</tr>
+<tr>
+<td>Android 2.3（Gingerbread）</td>
+<td>9</td>
+</tr>
+<tr>
+<td>Android 2.2（Froyo）</td>
+<td>8</td>
+</tr>
+<tr>
+<td>Android 2.1（Eclair）</td>
+<td>7</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>2019.8.1之后新规定，上架到应用场市场的要求targetSdkVersion大于等于26</p>
+</blockquote>
+<h1 id="Context"><a href="#Context" class="headerlink" title="Context"></a>Context</h1><p>Context本身是一个抽象类，是对一系列系统服务接口的封装，包括：内部资源、包、类加载、I/O操作、权限、主线程、IPC和组件启动等操作的管理。ContextImpl, Activity, Service, Application这些都是Context的直接或间接子类, 关系如下:</p>
+<p><img src="https://gitee.com/shen_bh/pic-bed/raw/master/img/%E5%AE%89%E5%8D%93/context%E7%B1%BB%E5%9B%BE.jpg" alt="安卓/context类图"></p>
+<p>ContextWrapper是代理Context的实现，简单地将其所有调用委托给另一个Context（mBase）。</p>
+<p>Application、Activity、Service通过<code>attach() </code>调用父类ContextWrapper的<code>attachBaseContext()</code>, 从而设置父类成员变量mBase为ContextImpl对象;, ontextWrapper的核心工作都是交给mBase(即ContextImpl)来完成.</p>
+<h1 id="Builder"><a href="#Builder" class="headerlink" title="Builder"></a>Builder</h1><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">User</span></span>&#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> String mFirstName;<span class="comment">//必选</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> String mLastName;<span class="comment">//必选</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> mAge;<span class="comment">//可选</span></span><br><span class="line">  <span class="keyword">private</span> String mPhoneNo;<span class="comment">//可选</span></span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">private</span> <span class="title">User</span><span class="params">(UserBuilder builder)</span></span>&#123;</span><br><span class="line">    mFirstName = builder.firstName;</span><br><span class="line">    mLastName = builder.lastName;</span><br><span class="line">    mAge = builder.age;</span><br><span class="line">    mPhoneNo = builder.phoneNo;</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">getFirstName</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> mFirstName;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">getLastName</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> mLastName;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getAge</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> mAge;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">getPhone</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> mPhoneNo;</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">UserBuilder</span></span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> String firstName;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> String lastName;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> age;</span><br><span class="line">    <span class="keyword">private</span> String phoneNo;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">UserBuilder</span><span class="params">(String firstName, String lastName)</span></span>&#123;</span><br><span class="line">      <span class="keyword">this</span>.firstName = firstName;</span><br><span class="line">      <span class="keyword">this</span>.lastName = lastName;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> UserBuilder <span class="title">age</span><span class="params">(<span class="keyword">int</span> age)</span></span>&#123;</span><br><span class="line">      <span class="keyword">this</span>.age= age;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">this</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> UserBuilder <span class="title">phone</span><span class="params">(String phone)</span></span>&#123;</span><br><span class="line">      <span class="keyword">this</span>.phone = phone;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">this</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> User <span class="title">build</span><span class="params">()</span></span>&#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">new</span> User(<span class="keyword">this</span>);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//调用</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> User <span class="title">getUser</span><span class="params">()</span></span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">new</span> </span><br><span class="line">    User.USerBuilder(<span class="string">&quot;jack&quot;</span>, <span class="string">&quot;Wilson&quot;</span>)</span><br><span class="line">    .age(<span class="number">30</span>)</span><br><span class="line">    .phone(<span class="string">&quot;13122345678&quot;</span>)</span><br><span class="line">    .build();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>变种Builder 模式的自动化生成。在 AS 的 plugin 中搜索”InnerBuilder“安装。在 User 类中右键打开 Generate 菜单，选择 Builder 按钮，会自动生成 User 的 Builder 静态内部类（不过长得不大一样）</p>
+<h1 id="注解"><a href="#注解" class="headerlink" title="注解"></a>注解</h1><p>android-apt 是在 Android Studio 中使用注解处理器的一个辅助插件。</p>
+<blockquote>
+<p>只在编译期间引入注解处理器所在函数库作为依赖，不会打包到最终生成的 APK 中。</p>
+<p>为注解处理器生成的源代码设置好正确的路径，以便 Android Studio 能够正常找到。</p>
+</blockquote>
+<h1 id="DialogmentFragment详细生命周期"><a href="#DialogmentFragment详细生命周期" class="headerlink" title="DialogmentFragment详细生命周期"></a><a target="_blank" rel="noopener" href="https://juejin.im/post/6844903816274395144">DialogmentFragment详细生命周期</a></h1><p>DialogmentFragment详细的生命周期为：</p>
+<ol>
+<li><p><code>onAttach(Activity)</code>： 当Activity与Fragment发生关联时调用（已废弃，但是还是调用了）</p>
+</li>
+<li><p><code>onAttach(Context)</code>：当Activity与Fragment发生关联时调用</p>
+</li>
+<li><p><code>onCreate(Bundle)</code>：初始化Fragment。可通过参数savedInstanceState获取之前保存的值</p>
+</li>
+<li><p><code>onCreateDialog(Bundle)</code>：重写以生成自己的对话框，通常用于显示AlertDialog，而不是常规对话框；执行此操作时，不需要实现OnCreateView），因为AlertDialog会处理自己的内容。</p>
+</li>
+<li><p><code>onCreateView( LayoutInflater,  ViewGroup,  Bundle)</code>：让Fragment实例化View。</p>
+</li>
+<li><p><code>onViewCreated(View, Bundle)</code>：紧随onCreateView调用，表示view已初始化完成。</p>
+</li>
+<li><p><code>onActivityCreated(Bundle)</code>：执行该方法时，与Fragment绑定的Activity的onCreate方法已经执行完成并返回，在该方法内可以进行与Activity交互的UI操作，所以在该方法之前Activity的onCreate方法并未执行完成，如果提前进行交互操作，会引发空指针异常。</p>
+</li>
+<li><p><code>onStart()</code>：执行该方法时，Fragment由不可见变为可见状态。</p>
+</li>
+<li><p><code>onResume()</code>：执行该方法时，Fragment处于活动状态，用户可与之交互。</p>
+</li>
+<li><p><code>onCancel(DialogInterface)</code>：取消对话框时将调用此方法。onCancel会调用onDismiss</p>
+</li>
+<li><p><code>onDismiss(DialogInterface)</code>：关闭对话框时将调用此方法。</p>
+</li>
+<li><p><code>onPause()</code>：执行该方法时，Fragment处于暂停状态，但依然可见，用户不能与之交互。</p>
+</li>
+<li><p><code>onStop()</code>：执行该方法时，Fragment完全不可见。</p>
+</li>
+<li><p><code>onDestroyView()</code>：销毁与Fragment有关的视图，但未与Activity解除绑定，依然可以通过onCreateView方法重新创建视图。通常在ViewPager+Fragment的方式下会调用此方法。</p>
+</li>
+<li><p><code>onDestroy()</code>：销毁Fragment。通常按Back键退出或者Fragment被回收时调用此方法。</p>
+</li>
+<li><p><code>onDetach()</code>：解除与Activity的绑定。在onDestroy方法之后调用。</p>
+</li>
+</ol>
+<h1 id="又一城的项目版本情况"><a href="#又一城的项目版本情况" class="headerlink" title="又一城的项目版本情况"></a>又一城的项目版本情况</h1><table>
+<thead>
+<tr>
+<th align="center">项目名称</th>
+<th align="center">gradle版本</th>
+<th align="center">classpath版本</th>
+<th align="center">buildTool</th>
+<th align="center">support:appcompat</th>
+<th align="center">kotlin版本</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">PMS3.9</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">SBC2.0</td>
+<td align="center">3.3</td>
+<td align="center">2.3.3</td>
+<td align="center">26</td>
+<td align="center">26</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">SBC2.1</td>
+<td align="center">5.4.1</td>
+<td align="center">3.5.3</td>
+<td align="center">28.0.3</td>
+<td align="center">28.0.0</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">PMS4.2</td>
+<td align="center">2.14.1</td>
+<td align="center">2.1.3</td>
+<td align="center">27.0.3</td>
+<td align="center">26.1.0</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">PMS5.0</td>
+<td align="center">5.1.1</td>
+<td align="center">3.4.1</td>
+<td align="center">28.0.3</td>
+<td align="center">28.0.0</td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<p><a target="_blank" rel="noopener" href="https://developer.android.google.cn/studio/releases/gradle-plugin.html#updating-gradle">https://developer.android.google.cn/studio/releases/gradle-plugin.html#updating-gradle</a></p>
+<p><img src="https://gitee.com/shen_bh/pic-bed/raw/master/img/%E5%AE%89%E5%8D%93/gradle%E7%9A%84tool%E7%89%88%E6%9C%AC%E4%B8%8Egradle%E7%89%88%E6%9C%AC.jpg" alt="gradle的tool版本与gradle版本.png"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E5%AE%89%E5%8D%93%E7%9F%A5%E8%AF%86%E7%82%B9/" rel="tag"><i class="fa fa-tag"></i> 安卓知识点</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/421813652/" rel="prev" title="后期-生成jar、aar、assets">
+      <i class="fa fa-chevron-left"></i> 后期-生成jar、aar、assets
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/1093970730/" rel="next" title="版本相关-安卓10">
+      版本相关-安卓10 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Android-%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%EF%BC%885-%E5%B1%82%EF%BC%89"><span class="nav-number">1.</span> <span class="nav-text">Android 系统架构（5 层）</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BC%96%E8%AF%91%E5%9E%8B%E8%AF%AD%E8%A8%80%E3%80%81%E8%A7%A3%E9%87%8A%E5%9E%8B%E8%AF%AD%E8%A8%80"><span class="nav-number">2.</span> <span class="nav-text">编译型语言、解释型语言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Dalvik-%E5%92%8C-ART"><span class="nav-number">3.</span> <span class="nav-text">Dalvik 和 ART</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Serializable-Parcelable"><span class="nav-number">4.</span> <span class="nav-text">Serializable&#x2F;Parcelable</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%89%8B%E6%9C%BA%E6%8C%89%E4%B8%8B%E7%94%B5%E6%BA%90"><span class="nav-number">5.</span> <span class="nav-text">手机按下电源</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#SDK%E7%89%88%E6%9C%AC%E5%AF%B9%E5%BA%94%E5%90%8D%E7%A7%B0"><span class="nav-number">6.</span> <span class="nav-text">SDK版本对应名称</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Context"><span class="nav-number">7.</span> <span class="nav-text">Context</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Builder"><span class="nav-number">8.</span> <span class="nav-text">Builder</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B3%A8%E8%A7%A3"><span class="nav-number">9.</span> <span class="nav-text">注解</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#DialogmentFragment%E8%AF%A6%E7%BB%86%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-number">10.</span> <span class="nav-text">DialogmentFragment详细生命周期</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%88%E4%B8%80%E5%9F%8E%E7%9A%84%E9%A1%B9%E7%9B%AE%E7%89%88%E6%9C%AC%E6%83%85%E5%86%B5"><span class="nav-number">11.</span> <span class="nav-text">又一城的项目版本情况</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="shenbh@qq.com"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">shenbh@qq.com</p>
+  <div class="site-description" itemprop="description">嗨，我是阿炳，欢迎来交流。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">198</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">232</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="mailto:shenbh@qq.com" title="E-Mail → mailto:shenbh@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://gitee.com/shen_bh" title="Gitee → https:&#x2F;&#x2F;gitee.com&#x2F;shen_bh" rel="noopener" target="_blank"><i class="fab fa-google fa-fw"></i>Gitee</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://juejin.im/user/57ea31a1a22b9d0061656f52" title="掘金 → https:&#x2F;&#x2F;juejin.im&#x2F;user&#x2F;57ea31a1a22b9d0061656f52" rel="noopener" target="_blank"><i class="fab fa-meetup fa-fw"></i>掘金</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;ptwenzi?spm&#x3D;1010.2135.3001.5113" rel="noopener" target="_blank"><i class="fab fa-gratipay fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://blankj.com/" title="https:&#x2F;&#x2F;blankj.com&#x2F;" rel="noopener" target="_blank">blankj</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://wuxiaolong.me/" title="http:&#x2F;&#x2F;wuxiaolong.me&#x2F;" rel="noopener" target="_blank">吴小龙同学</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://isuperqiang.cn/" title="https:&#x2F;&#x2F;isuperqiang.cn&#x2F;" rel="noopener" target="_blank">落英坠露</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://dp2px.com/" title="https:&#x2F;&#x2F;dp2px.com&#x2F;" rel="noopener" target="_blank">水寒的博客</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://hexo.yuanjh.cn/" title="https:&#x2F;&#x2F;hexo.yuanjh.cn&#x2F;" rel="noopener" target="_blank">闻鸡起舞</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.yanghujun.com/" title="https:&#x2F;&#x2F;www.yanghujun.com&#x2F;" rel="noopener" target="_blank">八归少年</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhpanvip.gitee.io/" title="https:&#x2F;&#x2F;zhpanvip.gitee.io&#x2F;" rel="noopener" target="_blank">马可没有菠萝</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://omooo.top/" title="http:&#x2F;&#x2F;omooo.top&#x2F;" rel="noopener" target="_blank">Omooo</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://hishark777.com/" title="https:&#x2F;&#x2F;hishark777.com&#x2F;" rel="noopener" target="_blank">777的博客</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">shenbh@qq.com</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">1.9m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">28:36</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

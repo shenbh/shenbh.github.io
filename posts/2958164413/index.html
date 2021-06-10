@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"shenbh.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Hook基本流程1、根据需求确定 要hook的对象2、寻找要hook的对象的持有者，拿到要hook的对象3、定义“要hook的对象”的代理类，并且创建该类的对象4、使用上一步创建出来的对象，替换掉要hook的对象">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android进阶">
+<meta property="og:url" content="http://shenbh.github.io/posts/2958164413/index.html">
+<meta property="og:site_name" content="ABing">
+<meta property="og:description" content="Hook基本流程1、根据需求确定 要hook的对象2、寻找要hook的对象的持有者，拿到要hook的对象3、定义“要hook的对象”的代理类，并且创建该类的对象4、使用上一步创建出来的对象，替换掉要hook的对象">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/shen_bh/pic-bed/raw/master/img/%E5%AE%89%E5%8D%93/AOP%E6%8F%92%E5%85%A5%E6%97%B6%E6%9C%BA%E5%9B%BE.jpg">
+<meta property="article:published_time" content="2018-11-20T07:24:08.000Z">
+<meta property="article:modified_time" content="2021-06-02T09:24:28.508Z">
+<meta property="article:author" content="shenbh@qq.com">
+<meta property="article:tag" content="Hook">
+<meta property="article:tag" content="Proguard">
+<meta property="article:tag" content="依赖注入">
+<meta property="article:tag" content="Hilt">
+<meta property="article:tag" content="AOP">
+<meta property="article:tag" content="ASM">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/shen_bh/pic-bed/raw/master/img/%E5%AE%89%E5%8D%93/AOP%E6%8F%92%E5%85%A5%E6%97%B6%E6%9C%BA%E5%9B%BE.jpg">
+
+<link rel="canonical" href="http://shenbh.github.io/posts/2958164413/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Android进阶 | ABing</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">ABing</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Just do IT Now.</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/shenbh" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/2958164413/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="shenbh@qq.com">
+      <meta itemprop="description" content="嗨，我是阿炳，欢迎来交流。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ABing">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Android进阶
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-11-20 15:24:08" itemprop="dateCreated datePublished" datetime="2018-11-20T15:24:08+08:00">2018-11-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-02 17:24:28" itemprop="dateModified" datetime="2021-06-02T17:24:28+08:00">2021-06-02</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AE%89%E5%8D%93/" itemprop="url" rel="index"><span itemprop="name">安卓</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>7.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>7 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Hook"><a href="#Hook" class="headerlink" title="Hook"></a>Hook</h1><h2 id="基本流程"><a href="#基本流程" class="headerlink" title="基本流程"></a>基本流程</h2><p>1、根据需求确定 要hook的对象<br>2、寻找要hook的对象的持有者，拿到要hook的对象<br>3、定义“要hook的对象”的代理类，并且创建该类的对象<br>4、使用上一步创建出来的对象，替换掉要hook的对象</p>
+<h2 id="使用示例"><a href="#使用示例" class="headerlink" title="使用示例"></a>使用示例</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* hook的核心代码</span></span><br><span class="line"><span class="comment">* 这个方法的唯一目的：用自己的点击事件，替换掉 View 原来的点击事件</span></span><br><span class="line"><span class="comment">*</span></span><br><span class="line"><span class="comment">* <span class="doctag">@param</span> view hook的范围仅限于这个view</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="meta">@SuppressLint(&#123;&quot;DiscouragedPrivateApi&quot;, &quot;PrivateApi&quot;&#125;)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">hook</span><span class="params">(Context context, <span class="keyword">final</span> View view)</span> </span>&#123;<span class="comment">//</span></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 反射执行View类的getListenerInfo()方法，拿到v的mListenerInfo对象，这个对象就是点击事件的持有者</span></span><br><span class="line">        Method method = View.class.getDeclaredMethod(<span class="string">&quot;getListenerInfo&quot;</span>);</span><br><span class="line">        method.setAccessible(<span class="keyword">true</span>);<span class="comment">//由于getListenerInfo()方法并不是public的，所以要加这个代码来保证访问权限</span></span><br><span class="line">        Object mListenerInfo = method.invoke(view);<span class="comment">//这里拿到的就是mListenerInfo对象，也就是点击事件的持有者</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 要从这里面拿到当前的点击事件对象</span></span><br><span class="line">        Class&lt;?&gt; listenerInfoClz = Class.forName(<span class="string">&quot;android.view.View$ListenerInfo&quot;</span>);<span class="comment">// 这是内部类的表示方法</span></span><br><span class="line">        Field field = listenerInfoClz.getDeclaredField(<span class="string">&quot;mOnClickListener&quot;</span>);</span><br><span class="line">        <span class="keyword">final</span> View.OnClickListener onClickListenerInstance = (View.OnClickListener) field.get(mListenerInfo);<span class="comment">//取得真实的mOnClickListener对象</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 2. 创建我们自己的点击事件代理类</span></span><br><span class="line">        <span class="comment">//   方式1：自己创建代理类</span></span><br><span class="line">        <span class="comment">//   ProxyOnClickListener proxyOnClickListener = new ProxyOnClickListener(onClickListenerInstance);</span></span><br><span class="line">        <span class="comment">//   方式2：由于View.OnClickListener是一个接口，所以可以直接用动态代理模式</span></span><br><span class="line">        <span class="comment">// Proxy.newProxyInstance的3个参数依次分别是：</span></span><br><span class="line">        <span class="comment">// 本地的类加载器;</span></span><br><span class="line">        <span class="comment">// 代理类的对象所继承的接口（用Class数组表示，支持多个接口）</span></span><br><span class="line">        <span class="comment">// 代理类的实际逻辑，封装在new出来的InvocationHandler内</span></span><br><span class="line">        Object proxyOnClickListener = Proxy.newProxyInstance(context.getClass().getClassLoader(), <span class="keyword">new</span> Class[]&#123;View.OnClickListener.class&#125;, <span class="keyword">new</span> InvocationHandler() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(Object proxy, Method method, Object[] args)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">                Log.d(<span class="string">&quot;HookSetOnClickListener&quot;</span>, <span class="string">&quot;点击事件被hook到了&quot;</span>);<span class="comment">//加入自己的逻辑</span></span><br><span class="line">                <span class="keyword">return</span> method.invoke(onClickListenerInstance, args);<span class="comment">//执行被代理的对象的逻辑</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        <span class="comment">// 3. 用我们自己的点击事件代理类，设置到&quot;持有者&quot;中</span></span><br><span class="line">        field.set(mListenerInfo, proxyOnClickListener);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 自定义代理类</span></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">ProxyOnClickListener</span> <span class="keyword">implements</span> <span class="title">View</span>.<span class="title">OnClickListener</span> </span>&#123;</span><br><span class="line">    View.OnClickListener oriLis;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ProxyOnClickListener</span><span class="params">(View.OnClickListener oriLis)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.oriLis = oriLis;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(View v)</span> </span>&#123;</span><br><span class="line">        Log.d(<span class="string">&quot;HookSetOnClickListener&quot;</span>, <span class="string">&quot;点击事件被hook到了&quot;</span>);</span><br><span class="line">        <span class="keyword">if</span> (oriLis != <span class="keyword">null</span>) &#123;</span><br><span class="line">            oriLis.onClick(v);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h1 id="Proguard"><a href="#Proguard" class="headerlink" title="Proguard"></a>Proguard</h1><p>Proguard 具有以下三个功能：</p>
+<ul>
+<li>压缩（Shrink）: 检测和删除没有使用的类，字段，方法和特性</li>
+<li>优化（Optimize） : 分析和优化Java字节码</li>
+<li>混淆（Obfuscate）: 使用简短的无意义的名称，对类，字段和方法进行重命名</li>
+</ul>
+<h2 id="公共模板"><a href="#公共模板" class="headerlink" title="公共模板"></a>公共模板</h2><figure class="highlight coffeescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">###</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># 对于一些基本指令的添加</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment">###</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span></span><br><span class="line"><span class="comment"># 代码混淆压缩比，在 0~7 之间，默认为 5，一般不做修改</span></span><br><span class="line">-optimizationpasses <span class="number">5</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 混合时不使用大小写混合，混合后的类名为小写</span></span><br><span class="line">-dontusemixedcaseclassnames</span><br><span class="line"></span><br><span class="line"><span class="comment"># 指定不去忽略非公共库的类</span></span><br><span class="line">-dontskipnonpubliclibraryclasses</span><br><span class="line"></span><br><span class="line"><span class="comment"># 这句话能够使我们的项目混淆后产生映射文件</span></span><br><span class="line"><span class="comment"># 包含有类名-&gt;混淆后类名的映射关系</span></span><br><span class="line">-verbose</span><br><span class="line"></span><br><span class="line"><span class="comment"># 指定不去忽略非公共库的类成员</span></span><br><span class="line">-dontskipnonpubliclibraryclassmembers</span><br><span class="line"></span><br><span class="line"><span class="comment"># 不做预校验，preverify 是 proguard 的四个步骤之一，Android 不需要 preverify，去掉这一步能够加快混淆速度。</span></span><br><span class="line">-dontpreverify</span><br><span class="line"></span><br><span class="line"><span class="comment"># 保留 Annotation 不混淆</span></span><br><span class="line">-keepattributes *Annotation*,InnerClasses</span><br><span class="line"></span><br><span class="line"><span class="comment"># 避免混淆泛型</span></span><br><span class="line">-keepattributes Signature</span><br><span class="line"></span><br><span class="line"><span class="comment"># 抛出异常时保留代码行号</span></span><br><span class="line">-keepattributes SourceFile,LineNumberTable</span><br><span class="line"></span><br><span class="line"><span class="comment"># 指定混淆是采用的算法，后面的参数是一个过滤器</span></span><br><span class="line"><span class="comment"># 这个过滤器是谷歌推荐的算法，一般不做更改</span></span><br><span class="line">-optimizations !code<span class="regexp">/simplification/cast,!field/</span>*,!<span class="class"><span class="keyword">class</span>/<span class="title">merging</span>/*</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">###</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># Android开发中一些需要保留的公共部分</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment">###</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 保留我们使用的四大组件，自定义的 Application 等等这些类不被混淆</span></span><br><span class="line"><span class="comment"># 因为这些子类都有可能被外部调用</span></span><br><span class="line">-keep public <span class="class"><span class="keyword">class</span> * <span class="keyword">extends</span> <span class="title">android</span>.<span class="title">app</span>.<span class="title">Activity</span></span></span><br><span class="line">-keep public <span class="class"><span class="keyword">class</span> * <span class="keyword">extends</span> <span class="title">android</span>.<span class="title">app</span>.<span class="title">Appliction</span></span></span><br><span class="line">-keep public <span class="class"><span class="keyword">class</span> * <span class="keyword">extends</span> <span class="title">android</span>.<span class="title">app</span>.<span class="title">Service</span></span></span><br><span class="line">-keep public <span class="class"><span class="keyword">class</span> * <span class="keyword">extends</span> <span class="title">android</span>.<span class="title">content</span>.<span class="title">BroadcastReceiver</span></span></span><br><span class="line">-keep public <span class="class"><span class="keyword">class</span> * <span class="keyword">extends</span> <span class="title">android</span>.<span class="title">content</span>.<span class="title">ContentProvider</span></span></span><br><span class="line">-keep public <span class="class"><span class="keyword">class</span> * <span class="keyword">extends</span> <span class="title">android</span>.<span class="title">app</span>.<span class="title">backup</span>.<span class="title">BackupAgentHelper</span></span></span><br><span class="line">-keep public <span class="class"><span class="keyword">class</span> * <span class="keyword">extends</span> <span class="title">android</span>.<span class="title">preference</span>.<span class="title">Preference</span></span></span><br><span class="line">-keep public <span class="class"><span class="keyword">class</span> * <span class="keyword">extends</span> <span class="title">android</span>.<span class="title">view</span>.<span class="title">View</span></span></span><br><span class="line">-keep public <span class="class"><span class="keyword">class</span> <span class="title">com</span>.<span class="title">android</span>.<span class="title">vending</span>.<span class="title">licensing</span>.<span class="title">ILicensingService</span></span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 保留 support 下的所有类及其内部类</span></span><br><span class="line">-keep <span class="class"><span class="keyword">class</span> <span class="title">android</span>.<span class="title">support</span>.** &#123; *; &#125;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 保留继承的</span></span><br><span class="line">-keep public <span class="class"><span class="keyword">class</span> * <span class="keyword">extends</span> <span class="title">android</span>.<span class="title">support</span>.<span class="title">v4</span>.**</span></span><br><span class="line">-keep public <span class="class"><span class="keyword">class</span> * <span class="keyword">extends</span> <span class="title">android</span>.<span class="title">support</span>.<span class="title">v7</span>.**</span></span><br><span class="line">-keep public <span class="class"><span class="keyword">class</span> * <span class="keyword">extends</span> <span class="title">android</span>.<span class="title">support</span>.<span class="title">annotation</span>.**</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 保留 R 下面的资源</span></span><br><span class="line">-keep <span class="class"><span class="keyword">class</span> **.<span class="title">R$</span>* &#123; *; &#125;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 保留本地 native 方法不被混淆</span></span><br><span class="line">-keepclasseswithmembernames <span class="class"><span class="keyword">class</span> * &#123;</span></span><br><span class="line">    native &lt;methods&gt;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 保留在 Activity 中的方法参数是view的方法，</span></span><br><span class="line"><span class="comment"># 这样以来我们在 layout 中写的 onClick 就不会被影响</span></span><br><span class="line">-keepclassmembers <span class="class"><span class="keyword">class</span> * <span class="keyword">extends</span> <span class="title">android</span>.<span class="title">app</span>.<span class="title">Activity</span> &#123;</span></span><br><span class="line">    public <span class="keyword">void</span> *(android.view.View);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 保留枚举类不被混淆</span></span><br><span class="line">-keepclassmembers enum * &#123;</span><br><span class="line">    public static **[] values();</span><br><span class="line">    public static ** valueOf(java.lang.<span class="built_in">String</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 保留我们自定义控件（继承自 View）不被混淆</span></span><br><span class="line">-keep public <span class="class"><span class="keyword">class</span> * <span class="keyword">extends</span> <span class="title">android</span>.<span class="title">view</span>.<span class="title">View</span> &#123;</span></span><br><span class="line">    *** get*();</span><br><span class="line">    <span class="keyword">void</span> set*(***);</span><br><span class="line">    public &lt;init&gt;(android.content.Context);</span><br><span class="line">    public &lt;init&gt;(android.content.Context, android.util.AttributeSet);</span><br><span class="line">    public &lt;init&gt;(android.content.Context, android.util.AttributeSet, int);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 保留 Parcelable 序列化类不被混淆</span></span><br><span class="line">-keep <span class="class"><span class="keyword">class</span> * <span class="title">implements</span> <span class="title">android</span>.<span class="title">os</span>.<span class="title">Parcelable</span> &#123;</span></span><br><span class="line">    public static final android.os.Parcelable$Creator *;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 保留 Serializable 序列化的类不被混淆</span></span><br><span class="line">-keepnames <span class="class"><span class="keyword">class</span> * <span class="title">implements</span> <span class="title">java</span>.<span class="title">io</span>.<span class="title">Serializable</span></span></span><br><span class="line">-keepclassmembers <span class="class"><span class="keyword">class</span> * <span class="title">implements</span> <span class="title">java</span>.<span class="title">io</span>.<span class="title">Serializable</span> &#123;</span></span><br><span class="line">    static final long serialVersionUID;</span><br><span class="line">    private static final java.io.ObjectStreamField[] serialPersistentFields;</span><br><span class="line">    !static !transient &lt;fields&gt;;</span><br><span class="line">    !private &lt;fields&gt;;</span><br><span class="line">    !private &lt;methods&gt;;</span><br><span class="line">    private <span class="keyword">void</span> writeObject(java.io.ObjectOutputStream);</span><br><span class="line">    private <span class="keyword">void</span> readObject(java.io.ObjectInputStream);</span><br><span class="line">    java.lang.<span class="built_in">Object</span> writeReplace();</span><br><span class="line">    java.lang.<span class="built_in">Object</span> readResolve();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 对于带有回调函数的 onXXEvent、**On*Listener 的，不能被混淆</span></span><br><span class="line">-keepclassmembers <span class="class"><span class="keyword">class</span> * &#123;</span></span><br><span class="line">    <span class="keyword">void</span> *(**On*Event);</span><br><span class="line">    <span class="keyword">void</span> *(**On*Listener);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># webView 处理，项目中没有使用到 webView 忽略即可</span></span><br><span class="line">-keepclassmembers <span class="class"><span class="keyword">class</span> <span class="title">fqcn</span>.<span class="title">of</span>.<span class="title">javascript</span>.<span class="title">interface</span>.<span class="title">for</span>.<span class="title">webview</span> &#123;</span></span><br><span class="line">    public *;</span><br><span class="line">&#125;</span><br><span class="line">-keepclassmembers <span class="class"><span class="keyword">class</span> * <span class="keyword">extends</span> <span class="title">android</span>.<span class="title">webkit</span>.<span class="title">webViewClient</span> &#123;</span></span><br><span class="line">    public <span class="keyword">void</span> *(android.webkit.WebView, java.lang.<span class="built_in">String</span>, android.graphics.Bitmap);</span><br><span class="line">    public boolean *(android.webkit.WebView, java.lang.<span class="built_in">String</span>);</span><br><span class="line">&#125;</span><br><span class="line">-keepclassmembers <span class="class"><span class="keyword">class</span> * <span class="keyword">extends</span> <span class="title">android</span>.<span class="title">webkit</span>.<span class="title">webViewClient</span> &#123;</span></span><br><span class="line">    public <span class="keyword">void</span> *(android.webkit.webView, java.lang.<span class="built_in">String</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># js</span></span><br><span class="line">-keepattributes JavascriptInterface</span><br><span class="line">-keep <span class="class"><span class="keyword">class</span> <span class="title">android</span>.<span class="title">webkit</span>.<span class="title">JavascriptInterface</span> &#123; *; &#125;</span></span><br><span class="line">-keepclassmembers <span class="class"><span class="keyword">class</span> * &#123;</span></span><br><span class="line">    @android.webkit.JavascriptInterface &lt;methods&gt;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># @Keep</span></span><br><span class="line">-keep,allowobfuscation @interface android.support.annotation.Keep</span><br><span class="line">-keep @android.support.annotation.Keep <span class="class"><span class="keyword">class</span> *</span></span><br><span class="line">-keepclassmembers <span class="class"><span class="keyword">class</span> * &#123;</span></span><br><span class="line">    @android.support.annotation.Keep *;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="aar中增加独立的混淆配置"><a href="#aar中增加独立的混淆配置" class="headerlink" title="aar中增加独立的混淆配置"></a>aar中增加独立的混淆配置</h2><p><code>build.gralde</code></p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">android &#123;</span><br><span class="line">    ···</span><br><span class="line">    defaultConfig &#123;</span><br><span class="line">        ···</span><br><span class="line">        consumerProguardFile <span class="string">&#x27;proguard-rules.pro&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line">    ···</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="检查混淆和追踪异常"><a href="#检查混淆和追踪异常" class="headerlink" title="检查混淆和追踪异常"></a>检查混淆和追踪异常</h2><p>开启Proguard功能，则每次构建时 ProGuard 都会输出下列文件：</p>
+<ul>
+<li><p>dump.txt<br>说明 APK 中所有类文件的内部结构。</p>
+</li>
+<li><p>mapping.txt<br>提供原始与混淆过的类、方法和字段名称之间的转换。</p>
+</li>
+<li><p>seeds.txt<br>列出未进行混淆的类和成员。</p>
+</li>
+<li><p>usage.txt<br>列出从 APK 移除的代码。</p>
+</li>
+</ul>
+<p>这些文件保存在/build/outputs/mapping/release/ 中。我们可以查看seeds.txt里面是否是我们需要保留的，以及usage.txt里查看是否有误删除的代码。mapping.txt文件很重要，由于我们的部分代码是经过重命名的，如果该部分出现bug，对应的异常堆栈信息里的类或成员也是经过重命名的，难以定位问题。我们可以用 retrace 脚本（在 Windows 上为 retrace.bat；在 Mac/Linux 上为 retrace.sh）。它位于/tools/proguard/ 目录中。该脚本利用 mapping.txt文件和你的异常堆栈文件生成没有经过混淆的异常堆栈文件,这样就可以看清是哪里出问题了。使用 retrace 工具的语法如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">retrace.bat|retrace.sh [-verbose] mapping.txt [&lt;stacktrace_file&gt;]</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h1 id="补齐Android技能树-从害怕到玩转Android代码混淆"><a href="#补齐Android技能树-从害怕到玩转Android代码混淆" class="headerlink" title="补齐Android技能树-从害怕到玩转Android代码混淆"></a><a target="_blank" rel="noopener" href="https://juejin.cn/post/6966526844552085512">补齐Android技能树-从害怕到玩转Android代码混淆</a></h1><h1 id="依赖注入"><a href="#依赖注入" class="headerlink" title="依赖注入"></a>依赖注入</h1><h2 id="Hilt"><a href="#Hilt" class="headerlink" title="Hilt"></a>Hilt</h2><p>Hilt依赖注入，基于Dagger</p>
+<h2 id="AOP"><a href="#AOP" class="headerlink" title="AOP"></a>AOP</h2><p><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/3de31e13f2fa">Android Aop基本知识和使用</a></p>
+<p>AOP：Aspect Oriented Programming：<strong>面向切面编程，通过预编译方式和运行期动态代理实现程序功能的统一维护的一种技术</strong>。AOP是OOP的延续，是软件开发中的一个热点，也是Spring框架中的一个重要内容，是函数式编程的一种衍生范型。<strong>利用AOP可以对业务逻辑的各个部分进行隔离，从而使得业务逻辑各部分之间的耦合度降低，提高程序的可重用性，同时提高了开发的效率。</strong></p>
+<p>AOP思想可以说成是插桩。关注下图AspectJ的插入时机</p>
+<p><img src="https://gitee.com/shen_bh/pic-bed/raw/master/img/%E5%AE%89%E5%8D%93/AOP%E6%8F%92%E5%85%A5%E6%97%B6%E6%9C%BA%E5%9B%BE.jpg" alt="AOP插入时机图"></p>
+<p>最常见的AOP就是代理</p>
+<h2 id="ASM"><a href="#ASM" class="headerlink" title="ASM"></a>ASM</h2><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/huachao1001/article/details/51810328">在AndroidStudio中实现自定义Gradle插件</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/zhangjg_blog/article/details/22976929">Class文件格式实战：使用ASM动态生成class文件</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/16ed4d233fd1">【Android】函数插桩（Gradle + ASM）</a></p>
+<p>自定义Gradle插件+ASM实现埋点，记录页面被打开\关闭（对应<code>Activity</code>的<code>onCreate()</code>和<code>onDestory()</code>）</p>
+<p><strong>思路：</strong>在class文件转换成dex之前，修改它，修改完成覆盖class文件。</p>
+<blockquote>
+<p>class文件：Java源文件经过<code>javac</code>后生成的一种紧凑的8位字节的二进制流文件。</p>
+<p>插入点：“dex”节点，表示将<code>class</code>文件打包到<code>dex</code>文件的过程，其输入包括<code>class</code>文件以及第三方依赖的<code>class</code>文件</p>
+<p>关于Transform API ：从<code>1.5.0-beta1</code>开始，Gradle插件包含一个Transform API，允许第三方插件在将编译后的类文件转换为<code>dex</code>文件之前对其进行操作。</p>
+<p>关于混淆：可以不用当心。混淆其实是个<code>ProguardTransform</code>，在自定义的Transform之后执行。</p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Hook/" rel="tag"><i class="fa fa-tag"></i> Hook</a>
+              <a href="/tags/Proguard/" rel="tag"><i class="fa fa-tag"></i> Proguard</a>
+              <a href="/tags/%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5/" rel="tag"><i class="fa fa-tag"></i> 依赖注入</a>
+              <a href="/tags/Hilt/" rel="tag"><i class="fa fa-tag"></i> Hilt</a>
+              <a href="/tags/AOP/" rel="tag"><i class="fa fa-tag"></i> AOP</a>
+              <a href="/tags/ASM/" rel="tag"><i class="fa fa-tag"></i> ASM</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/2516116413/" rel="prev" title="集合相关">
+      <i class="fa fa-chevron-left"></i> 集合相关
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/2247155331/" rel="next" title="书籍-Andorid进阶之路">
+      书籍-Andorid进阶之路 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Hook"><span class="nav-number">1.</span> <span class="nav-text">Hook</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E6%B5%81%E7%A8%8B"><span class="nav-number">1.1.</span> <span class="nav-text">基本流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B"><span class="nav-number">1.2.</span> <span class="nav-text">使用示例</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Proguard"><span class="nav-number">2.</span> <span class="nav-text">Proguard</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AC%E5%85%B1%E6%A8%A1%E6%9D%BF"><span class="nav-number">2.1.</span> <span class="nav-text">公共模板</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#aar%E4%B8%AD%E5%A2%9E%E5%8A%A0%E7%8B%AC%E7%AB%8B%E7%9A%84%E6%B7%B7%E6%B7%86%E9%85%8D%E7%BD%AE"><span class="nav-number">2.2.</span> <span class="nav-text">aar中增加独立的混淆配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A3%80%E6%9F%A5%E6%B7%B7%E6%B7%86%E5%92%8C%E8%BF%BD%E8%B8%AA%E5%BC%82%E5%B8%B8"><span class="nav-number">2.3.</span> <span class="nav-text">检查混淆和追踪异常</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A1%A5%E9%BD%90Android%E6%8A%80%E8%83%BD%E6%A0%91-%E4%BB%8E%E5%AE%B3%E6%80%95%E5%88%B0%E7%8E%A9%E8%BD%ACAndroid%E4%BB%A3%E7%A0%81%E6%B7%B7%E6%B7%86"><span class="nav-number">3.</span> <span class="nav-text">补齐Android技能树-从害怕到玩转Android代码混淆</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5"><span class="nav-number">4.</span> <span class="nav-text">依赖注入</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Hilt"><span class="nav-number">4.1.</span> <span class="nav-text">Hilt</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AOP"><span class="nav-number">4.2.</span> <span class="nav-text">AOP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ASM"><span class="nav-number">4.3.</span> <span class="nav-text">ASM</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="shenbh@qq.com"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">shenbh@qq.com</p>
+  <div class="site-description" itemprop="description">嗨，我是阿炳，欢迎来交流。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">198</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">232</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="mailto:shenbh@qq.com" title="E-Mail → mailto:shenbh@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://gitee.com/shen_bh" title="Gitee → https:&#x2F;&#x2F;gitee.com&#x2F;shen_bh" rel="noopener" target="_blank"><i class="fab fa-google fa-fw"></i>Gitee</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://juejin.im/user/57ea31a1a22b9d0061656f52" title="掘金 → https:&#x2F;&#x2F;juejin.im&#x2F;user&#x2F;57ea31a1a22b9d0061656f52" rel="noopener" target="_blank"><i class="fab fa-meetup fa-fw"></i>掘金</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;ptwenzi?spm&#x3D;1010.2135.3001.5113" rel="noopener" target="_blank"><i class="fab fa-gratipay fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://blankj.com/" title="https:&#x2F;&#x2F;blankj.com&#x2F;" rel="noopener" target="_blank">blankj</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://wuxiaolong.me/" title="http:&#x2F;&#x2F;wuxiaolong.me&#x2F;" rel="noopener" target="_blank">吴小龙同学</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://isuperqiang.cn/" title="https:&#x2F;&#x2F;isuperqiang.cn&#x2F;" rel="noopener" target="_blank">落英坠露</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://dp2px.com/" title="https:&#x2F;&#x2F;dp2px.com&#x2F;" rel="noopener" target="_blank">水寒的博客</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://hexo.yuanjh.cn/" title="https:&#x2F;&#x2F;hexo.yuanjh.cn&#x2F;" rel="noopener" target="_blank">闻鸡起舞</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.yanghujun.com/" title="https:&#x2F;&#x2F;www.yanghujun.com&#x2F;" rel="noopener" target="_blank">八归少年</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhpanvip.gitee.io/" title="https:&#x2F;&#x2F;zhpanvip.gitee.io&#x2F;" rel="noopener" target="_blank">马可没有菠萝</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://omooo.top/" title="http:&#x2F;&#x2F;omooo.top&#x2F;" rel="noopener" target="_blank">Omooo</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://hishark777.com/" title="https:&#x2F;&#x2F;hishark777.com&#x2F;" rel="noopener" target="_blank">777的博客</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">shenbh@qq.com</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">1.9m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">28:36</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

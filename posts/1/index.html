@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"shenbh.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="AndroidManifest清单文件合并优先级（低的合并到高的）【库清单&lt;主清单&lt;flavor的清单】">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安卓-Manifest">
+<meta property="og:url" content="http://shenbh.github.io/posts/1/index.html">
+<meta property="og:site_name" content="ABing">
+<meta property="og:description" content="AndroidManifest清单文件合并优先级（低的合并到高的）【库清单&lt;主清单&lt;flavor的清单】">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/shen_bh/pic-bed/raw/master/img/%E5%AE%89%E5%8D%93/%E6%B8%85%E5%8D%95%E6%96%87%E4%BB%B6%E5%90%88%E5%B9%B61.png">
+<meta property="article:published_time" content="2021-04-30T03:24:03.000Z">
+<meta property="article:modified_time" content="2021-06-01T05:57:33.216Z">
+<meta property="article:author" content="shenbh@qq.com">
+<meta property="article:tag" content="Manifest">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/shen_bh/pic-bed/raw/master/img/%E5%AE%89%E5%8D%93/%E6%B8%85%E5%8D%95%E6%96%87%E4%BB%B6%E5%90%88%E5%B9%B61.png">
+
+<link rel="canonical" href="http://shenbh.github.io/posts/1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>安卓-Manifest | ABing</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">ABing</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Just do IT Now.</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/shenbh" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="shenbh@qq.com">
+      <meta itemprop="description" content="嗨，我是阿炳，欢迎来交流。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ABing">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          安卓-Manifest
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-04-30 11:24:03" itemprop="dateCreated datePublished" datetime="2021-04-30T11:24:03+08:00">2021-04-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-01 13:57:33" itemprop="dateModified" datetime="2021-06-01T13:57:33+08:00">2021-06-01</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AE%89%E5%8D%93/" itemprop="url" rel="index"><span itemprop="name">安卓</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>12k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>11 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="AndroidManifest清单文件"><a href="#AndroidManifest清单文件" class="headerlink" title="AndroidManifest清单文件"></a>AndroidManifest清单文件</h1><h2 id="合并优先级（低的合并到高的）【库清单-lt-主清单-lt-flavor的清单】"><a href="#合并优先级（低的合并到高的）【库清单-lt-主清单-lt-flavor的清单】" class="headerlink" title="合并优先级（低的合并到高的）【库清单&lt;主清单&lt;flavor的清单】"></a><a target="_blank" rel="noopener" href="https://developer.android.google.cn/studio/build/manifest-merge">合并优先级（低的合并到高的）</a>【库清单&lt;主清单&lt;flavor的清单】</h2><p><img src="https://gitee.com/shen_bh/pic-bed/raw/master/img/%E5%AE%89%E5%8D%93/%E6%B8%85%E5%8D%95%E6%96%87%E4%BB%B6%E5%90%88%E5%B9%B61.png" alt="安卓/清单文件合并优先级"></p>
+<ul>
+<li><p>有三种基本的清单文件可以互相合并，它们的合并优先级如下（按优先级由高到低的顺序）：</p>
+<ol>
+<li><p>构建变体的清单文件</p>
+<p>如果变体有多个源代码集，则其清单优先级如下：</p>
+<ol>
+<li>构建变体清单（如 src/demoDebug/）</li>
+<li>构建类型清单（如 src/debug/）</li>
+<li>产品变种清单（如 src/demo/）<br>如果使用的是变种维度，则清单优先级与每个维度在 flavorDimensions 属性中的列示顺序（按优先级由高到低的顺序）对应。</li>
+</ol>
+</li>
+<li><p>应用模块的注清单文件</p>
+</li>
+<li><p>所包含的库中的清单文件<br> 如果有多个库，则其清单优先级与依赖顺序（库出现在 Gradle dependencies 代码块中的顺序）一致。</p>
+</li>
+</ol>
+</li>
+<li><p>build.gradle中构建配置将替换合并后的清单文件中所有对应的属性。如：build.gradle中的 minSdkVersion 将替换 <uses-sdk> 清单元素中的匹配属性。为避免混淆，应去掉 <uses-sdk> 只在 build.gradle中定义这些属性。</p>
+</li>
+</ul>
+<h2 id="合并冲突启发法"><a href="#合并冲突启发法" class="headerlink" title="合并冲突启发法"></a>合并冲突启发法</h2><table>
+<thead>
+<tr>
+<th align="left">高优先级属性</th>
+<th align="left">低优先级属性</th>
+<th align="left">属性的合并结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">没有值</td>
+<td align="left">没有值</td>
+<td align="left">没有值（使用默认值）</td>
+</tr>
+<tr>
+<td align="left">没有值</td>
+<td align="left">值 B</td>
+<td align="left">值 B</td>
+</tr>
+<tr>
+<td align="left">值 A</td>
+<td align="left">没有值</td>
+<td align="left">值 A</td>
+</tr>
+<tr>
+<td align="left">值 A</td>
+<td align="left">值 A</td>
+<td align="left">值 A</td>
+</tr>
+<tr>
+<td align="left">值 A</td>
+<td align="left">值 B</td>
+<td align="left"><strong>冲突错误</strong> - 您必须添加<a target="_blank" rel="noopener" href="https://developer.android.google.cn/studio/build/manifest-merge#merge_rule_markers">合并规则标记</a></td>
+</tr>
+</tbody></table>
+<ul>
+<li><p>在某些情况下，合并工具会采取其他行为方式来避免合并冲突：</p>
+<ul>
+<li><manifest> 元素中的属性绝不会合并在一起，只会使用优先级最高的清单中的属性。</li>
+</ul>
+</li>
+<li><p><uses-feature> 和 <uses-library> 元素中 android:required 属性使用 OR 合并，这样如果发生冲突，系统将应用 “true” 并始终包含一个清单所需的功能或库。</p>
+<ul>
+<li><p><uses-sdk> 元素中的属性始终使用优先级较高的清单中的值，但以下情况除外：</p>
+<ul>
+<li><p>如果优先级低的清单中 minSdkVersion 值较高，除非应用 overrideLibrary 合并规则，否则会发生错误。</p>
+</li>
+<li><p>如果优先级低的清单中 minSdkVersion 值较低，则将会使用优先级高的清单中的值。也会添加所有必要的系统权限。</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>绝不会在清单之间匹配 <intent-filter> 元素。每个该元素都被视为唯一的元素，并添加到合并后的清单中的共同父元素中。</p>
+</li>
+</ul>
+<h3 id="合并规则标记"><a href="#合并规则标记" class="headerlink" title="合并规则标记"></a>合并规则标记</h3><p>所有标记都属于Android tools命名空间，需要添加对应的 xmlns:tools 命名空间 优先在优先级高的清单文件中查找这些标记。</p>
+<h4 id="节点标记"><a href="#节点标记" class="headerlink" title="节点标记"></a>节点标记</h4><p>需要对整个XML元素（给定清单元素中的所有属性及其所有子标记）应用合并规则</p>
+<ul>
+<li><p><code>tools:node=&quot;merge&quot;</code></p>
+<p>在没有冲突的情况下，使用<a target="_blank" rel="noopener" href="https://developer.android.google.cn/studio/build/manifest-merge#merge_conflict_heuristics">合并冲突启发法</a>合并此标记中的所有属性以及所有嵌套元素。<strong>这是元素的默认行为</strong>。</p>
+<p>低优先级清单：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.ActivityOne&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:windowSoftInputMode</span>=<span class="string">&quot;stateUnchanged&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">intent-filter</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">action</span> <span class="attr">android:name</span>=<span class="string">&quot;android.intent.action.SEND&quot;</span> /&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">category</span> <span class="attr">android:name</span>=<span class="string">&quot;android.intent.category.DEFAULT&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">intent-filter</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">activity</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>高优先级清单：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.ActivityOne&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:screenOrientation</span>=<span class="string">&quot;portrait&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">tools:node</span>=<span class="string">&quot;merge&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">activity</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>合并后的清单结果：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.ActivityOne&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:screenOrientation</span>=<span class="string">&quot;portrait&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:windowSoftInputMode</span>=<span class="string">&quot;stateUnchanged&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">intent-filter</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">action</span> <span class="attr">android:name</span>=<span class="string">&quot;android.intent.action.SEND&quot;</span> /&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">category</span> <span class="attr">android:name</span>=<span class="string">&quot;android.intent.category.DEFAULT&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">intent-filter</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">activity</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+<li><p><code>tools:node=&quot;merge-only-attributes&quot;</code></p>
+<p>仅合并此标记中的属性，不合并嵌套元素。</p>
+<p>低优先级清单：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.ActivityOne&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:windowSoftInputMode</span>=<span class="string">&quot;stateUnchanged&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">intent-filter</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">action</span> <span class="attr">android:name</span>=<span class="string">&quot;android.intent.action.SEND&quot;</span> /&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">data</span> <span class="attr">android:type</span>=<span class="string">&quot;image/*&quot;</span> /&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">category</span> <span class="attr">android:name</span>=<span class="string">&quot;android.intent.category.DEFAULT&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">intent-filter</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">activity</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>高优先级清单：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.ActivityOne&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:screenOrientation</span>=<span class="string">&quot;portrait&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">tools:node</span>=<span class="string">&quot;merge-only-attributes&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">activity</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>合并后的清单结果：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.ActivityOne&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:screenOrientation</span>=<span class="string">&quot;portrait&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:windowSoftInputMode</span>=<span class="string">&quot;stateUnchanged&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">activity</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+<li><p><code>tools:node=&quot;remove&quot;</code></p>
+<p>从合并后的清单中移除此元素。虽然您似乎只需要删除此元素即可，但如果您发现合并后的清单中有不需要的元素，而且该元素是由不受您控制的优先级较低的清单文件（如导入的库）提供的，则必须使用此属性。</p>
+<p>低优先级清单：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity-alias</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.alias&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">meta-data</span> <span class="attr">android:name</span>=<span class="string">&quot;cow&quot;</span></span></span><br><span class="line"><span class="tag">      <span class="attr">android:value</span>=<span class="string">&quot;@string/moo&quot;</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">meta-data</span> <span class="attr">android:name</span>=<span class="string">&quot;duck&quot;</span></span></span><br><span class="line"><span class="tag">      <span class="attr">android:value</span>=<span class="string">&quot;@string/quack&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">activity-alias</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>高优先级清单：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity-alias</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.alias&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">meta-data</span> <span class="attr">android:name</span>=<span class="string">&quot;cow&quot;</span></span></span><br><span class="line"><span class="tag">      <span class="attr">tools:node</span>=<span class="string">&quot;remove&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">activity-alias</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>合并后的清单结果：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity-alias</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.alias&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">meta-data</span> <span class="attr">android:name</span>=<span class="string">&quot;duck&quot;</span></span></span><br><span class="line"><span class="tag">      <span class="attr">android:value</span>=<span class="string">&quot;@string/quack&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">activity-alias</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+<li><p><code>tools:node=&quot;removeAll&quot;</code></p>
+<p>与 <code>tools:node=&quot;remove&quot;</code> 类似，但它会移除与此元素类型匹配的所有元素（同一父元素内）。</p>
+<p>低优先级清单：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity-alias</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.alias&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">meta-data</span> <span class="attr">android:name</span>=<span class="string">&quot;cow&quot;</span></span></span><br><span class="line"><span class="tag">      <span class="attr">android:value</span>=<span class="string">&quot;@string/moo&quot;</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">meta-data</span> <span class="attr">android:name</span>=<span class="string">&quot;duck&quot;</span></span></span><br><span class="line"><span class="tag">      <span class="attr">android:value</span>=<span class="string">&quot;@string/quack&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">activity-alias</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>高优先级清单：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity-alias</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.alias&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">meta-data</span> <span class="attr">tools:node</span>=<span class="string">&quot;removeAll&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">activity-alias</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>合并后的清单结果：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity-alias</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.alias&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">activity-alias</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+<li><p><code>tools:node=&quot;replace&quot;</code></p>
+<p>完全替换优先级较低的元素。也就是说，如果优先级较低的清单中有匹配的元素，会将其忽略并完全按照此元素在此清单中显示的样子使用它。</p>
+<p>低优先级清单：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity-alias</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.alias&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">meta-data</span> <span class="attr">android:name</span>=<span class="string">&quot;cow&quot;</span></span></span><br><span class="line"><span class="tag">      <span class="attr">android:value</span>=<span class="string">&quot;@string/moo&quot;</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">meta-data</span> <span class="attr">android:name</span>=<span class="string">&quot;duck&quot;</span></span></span><br><span class="line"><span class="tag">      <span class="attr">android:value</span>=<span class="string">&quot;@string/quack&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">activity-alias</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>高优先级清单：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity-alias</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.alias&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">tools:node</span>=<span class="string">&quot;replace&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">meta-data</span> <span class="attr">android:name</span>=<span class="string">&quot;fox&quot;</span></span></span><br><span class="line"><span class="tag">      <span class="attr">android:value</span>=<span class="string">&quot;@string/dingeringeding&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">activity-alias</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>合并后的清单结果：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity-alias</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.alias&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">meta-data</span> <span class="attr">android:name</span>=<span class="string">&quot;fox&quot;</span></span></span><br><span class="line"><span class="tag">      <span class="attr">android:value</span>=<span class="string">&quot;@string/dingeringeding&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">activity-alias</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+<li><p><code>tools:node=&quot;strict&quot;</code></p>
+<p>每当此元素在优先级较低的清单中与在优先级较高的清单中不完全匹配时，都会导致构建失败（除非已通过其他合并规则标记解决）。这会替换<a target="_blank" rel="noopener" href="https://developer.android.google.cn/studio/build/manifest-merge#merge_conflict_heuristics">合并冲突启发式算法</a>。例如，如果优先级较低的清单只是包含一个额外的属性，构建就会失败（尽管默认行为是将该额外属性添加到合并后的清单中）。</p>
+<p>低优先级清单：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.ActivityOne&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:windowSoftInputMode</span>=<span class="string">&quot;stateUnchanged&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">intent-filter</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">action</span> <span class="attr">android:name</span>=<span class="string">&quot;android.intent.action.SEND&quot;</span> /&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">category</span> <span class="attr">android:name</span>=<span class="string">&quot;android.intent.category.DEFAULT&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">intent-filter</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">activity</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>高优先级清单：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.ActivityOne&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:screenOrientation</span>=<span class="string">&quot;portrait&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">tools:node</span>=<span class="string">&quot;strict&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">activity</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>这会导致清单合并错误</strong>。在严格模式下，这两个清单元素不能有任何不同。因此，您必须应用其他合并规则标记解决这些差异。（通常，这两个元素会正常合并在一起，如上面的 <code>tools:node=&quot;merge&quot;</code> 示例中所示。）</p>
+</li>
+</ul>
+<h4 id="属性标记"><a href="#属性标记" class="headerlink" title="属性标记"></a>属性标记</h4><p><strong>只需</strong>对清单标记中的特定属性应用合并规则，用以下属性。每个属性可接受一个或多个属性名称（包括属性命名空间），属性名称之间用英文逗号分隔。</p>
+<ul>
+<li><p><code>tools:remove=&quot;attr, ...&quot;</code></p>
+<p>从合并后的清单中移除指定属性。虽然您似乎只需要删除这些属性即可，但如果优先级较低的清单文件包含这些属性，而您想确保它们不会被纳入合并后的清单，则必须使用此属性。</p>
+<p>低优先级清单：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.ActivityOne&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:windowSoftInputMode</span>=<span class="string">&quot;stateUnchanged&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>高优先级清单：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.ActivityOne&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:screenOrientation</span>=<span class="string">&quot;portrait&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">tools:remove</span>=<span class="string">&quot;android:windowSoftInputMode&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>合并后的清单结果：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.ActivityOne&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:screenOrientation</span>=<span class="string">&quot;portrait&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+<li><p><code>tools:replace=&quot;attr, ...&quot;</code></p>
+<p>将优先级较低的清单中的指定属性替换为此清单中的属性。换句话说，始终保留优先级较高的清单中的值。</p>
+<p>低优先级清单：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.ActivityOne&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:theme</span>=<span class="string">&quot;@oldtheme&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:exported</span>=<span class="string">&quot;false&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:windowSoftInputMode</span>=<span class="string">&quot;stateUnchanged&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>高优先级清单：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.ActivityOne&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:theme</span>=<span class="string">&quot;@newtheme&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:exported</span>=<span class="string">&quot;true&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:screenOrientation</span>=<span class="string">&quot;portrait&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">tools:replace</span>=<span class="string">&quot;android:theme,android:exported&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>合并后的清单结果：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.ActivityOne&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:theme</span>=<span class="string">&quot;@newtheme&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:exported</span>=<span class="string">&quot;true&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:screenOrientation</span>=<span class="string">&quot;portrait&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:windowSoftInputMode</span>=<span class="string">&quot;stateUnchanged&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+<li><p><code>tools:strict=&quot;attr, ...&quot;</code></p>
+<p>每当这些属性在优先级较低的清单中与在优先级较高的清单中不完全匹配时，都会导致构建失败。<strong>这是所有属性的默认行为</strong>，但具有特殊行为的属性除外，如<a target="_blank" rel="noopener" href="https://developer.android.google.cn/studio/build/manifest-merge#merge_conflict_heuristics">合并冲突启发法</a>中所述。低优先级清单：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.ActivityOne&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:screenOrientation</span>=<span class="string">&quot;landscape&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">activity</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>高优先级清单：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.ActivityOne&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:screenOrientation</span>=<span class="string">&quot;portrait&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">tools:strict</span>=<span class="string">&quot;android:screenOrientation&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">activity</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>这会导致清单合并错误</strong>。您必须应用其他合并规则标记解决冲突。（切记：这是默认行为，因此如果您移除 <code>tools:strict=&quot;screenOrientation&quot;</code>，上面的示例将具有相同的结果。）</p>
+</li>
+<li><p>您也可以对一个元素应用多个标记，如下所示。</p>
+<p>低优先级清单：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.ActivityOne&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:theme</span>=<span class="string">&quot;@oldtheme&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:exported</span>=<span class="string">&quot;false&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:allowTaskReparenting</span>=<span class="string">&quot;true&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:windowSoftInputMode</span>=<span class="string">&quot;stateUnchanged&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>高优先级清单：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.ActivityOne&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:theme</span>=<span class="string">&quot;@newtheme&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:exported</span>=<span class="string">&quot;true&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:screenOrientation</span>=<span class="string">&quot;portrait&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">tools:replace</span>=<span class="string">&quot;android:theme,android:exported&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">tools:remove</span>=<span class="string">&quot;android:windowSoftInputMode&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>合并后的清单结果：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity</span> <span class="attr">android:name</span>=<span class="string">&quot;com.example.ActivityOne&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:theme</span>=<span class="string">&quot;@newtheme&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:exported</span>=<span class="string">&quot;true&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:allowTaskReparenting</span>=<span class="string">&quot;true&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:screenOrientation</span>=<span class="string">&quot;portrait&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="标记选择器"><a href="#标记选择器" class="headerlink" title="标记选择器"></a>标记选择器</h4><p>只想对导入的某个特定库应用合并规则标记，请添加带有库软件包名称的<code>tools:selector</code>属性。</p>
+<p>如：对于下面的清单，只有在优先级较低的清单文件来自 <code>com.example.lib1</code> 库时，才会应用 <code>remove</code> 合并规则。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">permission</span> <span class="attr">android:name</span>=<span class="string">&quot;permissionOne&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">tools:node</span>=<span class="string">&quot;remove&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">tools:selector</span>=<span class="string">&quot;com.example.lib1&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>如果优先级较低的清单文件来自其他任何来源，都会忽略<code>remove</code>合并规则。</p>
+<p><strong>注意</strong>：如果将此属性与其中一个属性标记配合使用，则它会应用到该标记中指定的所有属性。</p>
+<h3 id="替换导入的库的"><a href="#替换导入的库的" class="headerlink" title="替换导入的库的 "></a>替换导入的库的 <uses-sdk></h3><p>默认情况下，导入 <code>minSdkVersion</code> 值高于主清单文件的库时会出错，而且无法导入该库。如需使合并工具忽略此冲突并导入库，同时保留应用的较低 <code>minSdkVersion</code> 值，请将 <code>overrideLibrary</code> 属性添加到 <code>&lt;uses-sdk&gt;</code> 标记。属性值可以是一个或多个库软件包名称（用英文逗号分隔），指明可以替换主清单的 <code>minSdkVersion</code> 的库。</p>
+<p>例如，如果应用的主清单按如下方式应用 <code>overrideLibrary</code>：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">manifest</span> <span class="attr">xmlns:android</span>=<span class="string">&quot;http://schemas.android.com/apk/res/android&quot;</span></span></span><br><span class="line"><span class="tag">          <span class="attr">package</span>=<span class="string">&quot;com.example.app&quot;</span></span></span><br><span class="line"><span class="tag">          <span class="attr">xmlns:tools</span>=<span class="string">&quot;http://schemas.android.com/tools&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">uses-sdk</span> <span class="attr">tools:overrideLibrary</span>=<span class="string">&quot;com.example.lib1, com.example.lib2&quot;</span>/&gt;</span></span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>则以下清单可以合并，而不会出现与 <code>&lt;uses-sdk&gt;</code> 标记相关的错误，合并后的清单将保留应用清单中的 <code>minSdkVersion=&quot;2&quot;</code>。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">manifest</span> <span class="attr">xmlns:android</span>=<span class="string">&quot;http://schemas.android.com/apk/res/android&quot;</span></span></span><br><span class="line"><span class="tag">          <span class="attr">package</span>=<span class="string">&quot;com.example.lib1&quot;</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">uses-sdk</span> <span class="attr">android:minSdkVersion</span>=<span class="string">&quot;4&quot;</span> /&gt;</span></span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<h3 id="隐式系统权限"><a href="#隐式系统权限" class="headerlink" title="隐式系统权限"></a>隐式系统权限</h3><p>一些曾经可由应用自由访问的 Android API 在最新的 Android 版本中受到了<a target="_blank" rel="noopener" href="https://developer.android.google.cn/guide/topics/security/permissions">系统权限</a>的限制。为了避免中断预期会访问这些 API 的应用，最新的 Android 版本允许应用在无权限的情况下继续访问这些 API，条件是它们将 <code>targetSdkVersion</code> 设为低于添加限制的版本的值。此行为会有效地向应用授予隐式权限，以允许它们访问这些 API。因此，这可能会对具有不同 <code>targetSdkVersion</code> 值的合并后的清单产生以下影响。</p>
+<p>如果优先级较低的清单文件具有较低的 <code>targetSdkVersion</code> 值，因而为其提供了一项隐式权限，但优先级较高的清单不具备相同的隐式权限（因为它的 <code>targetSdkVersion</code> 等于或高于添加限制的版本），则合并工具会向合并后的清单明确添加相应的系统权限。</p>
+<p>例如，如果您的应用将 <code>targetSdkVersion</code> 设为 4 或更高的值，但导入的库将 <code>targetSdkVersion</code> 设为 3 或更低的值，则合并工具会向合并后的清单添加 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/android/Manifest.permission#WRITE_EXTERNAL_STORAGE"><code>WRITE_EXTERNAL_STORAGE</code></a> 权限。表 2 列出了可以向合并后的清单添加的所有可能的权限。</p>
+<p><strong>注意</strong>：如果您已将应用的 <code>targetSdkVersion</code> 设为 23 或更高的值，那么当应用试图访问受任何危险权限保护的 API 时，您必须对这些权限执行运行时权限请求。如需获得更多指导，请参阅<a target="_blank" rel="noopener" href="https://developer.android.google.cn/training/permissions">使用系统权限</a>。</p>
+<p><strong>表 2.</strong> 合并工具可以向合并后的清单添加的权限的列表</p>
+<table>
+<thead>
+<tr>
+<th align="left">优先级较低的清单声明</th>
+<th align="left">向合并后的清单添加的权限</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>targetSdkVersion</code> 为 3 或更低的值</td>
+<td align="left"><code>WRITE_EXTERNAL_STORAGE</code>、<code>READ_PHONE_STATE</code></td>
+</tr>
+<tr>
+<td align="left"><code>targetSdkVersion</code> 为 15 或更低的值，并且使用 <code>READ_CONTACTS</code></td>
+<td align="left"><code>READ_CALL_LOG</code></td>
+</tr>
+<tr>
+<td align="left"><code>targetSdkVersion</code> 为 15 或更低的值，并且使用 <code>WRITE_CONTACTS</code></td>
+<td align="left"><code>WRITE_CALL_LOG</code></td>
+</tr>
+</tbody></table>
+<h2 id="附录：合并政策"><a href="#附录：合并政策" class="headerlink" title="附录：合并政策"></a>附录：合并政策</h2><p>清单合并工具可以在逻辑上将一个清单文件中的每个 XML 元素与另一个文件中的对应元素相匹配。合并工具会使用“匹配键”匹配每个元素，匹配键可以是唯一的属性值（如 <code>android:name</code>），也可以是标记本身的自然唯一性（例如，只能有一个 <code>&lt;supports-screen&gt;</code> 元素）。如果两个清单具有相同的 XML 元素，则该工具会采用三种合并政策中的一种，将这两个元素合并在一起：</p>
+<ul>
+<li><p>合并</p>
+<p>将所有没有冲突的属性组合到同一标记中，并按各自的合并政策合并子元素。如果任何属性相互冲突，则使用<a target="_blank" rel="noopener" href="https://developer.android.google.cn/studio/build/manifest-merge#merge_rule_markers">合并规则标记</a>将它们合并在一起。</p>
+</li>
+<li><p>仅合并子元素</p>
+<p>不组合或合并属性（仅保留优先级最高的清单文件提供的属性），并按各自的合并政策合并子元素。</p>
+</li>
+<li><p>保留</p>
+<p>将元素“按原样”保留，并将其添加到合并后的文件中的共同父元素中。只有在可以接受同一元素有多个声明时，才会采用此政策。</p>
+</li>
+</ul>
+<p>表 3 列出了每种元素类型、所采用的合并政策类型，以及用于确定两个清单之间元素匹配的键。</p>
+<p><strong>表 3.</strong> 清单元素合并政策和匹配键</p>
+<table>
+<thead>
+<tr>
+<th align="left">元素</th>
+<th align="left">合并政策</th>
+<th align="left">匹配键</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>&lt;action&gt;</code></td>
+<td align="left">合并</td>
+<td align="left"><code>android:name</code> 属性</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;activity&gt;</code></td>
+<td align="left">合并</td>
+<td align="left"><code>android:name</code> 属性</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;application&gt;</code></td>
+<td align="left">合并</td>
+<td align="left">每个 <code>&lt;manifest&gt;</code> 只有一个</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;category&gt;</code></td>
+<td align="left">合并</td>
+<td align="left"><code>android:name</code> 属性</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;data&gt;</code></td>
+<td align="left">合并</td>
+<td align="left">每个 <code>&lt;intent-filter&gt;</code> 只有一个</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;grant-uri-permission&gt;</code></td>
+<td align="left">合并</td>
+<td align="left">每个 <code>&lt;provider&gt;</code> 只有一个</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;instrumentation&gt;</code></td>
+<td align="left">合并</td>
+<td align="left"><code>android:name</code> 属性</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;intent-filter&gt;</code></td>
+<td align="left">保留</td>
+<td align="left">不匹配；允许父元素内的多个声明</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;manifest&gt;</code></td>
+<td align="left">仅合并子元素</td>
+<td align="left">每个文件只有一个</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;meta-data&gt;</code></td>
+<td align="left">合并</td>
+<td align="left"><code>android:name</code> 属性</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;path-permission&gt;</code></td>
+<td align="left">合并</td>
+<td align="left">每个 <code>&lt;provider&gt;</code> 只有一个</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;permission-group&gt;</code></td>
+<td align="left">合并</td>
+<td align="left"><code>android:name</code> 属性</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;permission&gt;</code></td>
+<td align="left">合并</td>
+<td align="left"><code>android:name</code> 属性</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;permission-tree&gt;</code></td>
+<td align="left">合并</td>
+<td align="left"><code>android:name</code> 属性</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;provider&gt;</code></td>
+<td align="left">合并</td>
+<td align="left"><code>android:name</code> 属性</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;receiver&gt;</code></td>
+<td align="left">合并</td>
+<td align="left"><code>android:name</code> 属性</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;screen&gt;</code></td>
+<td align="left">合并</td>
+<td align="left"><code>android:screenSize</code> 属性</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;service&gt;</code></td>
+<td align="left">合并</td>
+<td align="left"><code>android:name</code> 属性</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;supports-gl-texture&gt;</code></td>
+<td align="left">合并</td>
+<td align="left"><code>android:name</code> 属性</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;supports-screen&gt;</code></td>
+<td align="left">合并</td>
+<td align="left">每个 <code>&lt;manifest&gt;</code> 只有一个</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;uses-configuration&gt;</code></td>
+<td align="left">合并</td>
+<td align="left">每个 <code>&lt;manifest&gt;</code> 只有一个</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;uses-feature&gt;</code></td>
+<td align="left">合并</td>
+<td align="left"><code>android:name</code> 属性（如果不存在，则使用 <code>android:glEsVersion</code> 属性）</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;uses-library&gt;</code></td>
+<td align="left">合并</td>
+<td align="left"><code>android:name</code> 属性</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;uses-permission&gt;</code></td>
+<td align="left">合并</td>
+<td align="left"><code>android:name</code> 属性</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;uses-sdk&gt;</code></td>
+<td align="left">合并</td>
+<td align="left">每个 <code>&lt;manifest&gt;</code> 只有一个</td>
+</tr>
+<tr>
+<td align="left">自定义元素</td>
+<td align="left">合并</td>
+<td align="left">不匹配；合并工具并不知晓这些元素，因此它们始终包含在合并后的清单中</td>
+</tr>
+</tbody></table>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Manifest/" rel="tag"><i class="fa fa-tag"></i> Manifest</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/900512959/" rel="prev" title="php代码编写规范">
+      <i class="fa fa-chevron-left"></i> php代码编写规范
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/918025443/" rel="next" title="EventBus封装">
+      EventBus封装 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#AndroidManifest%E6%B8%85%E5%8D%95%E6%96%87%E4%BB%B6"><span class="nav-number">1.</span> <span class="nav-text">AndroidManifest清单文件</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%88%E5%B9%B6%E4%BC%98%E5%85%88%E7%BA%A7%EF%BC%88%E4%BD%8E%E7%9A%84%E5%90%88%E5%B9%B6%E5%88%B0%E9%AB%98%E7%9A%84%EF%BC%89%E3%80%90%E5%BA%93%E6%B8%85%E5%8D%95-lt-%E4%B8%BB%E6%B8%85%E5%8D%95-lt-flavor%E7%9A%84%E6%B8%85%E5%8D%95%E3%80%91"><span class="nav-number">1.1.</span> <span class="nav-text">合并优先级（低的合并到高的）【库清单&lt;主清单&lt;flavor的清单】</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%88%E5%B9%B6%E5%86%B2%E7%AA%81%E5%90%AF%E5%8F%91%E6%B3%95"><span class="nav-number">1.2.</span> <span class="nav-text">合并冲突启发法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%88%E5%B9%B6%E8%A7%84%E5%88%99%E6%A0%87%E8%AE%B0"><span class="nav-number">1.2.1.</span> <span class="nav-text">合并规则标记</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%8A%82%E7%82%B9%E6%A0%87%E8%AE%B0"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">节点标记</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B1%9E%E6%80%A7%E6%A0%87%E8%AE%B0"><span class="nav-number">1.2.1.2.</span> <span class="nav-text">属性标记</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%A0%87%E8%AE%B0%E9%80%89%E6%8B%A9%E5%99%A8"><span class="nav-number">1.2.1.3.</span> <span class="nav-text">标记选择器</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9B%BF%E6%8D%A2%E5%AF%BC%E5%85%A5%E7%9A%84%E5%BA%93%E7%9A%84"><span class="nav-number">1.2.2.</span> <span class="nav-text">替换导入的库的 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9A%90%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9D%83%E9%99%90"><span class="nav-number">1.2.3.</span> <span class="nav-text">隐式系统权限</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%99%84%E5%BD%95%EF%BC%9A%E5%90%88%E5%B9%B6%E6%94%BF%E7%AD%96"><span class="nav-number">1.3.</span> <span class="nav-text">附录：合并政策</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="shenbh@qq.com"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">shenbh@qq.com</p>
+  <div class="site-description" itemprop="description">嗨，我是阿炳，欢迎来交流。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">198</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">232</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="mailto:shenbh@qq.com" title="E-Mail → mailto:shenbh@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://gitee.com/shen_bh" title="Gitee → https:&#x2F;&#x2F;gitee.com&#x2F;shen_bh" rel="noopener" target="_blank"><i class="fab fa-google fa-fw"></i>Gitee</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://juejin.im/user/57ea31a1a22b9d0061656f52" title="掘金 → https:&#x2F;&#x2F;juejin.im&#x2F;user&#x2F;57ea31a1a22b9d0061656f52" rel="noopener" target="_blank"><i class="fab fa-meetup fa-fw"></i>掘金</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;ptwenzi?spm&#x3D;1010.2135.3001.5113" rel="noopener" target="_blank"><i class="fab fa-gratipay fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://blankj.com/" title="https:&#x2F;&#x2F;blankj.com&#x2F;" rel="noopener" target="_blank">blankj</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://wuxiaolong.me/" title="http:&#x2F;&#x2F;wuxiaolong.me&#x2F;" rel="noopener" target="_blank">吴小龙同学</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://isuperqiang.cn/" title="https:&#x2F;&#x2F;isuperqiang.cn&#x2F;" rel="noopener" target="_blank">落英坠露</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://dp2px.com/" title="https:&#x2F;&#x2F;dp2px.com&#x2F;" rel="noopener" target="_blank">水寒的博客</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://hexo.yuanjh.cn/" title="https:&#x2F;&#x2F;hexo.yuanjh.cn&#x2F;" rel="noopener" target="_blank">闻鸡起舞</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.yanghujun.com/" title="https:&#x2F;&#x2F;www.yanghujun.com&#x2F;" rel="noopener" target="_blank">八归少年</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhpanvip.gitee.io/" title="https:&#x2F;&#x2F;zhpanvip.gitee.io&#x2F;" rel="noopener" target="_blank">马可没有菠萝</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://omooo.top/" title="http:&#x2F;&#x2F;omooo.top&#x2F;" rel="noopener" target="_blank">Omooo</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://hishark777.com/" title="https:&#x2F;&#x2F;hishark777.com&#x2F;" rel="noopener" target="_blank">777的博客</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">shenbh@qq.com</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">1.9m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">28:36</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

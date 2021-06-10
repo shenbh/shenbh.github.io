@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"shenbh.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Servlet生命周期 什么是 Servlet?  Servlet 是一个 Java 编写的程序，此程序是在服务器端运行的，是按照 Servlet 规范 编写的一个 Java 类。   Servlet 是做什么的？  Servlet 是处理客户端的请求并将其发送到客户端。  Servlet API  Servlet 框架的组成Servlet 框架是由 2 个 Java 包组成：(1)javax.s">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Servlet生命周期">
+<meta property="og:url" content="http://shenbh.github.io/posts/3908245919/index.html">
+<meta property="og:site_name" content="ABing">
+<meta property="og:description" content="Servlet生命周期 什么是 Servlet?  Servlet 是一个 Java 编写的程序，此程序是在服务器端运行的，是按照 Servlet 规范 编写的一个 Java 类。   Servlet 是做什么的？  Servlet 是处理客户端的请求并将其发送到客户端。  Servlet API  Servlet 框架的组成Servlet 框架是由 2 个 Java 包组成：(1)javax.s">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-09-25T03:47:43.000Z">
+<meta property="article:modified_time" content="2021-04-08T07:07:58.033Z">
+<meta property="article:author" content="shenbh@qq.com">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://shenbh.github.io/posts/3908245919/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Servlet生命周期 | ABing</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">ABing</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Just do IT Now.</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/shenbh" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/3908245919/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="shenbh@qq.com">
+      <meta itemprop="description" content="嗨，我是阿炳，欢迎来交流。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ABing">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Servlet生命周期
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-09-25 11:47:43" itemprop="dateCreated datePublished" datetime="2020-09-25T11:47:43+08:00">2020-09-25</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-08 15:07:58" itemprop="dateModified" datetime="2021-04-08T15:07:58+08:00">2021-04-08</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%90%8E%E7%AB%AF/" itemprop="url" rel="index"><span itemprop="name">后端</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Servlet生命周期"><a href="#Servlet生命周期" class="headerlink" title="Servlet生命周期"></a><a target="_blank" rel="noopener" href="https://blog.csdn.net/haobo920/article/details/5925656">Servlet生命周期</a></h1><ol>
+<li><p>什么是 Servlet? </p>
+<p>Servlet 是一个 Java 编写的程序，此程序是在服务器端运行的，是按照 Servlet 规范 编写的一个 Java 类。 </p>
+</li>
+<li><p>Servlet 是做什么的？ </p>
+<p>Servlet 是处理客户端的请求并将其发送到客户端。</p>
+</li>
+<li><p>Servlet API</p>
+<ol>
+<li><p>Servlet 框架的组成<br>Servlet 框架是由 2 个 Java 包组成：(1)javax.servlet 和(2)javax.servlet.http</p>
+<p>(1) <code>javax.servlet</code> 包中定义了所有 Servlet 类都必须实现的接口和类。</p>
+<p><code>javax.servlet</code> 包的接口为：</p>
+<ol>
+<li><p><code>ServletConfig</code> 接口 —- 在初始化过程中由 Servlet 容器使用</p>
+<p><code>ServletContext</code> 接口 —- 定义 Servlet 用于获取容器信息的方法</p>
+<p><code>ServletRequest</code> 接口 —- 向服务器请求信息</p>
+<p><code>ServletResponse</code> 接口 —- 响应客户端请求</p>
+<p><code>Servlet</code> 接口 —- 定义所有 Servlet 必须实现的方法</p>
+</li>
+<li><p><code>javax.servlet</code> 包中的类为：</p>
+<p><code>ServletInputStream</code> 类 —- 用于从客户端读取二进制数据</p>
+<p><code>ServletOutputStream</code> 类 —- 用于将二进制数据发送到客户端</p>
+<p><code>GenericServlet</code> 类 —- 抽象类，定义一个通用的，独立于底层协议的 Servlet。</p>
+</li>
+</ol>
+<p>(2) <code>javax.servlet.http</code> 包中定义了采用 HTTP 通信的 HttpServlet 类。</p>
+<ol>
+<li><p><code>javax.servlet.http</code> 包的接口为：</p>
+<p><code>HttpServletRequest</code> 接口 —- 提供 http 请求<br><code>HttpServletResponse</code> 接口 —- 提供 http 响应<br><code>HttpSession</code> 接口 —- 用于标识客户端并存储有关客户信息<br><code>HttpSessionAttributeListener</code> 接口 —-实现这个侦听接口用户获取会话的属性列表的改变的通知</p>
+</li>
+<li><p><code>javax.servlet.http</code> 包中的类：<br><code>HttpServlet</code> 类 —- 扩展了 GenericServlet 的抽象类，用于扩展创建Http Servlet<br><code>Cookie</code> 类 —- 创建一个 Cookie，用于存储 Servlet 发送给客户端的信息</p>
+</li>
+</ol>
+</li>
+<li><p>Servlet 框架的核心<br>Servlet 框架的核心是：javax.servlet.Servlet 接口，所有的 Servlet 都必须实现这一接口。</p>
+</li>
+</ol>
+</li>
+<li><p>Http Servlet</p>
+<p>HttpServlet 是一个抽象类，用来创建用户自己的 HTTP Servlet。HttpServlet 类的子类必须至少重写一下方法中的一个：doGet()和 doPost()。<br>HttpServlet 类提供 doGet()方法来处理 GET 请求<br>public void doGet(HttpServletRequest req,HttpServletResponse res)<br>提供 doPost()方法处理 POST 请求<br>public void doPost(HttpServletRequest req,HttpServletResponse res)<br>其中有 2 个参数：HttpServletRequset 和 HttpServlerResponse<br>这 2 个类实现了 ServlerRequset 接口和 ServletResponse 接口<br>ServletRequest 接口中封装了客户请求信息&lt;客户请求方式，参数名，参数值等&gt;<br>ServletResponse 接口 为 Servlet 提供了返回相应结果的方法。</p>
+</li>
+<li><p>Servlet 体系结构</p>
+<p>Servlet–&gt;GenericServlet–&gt;HttpServlet–&gt;用户自定义的 Servlet</p>
+</li>
+<li><p>Servlet 的生命周期</p>
+<p>Servlet 的生命周期由 Servlet 容器控制，该容器创建 Servlet 的实例。<br>Servlet 生命周期就是指创建 Servlet 实例后响应客户请求直至销毁的全过程。</p>
+<ol>
+<li><p>Serlvet 生命周期的三个方法：init()–&gt;service()–&gt;destroy()</p>
+</li>
+<li><p>生命周期的各个阶段：</p>
+<p>实例化：Servlet 容器创建 Servlet 类的实例对象</p>
+<p>初始化：Servlet 容器调用 Servlet 的 init()方法</p>
+<p>服务：如果请求 Servlet,则容器调用 service()方法</p>
+<p>销毁：销毁实例之前调用 destroy()方法</p>
+<p>不可用：销毁实例并标记为垃圾处理</p>
+</li>
+</ol>
+<p><strong>Servlet 的生命周期</strong></p>
+<p>Servlet 的生命周期由 Servlet 容器控制，该容器创建 Servlet 的实例。Servlet 的生命周期就是指 Servlet 实例在创建之后响应客户请求直到至销毁的全过程。Servlet 实例的创建取决于 Servlet 的首次调用。Servlet 接口定义了 Servlet 生命周期的 3 个方法。</p>
+<ol>
+<li>init()：<br>创建 Servlet 的实例后对其进行初始化。实现 ServletConfig 接口的对象作为参<br>数进行传递。init 方法在浏览器请求 servlet 或 web server 启动时加载运行。</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span><span class="keyword">throws</span> servletexception</span>&#123;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">(servletconfig conf)</span><span class="keyword">throws</span> servletexception</span>&#123;</span><br><span class="line">    <span class="keyword">super</span>.init(conf);<span class="comment">//init 方法带 servletconfig 参数时必须有此句代码</span></span><br><span class="line">    <span class="comment">//此处写一些初始化操作。如连接数据库等。</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>service()：<br>响应客户端发出的请求。Service()方法接受 ServletRequest 接口和<br>ServletResponse 接口的对象来处理请求和发送响应。经常的用法是：不用 service()方法，用dopost,doget方法来处理请求。其他的方法还有dotrace(),dooptions().dohead()方法，因 trace，options.head 信息已经在 dopost,doget 方法中包括，不必使用，doput(),dodelete()方法在 web app 不经常使用Service()方法的语法为：</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">service</span><span class="params">(ServletRequest request, ServletResponse response)</span> <span class="keyword">throws</span> ServletException,IOException</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>其中，request 是作为参数传递以存储客户端请求的 ServletRequest 接口的对象；<br>ServletResponse 接口的对象，它包含 Servlet 作出的响应。</p>
+</blockquote>
+<ol start="3">
+<li>destroy()：<br>如果不需要处理的请求，则释放 Servlet 实例。Destroy()方法的语法为：</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span></span>&#123;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">super</span>.dedtroy(conf);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意：Servlet 关闭时才销毁。</p>
+</blockquote>
+</li>
+</ol>
+<p>Servlet 层次结构<br>在写 Servlet 程序时,一开始必须导入(import) javax.servlet.*、javax.servlet.http.*。<br>其中：<br>javax.servlet.*：存放与 Http 协议无关的一般性 servlet 类；<br>javax.servlet.http.<em>：除了继承 javax.servlet.<em>之外，并且还增加了与 HTTP 协议有关的功<br>能。<br>所有 Servlet 都必需实现 javax.servlet.Servlet 接口(Interface)，但是通常我们都会从<br>javax.sevler.GenericServlet 或 javax.servlet.http.HttpServlet 择一来实现。<br>javax.servlet.</em> 里的 ServletRequest 和 ServletResponse 接口提供存取一般的请求和响应；<br>javax.servlet.http.</em> 里的 HttpServletRequest 和 HttpServletResponse 接口，则提供<br>HTTP 请求及响应的存取服务。<br>声明 servlet 类 MyServlet<br>public class MyServlet extends httpservlet{}<br>javax.servlet 包主要的接口和类：<br>1 ServletInputStream 类：用于从客户端读取二进制据数。<br>ServletInputStream 类是从 java.io.InputStream 类扩展而来的抽象类。它只实现<br>一个 readLine()方法。<br>Public int readLine(byte b[],int offset,int length) throws IOException<br>b 是用于存储读取的数据的字节数组；<br>offset 指定开始读取字符串的位置；<br>length 指定要读取的最大字节数<br>返回实际读到的字节数。到达流的结尾时返回-1.<br>2 ServletOutputStream 类：向客户端发送二进制数据。<br>ServletOutputStream类是从java.io.OutputStream类扩展而来的抽象类。主要方法：<br>public void print(String s) throws IOException<br>public ovid println(String s) throws IOException<br>s 是要发送到客户端的字符串<br>3 GenericServlet 类：抽象类，定义一个通用的、独立于底层协议的 Servlet。<br>4 ServletRequest 接口：定义一个对象，封装客户向 Servlet 的请求信息。<br>使用 ServletRequest 接口创建的对象，用于使客户端请求信息对 Servlet 可用。创建<br>的对象作为参数传递至 Servlet 的 Service()方法。<br>5 ServletResponse 接口：定义一个对象辅助 Servlet 将请求的响应信息发送给客户端。<br>6 ServletContext 接口：Servlet 上下文。定义 Servlet 使用的方法以获取其容器的信息。<br>7 ServletConfig 接口：定义了在 Servlet 初始化的过程中由 Servlet 容器传递给 Servlet<br>的配置信息对象。保存 Servlet 的配置信息。<br>8 Servlet 接口：定义所有 Servlet 必须实现的方法。<br>javax.servlet.http 包主要的接口和类：<br>1 HttpServletRequest 接口：扩展 ServletRequest 接口，为 Http Servlet 提供 Http 请求<br>信息。<br>getrealpath,getinputstream,getcontenttype,getcontentlengh…<br>得到服务器的根目录<br>string path=request.getrealpath(“.”);<br>取得输入流<br>datainputstream din=new datainputstream(request.getinputstream());<br>2 HttpServletResponse 接口：扩展 ServletResponse 接口，提供 Http 特定的发送响应<br>的功能。常用的方法：<br>sendredirect,getwriter,setcontenttype,getoutputstream.<br>设置文件类型<br>private static final string content_type=”text/html;charset=gb2312”;<br>response.setcontenttype(content_type);<br>输出 html 文件头部信息：<br>printwriter out=response.getwriter();<br>out.close();<br>3 HttpSession 接口：用于创建客户端与服务器端之间的会话。<br>Public HttpSession getSession()<br>返回与请求关联的当前会话。如果请求没有与其关联的话，则 getSession()会创建一个新<br>会话。<br>Public HttpSession getSession(boolean value)<br>返回与请求关联的当前 session 的对象。<br>boolean value 为 true 时等同于 Public HttpSession getSession()<br>boolean value 为 false 时,则返回 null。<br>4 HttpSessionAttributeListener 接口：实现这个侦听接口用于获取会话的属性列表的改变<br>的通知。<br>5 HttpServlet 类：扩展了 GenericServlet 的抽象类，用于扩展创建 Http Servlet。<br>6 Cookie 类：创建一个 Cookie，用于存储 Servlet 发送给客户端的信息。<br>会话跟踪<br>会话跟踪允许服务器确定访问站点的用户、用户访问站点的次数和用停留站点的时间<br>段。会话跟踪技术包括隐藏表单域、URL 重写、Cookie、Session。<br>1 隐藏表单域：是实现会话跟踪最简单的方式。将字段添加到 HTML 表单中，但并不在<br>客户端浏览器中显示。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/1418315385/" rel="prev" title="Oracle相关">
+      <i class="fa fa-chevron-left"></i> Oracle相关
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/3810205069/" rel="next" title="MySQL相关">
+      MySQL相关 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Servlet%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-number">1.</span> <span class="nav-text">Servlet生命周期</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="shenbh@qq.com"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">shenbh@qq.com</p>
+  <div class="site-description" itemprop="description">嗨，我是阿炳，欢迎来交流。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">198</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">232</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="mailto:shenbh@qq.com" title="E-Mail → mailto:shenbh@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://gitee.com/shen_bh" title="Gitee → https:&#x2F;&#x2F;gitee.com&#x2F;shen_bh" rel="noopener" target="_blank"><i class="fab fa-google fa-fw"></i>Gitee</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://juejin.im/user/57ea31a1a22b9d0061656f52" title="掘金 → https:&#x2F;&#x2F;juejin.im&#x2F;user&#x2F;57ea31a1a22b9d0061656f52" rel="noopener" target="_blank"><i class="fab fa-meetup fa-fw"></i>掘金</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;ptwenzi?spm&#x3D;1010.2135.3001.5113" rel="noopener" target="_blank"><i class="fab fa-gratipay fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://blankj.com/" title="https:&#x2F;&#x2F;blankj.com&#x2F;" rel="noopener" target="_blank">blankj</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://wuxiaolong.me/" title="http:&#x2F;&#x2F;wuxiaolong.me&#x2F;" rel="noopener" target="_blank">吴小龙同学</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://isuperqiang.cn/" title="https:&#x2F;&#x2F;isuperqiang.cn&#x2F;" rel="noopener" target="_blank">落英坠露</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://dp2px.com/" title="https:&#x2F;&#x2F;dp2px.com&#x2F;" rel="noopener" target="_blank">水寒的博客</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://hexo.yuanjh.cn/" title="https:&#x2F;&#x2F;hexo.yuanjh.cn&#x2F;" rel="noopener" target="_blank">闻鸡起舞</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.yanghujun.com/" title="https:&#x2F;&#x2F;www.yanghujun.com&#x2F;" rel="noopener" target="_blank">八归少年</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhpanvip.gitee.io/" title="https:&#x2F;&#x2F;zhpanvip.gitee.io&#x2F;" rel="noopener" target="_blank">马可没有菠萝</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://omooo.top/" title="http:&#x2F;&#x2F;omooo.top&#x2F;" rel="noopener" target="_blank">Omooo</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://hishark777.com/" title="https:&#x2F;&#x2F;hishark777.com&#x2F;" rel="noopener" target="_blank">777的博客</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">shenbh@qq.com</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">1.9m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">28:36</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

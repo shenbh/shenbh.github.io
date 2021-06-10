@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"shenbh.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="协程背景kotlin1.1介绍了协程，一种写异步的非阻塞的新方法。需要引入kotlinx.coroutines库">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kotlin协程">
+<meta property="og:url" content="http://shenbh.github.io/posts/2718735878/index.html">
+<meta property="og:site_name" content="ABing">
+<meta property="og:description" content="协程背景kotlin1.1介绍了协程，一种写异步的非阻塞的新方法。需要引入kotlinx.coroutines库">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://ww1.sinaimg.cn/large/981009fdly1gimfcyr9kpj208z0cbgmq.jpg">
+<meta property="article:published_time" content="2020-09-22T08:17:01.000Z">
+<meta property="article:modified_time" content="2021-04-08T07:07:58.022Z">
+<meta property="article:author" content="shenbh@qq.com">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://ww1.sinaimg.cn/large/981009fdly1gimfcyr9kpj208z0cbgmq.jpg">
+
+<link rel="canonical" href="http://shenbh.github.io/posts/2718735878/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Kotlin协程 | ABing</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">ABing</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Just do IT Now.</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/shenbh" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/2718735878/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="shenbh@qq.com">
+      <meta itemprop="description" content="嗨，我是阿炳，欢迎来交流。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ABing">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Kotlin协程
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-09-22 16:17:01" itemprop="dateCreated datePublished" datetime="2020-09-22T16:17:01+08:00">2020-09-22</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-08 15:07:58" itemprop="dateModified" datetime="2021-04-08T15:07:58+08:00">2021-04-08</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/kotlin/" itemprop="url" rel="index"><span itemprop="name">kotlin</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="协程"><a href="#协程" class="headerlink" title="协程"></a>协程</h1><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>kotlin1.1介绍了协程，一种写异步的<strong>非阻塞</strong>的新方法。需要引入<code>kotlinx.coroutines</code>库</p>
+<p>协程可认为是一个轻量级的线程。协程和线程最大的不同就是协程很轻量可以创建上千个，且消耗的性能很少。</p>
+<p>协程通过挂起函数支持：对这样的函数的调用可能会挂起协程，并启动一个新的协程，我们通常使用匿名挂起函数（即鼓起lambda表达式）</p>
+<h2 id="进程、线程、协程"><a href="#进程、线程、协程" class="headerlink" title="进程、线程、协程"></a>进程、线程、协程</h2><p>张涛（微信：kymjs123，博客：开源实验室）</p>
+<p>进程：针对多进程切换，保存它们的状态<br>线程：因为CPU 越来越多可执行的任务越来越多，要保存的状态太多。提出不用多个进程切换，在进程内弄多个线程，线程内自己阻塞等待。<br>协程：在线程执行耗时操作（比如 IO操作），浪费 CPU 资源，协程交出 CPU给 main。 提高 CPU 利用率减少线程之间的切换。</p>
+<h2 id="协程特点"><a href="#协程特点" class="headerlink" title="协程特点"></a>协程特点</h2><p>可控制：协程能做到可被控制的发起子任务（不经过操作系统，是个函数）<br>轻量级：非常小，占用资源比线程还少<br>语法糖：使多任务或多线程切换不再使用回调语法</p>
+<h2 id="协程的集成步骤"><a href="#协程的集成步骤" class="headerlink" title="协程的集成步骤"></a>协程的集成步骤</h2><ol>
+<li>确保工程配置为kotlin1.1+</li>
+<li>在<code>build.gradle</code>中</li>
+</ol>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">apply <span class="attr">plugin:</span> <span class="string">&#x27;kotlin&#x27;</span></span><br><span class="line">kotlin&#123;</span><br><span class="line">    experimental&#123;</span><br><span class="line">        coroutines <span class="string">&#x27;enable&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>若项目中引用了<code>apply plugin:&#39;kotlin-android&#39;</code>，就不用引用<code>apply plugin:&#39;kotlin&#39;</code></p>
+</blockquote>
+<ol start="3">
+<li>添加依赖库</li>
+</ol>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">dependencies&#123;</span><br><span class="line">    ...</span><br><span class="line">    implementation <span class="string">&#x27;org.jetbrains.kotlinx:kotlinx-coroutines-core:0.21&#x27;</span></span><br><span class="line">    implementation <span class="string">&#x27;org.jetbrains.kotlinx:kotlinx-coroutines-android:0.21&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>添加混淆</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">-keepclassmembernames <span class="class"><span class="keyword">class</span> <span class="title">kotlinx</span>.** </span>&#123;</span><br><span class="line">    <span class="keyword">volatile</span> &lt;fields&gt;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><h3 id="通过lanch-开启一个协程"><a href="#通过lanch-开启一个协程" class="headerlink" title="通过lanch{}开启一个协程"></a>通过<code>lanch&#123;&#125;</code>开启一个协程</h3><p>通过<code>lanch&#123;&#125;</code>开启一个协程，默认协程运行在一个共享的线程池上。线程仍可运行在一个基于协程开发的程序中，一个线程可以运行很多个协程。</p>
+<p>例子：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> kotlinx.coroutines.experimental.*</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">(args: <span class="type">Array</span>&lt;<span class="type">String</span>&gt;)</span></span> &#123;</span><br><span class="line">    println(<span class="string">&quot;Start&quot;</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//启动一个协程</span></span><br><span class="line">    launch &#123;</span><br><span class="line">        delay(<span class="number">1000</span>)</span><br><span class="line">        println(<span class="string">&quot;Hello1&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//启动另一个协程并阻塞直至它结束</span></span><br><span class="line">    runBlocking &#123;</span><br><span class="line">        delay(<span class="number">2000</span>)</span><br><span class="line">        println(<span class="string">&quot;Hello2&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    Thread.sleep(<span class="number">2000</span>) <span class="comment">// 如果删除掉这句，程序会在Hello被打印前终止，会报“挂起函数只被允许再协程或另一个挂起函数中使用”</span></span><br><span class="line">    println(<span class="string">&quot;Stop&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><code>delay()</code>函数类似与<code>Thread.sleep()</code>，但它更优异：它<strong>不会阻塞一个线程</strong>，但是会挂起协程自身。当这个协程处于等待状态时该线程会返回线程池中，当等待结束的时候，这个协程会在线程池中的空闲线程上恢复。</p>
+</blockquote>
+<h3 id="通过async-开启一个协程"><a href="#通过async-开启一个协程" class="headerlink" title="通过async{}开启一个协程"></a>通过<code>async&#123;&#125;</code>开启一个协程</h3><p>通过<code>async&#123;&#125;</code>开启一个协程，和<code>lanch&#123;&#125;</code>一样，但它会返回一个<code>Deferred&lt;T&gt;</code>实例，这个实例含有一个<code>await()</code>函数返回协程结果。</p>
+<p>例子：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">(args: <span class="type">Array</span>&lt;<span class="type">String</span>&gt;)</span></span>&#123;</span><br><span class="line">    createAsyncCoroutines()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">createAsyncCoroutines</span><span class="params">()</span></span>&#123;</span><br><span class="line">    thread(start = <span class="literal">true</span>)&#123;</span><br><span class="line">        <span class="keyword">val</span> deferred = (<span class="number">1.</span><span class="number">.1_1000_1000</span>).map&#123;n-&gt;</span><br><span class="line">            async&#123;</span><br><span class="line">                n</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        runBlocking&#123;</span><br><span class="line">            <span class="keyword">val</span> sum = deferred.sumBy&#123; it.await() &#125;</span><br><span class="line">            println(<span class="string">&quot;Sum:<span class="variable">$sum</span>&quot;</span>)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>await()不能在协程之外使用，因为它需要挂起知道计算完成，并且只有协程能通过非阻塞的方式挂起。现在输出结果是1784293664，因为所有协程都执行完毕了。</p>
+</blockquote>
+<p>我们一样可以证明协程是并行运行的。如我们使用delay函数，每个async延迟一秒，结果并不是延迟1_1000_1000秒（约11.5天）实际大概是10秒，如底下例子</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> deferred = (<span class="number">1.</span>.<span class="number">.1_1000_000</span>).map&#123;n-&gt;</span><br><span class="line">	async&#123;</span><br><span class="line">        delay(<span class="number">1000</span>)</span><br><span class="line">        n</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="使用suspend挂起函数"><a href="#使用suspend挂起函数" class="headerlink" title="使用suspend挂起函数"></a>使用<code>suspend</code>挂起函数</h4><p>例：实现一个单独的方法，该方法等待1秒并且返回一个数字</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">workload</span><span class="params">(n: <span class="type">Int</span>)</span></span>: <span class="built_in">Int</span>&#123;</span><br><span class="line">    delay(<span class="number">1000</span>)</span><br><span class="line">    <span class="keyword">return</span> n</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注：协程最大的价值就是他可以挂起而不阻塞线程。编译器通过suspend关键字实现这一功能</p>
+</blockquote>
+<p><a target="_blank" rel="noopener" href="https://blog.dreamtobe.cn/kotlin-coroutines/">别人的笔记 Kotlin Coroutines(协程)</a></p>
+<h1 id="协程《深入理解Kotlin协程》"><a href="#协程《深入理解Kotlin协程》" class="headerlink" title="协程《深入理解Kotlin协程》"></a>协程《深入理解Kotlin协程》</h1><p>Kotlin协程的挂起函数（suspend fuction）本质上就采取了异步返回值的设计思路。</p>
+<p>异步返回值思路：有值直接返回；无值先返回null，等回调结束再次返回值。</p>
+<p>代码：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">asyncBitmap</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    url: <span class="type">String</span>,</span></span></span><br><span class="line"><span class="function"><span class="params">	callback: (<span class="type">Bitmap</span>) -&gt; <span class="type">Unit</span></span></span></span><br><span class="line"><span class="function"><span class="params">)</span></span>: Bitmap? &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">when</span> (<span class="keyword">val</span> bitmap = Cache.<span class="keyword">get</span>(url)) &#123;</span><br><span class="line">        <span class="literal">null</span> -&gt; &#123;</span><br><span class="line">            thread &#123;</span><br><span class="line">                download(url)</span><br><span class="line">                .also &#123; Cache.put(url, it) &#125;</span><br><span class="line">                .also(callback)</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="literal">null</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> -&gt; bitmap</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://ww1.sinaimg.cn/large/981009fdly1gimfcyr9kpj208z0cbgmq.jpg" alt="kotlin挂起函数的异步回调示意图.png"></p>
+<h1 id="HenCoder-协程"><a href="#HenCoder-协程" class="headerlink" title="HenCoder-协程"></a>HenCoder-协程</h1><p>视频：</p>
+<p><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV164411C7FK">Kotlin的协程1</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1KJ41137E9">Kotlin的协程2</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1JE411R7hp">Kotlin的协程3</a></p>
+<h2 id="并发与并行"><a href="#并发与并行" class="headerlink" title="并发与并行"></a>并发与并行</h2><p>并发（concurrency）和并行（parallellism）是：</p>
+<ol>
+<li>解释一：并行是指两个或者多个事件在同一时刻发生；而并发是指两个或多个事件在同一时间间隔发生。</li>
+<li>解释二：并行是在不同实体上的多个事件，并发是在同一实体上的多个事件。</li>
+<li>解释三：并行是在多台处理器上同时处理多个任务。如 hadoop 分布式集群，并发是在一台处理器上“同时”处理多个任务。</li>
+</ol>
+<blockquote>
+<p>并发：多个 线程 执行任务（两个以上事件在同一时刻间隔发生）</p>
+<p>并行；多个 CPU 执行任务（两个以上事件在同一时刻发生）</p>
+</blockquote>
+<h2 id="协程是什么？"><a href="#协程是什么？" class="headerlink" title="协程是什么？"></a>协程是什么？</h2><p>协程是：一种在程序中处理并发（Concurrency）任务的方案；也是这种方案的一个组件</p>
+<p>协程和线程属于一个层级的概念</p>
+<p>协程中不存在线程，也不存在并行（Parallelism）</p>
+<p><strong>Kotlin的协程（for JVM）</strong>与Java的线程池类似，<strong>是API</strong>，是对底层Thread的封装库封装工具，<strong>本质</strong>：就是个<strong>线程框架</strong>。</p>
+<p>特点：</p>
+<ul>
+<li>方便（用看似同步的形式写出异步的功能）</li>
+</ul>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> token = api.getToken()  <span class="comment">//网络请求（后台线程）</span></span><br><span class="line"><span class="keyword">val</span> user = api.getUser(token) <span class="comment">//网络请求（后台线程）</span></span><br><span class="line">nameTv.text = user.name  <span class="comment">//更新UI（主线程）</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>非阻塞式挂起</li>
+</ul>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">launch(Dispatchers.Main)&#123;</span><br><span class="line">	<span class="keyword">val</span> avatar = async&#123; api.getAvatar(user) &#125;  <span class="comment">//获取用户头像</span></span><br><span class="line">	<span class="keyword">val</span> logo = async&#123; api.getCompanyLogo(user) &#125; <span class="comment">//获取公司的logo</span></span><br><span class="line">    <span class="keyword">val</span> merged = suspendingMerge(avatar, logo) <span class="comment">//合并</span></span><br><span class="line">    show(merged) <span class="comment">//显示</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>由于消除了并发任务之间协作的难度，协程让我们可以轻松写出复杂的并发代码</p>
+<h3 id="Kotlin中协程与线程的关系："><a href="#Kotlin中协程与线程的关系：" class="headerlink" title="Kotlin中协程与线程的关系："></a>Kotlin中协程与线程的关系：</h3><p>协程是基于线程而实现的一套更上层的工具API。协程的本质还是线程</p>
+<h2 id="协程怎么用？"><a href="#协程怎么用？" class="headerlink" title="协程怎么用？"></a>协程怎么用？</h2><figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Dispatchers调度器</span></span><br><span class="line">launch(Dispatchers.IO)&#123;</span><br><span class="line">    <span class="keyword">val</span> image = getImage(imageId)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面的就是最简单的用法，launch，创建一个新的协程（async也是中创建协程的方法）</p>
+<p>切线程</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">launch(Dispatchers.Main)&#123;</span><br><span class="line">    <span class="comment">//用witchContext切线程</span></span><br><span class="line">    <span class="keyword">val</span> image = withContext(Dispatchers.IO)&#123;</span><br><span class="line">        getImage(imageId)</span><br><span class="line">    &#125;</span><br><span class="line">    avatarIv.setImageBitmap(image)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//把切线程部分抽取到另一个方法中。要加suspend</span></span><br><span class="line">launch(Dispatchers.Main)&#123;</span><br><span class="line">    <span class="keyword">val</span> image = suspendingGetImage(imageId)</span><br><span class="line">    <span class="comment">//自动切回Main线程（也可以设置特殊的Dispatchers让其不自动切回来）</span></span><br><span class="line">    avatarIv.setImageBitmap(image)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">suspendingGetImage</span><span class="params">(imageId: <span class="type">String</span>)</span></span>&#123;</span><br><span class="line">    withContext(Dispatchers.IO)&#123;<span class="comment">//此处指定在IO线程中执行</span></span><br><span class="line">        getImage(imageId)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>点进 withContext 看</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> <span class="title">withContext</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">	context: <span class="type">CoroutineContext</span>,</span></span></span><br><span class="line"><span class="function"><span class="params">    block: <span class="type">suspend</span> <span class="type">CoroutineScope</span>.() -&gt; <span class="type">T</span></span></span></span><br><span class="line"><span class="function"><span class="params">)</span></span>:T = ...</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="挂起是什么？"><a href="#挂起是什么？" class="headerlink" title="挂起是什么？"></a>挂起是什么？</h2><p><strong>本质</strong>：可以自动切回来的<strong>切线程</strong></p>
+<p><strong>Suspend（定位：“暂时切走，稍后再切回来”）</strong></p>
+<p>挂起的是协程，从当前线程挂起（这个协程从正在执行它的线程上脱离了）</p>
+<p>挂起类似于新开个协程，是个稍后会自动切回来的线程切换。</p>
+<p>切回来的操作在协程里叫做<code>resume</code>恢复。resume是在协程里的，所以挂起函数也是在协程里被调用的，不然恢复的功能没法实现。</p>
+<h3 id="suspend是怎么挂起的？"><a href="#suspend是怎么挂起的？" class="headerlink" title="suspend是怎么挂起的？"></a>suspend是怎么挂起的？</h3><figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">suspendingPrint</span><span class="params">()</span></span>&#123;</span><br><span class="line">   withContext(Dispatchers.IO)&#123;<span class="comment">//withContex是个挂起函数</span></span><br><span class="line">       println(<span class="string">&quot;Thread: <span class="subst">$&#123;Thread.currentThread().name&#125;</span>&quot;</span>)</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line">launch(Dispatchers.Main)&#123;</span><br><span class="line">    suspendingPrint()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中suspend不起挂起的作用，需要在函数内调用另一个挂起函数（withContext）【不止withContext这一个自带地挂起函数。也可以自定义挂起函数】</p>
+<p>要自定义挂起函数，就要或直接或间接地去调用某个自带地挂起函数才行【只加suspend关键字是不行的】。</p>
+<p><strong>suspend作用</strong>：函数创建者对函数调用者的<strong>提醒</strong>，我是一个耗时操作，因此我被我的创建者用挂起的方式放在了后台运行，所以请在协程里调用我。这个提醒能让主线程不卡。</p>
+<h3 id="怎么自定义suspend函数"><a href="#怎么自定义suspend函数" class="headerlink" title="怎么自定义suspend函数"></a>怎么自定义suspend函数</h3><ul>
+<li><p>什么时候自定义？</p>
+<ul>
+<li>原则：耗时（特殊情况：等待）</li>
+<li>一般就两类：I/O操作和（CPU）计算工作（如：文件的读写、网络交互、图片的模糊或美化处理）</li>
+</ul>
+</li>
+<li><p>怎么写？</p>
+<p>函数前加suspend，里面创建withContext挂起函数（常用）、delay等等</p>
+</li>
+</ul>
+<h2 id="挂起的非阻塞式是什么？"><a href="#挂起的非阻塞式是什么？" class="headerlink" title="挂起的非阻塞式是什么？"></a>挂起的非阻塞式是什么？</h2><ul>
+<li><p><strong>本质：不卡线程</strong>（线程都切走了，肯定不卡主线程）</p>
+<p>用Java自带的Thread或线程池去切线程也属于非阻塞式</p>
+</li>
+<li><p>协程就是写法上比较有优势（上下两行），Java内的要用到回调（回调地狱）</p>
+<p>不用协程，那么上下两行的形式就是单线程了，会卡主线程</p>
+<p><strong>协程用“看起来阻塞，实际非阻塞”的写法</strong>而已</p>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/3810205069/" rel="prev" title="MySQL相关">
+      <i class="fa fa-chevron-left"></i> MySQL相关
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/2245620501/" rel="next" title="Kotlin代码">
+      Kotlin代码 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8D%8F%E7%A8%8B"><span class="nav-number">1.</span> <span class="nav-text">协程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%83%8C%E6%99%AF"><span class="nav-number">1.1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E5%8D%8F%E7%A8%8B"><span class="nav-number">1.2.</span> <span class="nav-text">进程、线程、协程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%8F%E7%A8%8B%E7%89%B9%E7%82%B9"><span class="nav-number">1.3.</span> <span class="nav-text">协程特点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%8F%E7%A8%8B%E7%9A%84%E9%9B%86%E6%88%90%E6%AD%A5%E9%AA%A4"><span class="nav-number">1.4.</span> <span class="nav-text">协程的集成步骤</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8"><span class="nav-number">1.5.</span> <span class="nav-text">使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%9A%E8%BF%87lanch-%E5%BC%80%E5%90%AF%E4%B8%80%E4%B8%AA%E5%8D%8F%E7%A8%8B"><span class="nav-number">1.5.1.</span> <span class="nav-text">通过lanch&amp;#123;&amp;#125;开启一个协程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%9A%E8%BF%87async-%E5%BC%80%E5%90%AF%E4%B8%80%E4%B8%AA%E5%8D%8F%E7%A8%8B"><span class="nav-number">1.5.2.</span> <span class="nav-text">通过async&amp;#123;&amp;#125;开启一个协程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8suspend%E6%8C%82%E8%B5%B7%E5%87%BD%E6%95%B0"><span class="nav-number">1.5.2.1.</span> <span class="nav-text">使用suspend挂起函数</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8D%8F%E7%A8%8B%E3%80%8A%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Kotlin%E5%8D%8F%E7%A8%8B%E3%80%8B"><span class="nav-number">2.</span> <span class="nav-text">协程《深入理解Kotlin协程》</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#HenCoder-%E5%8D%8F%E7%A8%8B"><span class="nav-number">3.</span> <span class="nav-text">HenCoder-协程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B9%B6%E5%8F%91%E4%B8%8E%E5%B9%B6%E8%A1%8C"><span class="nav-number">3.1.</span> <span class="nav-text">并发与并行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%8F%E7%A8%8B%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-number">3.2.</span> <span class="nav-text">协程是什么？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Kotlin%E4%B8%AD%E5%8D%8F%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%85%B3%E7%B3%BB%EF%BC%9A"><span class="nav-number">3.2.1.</span> <span class="nav-text">Kotlin中协程与线程的关系：</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%8F%E7%A8%8B%E6%80%8E%E4%B9%88%E7%94%A8%EF%BC%9F"><span class="nav-number">3.3.</span> <span class="nav-text">协程怎么用？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8C%82%E8%B5%B7%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-number">3.4.</span> <span class="nav-text">挂起是什么？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#suspend%E6%98%AF%E6%80%8E%E4%B9%88%E6%8C%82%E8%B5%B7%E7%9A%84%EF%BC%9F"><span class="nav-number">3.4.1.</span> <span class="nav-text">suspend是怎么挂起的？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%8E%E4%B9%88%E8%87%AA%E5%AE%9A%E4%B9%89suspend%E5%87%BD%E6%95%B0"><span class="nav-number">3.4.2.</span> <span class="nav-text">怎么自定义suspend函数</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8C%82%E8%B5%B7%E7%9A%84%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-number">3.5.</span> <span class="nav-text">挂起的非阻塞式是什么？</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="shenbh@qq.com"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">shenbh@qq.com</p>
+  <div class="site-description" itemprop="description">嗨，我是阿炳，欢迎来交流。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">198</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">232</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="mailto:shenbh@qq.com" title="E-Mail → mailto:shenbh@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://gitee.com/shen_bh" title="Gitee → https:&#x2F;&#x2F;gitee.com&#x2F;shen_bh" rel="noopener" target="_blank"><i class="fab fa-google fa-fw"></i>Gitee</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://juejin.im/user/57ea31a1a22b9d0061656f52" title="掘金 → https:&#x2F;&#x2F;juejin.im&#x2F;user&#x2F;57ea31a1a22b9d0061656f52" rel="noopener" target="_blank"><i class="fab fa-meetup fa-fw"></i>掘金</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;ptwenzi?spm&#x3D;1010.2135.3001.5113" rel="noopener" target="_blank"><i class="fab fa-gratipay fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://blankj.com/" title="https:&#x2F;&#x2F;blankj.com&#x2F;" rel="noopener" target="_blank">blankj</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://wuxiaolong.me/" title="http:&#x2F;&#x2F;wuxiaolong.me&#x2F;" rel="noopener" target="_blank">吴小龙同学</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://isuperqiang.cn/" title="https:&#x2F;&#x2F;isuperqiang.cn&#x2F;" rel="noopener" target="_blank">落英坠露</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://dp2px.com/" title="https:&#x2F;&#x2F;dp2px.com&#x2F;" rel="noopener" target="_blank">水寒的博客</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://hexo.yuanjh.cn/" title="https:&#x2F;&#x2F;hexo.yuanjh.cn&#x2F;" rel="noopener" target="_blank">闻鸡起舞</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.yanghujun.com/" title="https:&#x2F;&#x2F;www.yanghujun.com&#x2F;" rel="noopener" target="_blank">八归少年</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhpanvip.gitee.io/" title="https:&#x2F;&#x2F;zhpanvip.gitee.io&#x2F;" rel="noopener" target="_blank">马可没有菠萝</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://omooo.top/" title="http:&#x2F;&#x2F;omooo.top&#x2F;" rel="noopener" target="_blank">Omooo</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://hishark777.com/" title="https:&#x2F;&#x2F;hishark777.com&#x2F;" rel="noopener" target="_blank">777的博客</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">shenbh@qq.com</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">1.9m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">28:36</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
