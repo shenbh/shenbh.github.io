@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"shenbh.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Kotlin 泛型类型擦除kotlin伪泛型">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kotlin泛型">
+<meta property="og:url" content="http://shenbh.github.io/posts/6f6a6f9c/index.html">
+<meta property="og:site_name" content="ABing">
+<meta property="og:description" content="Kotlin 泛型类型擦除kotlin伪泛型">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2019/09/29/ADo6skKv2UOBXWw.png">
+<meta property="og:image" content="https://i.loli.net/2019/09/29/4PxA1ykdOYwEhgt.png">
+<meta property="og:image" content="https://i.loli.net/2019/10/08/lvzUDkunS9wChWK.png">
+<meta property="article:published_time" content="2020-03-23T02:17:01.000Z">
+<meta property="article:modified_time" content="2021-07-01T03:09:48.061Z">
+<meta property="article:author" content="shenbh@qq.com">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2019/09/29/ADo6skKv2UOBXWw.png">
+
+<link rel="canonical" href="http://shenbh.github.io/posts/6f6a6f9c/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Kotlin泛型 | ABing</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">ABing</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Just do IT Now.</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/shenbh" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/6f6a6f9c/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="shenbh@qq.com">
+      <meta itemprop="description" content="嗨，我是阿炳，欢迎来交流。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ABing">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Kotlin泛型
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-03-23 10:17:01" itemprop="dateCreated datePublished" datetime="2020-03-23T10:17:01+08:00">2020-03-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-07-01 11:09:48" itemprop="dateModified" datetime="2021-07-01T11:09:48+08:00">2021-07-01</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/kotlin/" itemprop="url" rel="index"><span itemprop="name">kotlin</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>11k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>10 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="Kotlin-泛型"><a href="#Kotlin-泛型" class="headerlink" title="Kotlin 泛型"></a>Kotlin 泛型</h2><h3 id="类型擦除"><a href="#类型擦除" class="headerlink" title="类型擦除"></a>类型擦除</h3><h4 id="kotlin伪泛型"><a href="#kotlin伪泛型" class="headerlink" title="kotlin伪泛型"></a>kotlin伪泛型</h4><p>与Java一样，kotlin的泛型也是编译时期的泛型，在运行时期的时候泛型会被擦除掉，这种泛型可以理解为伪泛型，与之相对，真泛型即在运行期还存在泛型类型。可以通过以下两个例子来验证kotlin类型擦除：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// demo 1</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">val</span> a : List&lt;String&gt; = ArrayList&lt;String&gt;()</span><br><span class="line">    <span class="keyword">val</span> b : List&lt;<span class="built_in">Int</span>&gt; = ArrayList&lt;<span class="built_in">Int</span>&gt;()</span><br><span class="line">    println(a.javaClass == b.javaClass)</span><br><span class="line">&#125;</span><br><span class="line">************************************************</span><br><span class="line">运行结果：</span><br><span class="line"><span class="literal">true</span></span><br><span class="line">Process finished with exit code <span class="number">0</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>上面demo 1代码中定义了两个泛型变量，分别是<code>ArrayList&lt;String&gt;</code>和<code>ArrayList&lt;Int&gt;</code>,并通过获取javaClass对比，结果相等，说明在运行时泛型被擦除了，只剩下了原始类型</p>
+</blockquote>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// demo 2</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">val</span> c : MutableList&lt;<span class="built_in">Int</span>&gt; = mutableListOf(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>)</span><br><span class="line">    <span class="keyword">val</span> method : Method = c::<span class="keyword">class</span>.java.getMethod(<span class="string">&quot;add&quot;</span>,Any::<span class="keyword">class</span>.java)</span><br><span class="line">    method.invoke(c,<span class="string">&quot;list&quot;</span>)</span><br><span class="line">    println(c)</span><br><span class="line">&#125;</span><br><span class="line">*********************************************</span><br><span class="line">运行结果：</span><br><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, list]</span><br><span class="line">Process finished with exit code <span class="number">0</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>demo 2中定义了一个泛型类为<code>MutableList&lt;Int&gt;</code>的变量<code>c</code>，变量<code>c</code>的泛型为<code>&lt;Int&gt;</code>，但是通过反射能够添加<code>&lt;String&gt;</code>类型的值，说明运行过程中泛型被擦除，没有了泛型约束</p>
+</blockquote>
+<p>通过代码反编译也很容易观察到类型擦除：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Kotlin 代码</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> <span class="title">testGenericOne</span><span class="params">()</span></span>: T?&#123;</span><br><span class="line">    <span class="keyword">val</span> t : T? = <span class="literal">null</span></span><br><span class="line">    <span class="keyword">return</span> t</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 反编译后的Java代码</span></span><br><span class="line"><span class="meta">@Nullable</span></span><br><span class="line"><span class="keyword">public</span> static <span class="keyword">final</span> Object testGenericOne() &#123;</span><br><span class="line">    Object t = <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">return</span> t;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从反编译的代码中可以观察到泛型<code>&lt;T&gt;</code>被擦除掉了，在实际运行过程中的类型是<code>Object</code></p>
+<h4 id="reified-inline"><a href="#reified-inline" class="headerlink" title="reified inline"></a>reified inline</h4><blockquote>
+<p>上述的代码可以证实Java(kotlin)确实存在类型擦除，那么为什么会存在类型擦除呢，这是因为在Java1.5版本之前没有泛型，泛型是在Java1.5版本引入的，因而为了兼容1.5版本及1.5之前的版本，Java选择伪泛型，否则Java需要就需要修改整个底层</p>
+</blockquote>
+<p>为了版本兼容选择类型擦除无可厚非，但是类型擦除同时也带来了一些限制：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> <span class="title">testGeneric</span><span class="params">(t: <span class="type">T</span>)</span></span>&#123;</span><br><span class="line">    println(T::<span class="keyword">class</span>.java)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这段代码无法编译通过，泛型<code>T</code>只是一个泛型参数，无法获取<code>Class</code>信息，同样这也是伪泛型的体现；因为无法通过泛型参数获取<code>Class</code>，因此有时候需要另外传递一个<code>Class</code>参数，比如Gson框架中的fromJson方法：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> &lt;T&gt; T fromJson(String json, Class&lt;T&gt; classOfT) throws JsonSyntaxException &#123; </span><br><span class="line">   <span class="keyword">return</span> gson.fromJson(json, clazz); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>传递额外参数可以满足需要类对象的场景，kotlin还有另外更彻底的实现方式，通过关键字<code>reified</code>和<code>inline</code>的结合使用，把函数定义成内联函数，同时可以将函数中的泛型参数当成真实参数使用：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// reified inline 使用</span></span><br><span class="line"><span class="keyword">inline</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;<span class="keyword">reified</span> T&gt;</span> <span class="title">testGenericTwo</span><span class="params">()</span></span>&#123;</span><br><span class="line">    println(T::<span class="keyword">class</span>.java)</span><br><span class="line">&#125;</span><br><span class="line">********************************************</span><br><span class="line">运行结果：</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">java</span>.<span class="title">lang</span>.<span class="title">String</span></span></span><br><span class="line">Process finished with exit code <span class="number">0</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Kotlin型变"><a href="#Kotlin型变" class="headerlink" title="Kotlin型变"></a>Kotlin型变</h3><h4 id="Java协变和逆变"><a href="#Java协变和逆变" class="headerlink" title="Java协变和逆变"></a>Java协变和逆变</h4><p>假设有两个类<code>Father</code>和<code>Son</code>，<code>Son</code>是<code>Father</code>的子类，但是包含这两个泛型的泛型类之间没有任何关系，例如：<code>List&lt;Father&gt;</code>和<code>List&lt;Son&gt;</code>之间没有任何关系，这也意味着以下的代码是走不通的：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Father</span></span>&#123;&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Son</span> <span class="title">extends</span> <span class="title">Father</span></span>&#123;&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Family</span>&lt;<span class="type">T</span>&gt;</span>&#123;&#125;</span><br><span class="line">void addElement(Family&lt;Father&gt; family)&#123;&#125;</span><br><span class="line"><span class="keyword">public</span> void main()&#123;</span><br><span class="line">    Family&lt;Son&gt; sonFamily = new Family&lt;&gt;();</span><br><span class="line">    addElement(sonFamily);</span><br><span class="line">&#125;</span><br><span class="line">************************************************</span><br><span class="line">编译报错：</span><br><span class="line">Type mismatch.</span><br><span class="line">Required:</span><br><span class="line">Family&lt;Father&gt;</span><br><span class="line">Found:</span><br><span class="line">Family&lt;Son&gt;</span><br></pre></td></tr></table></figure>
+
+<p>这段代码提示类型不匹配的，<code>Family&lt;Son&gt;</code>类型对象并不能作为<code>Family&lt;Father&gt;</code>类型参数传递。即使<code>Son</code>和<code>Father</code>之间存在继承关系，但是<code>Family&lt;Son&gt;</code>和<code>Family&lt;Father&gt;</code>之间并没有半毛钱关系；可是在实际开发中有时候会有这样的需求，希望带泛型类型的参数也能够实现多态传递，这个时候就需要借助通配符<code>?</code>，使用<code>? extends</code>或<code>? super </code>。<code>? extends</code>是上界通配符，能够使Java泛型具有协变性，<code>? super</code>是下界通配符，能够使Java泛型就有逆变性。</p>
+<blockquote>
+<p>在继承关系树中，子类继承自父类，可以认为父类在上，子类在下。<code>extends</code> 限制了泛型类型的父类型，所以叫上界。</p>
+<p>与上界通配符对应，这里 super 限制了通配符 ? 的子类型，所以称之为下界。</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Father</span></span>&#123;&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Son</span> <span class="keyword">extends</span> <span class="title">Father</span></span>&#123;&#125;</span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Family</span>&lt;<span class="title">T</span>&gt;</span>&#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">addChildElement</span><span class="params">(Family&lt;? extends Father&gt; family)</span></span>&#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">addParentElement</span><span class="params">(Family&lt;? <span class="keyword">super</span> Son&gt; family)</span></span>&#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">    Family&lt;Son&gt; sonFamily = <span class="keyword">new</span> Family&lt;&gt;();</span><br><span class="line">    Family&lt;Father&gt; fatherFamily = <span class="keyword">new</span> Family&lt;&gt;();</span><br><span class="line">    addChildElement(sonFamily); <span class="comment">// 协变调用</span></span><br><span class="line">    addParentElement(fatherFamily); <span class="comment">// 逆变调用</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>通过使用<code>? extends</code>，允许传入参数可以是泛型类型参数<code>Father</code>的子类型的任意类型，这种用法就是协变；与之相反，使用<code>? super</code>，就是允许传入参数可以是泛型类型参数Son的父类型的任意类型，这个用法就是逆变。</p>
+</blockquote>
+<p>与Java相似，Java通过<code>? extends</code>和<code>? super</code>来实现Java泛型的协变和逆变，Kotlin则通过泛型关键字<code>out</code>和<code>in</code>关键字来定义协变和逆变；或者可以说<code>out</code>等同于<code>? extends</code>，<code>in</code>等同于<code>? super</code></p>
+<h4 id="协变"><a href="#协变" class="headerlink" title="协变"></a>协变</h4><p><code>out</code>:泛型关键字，实现kotlin泛型协变，out关键字的使用可以是在泛型类定义中，也可以是在带泛型类型参数的函数中</p>
+<h5 id="out关键字的使用"><a href="#out关键字的使用" class="headerlink" title="out关键字的使用"></a><code>out</code>关键字的使用</h5><figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">open</span> <span class="class"><span class="keyword">class</span> <span class="title">Father</span></span>&#123;&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Son</span> : <span class="type">Father</span></span>()&#123;&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Family</span>&lt;<span class="type">out T</span>&gt;</span>&#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">addElement</span><span class="params">(element: <span class="type">Family</span>&lt;<span class="type">Father</span>&gt;)</span></span>&#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">val</span> sons : Family&lt;Son&gt; = Family()</span><br><span class="line">    addElement(sons)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>对于协变来说，假设类型A和类型B存在继承关系，且类型A是类型B的子类，那么通过协变<code>Family&lt;A&gt;</code>是<code>Family&lt;B&gt;</code>的子类型，这个是协变的一个特点</p>
+</blockquote>
+<h5 id="另外一个角度理解协变"><a href="#另外一个角度理解协变" class="headerlink" title="另外一个角度理解协变"></a>另外一个角度理解协变</h5><p>通过Java的型变分析，泛型型变的出现是为了使得泛型使用更加的灵活，kotlin也是一样；但是同时也需要对型变做一些限制，对于协变来说，规定类中的参数被声明为协变，那么就限制这个参数在该类中的使用：<strong>out关键字声明的泛型参数只能出现在out位置</strong>，out位置如下图：</p>
+<p><img src="https://i.loli.net/2019/09/29/ADo6skKv2UOBXWw.png" alt="kotin泛型&quot;out&quot;位置"></p>
+<p><code>“out”</code>位置是声明函数返回值类型的位置，其主要是函数运行结束时产生指定的泛型对象，其扮演的是生产者的角色，所以用<code>“out”</code>声明很形象。那么，声明为协变的泛型为什么一定要限制在<code>out</code>位置呢？这是出于泛型安全考虑：假设有垃圾桶，垃圾桶分别用来装可回收垃圾、有害垃圾</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">open</span> <span class="class"><span class="keyword">class</span> <span class="title">Waste</span></span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">recyclableWaste</span> : <span class="type">Waste</span></span>()</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HarmfulWaste</span> : <span class="type">Waste</span></span>()</span><br><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Ashbin</span>&lt;<span class="type">out T</span>&gt;</span>&#123;</span><br><span class="line">    <span class="comment">// demo 实现垃圾分类例子 设置为抽象类，抽象方法</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 倒垃圾</span></span><br><span class="line">    <span class="keyword">abstract</span> <span class="function"><span class="keyword">fun</span> <span class="title">pour</span><span class="params">()</span></span> : T</span><br><span class="line">    <span class="comment">// 扔垃圾到垃圾桶 这个方法是错误的 假设成立</span></span><br><span class="line">    <span class="keyword">abstract</span> <span class="function"><span class="keyword">fun</span> <span class="title">put</span><span class="params">(t : <span class="type">T</span>)</span></span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>RecyclableWaste</code>类是<code>Waste</code>类的子类，由于泛型类<code>Ashbin&lt;out T&gt;</code>用关键字<code>out</code>声明泛型参数为协变，泛型类<code>Ashbin&lt;out T&gt;</code>子类型化得以保留；</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 投放垃圾</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">wast</span><span class="params">(ashbin: <span class="type">Ashbin</span>&lt;<span class="type">Waste</span>&gt;)</span></span>&#123;</span><br><span class="line">     <span class="comment">// 有害垃圾</span></span><br><span class="line">    <span class="keyword">val</span> waste : Waste = HarmfulWaste()</span><br><span class="line">    ashbin.put(waste)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="comment">// 声明一个可回收垃圾桶</span></span><br><span class="line">    <span class="keyword">val</span> ashbin: Ashbin&lt;RecyclableWaste&gt; = Ashbin&lt;RecyclableWaste&gt;()</span><br><span class="line">    wast(ashbin)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>假设泛型类<code>Ashbin&lt;out T&gt;</code>中的<code>put(t : T)</code>函数成立，那么根据以上代码，就会出现这样一种情况：<code>main()</code> 函数中声明了一个用来装可回收垃圾的垃圾桶，并将其作为参数传递给<code>wast(ashbin: Ashbin&lt;Waste&gt;)</code>函数，但是却在该函数中投放如有害垃圾；显而易见，在可回收垃圾桶中投放有害垃圾是一种错误的做法，不符合垃圾分类的原则。由此可见，在声明为协变的泛型类中，泛型出现在了函数参数的位置上会导致泛型安全问题，这是限制协变声明的泛型类的泛型参数只能出现在<code>&quot;out&quot;</code>位置原因，这一限制在Java泛型中同样也适用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Waster</span></span>&#123;&#125;</span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">RecyclableWaste</span> <span class="keyword">extends</span> <span class="title">Waster</span></span>&#123;&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Ashbin</span>&lt;<span class="title">T</span>&gt;</span>&#123;</span><br><span class="line">    T t;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> T <span class="title">get</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> t;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">set</span><span class="params">(T t)</span></span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">    Ashbin&lt;? extends Waste&gt; ashbin = <span class="keyword">new</span> Ashbin&lt;&gt;();</span><br><span class="line">    RecyclableWaste recyclableWaste = <span class="keyword">new</span> RecyclableWaste();</span><br><span class="line">    <span class="comment">// 编译报错</span></span><br><span class="line">    ashbin.set(recyclableWaste);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://i.loli.net/2019/09/29/4PxA1ykdOYwEhgt.png" alt="协变泛型参数消费使用报错(Java).png"></p>
+<h5 id="协变总结"><a href="#协变总结" class="headerlink" title="协变总结"></a>协变总结</h5><p>对泛型类泛型参数协变，即用<code>out</code>关键字声明，那么：</p>
+<ul>
+<li>子类型化会被保留（Family<Son> 是Family<Father>的子类型）</li>
+<li>泛型类型（T）必须只能用在<code>&quot;out&quot;</code>位置上</li>
+</ul>
+<h4 id="逆变"><a href="#逆变" class="headerlink" title="逆变"></a>逆变</h4><p>逆变与协变不同，甚至可以说是相反，主要体现在子类型化关系上。假设有子类<code>Dog</code>和父类<code>Animal</code>，通过逆变，则<code>Zoom&lt;Animal&gt;</code>是<code>Zoom&lt;Dog&gt;</code>的子类型；可以看出不同类型的关系和声明逆变后泛型类之间的关系是截然相反的，这也是逆变的特点。</p>
+<p>逆变是通过关键字<code>in</code>来声明的：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">open</span> <span class="class"><span class="keyword">class</span> <span class="title">Animal</span></span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Dog</span> : <span class="type">Animal</span></span>()</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Cat</span> : <span class="type">Animal</span></span>()</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Zoom</span>&lt;<span class="type">in T</span>&gt;</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">addAnimal</span><span class="params">(animal: <span class="type">Zoom</span>&lt;<span class="type">Dog</span>&gt;)</span></span>&#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="comment">// in</span></span><br><span class="line">    <span class="keyword">val</span> animal : Zoom&lt;Animal&gt; = Zoom()</span><br><span class="line">    addAnimal(animal)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>和协变一样，对于逆变的使用同样也需要限制：<strong>对声明为逆变的泛型类，其泛型类型参数在泛型类内部只能被消费，而不能作为生产者，即泛型参数只能出现在<code>in</code>位置而不能出现在<code>out</code>位置</strong>，如下图：</p>
+<p><img src="https://i.loli.net/2019/10/08/lvzUDkunS9wChWK.png" alt="逆变in位置.png"></p>
+<p>同样，可以使用垃圾和垃圾桶的关系来解释下为什么逆变的泛型参数只能被放置在<code>&quot;in&quot;</code>位置：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">open</span> <span class="class"><span class="keyword">class</span> <span class="title">Waste</span></span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RecyclableWaste</span> : <span class="type">Waste</span></span>()</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HarmfulWaste</span> : <span class="type">Waste</span></span>()</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RefuseBin</span>&lt;<span class="type">in T</span>&gt;</span>&#123;</span><br><span class="line">    <span class="comment">// 倒垃圾 泛型参数T 不能作为返回类型 编译错误</span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">pour</span><span class="params">()</span></span> : T&#123;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 扔垃圾到垃圾桶 </span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">put</span><span class="params">(t : <span class="type">T</span>)</span></span>&#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">putWaste</span><span class="params">(refuseBin: <span class="type">RefuseBin</span>&lt;<span class="type">RecyclableWaste</span>&gt;)</span></span>&#123;</span><br><span class="line">    <span class="keyword">val</span> recyclableWaste : RecyclableWaste = RecyclableWaste()</span><br><span class="line">    refuseBin.put(recyclableWaste)</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="comment">// 逆变调用</span></span><br><span class="line">    <span class="keyword">val</span> refuseBin : RefuseBin&lt;Waste&gt; = RefuseBin()</span><br><span class="line">    putWaste(refuseBin)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对于逆变，泛型参数作为消费使用的时候，传入的参数一定是该泛型<code>T</code>的子类，能够保证泛型使用的安全；上述代码中定义了一个函数<code>putWaste</code>，需要传递的参数是<code>RefuseBin&lt;RecyclableWaste&gt;</code>，在函数中声明一个可回收垃圾，然后放入垃圾桶中，从逻辑上看，可回收垃圾桶放入可回收垃圾，没毛病；由于泛型参数被声明逆变，<code>RefuseBin&lt;Waste&gt;</code>是<code> RefuseBin&lt;RecyclableWaste&gt;</code>的子类型，那么在<code>main</code>函数中传递给  <code>putWaste</code>的参数是<code>RefuseBin&lt;Waste&gt;</code>是合理的，<code>RefuseBin&lt;Waste&gt;</code>是一个可以装任意垃圾的垃圾桶，垃圾桶装可回收垃圾，也没有毛病，666。因此泛型参数用在<code>in</code>位置是合法的。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">open</span> <span class="class"><span class="keyword">class</span> <span class="title">Waste</span></span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RecyclableWaste</span> : <span class="type">Waste</span></span>()</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HarmfulWaste</span> : <span class="type">Waste</span></span>()</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RefuseBin</span>&lt;<span class="type">in T</span>&gt;</span>&#123;</span><br><span class="line">    <span class="comment">// 倒垃圾 泛型参数T 不能作为返回类型 编译错误</span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">pour</span><span class="params">()</span></span> : T&#123;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 扔垃圾到垃圾桶 </span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">put</span><span class="params">(t : <span class="type">T</span>)</span></span>&#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 倒出可回收垃圾</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">pourRecyclableWaste</span><span class="params">(refuseBin: <span class="type">RefuseBin</span>&lt;<span class="type">RecyclableWaste</span>&gt;)</span></span> : RecyclableWaste&#123;</span><br><span class="line">    <span class="keyword">val</span> recyclableWaste : RecyclableWaste = refuseBin.pour()</span><br><span class="line">    <span class="keyword">return</span> recyclableWaste</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="comment">// 逆变调用</span></span><br><span class="line">    <span class="keyword">val</span> pourWaste : RefuseBin&lt;Waste&gt; = RefuseBin()</span><br><span class="line">    pourRecyclableWaste(pourWaste)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>假设在逆变声明的<code>RefuseBin&lt;in T&gt;</code>中的pour函数是合法的，定义两个函数：<code>pourRecyclableWaste</code>函数中传递的参数是<code>RefuseBin&lt;RecyclableWaste&gt;</code>，在<code>pourRecyclableWaste</code>函数中返回从可回收垃圾桶中获取的可回收垃圾，但是在<code>main</code>函数中传递给<code>pourRecyclableWaste</code>的是可以装任意垃圾的垃圾桶（<code>RefuseBin&lt;Waste&gt;</code>），这样就会导致在<code>pourRecyclableWaste</code>获取到的就有可能不是可回收垃圾，因为普通垃圾桶可能倒出有害垃圾或者其他垃圾，这就出现了泛型类安全问题。所以逆变泛型类中泛型参数不能作为生产者角色出现（即不能出现在<code>out</code>位置）。</p>
+<h6 id="逆变总结"><a href="#逆变总结" class="headerlink" title="逆变总结"></a>逆变总结</h6><p>对泛型类泛型参数逆变，即用<code>in</code>关键字声明，那么：</p>
+<ul>
+<li>子类型化关系会被逆转（Family<Father> 是Family<Son>的子类型）</li>
+<li>泛型类型（T）必须只能用在<code>&quot;out&quot;</code>位置上</li>
+</ul>
+<h4 id="不变和点变形"><a href="#不变和点变形" class="headerlink" title="不变和点变形"></a>不变和点变形</h4><p>不变，顾名思义就是既不协变也不逆变，就是普通的泛型类，因此泛型参数即可以放在<code>in</code>位置也可以用到<code>out</code>位置，比如kotlin自带的<code>MutableList&lt;E&gt;</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">public interface MutableList&lt;E&gt; : List&lt;E&gt;, MutableCollection&lt;E&gt; &#123;</span><br><span class="line">    <span class="function">override fun <span class="title">add</span><span class="params">(element: E)</span>: Boolean</span></span><br><span class="line"><span class="function">    override fun <span class="title">remove</span><span class="params">(element: E)</span>: Boolean</span></span><br><span class="line"><span class="function">    override fun <span class="title">addAll</span><span class="params">(elements: Collection&lt;E&gt;)</span>: Boolean</span></span><br><span class="line"><span class="function">    <span class="keyword">public</span> fun <span class="title">addAll</span><span class="params">(index: Int, elements: Collection&lt;E&gt;)</span>: Boolean</span></span><br><span class="line"><span class="function">    override fun <span class="title">removeAll</span><span class="params">(elements: Collection&lt;E&gt;)</span>: Boolean</span></span><br><span class="line"><span class="function">    override fun <span class="title">retainAll</span><span class="params">(elements: Collection&lt;E&gt;)</span>: Boolean</span></span><br><span class="line"><span class="function">    override fun <span class="title">clear</span><span class="params">()</span>: Unit</span></span><br><span class="line"><span class="function">    <span class="keyword">public</span> operator fun <span class="title">set</span><span class="params">(index: Int, element: E)</span>: E</span></span><br><span class="line"><span class="function">    <span class="keyword">public</span> fun <span class="title">add</span><span class="params">(index: Int, element: E)</span>: Unit</span></span><br><span class="line"><span class="function">    <span class="keyword">public</span> fun <span class="title">removeAt</span><span class="params">(index: Int)</span>: E</span></span><br><span class="line"><span class="function">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>那么，问题来了，泛型不变是能够使泛型参数同时出现在<code>in</code>位置也可以出现在<code>out</code>位置，但是却失去了协变和逆变的特性，代码的复用性就很差，这不是一朝回到解放前么；能不能同时保留协变和逆变呢？是可以的，通过点变形来实现，如下代码：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">open</span> <span class="class"><span class="keyword">class</span> <span class="title">Waste</span></span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RecyclableWaste</span> : <span class="type">Waste</span></span>()</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HarmfulWaste</span> : <span class="type">Waste</span></span>()</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TrashCan</span>&lt;<span class="type">T</span>&gt;</span>&#123;</span><br><span class="line">    <span class="comment">// 倒垃圾</span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">pour</span><span class="params">()</span></span> : T&#123;&#125;</span><br><span class="line">    <span class="comment">// 扔垃圾到垃圾桶</span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">put</span><span class="params">(t : <span class="type">T</span>)</span></span>&#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">putWasteWithIn</span><span class="params">(trashCan : <span class="type">TrashCan</span>&lt;<span class="type">in</span> <span class="type">RecyclableWaste</span>&gt;)</span></span>&#123;</span><br><span class="line">    <span class="keyword">val</span> recyclableWaste : RecyclableWaste = RecyclableWaste()</span><br><span class="line">    trashCan.put(recyclableWaste)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">pourWasteWithOut</span><span class="params">(trashCan : <span class="type">TrashCan</span>&lt;<span class="type">out</span> <span class="type">RecyclableWaste</span>&gt;)</span></span>: RecyclableWaste&#123;</span><br><span class="line">    <span class="keyword">val</span> recyclableWaste : RecyclableWaste = trashCan.pour()</span><br><span class="line">    <span class="keyword">return</span> recyclableWaste</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如上所示，我们可以把泛型类声明为不型变的，但是在使用它的时候，加上<code>out</code>或者<code>in</code>，让它在使用的时候产生型变，通过这种方式，代码更加灵活，满足了既需要泛型参数作为函数参数类型又需要泛型参数作为函数返回值类型的类。但是同时也存在限制：如上代码，在<code>pourWasteWithOut</code>函数中不能够调用<code>TrashCan&lt;T&gt;</code>类的<code>put</code>函数；在<code>putWasteWithIn</code>函数中不能够调用<code>TrashCan&lt;T&gt;</code>类中的<code>pour</code>函数；具体原因如同上面的协变逆变分析。</p>
+<h3 id="星型投影-和-泛型边界"><a href="#星型投影-和-泛型边界" class="headerlink" title="星型投影 * 和 泛型边界"></a>星型投影 * 和 泛型边界</h3><h4 id="星型投影"><a href="#星型投影" class="headerlink" title="星型投影*"></a>星型投影*</h4><p><strong>星型投影</strong>，其实就是：假如你对于你现在泛型要传入的泛型参数不确定或者是无所谓的时候，为了确保泛型类能够正确的编译运行，可以借助星型投影<code>*</code>，而且该泛型类型的每个具体实例化将是该投影的子类型，<code>kotlin</code>中星型投影<code>*</code>的使用类似于java中<code>？</code>的使用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">    <span class="comment">// java通配符？使用</span></span><br><span class="line">    ArrayList&lt;?&gt; array;</span><br><span class="line">    array = <span class="keyword">new</span> ArrayList&lt;String&gt;();</span><br><span class="line">    array = <span class="keyword">new</span> ArrayList&lt;Integer&gt;();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对应kotlin的代码：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// kotlin星型投影</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">var</span> list : ArrayList&lt;*&gt;</span><br><span class="line">	list = ArrayList&lt;String&gt;()</span><br><span class="line">	list = ArrayList&lt;<span class="built_in">Int</span>&gt;()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Kotlin 可以根据 * 所指代的泛型参数进行相应的映射，下面是官方的说法：</p>
+<ul>
+<li>对于 <code>Foo &lt;out T : TUpper&gt;</code>，其中 <code>T</code> 是一个具有上界 <code>TUpper</code> 的协变类型参数，<code>Foo &lt;*&gt;</code> 等价于 <code>Foo &lt;out TUpper&gt;</code>。 这意味着当 <code>T</code> 未知时，你可以安全地从 <code>Foo &lt;*&gt;</code> 读取 <code>TUpper</code> 的值。</li>
+<li>对于 <code>Foo &lt;in T&gt;</code>，其中 <code>T</code> 是一个逆变类型参数，<code>Foo &lt;*&gt;</code> 等价于 <code>Foo &lt;in Nothing&gt;</code>。 这意味着当 <code>T</code> 未知时，没有什么可以以安全的方式写入 <code>Foo &lt;*&gt;</code>。</li>
+<li>对于 <code>Foo &lt;T : TUpper&gt;</code>，其中 <code>T</code> 是一个具有上界 <code>TUpper</code> 的不型变类型参数，<code>Foo&lt;*&gt;</code> 对于读取值时等价于 <code>Foo&lt;out TUpper&gt;</code> 而对于写值时等价于 <code>Foo&lt;in Nothing&gt;</code>。</li>
+</ul>
+<p><strong>如果泛型类型具有多个类型参数，则每个类型参数都可以单独投影。</strong><br>例如，如果类型被声明为 <code>interface Function &lt;in T, out U&gt;</code>，我们可以想象以下星投影：</p>
+<ul>
+<li><code>Function&lt;*, String&gt;</code> 表示 <code>Function&lt;in Nothing, String&gt;</code>；</li>
+<li><code>Function&lt;Int, *&gt;</code> 表示 <code>Function&lt;Int, out Any?&gt;</code>；</li>
+<li><code>Function&lt;*, *&gt;</code> 表示 <code>Function&lt;in Nothing, out Any?&gt;</code>。</li>
+</ul>
+<h4 id="泛型边界"><a href="#泛型边界" class="headerlink" title="泛型边界"></a>泛型边界</h4><p>在 Java 中，我们可以用 extends 关键字为泛型参数指定上限，如下：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// java </span></span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">Bound</span></span>&#123;&#125;</span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">GenericBound</span>&lt;<span class="type">T extends Bound</span>&gt;</span>&#123;...&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而对应的kotlin写法类似：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">Bound</span></span>&#123;&#125;</span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">GenericBound</span>&lt;<span class="type">T : Bound</span>&gt;</span>&#123;...&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果同一类型参数需要多个上界，在Java中的写法是这样的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">Bound</span></span>&#123;&#125;</span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">Generic</span></span>&#123;&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">GenericBound</span>&lt;<span class="title">T</span> <span class="keyword">extends</span> <span class="title">Bound</span>, <span class="title">Generic</span>&gt;</span>&#123;...&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在kotlin中同一类型参数需要多个上界与Java的写法有很大区别，kotlin的写法中多了关键字<code>where</code>，如下：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">Bound</span></span>&#123;&#125;</span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">Generic</span></span>&#123;&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">GenericBound</span>&lt;<span class="type">T</span>&gt; <span class="title">where</span> <span class="title">T</span> : <span class="type">Bound </span>, <span class="type">T : Generic&#123;&#125;</span></span></span><br></pre></td></tr></table></figure>
+
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>kotlin泛型中比较难理解的是协变和逆变，感觉学习起来会比较的抽象，但是协变和逆变在Java中就有所体现，只不过是在kotlin中的使用方式与Java不同，kotlin中使用变得更加的简便；同样对于泛型边界来说，虽然多了一个关键字<code>where</code>，但是内容确实与Java完全一致，没有新增任何东西；总的来说，kotlin泛型的内容是与Java泛型一致的，只是在写法上有区分而已，要学习kotlin的泛型，可以先将Java泛型完全掌握，只要掌握了Java泛型，kotlin泛型学习起来就十分的简单，无非就是换个写法而已。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/posts/710c8103/" rel="prev" title="Kotlin类委托和属性委托">
+      <i class="fa fa-chevron-left"></i> Kotlin类委托和属性委托
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/posts/2020663480/" rel="next" title="Kotlin笔记">
+      Kotlin笔记 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Kotlin-%E6%B3%9B%E5%9E%8B"><span class="nav-number">1.</span> <span class="nav-text">Kotlin 泛型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%B1%BB%E5%9E%8B%E6%93%A6%E9%99%A4"><span class="nav-number">1.1.</span> <span class="nav-text">类型擦除</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#kotlin%E4%BC%AA%E6%B3%9B%E5%9E%8B"><span class="nav-number">1.1.1.</span> <span class="nav-text">kotlin伪泛型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#reified-inline"><span class="nav-number">1.1.2.</span> <span class="nav-text">reified inline</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Kotlin%E5%9E%8B%E5%8F%98"><span class="nav-number">1.2.</span> <span class="nav-text">Kotlin型变</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Java%E5%8D%8F%E5%8F%98%E5%92%8C%E9%80%86%E5%8F%98"><span class="nav-number">1.2.1.</span> <span class="nav-text">Java协变和逆变</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8D%8F%E5%8F%98"><span class="nav-number">1.2.2.</span> <span class="nav-text">协变</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#out%E5%85%B3%E9%94%AE%E5%AD%97%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">out关键字的使用</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%8F%A6%E5%A4%96%E4%B8%80%E4%B8%AA%E8%A7%92%E5%BA%A6%E7%90%86%E8%A7%A3%E5%8D%8F%E5%8F%98"><span class="nav-number">1.2.2.2.</span> <span class="nav-text">另外一个角度理解协变</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%8D%8F%E5%8F%98%E6%80%BB%E7%BB%93"><span class="nav-number">1.2.2.3.</span> <span class="nav-text">协变总结</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%80%86%E5%8F%98"><span class="nav-number">1.2.3.</span> <span class="nav-text">逆变</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E9%80%86%E5%8F%98%E6%80%BB%E7%BB%93"><span class="nav-number">1.2.3.0.1.</span> <span class="nav-text">逆变总结</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%8D%E5%8F%98%E5%92%8C%E7%82%B9%E5%8F%98%E5%BD%A2"><span class="nav-number">1.2.4.</span> <span class="nav-text">不变和点变形</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%98%9F%E5%9E%8B%E6%8A%95%E5%BD%B1-%E5%92%8C-%E6%B3%9B%E5%9E%8B%E8%BE%B9%E7%95%8C"><span class="nav-number">1.3.</span> <span class="nav-text">星型投影 * 和 泛型边界</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%98%9F%E5%9E%8B%E6%8A%95%E5%BD%B1"><span class="nav-number">1.3.1.</span> <span class="nav-text">星型投影*</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B3%9B%E5%9E%8B%E8%BE%B9%E7%95%8C"><span class="nav-number">1.3.2.</span> <span class="nav-text">泛型边界</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">1.4.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="shenbh@qq.com"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">shenbh@qq.com</p>
+  <div class="site-description" itemprop="description">嗨，我是阿炳，欢迎来交流。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">161</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">191</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="mailto:shenbh@qq.com" title="E-Mail → mailto:shenbh@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://gitee.com/shen_bh" title="Gitee → https:&#x2F;&#x2F;gitee.com&#x2F;shen_bh" rel="noopener" target="_blank"><i class="fab fa-google fa-fw"></i>Gitee</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://juejin.im/user/57ea31a1a22b9d0061656f52" title="掘金 → https:&#x2F;&#x2F;juejin.im&#x2F;user&#x2F;57ea31a1a22b9d0061656f52" rel="noopener" target="_blank"><i class="fab fa-meetup fa-fw"></i>掘金</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;ptwenzi?spm&#x3D;1010.2135.3001.5113" rel="noopener" target="_blank"><i class="fab fa-gratipay fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://blankj.com/" title="https:&#x2F;&#x2F;blankj.com&#x2F;" rel="noopener" target="_blank">blankj</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://wuxiaolong.me/" title="http:&#x2F;&#x2F;wuxiaolong.me&#x2F;" rel="noopener" target="_blank">吴小龙同学</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://isuperqiang.cn/" title="https:&#x2F;&#x2F;isuperqiang.cn&#x2F;" rel="noopener" target="_blank">落英坠露</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://dp2px.com/" title="https:&#x2F;&#x2F;dp2px.com&#x2F;" rel="noopener" target="_blank">水寒的博客</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://hexo.yuanjh.cn/" title="https:&#x2F;&#x2F;hexo.yuanjh.cn&#x2F;" rel="noopener" target="_blank">闻鸡起舞</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.yanghujun.com/" title="https:&#x2F;&#x2F;www.yanghujun.com&#x2F;" rel="noopener" target="_blank">八归少年</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhpanvip.gitee.io/" title="https:&#x2F;&#x2F;zhpanvip.gitee.io&#x2F;" rel="noopener" target="_blank">马可没有菠萝</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://omooo.top/" title="http:&#x2F;&#x2F;omooo.top&#x2F;" rel="noopener" target="_blank">Omooo</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://hishark777.com/" title="https:&#x2F;&#x2F;hishark777.com&#x2F;" rel="noopener" target="_blank">777的博客</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">shenbh@qq.com</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">1.3m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">20:26</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
