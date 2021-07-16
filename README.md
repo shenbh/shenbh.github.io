@@ -7,7 +7,7 @@
 <!-- first row -->
 
 <p align="center">
-<a href="http://shenbh.top"><img src="https://media.giphy.com/media/WUlplcMpOCEmTGBtBW/giphy.gif" width="30"></a>
+<a href="http://shenbh.github.io"><img src="https://media.giphy.com/media/WUlplcMpOCEmTGBtBW/giphy.gif" width="30"></a>
 
 
 # ☕Get In Touch
@@ -16,18 +16,17 @@
 <p>
 <a href="https://github.com/shenbh"><img src="https://img.shields.io/badge/-Github-000?style=flat&logo=Github&logoColor=white"></a>
 
-[![Blog](https://img.shields.io/badge/-Website-FCA121?style=flat&logo=java&logoColor=white)](http://shenbh.top/)
+[![Blog](https://img.shields.io/badge/-Website-FCA121?style=flat&logo=java&logoColor=white)](http://shenbh.github.io/)
 
 <a href="mailto:shenbh@qq.com"><img src="http://file.service.qq.com/user-files/uploads/201701/8b713d5a5557aec926f7b379f61843ed.png" width="100"></a>
 
 
 
 
-# shenbh's Blog
+# AB's Blog
 
-博客地址：http://shenbh.top
+博客地址：http://shenbh.github.io
 
-[博客设置参考链接](https://github.com/Blankj/blankj.github.io)
 
 ## About Blog
 
@@ -39,7 +38,7 @@
 
 ### 添加[Gitalk](https://github.com/gitalk/gitalk)评论
 
-需要 `Github Application`，如果没有 [点击这里申请](https://github.com/settings/applications/new)，`Authorization callback URL` 填写你主页地址，比如我的就是 `https://shenbh.top`，其他都随意。
+需要 `Github Application`，如果没有 [点击这里申请](https://github.com/settings/applications/new)，`Authorization callback URL` 填写你主页地址，比如我的就是 `https://shenbh.github.io`，其他都随意。
 
 1. 首先创建 `Gitalk` 的 `swig` 文件，放在 `themes/next/layout/_third-party/comments` 文件夹下，命名为 `gitalk.swig` 。内容如下
 
@@ -96,7 +95,7 @@ gitalk:
 
 其中 `githubID` 是你的 `Github` 用户名，`repo` 是你用来存放评论 `issue` 的仓库，比如我的就是[blog-comment](https://github.com/Blankj/blog-comment)，那么我就写 `blog-comment` 即可，`ClientID` 和 `ClientSecret` 就是你之前申请 `Github Application` 可以获取到，`adminUser` 和 `githubID` 一样即可，`distractionFreeMode` 是评论时遮照效果的开关。
 
-### 
+
 
 ### 添加背景图
 
@@ -112,7 +111,7 @@ body{
 }
 ```
 
-### 
+
 
 ### 修改Logo字体
 
@@ -132,7 +131,7 @@ body{
 
 其中字体文件在 `themes/next/source/fonts` 目录下，里面有个 `.gitkeep` 的隐藏文件，打开写入你要保留的字体文件，比如我的是就是写入 `Blankj.ttf`，具体字库自己从网上下载即可。
 
-### 
+
 
 ### 设置圆形头像
 
