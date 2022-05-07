@@ -1,0 +1,1540 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="安卓书籍," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Android源码、Android系统启动、ClassLoader">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android进阶解密">
+<meta property="og:url" content="http://shenbh.github.io/posts/1796163963/index.html">
+<meta property="og:site_name" content="AB">
+<meta property="og:description" content="Android源码、Android系统启动、ClassLoader">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://shenbh.github.io/.io//Android框架模型.jpg">
+<meta property="og:image" content="http://shenbh.github.io/.io//Java的ClassLoader继承图.jpg">
+<meta property="og:image" content="http://shenbh.github.io/.io//Java的双亲委托.jpg">
+<meta property="article:published_time" content="2021-01-18T11:00:00.000Z">
+<meta property="article:modified_time" content="2022-05-05T06:57:06.829Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="安卓书籍">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://shenbh.github.io/.io//Android框架模型.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/1796163963/"/>
+
+
+
+
+
+  <title>Android进阶解密 | AB</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">AB</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Just do IT Now.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/1796163963/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="AB">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Android进阶解密</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-01-18T19:00:00+08:00">
+                2021-01-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>Android源码、Android系统启动、ClassLoader</p>
+<span id="more"></span>
+
+<h1 id="阅读Android源码"><a href="#阅读Android源码" class="headerlink" title="阅读Android源码"></a>阅读Android源码</h1><h2 id="安卓系统架构（5层）"><a href="#安卓系统架构（5层）" class="headerlink" title="安卓系统架构（5层）"></a>安卓系统架构（5层）</h2><img src="/.io//Android框架模型.jpg" alt="Android框架模型" style="zoom:67%;">
+
+
+
+<h2 id="系统根目录结构说明-整体结构"><a href="#系统根目录结构说明-整体结构" class="headerlink" title="系统根目录结构说明(整体结构)"></a>系统根目录结构说明(整体结构)</h2><table>
+<thead>
+<tr>
+<th>Android源码根目录</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>art</code></td>
+<td>全新的<code>ART</code>运行环境</td>
+</tr>
+<tr>
+<td><code>bionic</code></td>
+<td>系统<code>C</code>库</td>
+</tr>
+<tr>
+<td><code>bootable</code></td>
+<td>启动引导相关代码</td>
+</tr>
+<tr>
+<td><code>build</code></td>
+<td>存放系统编译规则及<code>generic</code>等基础开发包配置</td>
+</tr>
+<tr>
+<td><code>cts</code></td>
+<td><code>Android</code>兼容性测试套件标准</td>
+</tr>
+<tr>
+<td><code>dalvik</code></td>
+<td><code>Dalvik</code>虚拟机</td>
+</tr>
+<tr>
+<td><code>development</code></td>
+<td>与应用程序开发相关</td>
+</tr>
+<tr>
+<td><code>device</code></td>
+<td>设备相关配置</td>
+</tr>
+<tr>
+<td><code>docs</code></td>
+<td>参考文档目录</td>
+</tr>
+<tr>
+<td><code>external</code></td>
+<td>开源模组相关文件</td>
+</tr>
+<tr>
+<td><code>frameworks</code></td>
+<td>应用程序框架，<code>Android</code>系统核心部分，由<code>Java</code>和<code>C++</code>编写</td>
+</tr>
+<tr>
+<td><code>hardware</code></td>
+<td>主要是硬件抽象层的代码</td>
+</tr>
+<tr>
+<td><code>libcore</code></td>
+<td>核心库相关文件</td>
+</tr>
+<tr>
+<td><code>libnativehelper</code></td>
+<td>动态库，实现<code>JNI</code>库的基础</td>
+</tr>
+<tr>
+<td><code>out</code></td>
+<td>编译完成后代码在此目录输出</td>
+</tr>
+<tr>
+<td><code>pdk</code></td>
+<td><code>Plug Development Kit</code>的缩写，本地开发套件</td>
+</tr>
+<tr>
+<td><code>platform_testing</code></td>
+<td>平台测试</td>
+</tr>
+<tr>
+<td><code>prebuilts</code></td>
+<td><code>X86</code>和<code>arm</code>架构下预编译的一些资源</td>
+</tr>
+<tr>
+<td><code>sdk</code></td>
+<td><code>SDK</code>和模拟器</td>
+</tr>
+<tr>
+<td><code>packages</code></td>
+<td>应用程序包</td>
+</tr>
+<tr>
+<td><code>system</code></td>
+<td>底层文件系统库、应用和组件</td>
+</tr>
+<tr>
+<td><code>toolchain</code></td>
+<td>工具链文件</td>
+</tr>
+<tr>
+<td><code>tools</code></td>
+<td>工具文件</td>
+</tr>
+<tr>
+<td><code>makefile</code></td>
+<td>全局<code>Makefile</code>文件，用来定义编译规则</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>应用层的代码在<code>packages/</code>目录中；</p>
+<p>应用框架层的代码在<code>frameworks/</code>目录下</p>
+<p>运行时库的代码在<code>art/</code>目录中；</p>
+<p>硬件抽象层的代码在<code>hardware/</code>目录中，是手机厂商改动最大的部分</p>
+</blockquote>
+<h3 id="应用层部分"><a href="#应用层部分" class="headerlink" title="应用层部分"></a>应用层部分</h3><p>应用层位于Android系统的最上层，开发者开发的应用程序以及系统内置的应用程序都在应用层。源码根目录中的<code>packages</code>目录对应着系统应用层</p>
+<p>packages目录结构</p>
+<table>
+<thead>
+<tr>
+<th>packages目录</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>apps</code></td>
+<td>核心应用程序</td>
+</tr>
+<tr>
+<td><code>experimental</code></td>
+<td>第三方应用程序</td>
+</tr>
+<tr>
+<td><code>inputmethods</code></td>
+<td>输入法目录</td>
+</tr>
+<tr>
+<td><code>providers</code></td>
+<td>内容提供者目录</td>
+</tr>
+<tr>
+<td><code>screensavers</code></td>
+<td>屏幕保护</td>
+</tr>
+<tr>
+<td><code>services</code></td>
+<td>通信服务</td>
+</tr>
+<tr>
+<td><code>wallpapers</code></td>
+<td>墙纸</td>
+</tr>
+</tbody></table>
+<h3 id="应用框架层部分"><a href="#应用框架层部分" class="headerlink" title="应用框架层部分"></a>应用框架层部分</h3><p>应用框架层是系统的<strong>核心部分</strong>，一方面向上提供接口给应用层调用，另一方面向下与<code>C/C++</code>程序库及硬件抽象层等进行衔接。应用框架层主要实现代码在<code>frameworks/base</code>和<code>frameworks/av</code>目录下</p>
+<p><code>frameworks/base</code>目录</p>
+<table>
+<thead>
+<tr>
+<th><code>frameworks/base</code>目录</th>
+<th>描述</th>
+<th><code>frameworks/base</code>目录</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>api</code></td>
+<td>定义<code>API</code></td>
+<td><code>cmds</code></td>
+<td>重要命令：<code>am</code>、<code>app_proce</code>等</td>
+</tr>
+<tr>
+<td><code>core</code></td>
+<td>核心库</td>
+<td><code>data</code></td>
+<td>字体和声音等数据文件</td>
+</tr>
+<tr>
+<td><code>docs</code></td>
+<td>文档</td>
+<td><code>graphics</code></td>
+<td>与图形图像相关</td>
+</tr>
+<tr>
+<td><code>include</code></td>
+<td>头文件</td>
+<td><code>keystore</code></td>
+<td>与数据签名证书相关</td>
+</tr>
+<tr>
+<td><code>libs</code></td>
+<td>库</td>
+<td><code>location</code></td>
+<td>地理位置相关库</td>
+</tr>
+<tr>
+<td><code>media</code></td>
+<td>多媒体相关库</td>
+<td><code>native</code></td>
+<td>本地库</td>
+</tr>
+<tr>
+<td><code>nfc-extras</code></td>
+<td>与<code>NFC</code>相关</td>
+<td><code>obex</code></td>
+<td>蓝牙传输</td>
+</tr>
+<tr>
+<td><code>opengl</code></td>
+<td><code>2D/3D</code>图形<code>API</code></td>
+<td><code>packages</code></td>
+<td>设置、<code>TTS</code>、<code>VPN</code>程序</td>
+</tr>
+<tr>
+<td><code>sax</code></td>
+<td><code>XML</code>解析器</td>
+<td><code>services</code></td>
+<td>系统服务</td>
+</tr>
+<tr>
+<td><code>telephony</code></td>
+<td>电话通信管理</td>
+<td><code>test-runner</code></td>
+<td>测试工具相关</td>
+</tr>
+<tr>
+<td><code>tests</code></td>
+<td>与测试相关</td>
+<td><code>tools</code></td>
+<td>工具</td>
+</tr>
+<tr>
+<td><code>vr</code></td>
+<td>与<code>VR</code>相关</td>
+<td><code>wifi</code></td>
+<td><code>Wi-Fi</code>无线网络</td>
+</tr>
+</tbody></table>
+<h3 id="C-C-程序库部分"><a href="#C-C-程序库部分" class="headerlink" title="C/C++程序库部分"></a><code>C/C++</code>程序库部分</h3><p>系统运行库层（<code>Navive</code>）中的<code>C/C++</code>程序库的类型繁多，功能强大，<code>C/C++</code>程序库并不完全在一个目录中，这里给出几个常用且比较重要的<code>C/C++</code>程序库所在的目录位置</p>
+<p><code>C/C++</code>程序库所在的目录位置</p>
+<table>
+<thead>
+<tr>
+<th>目录位置</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>bionic</code></td>
+<td><code>Google</code>开发的系统<code>C</code>库，以<code>BSD</code>许可形式开源</td>
+</tr>
+<tr>
+<td><code>frameworks/av/media</code></td>
+<td>系统媒体库</td>
+</tr>
+<tr>
+<td><code>frameworks/native/opengl</code></td>
+<td>第三方图形渲染库</td>
+</tr>
+<tr>
+<td><code>frameworks/native/services/surfaceflinger</code></td>
+<td>图形显示库，主要负责图形的渲染，叠加和绘制等功能</td>
+</tr>
+<tr>
+<td><code>external/sqlite</code></td>
+<td>轻量级关系型数据库<code>SQLite</code>的<code>C++</code>实现</td>
+</tr>
+</tbody></table>
+<h1 id="Android系统启动"><a href="#Android系统启动" class="headerlink" title="Android系统启动"></a>Android系统启动</h1><p>安卓：</p>
+<ol>
+<li>按下电源时，引导芯片从预定义地方（固化在ROM）开始执行–》加载引导程序BootLoader到RAM中</li>
+<li>BootLoader会把系统OS拉起来并运行</li>
+<li>当内核启动时，会设置缓存、被保护存储器、计划列表、加载驱动。当内核完成设置后，会在系统文件中找到<code>init.rc</code>文件（这个文件在后面的<code>init</code>进程中调用），并启动<code>init</code>进程</li>
+<li><code>init</code>进程启动。初始化和启动属性服务，启动Zygote进程等。</li>
+</ol>
+<h2 id="init进程启动过程"><a href="#init进程启动过程" class="headerlink" title="init进程启动过程"></a>init进程启动过程</h2><h2 id="Zygote进程启动过程"><a href="#Zygote进程启动过程" class="headerlink" title="Zygote进程启动过程"></a>Zygote进程启动过程</h2><h1 id="理解ClassLoader"><a href="#理解ClassLoader" class="headerlink" title="理解ClassLoader"></a>理解ClassLoader</h1><p>Java的ClassLoader加载的是class，Android的ClassLoader加载的是dex，所以两者有一定的不同</p>
+<h2 id="Java中的ClassLoader"><a href="#Java中的ClassLoader" class="headerlink" title="Java中的ClassLoader"></a>Java中的ClassLoader</h2><h3 id="Java的类加载器有三种："><a href="#Java的类加载器有三种：" class="headerlink" title="Java的类加载器有三种："></a>Java的类加载器有三种：</h3><ul>
+<li><p>Bootstrap ClassLoader:（引导类加载器，用C&#x2F;C++写的，在Java代码中无法获取它的实例）</p>
+<p>用于加载指定的JDK的核心类库，比如<code>java.lang.</code>、<code>java.util.</code>等这些系统类。</p>
+<p>它用来加载以下目录中的类库：</p>
+<ul>
+<li><p><code>$JAVA_HOME/jre/lib</code>目录；</p>
+</li>
+<li><p><code>-Xbootclasspath</code>参数指定的目录。</p>
+</li>
+</ul>
+</li>
+<li><p>Extensions ClassLoader：</p>
+</li>
+<li><p>Application ClassLoader：</p>
+</li>
+</ul>
+<h3 id="ExtClasssLoader和AppClassLoader的关系"><a href="#ExtClasssLoader和AppClassLoader的关系" class="headerlink" title="ExtClasssLoader和AppClassLoader的关系"></a>ExtClasssLoader和AppClassLoader的关系</h3><img src="/.io//Java的ClassLoader继承图.jpg" alt="ExtClasssLoader和AppClassLoader的关系" style="zoom: 50%;">
+
+<h3 id="双亲委托"><a href="#双亲委托" class="headerlink" title="双亲委托"></a>双亲委托</h3><img src="/.io//Java的双亲委托.jpg" alt="安卓/Java的双亲委托" style="zoom:50%;">
+
+<h2 id="Android中的ClassLoader"><a href="#Android中的ClassLoader" class="headerlink" title="Android中的ClassLoader"></a>Android中的ClassLoader</h2>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>请我喝杯奶茶吧~</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>Donate</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.jpg" alt=" WeChat Pay"/>
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/%E5%AE%89%E5%8D%93%E4%B9%A6%E7%B1%8D/" rel="tag"># 安卓书籍</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/2089223150/" rel="next" title="前端笔记">
+                <i class="fa fa-chevron-left"></i> 前端笔记
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/515339211/" rel="prev" title="第三方-Retrofit">
+                第三方-Retrofit <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7Carchive">
+              
+                  <span class="site-state-item-count">248</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">20</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">49</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@qq.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://juejin.im/user/57ea31a1a22b9d0061656f52" target="_blank" title="掘金">
+                      
+                        <i class="fa fa-fw fa-fa fa-fw fa-book"></i>掘金</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/shenbh" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                友情链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://www.wanandroid.com/" title="玩Android" target="_blank">玩Android</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://wuxiaolong.me/" title="吴小龙同学" target="_blank">吴小龙同学</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://hexo.yuanjh.cn/" title="江州司马" target="_blank">江州司马</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://www.yanghujun.com/" title="八归少年" target="_blank">八归少年</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://zhpanvip.gitee.io/" title="马可没有菠萝" target="_blank">马可没有菠萝</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://omooo.top/" title="Omooo" target="_blank">Omooo</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://gityuan.com/" title="Gityuan" target="_blank">Gityuan</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%98%85%E8%AF%BBAndroid%E6%BA%90%E7%A0%81"><span class="nav-text">阅读Android源码</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E5%8D%93%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%EF%BC%885%E5%B1%82%EF%BC%89"><span class="nav-text">安卓系统架构（5层）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B3%BB%E7%BB%9F%E6%A0%B9%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84%E8%AF%B4%E6%98%8E-%E6%95%B4%E4%BD%93%E7%BB%93%E6%9E%84"><span class="nav-text">系统根目录结构说明(整体结构)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E5%B1%82%E9%83%A8%E5%88%86"><span class="nav-text">应用层部分</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E6%A1%86%E6%9E%B6%E5%B1%82%E9%83%A8%E5%88%86"><span class="nav-text">应用框架层部分</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#C-C-%E7%A8%8B%E5%BA%8F%E5%BA%93%E9%83%A8%E5%88%86"><span class="nav-text">C&#x2F;C++程序库部分</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Android%E7%B3%BB%E7%BB%9F%E5%90%AF%E5%8A%A8"><span class="nav-text">Android系统启动</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#init%E8%BF%9B%E7%A8%8B%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B"><span class="nav-text">init进程启动过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Zygote%E8%BF%9B%E7%A8%8B%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B"><span class="nav-text">Zygote进程启动过程</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%90%86%E8%A7%A3ClassLoader"><span class="nav-text">理解ClassLoader</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Java%E4%B8%AD%E7%9A%84ClassLoader"><span class="nav-text">Java中的ClassLoader</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Java%E7%9A%84%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E6%9C%89%E4%B8%89%E7%A7%8D%EF%BC%9A"><span class="nav-text">Java的类加载器有三种：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ExtClasssLoader%E5%92%8CAppClassLoader%E7%9A%84%E5%85%B3%E7%B3%BB"><span class="nav-text">ExtClasssLoader和AppClassLoader的关系</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%8C%E4%BA%B2%E5%A7%94%E6%89%98"><span class="nav-text">双亲委托</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Android%E4%B8%AD%E7%9A%84ClassLoader"><span class="nav-text">Android中的ClassLoader</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

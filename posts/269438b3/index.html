@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="安卓知识点," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Gradle下载后的本地路径：打开AS，打开项目，更改为Project模式，找到External Libraries找某一个第三方库，然后点开，找个具体文件（比如AndroidManifest.xml）右键它选择Open In Explorer。 比如我现在的路径是：D:\dev\.gradle\caches\transforms-2\files-2.1\ 依赖相关">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安卓-Dependencies依赖相关">
+<meta property="og:url" content="http://shenbh.github.io/posts/269438b3/index.html">
+<meta property="og:site_name" content="AB">
+<meta property="og:description" content="Gradle下载后的本地路径：打开AS，打开项目，更改为Project模式，找到External Libraries找某一个第三方库，然后点开，找个具体文件（比如AndroidManifest.xml）右键它选择Open In Explorer。 比如我现在的路径是：D:\dev\.gradle\caches\transforms-2\files-2.1\ 依赖相关">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-07-07T02:25:00.000Z">
+<meta property="article:modified_time" content="2022-05-05T06:57:04.532Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="安卓知识点">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/269438b3/"/>
+
+
+
+
+
+  <title>安卓-Dependencies依赖相关 | AB</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">AB</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Just do IT Now.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/269438b3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="AB">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">安卓-Dependencies依赖相关</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-07-07T10:25:00+08:00">
+                2021-07-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>Gradle下载后的本地路径：打开AS，打开项目，更改为<code>Project</code>模式，找到<code>External Libraries</code>找某一个第三方库，然后点开，找个具体文件（比如<code>AndroidManifest.xml</code>）右键它选择<code>Open In Explorer</code>。</p>
+<p>比如我现在的路径是：<code>D:\dev\.gradle\caches\transforms-2\files-2.1\</code></p>
+<h1 id="依赖相关"><a href="#依赖相关" class="headerlink" title="依赖相关"></a>依赖相关</h1><h2 id="查看项目依赖"><a href="#查看项目依赖" class="headerlink" title="查看项目依赖"></a>查看项目依赖</h2><p>Terminal中输入：</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gradlew <span class="symbol">:app</span><span class="symbol">:dependencies</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="依赖多次（如果是同一个版本）没有问题"><a href="#依赖多次（如果是同一个版本）没有问题" class="headerlink" title="依赖多次（如果是同一个版本）没有问题"></a>依赖多次（如果是同一个版本）没有问题</h2><p>场景：moduleA依赖moduleB（B的libs中有个B.jar），moduleC依赖moduleA也依赖moduleB。moduleC调用这个B.jar，没有版本冲突等问题（因为是同一个版本的jar）</p>
+<h2 id="exclude排除依赖中的某个group"><a href="#exclude排除依赖中的某个group" class="headerlink" title="exclude排除依赖中的某个group"></a>exclude排除依赖中的某个group</h2><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 单独排除某个模块中的依赖  </span></span><br><span class="line">compile(<span class="string">&#x27;com.h6ah4i.android.widget.advrecyclerview:advrecyclerview:0.11.0@aar&#x27;</span>) &#123;</span><br><span class="line">    exclude <span class="attr">group:</span> <span class="string">&#x27;com.android.support&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 排除所有子依赖中的support依赖，统一使用主项目中的版本</span></span><br><span class="line">configurations &#123;</span><br><span class="line">    all*.exclude <span class="attr">group:</span> <span class="string">&#x27;com.android.support&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>用法：exclude group:’ ‘, module: ‘ ‘ 【group和module两个参数可分别单独使用】</p>
+<p>说明：排除某个依赖，可解决部分传递依赖。</p>
+<p>使用场景：</p>
+<ul>
+<li>解决依赖冲突。若两个模块使用相同jar包的不同版本，gradle默认会使用最新版本的jar包，此时可通过exclude排除冲突。（版本冲突带来的问题最主要是API类或方法移除）</li>
+<li>运行期无需此模块。</li>
+<li>依赖传递无法找到时，可通过exclude排除。</li>
+<li>版权原因需排除。</li>
+</ul>
+<h2 id="transitive是否传递本身的依赖给宿主程序"><a href="#transitive是否传递本身的依赖给宿主程序" class="headerlink" title="transitive是否传递本身的依赖给宿主程序"></a>transitive是否传递本身的依赖给宿主程序</h2><p>用法：transitive &#x3D; true | false</p>
+<p>说明：是否传递本身的依赖给宿主程序（使用传递依赖时，Gradle会将传递依赖一起下载下来。compile默认时开启传递依赖）</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">compile</span>(<span class="params"><span class="string">&#x27;com.alibaba.android:ultraviewpager:1.0.4@aar&#x27;</span></span>) &#123;</span><br><span class="line">    transitive = <span class="literal">false</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>@aar表示只下载该aar包，而不下该aar包所依赖的其他库。如果还不想使用@aar前提下的其依赖库，需要加transitive&#x3D;false（默认是true开启传递依赖）。其中transitive表示传递依赖（间接依赖）。</p>
+<p>transitive&#x3D;true，等同于没有使用exclude排除依赖，每个包的依赖项都会被递归分析并添加进来。</p>
+<p>transitive&#x3D;false，等同于用exclude排除依赖。</p>
+<h2 id="force强制使用某版本"><a href="#force强制使用某版本" class="headerlink" title="force强制使用某版本"></a>force强制使用某版本</h2><p>用法：force &#x3D; true<br>作用：强制使用某个版本。出现冲突时，优先使用该版本解决。</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 强制使用 support-v4 26.1.0版本</span></span><br><span class="line">compile(<span class="string">&#x27;com.android.support:support-v4:26.1.0&#x27;</span>) &#123;</span><br><span class="line">   force = <span class="literal">true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="综合例子"><a href="#综合例子" class="headerlink" title="综合例子"></a>综合例子</h2><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">compile(<span class="string">&#x27;org.hibernate:hibernate:3.1&#x27;</span>) &#123;</span><br><span class="line">    <span class="comment">// 冲突时优先使用该版本</span></span><br><span class="line">    force = <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 依据构建名称排除</span></span><br><span class="line">    exclude <span class="attr">module:</span> <span class="string">&#x27;cglib&#x27;</span> </span><br><span class="line">    <span class="comment">// 依据组织名称排除</span></span><br><span class="line">    exclude <span class="attr">group:</span> <span class="string">&#x27;org.jmock&#x27;</span> </span><br><span class="line">    <span class="comment">// 依据组织名称+构件名称排除</span></span><br><span class="line">    exclude <span class="attr">group:</span> <span class="string">&#x27;org.unwanted&#x27;</span>, <span class="attr">module:</span> <span class="string">&#x27;iAmBuggy&#x27;</span> </span><br><span class="line"></span><br><span class="line">    <span class="comment">// 为本依赖关闭依赖传递特性</span></span><br><span class="line">    transitive = <span class="literal">false</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="api、implementation、compile、compileOnly、provided"><a href="#api、implementation、compile、compileOnly、provided" class="headerlink" title="api、implementation、compile、compileOnly、provided"></a><a target="_blank" rel="noopener" href="https://blog.csdn.net/yuzhiqiang_1993/article/details/78366985">api、implementation、compile、compileOnly、provided</a></h2><ul>
+<li><strong>implementation</strong>所依赖的库不会传递，只会在当前module中生效</li>
+</ul>
+<blockquote>
+<p> 比如：moduleA 用implementation依赖了 base库，moduleB依赖moduleA后想调用base库内方法是不行的。</p>
+</blockquote>
+<ul>
+<li><strong>api</strong>跟2.x版本的<strong>compile</strong>一样，具有“穿透性”，对其他module是<strong>可见的</strong></li>
+<li><strong>compileOnly</strong>跟2.x版本的<strong>provided</strong>一样。只在编译时有效，不会参与打包</li>
+</ul>
+<blockquote>
+<p>如果是自己创建的library给别人使用时，需要依赖 com.android.support的话，建议使用compileOnly，避免给使用者带来不便。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>2.x的gradle</th>
+<th></th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>compile</td>
+<td>api</td>
+<td>传递。对其他module可见</td>
+</tr>
+<tr>
+<td>porovided</td>
+<td>compileOnly</td>
+<td>不传递。不参与打包，只在编译时有效</td>
+</tr>
+<tr>
+<td></td>
+<td>implementation</td>
+<td>不传递。在当前module中生效</td>
+</tr>
+<tr>
+<td></td>
+<td>runtimeOnly</td>
+<td>会打到包中，运行时才有效。</td>
+</tr>
+<tr>
+<td></td>
+<td>testImplementation</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>androidTestImplementation</td>
+<td></td>
+</tr>
+<tr>
+<td>apt（在gradle2.2已过时）</td>
+<td>annotationProcessor</td>
+<td>自动化构建</td>
+</tr>
+</tbody></table>
+<h3 id="APK"><a href="#APK" class="headerlink" title="APK"></a>APK</h3><p>只会打包到apk文件中，而不参与编译，所以不能在代码中直接调用jar中的类或方法，否则在编译时会报错</p>
+<h3 id="Test-compile"><a href="#Test-compile" class="headerlink" title="Test compile"></a>Test compile</h3><p>Test compile 仅仅是针对单元<a target="_blank" rel="noopener" href="http://lib.csdn.net/base/softwaretest">测试</a>代码的编译编译以及最终打包测试apk时有效，而对正常的debug或者release apk包不起作用。</p>
+<h3 id="Debug-compile"><a href="#Debug-compile" class="headerlink" title="Debug compile"></a>Debug compile</h3><p>Debug compile 仅仅针对debug模式的编译和最终的debug apk打包。</p>
+<h3 id="Release-compile"><a href="#Release-compile" class="headerlink" title="Release compile"></a>Release compile</h3><p>Release compile 仅仅针对Release 模式的编译和最终的Release apk打包。</p>
+<h2 id="AS-library生成jar包和aar的方法总结"><a href="#AS-library生成jar包和aar的方法总结" class="headerlink" title="AS library生成jar包和aar的方法总结"></a>AS library生成jar包和aar的方法总结</h2><h3 id="生成jar包（针对的是类库library）"><a href="#生成jar包（针对的是类库library）" class="headerlink" title="生成jar包（针对的是类库library）"></a>生成jar包（针对的是类库<code>library</code>）</h3><ol>
+<li>在 <code>library/build.gradle</code> 中的最后添加</li>
+</ol>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//task to delete the old jar</span></span><br><span class="line">task deleteOldJar(<span class="attr">type:</span> Delete) &#123;</span><br><span class="line">    delete <span class="string">&#x27;release/AndroidPlugin.jar&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//task to export contents as jar</span></span><br><span class="line">task exportJar(<span class="attr">type:</span> Copy) &#123;</span><br><span class="line">    from(<span class="string">&#x27;build/intermediates/bundles/release/&#x27;</span>)</span><br><span class="line">    into(<span class="string">&#x27;release/&#x27;</span>)</span><br><span class="line">    include(<span class="string">&#x27;classes.jar&#x27;</span>)</span><br><span class="line">    <span class="comment">///Rename the jar</span></span><br><span class="line">    rename(<span class="string">&#x27;classes.jar&#x27;</span>, <span class="string">&#x27;AndroidPlugin.jar&#x27;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">exportJar.dependsOn(deleteOldJar, build)</span><br></pre></td></tr></table></figure>
+
+<p>其中AndroidPlugin.jar就是生成的jar包名</p>
+<ol start="2">
+<li>实现上面操作之后 点击右边的Gradle侧边栏，选择library目录下<code>Tasks-&gt;other-&gt;exportJar</code>方法</li>
+</ol>
+<p>运行完毕后 你就可以在library项目文件下面的release文件夹里面找到生成的jar</p>
+<h3 id="jar包的使用"><a href="#jar包的使用" class="headerlink" title="jar包的使用"></a>jar包的使用</h3><p>在<code>app/build.gradle</code>中<code>dependencies</code>中添加</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">dependencies&#123;</span><br><span class="line">    <span class="comment">//添加jar</span></span><br><span class="line">    compile files(<span class="string">&#x27;libs/mytool_1.0.jar&#x27;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="生成aar包"><a href="#生成aar包" class="headerlink" title="生成aar包"></a>生成aar包</h3><ol>
+<li>选择<code>library</code>目录下的 <code>Tasks-&gt;build-&gt;assembleRelease</code>方法</li>
+<li>等待运行完毕后去 <code>buile-&gt;outputs-&gt;aar</code> 的文件夹下拷贝出来即可</li>
+</ol>
+<h3 id="aar包使用"><a href="#aar包使用" class="headerlink" title="aar包使用"></a>aar包使用</h3><ol>
+<li><code>app/build.gradle</code>中，添加</li>
+</ol>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">repositories &#123;</span><br><span class="line">    flatDir &#123;</span><br><span class="line">        dirs <span class="string">&#x27;libs&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">dependencies&#123;</span><br><span class="line">    <span class="comment">//添加aar</span></span><br><span class="line">    compile(<span class="attr">name:</span> <span class="string">&#x27;toollibrary-1.0&#x27;</span>, <span class="attr">ext:</span> <span class="string">&#x27;aar&#x27;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<h2 id="AS-生成assert文件"><a href="#AS-生成assert文件" class="headerlink" title="AS 生成assert文件"></a>AS 生成assert文件</h2><ol>
+<li><p>右键项目的某个module，选择Folder-&gt;Assets Folder即可</p>
+</li>
+<li><p>引用assert文件</p>
+</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mWebView.loadUrl(<span class="string">&quot;file:///android_asset/test.html&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="aar包设置成本地"><a href="#aar包设置成本地" class="headerlink" title="aar包设置成本地"></a>aar包设置成本地</h2><p>拿oaid的aar包举例：</p>
+<ol>
+<li><p>项目根目录下创建文件夹localRepo；</p>
+</li>
+<li><p>在localRepo下创建文件夹oaid_sdk</p>
+</li>
+<li><p>localRepo&#x2F;oaid_sdk下</p>
+<ol>
+<li><p>新建<code>.gitignore</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/build</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>新建<code>build.gradle</code></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">configurations.maybeCreate(<span class="string">&quot;default&quot;</span>)</span><br><span class="line">artifacts.add(<span class="string">&quot;default&quot;</span>, file(<span class="string">&#x27;oaid_sdk_1.0.25.aar&#x27;</span>))</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>黏贴<code>oaid_sdk_1.0.25.aar</code></p>
+</li>
+</ol>
+</li>
+<li><p>在<code>settings.gradle</code>中添加</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">include <span class="string">&#x27;:localRepo:oaid_sdk&#x27;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用：<code>app/build.gradle</code>中添加</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">    <span class="comment">//移动安全联盟OAID</span></span><br><span class="line">    api project(<span class="attr">path:</span> <span class="string">&#x27;:localRepo:oaid_sdk&#x27;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>请我喝杯奶茶吧~</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>Donate</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.jpg" alt=" WeChat Pay"/>
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/%E5%AE%89%E5%8D%93%E7%9F%A5%E8%AF%86%E7%82%B9/" rel="tag"># 安卓知识点</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/9acd41cd/" rel="next" title="问题-依赖相关">
+                <i class="fa fa-chevron-left"></i> 问题-依赖相关
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/b883d81b/" rel="prev" title="从OkHttp的原理来看HTTP">
+                从OkHttp的原理来看HTTP <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7Carchive">
+              
+                  <span class="site-state-item-count">248</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">20</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">49</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@qq.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://juejin.im/user/57ea31a1a22b9d0061656f52" target="_blank" title="掘金">
+                      
+                        <i class="fa fa-fw fa-fa fa-fw fa-book"></i>掘金</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/shenbh" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                友情链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://www.wanandroid.com/" title="玩Android" target="_blank">玩Android</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://wuxiaolong.me/" title="吴小龙同学" target="_blank">吴小龙同学</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://hexo.yuanjh.cn/" title="江州司马" target="_blank">江州司马</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://www.yanghujun.com/" title="八归少年" target="_blank">八归少年</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://zhpanvip.gitee.io/" title="马可没有菠萝" target="_blank">马可没有菠萝</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://omooo.top/" title="Omooo" target="_blank">Omooo</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://gityuan.com/" title="Gityuan" target="_blank">Gityuan</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BE%9D%E8%B5%96%E7%9B%B8%E5%85%B3"><span class="nav-text">依赖相关</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E9%A1%B9%E7%9B%AE%E4%BE%9D%E8%B5%96"><span class="nav-text">查看项目依赖</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BE%9D%E8%B5%96%E5%A4%9A%E6%AC%A1%EF%BC%88%E5%A6%82%E6%9E%9C%E6%98%AF%E5%90%8C%E4%B8%80%E4%B8%AA%E7%89%88%E6%9C%AC%EF%BC%89%E6%B2%A1%E6%9C%89%E9%97%AE%E9%A2%98"><span class="nav-text">依赖多次（如果是同一个版本）没有问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#exclude%E6%8E%92%E9%99%A4%E4%BE%9D%E8%B5%96%E4%B8%AD%E7%9A%84%E6%9F%90%E4%B8%AAgroup"><span class="nav-text">exclude排除依赖中的某个group</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#transitive%E6%98%AF%E5%90%A6%E4%BC%A0%E9%80%92%E6%9C%AC%E8%BA%AB%E7%9A%84%E4%BE%9D%E8%B5%96%E7%BB%99%E5%AE%BF%E4%B8%BB%E7%A8%8B%E5%BA%8F"><span class="nav-text">transitive是否传递本身的依赖给宿主程序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#force%E5%BC%BA%E5%88%B6%E4%BD%BF%E7%94%A8%E6%9F%90%E7%89%88%E6%9C%AC"><span class="nav-text">force强制使用某版本</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%BC%E5%90%88%E4%BE%8B%E5%AD%90"><span class="nav-text">综合例子</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#api%E3%80%81implementation%E3%80%81compile%E3%80%81compileOnly%E3%80%81provided"><span class="nav-text">api、implementation、compile、compileOnly、provided</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#APK"><span class="nav-text">APK</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Test-compile"><span class="nav-text">Test compile</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Debug-compile"><span class="nav-text">Debug compile</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Release-compile"><span class="nav-text">Release compile</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AS-library%E7%94%9F%E6%88%90jar%E5%8C%85%E5%92%8Caar%E7%9A%84%E6%96%B9%E6%B3%95%E6%80%BB%E7%BB%93"><span class="nav-text">AS library生成jar包和aar的方法总结</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%9F%E6%88%90jar%E5%8C%85%EF%BC%88%E9%92%88%E5%AF%B9%E7%9A%84%E6%98%AF%E7%B1%BB%E5%BA%93library%EF%BC%89"><span class="nav-text">生成jar包（针对的是类库library）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#jar%E5%8C%85%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-text">jar包的使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%9F%E6%88%90aar%E5%8C%85"><span class="nav-text">生成aar包</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#aar%E5%8C%85%E4%BD%BF%E7%94%A8"><span class="nav-text">aar包使用</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AS-%E7%94%9F%E6%88%90assert%E6%96%87%E4%BB%B6"><span class="nav-text">AS 生成assert文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#aar%E5%8C%85%E8%AE%BE%E7%BD%AE%E6%88%90%E6%9C%AC%E5%9C%B0"><span class="nav-text">aar包设置成本地</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

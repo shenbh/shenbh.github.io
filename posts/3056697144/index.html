@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="安卓第三方," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="“抽丝剥茧，点到即止” 阅读源码应认准一个功能点，然后去分析这个功能是如何实现的。但只要去追寻主体的实现逻辑即可，不要试图搞懂每一行代码。 Glide源码就定一个以下目标：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="第三方-Glide源码解读（记录）">
+<meta property="og:url" content="http://shenbh.github.io/posts/3056697144/index.html">
+<meta property="og:site_name" content="AB">
+<meta property="og:description" content="“抽丝剥茧，点到即止” 阅读源码应认准一个功能点，然后去分析这个功能是如何实现的。但只要去追寻主体的实现逻辑即可，不要试图搞懂每一行代码。 Glide源码就定一个以下目标：">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-12-25T01:46:16.000Z">
+<meta property="article:modified_time" content="2022-05-05T06:52:45.411Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="安卓第三方">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/3056697144/"/>
+
+
+
+
+
+  <title>第三方-Glide源码解读（记录） | AB</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">AB</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Just do IT Now.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/3056697144/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="AB">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">第三方-Glide源码解读（记录）</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-12-25T09:46:16+08:00">
+                2019-12-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>“抽丝剥茧，点到即止”</p>
+<p>阅读源码应认准一个功能点，然后去分析这个功能是如何实现的。但只要去追寻主体的实现逻辑即可，不要试图搞懂每一行代码。</p>
+<h3 id="Glide源码就定一个以下目标："><a href="#Glide源码就定一个以下目标：" class="headerlink" title="Glide源码就定一个以下目标："></a>Glide源码就定一个以下目标：</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Glide.with(<span class="built_in">this</span>).load(url).into(imageView);</span><br></pre></td></tr></table></figure>
+
+<h4 id="with"><a href="#with" class="headerlink" title="with() "></a><code>with() </code></h4><p>with()方法是 Glide 类中的一组静态方法，它有好几个方法重载，我们来看一下 Glide 类中所 </p>
+<p>有 with()方法的方法重载：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Glide</span> &#123; </span><br><span class="line">    ... </span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> RequestManager <span class="title function_">with</span><span class="params">(Context context)</span> &#123; </span><br><span class="line">        <span class="type">RequestManagerRetriever</span> <span class="variable">retriever</span> <span class="operator">=</span> RequestManagerRetriever.get(); </span><br><span class="line">        <span class="keyword">return</span> retriever.get(context); </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> RequestManager <span class="title function_">with</span><span class="params">(Activity activity)</span> &#123; </span><br><span class="line">        <span class="type">RequestManagerRetriever</span> <span class="variable">retriever</span> <span class="operator">=</span> RequestManagerRetriever.get(); </span><br><span class="line">        <span class="keyword">return</span> retriever.get(activity); </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> RequestManager <span class="title function_">with</span><span class="params">(FragmentActivity activity)</span> &#123; </span><br><span class="line">        <span class="type">RequestManagerRetriever</span> <span class="variable">retriever</span> <span class="operator">=</span> RequestManagerRetriever.get(); </span><br><span class="line">        <span class="keyword">return</span> retriever.get(activity); </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@TargetApi(Build.VERSION_CODES.HONEYCOMB)</span> </span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> RequestManager <span class="title function_">with</span><span class="params">(android.app.Fragment fragment)</span> &#123; </span><br><span class="line">        <span class="type">RequestManagerRetriever</span> <span class="variable">retriever</span> <span class="operator">=</span> RequestManagerRetriever.get(); </span><br><span class="line">        <span class="keyword">return</span> retriever.get(fragment); </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> RequestManager <span class="title function_">with</span><span class="params">(Fragment fragment)</span> &#123;</span><br><span class="line">        <span class="type">RequestManagerRetriever</span> <span class="variable">retriever</span> <span class="operator">=</span> RequestManagerRetriever.get(); </span><br><span class="line">        <span class="keyword">return</span> retriever.get(fragment); </span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可看到，with()的重载种类非常多。每个with()方法重载的代码都非常简单，都是先调用<code>RequestManagerRetriever</code>的静态<code>get()</code>得到对象，这个静态<code>get()</code>方法就是一个单例实现。再调用<code>RequestManagerRetriever</code>的实例的<code>get()</code>方法，去获取<code>RequestManager</code>对象</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RequestManagerRetriever</span> <span class="keyword">implements</span> <span class="title class_">Handler</span>.Callback&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">RequestManagerRetriever</span> <span class="variable">INSTANCE</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RequestManagerRetriever</span>();</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> RequestManager applicationManager;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Retrieves and returns the RequestManagerRetriever sigleton.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> RequestManagerRetriever <span class="title function_">get</span><span class="params">()</span>&#123;</span><br><span class="line">        <span class="keyword">return</span> INSTANCE;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> RequestManager <span class="title function_">getApplicationManager</span><span class="params">(Context context)</span>&#123;</span><br><span class="line">        <span class="comment">//Either an application context or we&#x27;re on a background thread.</span></span><br><span class="line">        <span class="keyword">if</span>(applicationManager == <span class="literal">null</span>)&#123;</span><br><span class="line">            <span class="keyword">synchronized</span>(<span class="built_in">this</span>)&#123;</span><br><span class="line">                <span class="keyword">if</span>(applicationManager == <span class="literal">null</span>)&#123;</span><br><span class="line">                    <span class="comment">//Normally pause/resume is taken caare of by the fragment we add to the fragment or activity.</span></span><br><span class="line">                    <span class="comment">//However, in this case since the manager attached to the application will not receive lifecycle</span></span><br><span class="line">                    <span class="comment">//events, we must force the manager to start resumed using ApplicationLifecycle.</span></span><br><span class="line">                    applicationManager = <span class="keyword">new</span> <span class="title class_">RequestManager</span>(context.getApplicationContext(), <span class="keyword">new</span> <span class="title class_">ApplicationLifecycle</span>(), <span class="keyword">new</span> <span class="title class_">EmptyRequestManagerTreeNode</span>());</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> applicationManager;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> RequestManager <span class="title function_">get</span><span class="params">(Context context)</span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(context == <span class="literal">null</span>)&#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;You cannot start a load on a null Context&quot;</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span>(Util.isOnMainThread() &amp;&amp; !(context <span class="keyword">instanceof</span> Application))&#123;</span><br><span class="line">            <span class="keyword">if</span>(context <span class="keyword">instanceof</span> FragmentActivity)&#123;</span><br><span class="line">                <span class="keyword">return</span> get((FragmentActivity) context);</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span>(context <span class="keyword">instanceof</span> Activity)&#123;</span><br><span class="line">                <span class="keyword">return</span> get((Activity) context);</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span>(context <span class="keyword">instanceof</span> ContextWrapper)&#123;</span><br><span class="line">                <span class="keyword">return</span> get(((ContextWrapper) context).getBaseContext());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> getApplicationManager(context);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> RequestManager <span class="title function_">get</span><span class="params">(FragmentActivity activity)</span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(Util.isOnBackgroundThread())&#123;</span><br><span class="line">            <span class="keyword">return</span> get(activity.getApplicationContext());</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            assertNotDestroyed(activity);</span><br><span class="line">            <span class="type">FragmentManager</span> <span class="variable">fm</span> <span class="operator">=</span> activity.getSupportFragmentManager();</span><br><span class="line">            <span class="keyword">return</span> supportFragmentGet(activity, fm);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> RequestManger <span class="title function_">get</span><span class="params">(Fragment fragment)</span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(fragment.getActivity() == <span class="literal">null</span>)&#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;You cannot start a load on a fragment before it is attached&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span>(Util.isOnBackgroundThread())&#123;</span><br><span class="line">            <span class="keyword">return</span> get(fragment.getActivity()。getApplicationContext());</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="type">FragmentManager</span> <span class="variable">fm</span> <span class="operator">=</span> fragment.getChildFragmentManager();</span><br><span class="line">            <span class="keyword">return</span> supportFragmentGet(fragment.getActivity(), fm);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@TargetApi(Build.VERSION_CODES.HONEYCOMB)</span></span><br><span class="line">    <span class="keyword">public</span> RequestManager <span class="title function_">get</span><span class="params">(Activity activity)</span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(Util.isOnBackgroundThread() || Build.VERSION.SDK_INT &lt; Build.VERSION_CODES.HONEYCOMB)&#123;</span><br><span class="line">            <span class="keyword">return</span> get(activity.getApplicationContext());</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            assertNotDestroyed(activity);</span><br><span class="line">            android.app.<span class="type">FragmentManager</span> <span class="variable">fm</span> <span class="operator">=</span> activity.getFragmentManager();</span><br><span class="line">            <span class="keyword">return</span> fragmentGet(activity, fm);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">assertNotDestroyed</span><span class="params">(Activity activity)</span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.JELLY_BEAN_MR1 &amp;&amp; activity.isDestroyed())&#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;You cannot start a load for a destroyed activity&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)</span> </span><br><span class="line">    <span class="keyword">public</span> RequestManager <span class="title function_">get</span><span class="params">(android.app.Fragment fragment)</span> &#123; </span><br><span class="line">        <span class="keyword">if</span> (fragment.getActivity() == <span class="literal">null</span>) &#123; </span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;You cannot start a load on a fragment before it is attached&quot;</span>); </span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span> (Util.isOnBackgroundThread() || Build.VERSION.SDK_INT &lt; Build.VERSION_CODES.JELLY_BEAN_MR1) &#123; </span><br><span class="line">            <span class="keyword">return</span> get(fragment.getActivity().getApplicationContext()); </span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            android.app.<span class="type">FragmentManager</span> <span class="variable">fm</span> <span class="operator">=</span> fragment.getChildFragmentManager(); </span><br><span class="line">            <span class="keyword">return</span> fragmentGet(fragment.getActivity(), fm); </span><br><span class="line">        &#125; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)</span> </span><br><span class="line">    RequestManagerFragment <span class="title function_">getRequestManagerFragment</span><span class="params">(<span class="keyword">final</span> android.app.FragmentManager fm)</span> &#123; </span><br><span class="line">        <span class="type">RequestManagerFragment</span> <span class="variable">current</span> <span class="operator">=</span> (RequestManagerFragment) fm.findFragmentByTag(FRAGMENT_TAG); </span><br><span class="line">        <span class="keyword">if</span> (current == <span class="literal">null</span>) &#123; </span><br><span class="line">            current = pendingRequestManagerFragments.get(fm); </span><br><span class="line">            <span class="keyword">if</span> (current == <span class="literal">null</span>) &#123; </span><br><span class="line">                current = <span class="keyword">new</span> <span class="title class_">RequestManagerFragment</span>(); pendingRequestManagerFragments.put(fm, current);</span><br><span class="line">                fm.beginTransaction().add(current, FRAGMENT_TAG).commitAllowingStateLoss(); </span><br><span class="line">                handler.obtainMessage(ID_REMOVE_FRAGMENT_MANAGER, fm).sendToTarget(); </span><br><span class="line">            &#125; </span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> current; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@TargetApi(Build.VERSION_CODES.HONEYCOMB)</span> </span><br><span class="line">    RequestManager <span class="title function_">fragmentGet</span><span class="params">(Context context, android.app.FragmentManager fm)</span> &#123; </span><br><span class="line">        <span class="type">RequestManagerFragment</span> <span class="variable">current</span> <span class="operator">=</span> getRequestManagerFragment(fm); </span><br><span class="line">        <span class="type">RequestManager</span> <span class="variable">requestManager</span> <span class="operator">=</span> current.getRequestManager(); </span><br><span class="line">        <span class="keyword">if</span> (requestManager == <span class="literal">null</span>) &#123; </span><br><span class="line">            requestManager = <span class="keyword">new</span> <span class="title class_">RequestManager</span>(context, current.getLifecycle(), current.getRequestManagerTreeNode()); </span><br><span class="line">            current.setRequestManager(requestManager); </span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> requestManager; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    SupportRequestManagerFragment <span class="title function_">getSupportRequestManagerFragment</span><span class="params">(<span class="keyword">final</span> FragmentManager fm)</span> &#123; </span><br><span class="line">        <span class="type">SupportRequestManagerFragment</span> <span class="variable">current</span> <span class="operator">=</span> (SupportRequestManagerFragment) fm.findFragmentByTag(FRAGMENT_TAG); </span><br><span class="line">        <span class="keyword">if</span> (current == <span class="literal">null</span>) &#123; </span><br><span class="line">            current = pendingSupportRequestManagerFragments.get(fm); </span><br><span class="line">            <span class="keyword">if</span> (current == <span class="literal">null</span>) &#123; </span><br><span class="line">                current = <span class="keyword">new</span> <span class="title class_">SupportRequestManagerFragment</span>(); </span><br><span class="line">                pendingSupportRequestManagerFragments.put(fm, current); </span><br><span class="line">                fm.beginTransaction().add(current, FRAGMENT_TAG).commitAllowingStateLoss(); </span><br><span class="line">                handler.obtainMessage(ID_REMOVE_SUPPORT_FRAGMENT_MANAGER, fm).sendToTarget(); </span><br><span class="line">            &#125; </span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> current; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    RequestManager <span class="title function_">supportFragmentGet</span><span class="params">(Context context, FragmentManager fm)</span> &#123;</span><br><span class="line">        <span class="type">SupportRequestManagerFragment</span> <span class="variable">current</span> <span class="operator">=</span> getSupportRequestManagerFragment(fm); </span><br><span class="line">        <span class="type">RequestManager</span> <span class="variable">requestManager</span> <span class="operator">=</span> current.getRequestManager(); </span><br><span class="line">        <span class="keyword">if</span> (requestManager == <span class="literal">null</span>) &#123;</span><br><span class="line">            requestManager = <span class="keyword">new</span> <span class="title class_">RequestManager</span>(context, current.getLifecycle(), current.getRequestManagerTreeNode()); </span><br><span class="line">            current.setRequestManager(requestManager); </span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> requestManager; </span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上述代码看起来逻辑优点复杂，其实分两种情况：传入Application类型的参数，传入非Application类型的参数。</p>
+<p>若<code>Glide.with()</code>传入<code>Application</code>对象，那么这里会调用带有<code>Context</code>参数的<code>get()</code>方法重载，会调用<code>getApplicationManager()</code>获取<code>RequestManager</code>对象。另外，因为<code>Application</code>对象的生命周期即应用程序的生命周期，所以 Glide  不需要做特殊处理，它自动就是和应用程序的生命周期是同步的，如果应用程序关闭的话，Glide的加载也会同时终止。</p>
+<p>若<code>Glide.with()</code>传入非<code>Application</code>参数情况，不管传入的是<code>Activity</code>、<code>FragmentAcitivity</code>、<code>v4</code>包下的<code>Fragment</code>、还是<code>app</code>包下的<code>Fragment</code>，最终都是向当前<code>Activity</code>中添加一个隐藏的<code>Fragment</code>。如此设计的原因是<code>Glide</code>需要知道加载的生命周期，若图片还没加载出来<code>activity</code>就结束了那么就不用加载图片了。当时因为<code>Glide</code>无法知道<code>Activity</code>的生命周期，所以借助添加隐藏<code>Fragment</code>的小技巧，<code>Fragment</code>的生命周期和<code>Activity</code>的同步，可以监听到<code>Activity</code>的销毁，只有<code>Glide</code>就可以捕获这个事件并停止图片加载了。</p>
+<p>另外，如果在非主线程当中使用<code>Glide</code>，那么不管传入的是<code>Activity</code>还是<code>Fragment</code>，都会被强制当成<code>Application</code>来处理。</p>
+<p>总体来说，第一个<code>with()</code>方法的源码就是为了得到一个<code>RequestManager</code>对象，然后<code>Glide</code>会根据传入<code>with()</code>的参数来确定图片加载的生命周期。</p>
+<h4 id="load"><a href="#load" class="headerlink" title="load()"></a><code>load()</code></h4><p>由于<code>with()</code>返回的是<code>RequestManager</code>对象，那么容易想到<code>load()</code>是在<code>RequestManager</code>类中。<code>Glide</code>支持片<code>URL</code>字符串、图片本地路径等等加载形式，我们选其中一个加载图片<code>URL</code>字符串的<code>load()</code>来研究。</p>
+<p><code>RequestManager</code>类简化代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RequestManager</span> <span class="keyword">implements</span> <span class="title class_">LifecycleListener</span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Returns a request builder to load the given &#123;<span class="doctag">@link</span> String&#125;. </span></span><br><span class="line"><span class="comment">     * signature. </span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@see</span> #fromString() </span></span><br><span class="line"><span class="comment">     * <span class="doctag">@see</span> #load(Object) </span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> string A file path, or a uri or url handled by &#123;<span class="doctag">@link</span> com.bumptech.glide.load.model.UriLoader&#125;. </span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">     <span class="keyword">public</span> DrawableTypeRequest&lt;String&gt; <span class="title function_">load</span><span class="params">(String string)</span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (DrawableTypeRequest&lt;String&gt;) fromString().load(string);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Returns a request builder that loads data from &#123;<span class="doctag">@link</span> String&#125;s using an empty signature. </span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * &lt;p&gt; </span></span><br><span class="line"><span class="comment">     * Note - this method caches data using only the given String as the cache key. If the data is a Uri outside of </span></span><br><span class="line"><span class="comment">     * your control, or you otherwise expect the data represented by the given String to change without the String </span></span><br><span class="line"><span class="comment">     * identifier changing, Consider using </span></span><br><span class="line"><span class="comment">     * &#123;<span class="doctag">@link</span> GenericRequestBuilder#signature(Key)&#125; to mixin a signature </span></span><br><span class="line"><span class="comment">     * you create that identifies the data currently at the given String that will invalidate the cache if that data </span></span><br><span class="line"><span class="comment">     * changes. Alternatively, using &#123;<span class="doctag">@link</span> DiskCacheStrategy#NONE&#125; and/or </span></span><br><span class="line"><span class="comment">     * &#123;<span class="doctag">@link</span> DrawableRequestBuilder#skipMemoryCache(boolean)&#125; may be appropriate. </span></span><br><span class="line"><span class="comment">     * &lt;/p&gt; </span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@see</span> #from(Class) </span></span><br><span class="line"><span class="comment">     * <span class="doctag">@see</span> #load(String) </span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> DrawableTypeRequest&lt;String&gt; <span class="title function_">fromString</span><span class="params">()</span>&#123;</span><br><span class="line">        <span class="keyword">return</span> loadGeneric(String.class);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> &lt;T&gt; DrawableTypeRequest&lt;T&gt; <span class="title function_">loadGeneric</span><span class="params">(Class&lt;T&gt; modelClass)</span>&#123;</span><br><span class="line">        ModelLoader&lt;T, InputStream&gt; streamModelLoader = Glide.buildStreamModelLoader(modelClass, context);</span><br><span class="line">        ModelLoader&lt;T, ParcelFileDescriptor&gt; fileDescriptorModelLoader = Glide.buildFileDescriptorModelLoader(modelClass, context);</span><br><span class="line">        <span class="keyword">if</span>(modelClass != <span class="literal">null</span> &amp;&amp; streamModelLoader == <span class="literal">null</span> &amp;&amp; fileDescriptorModelLoader == <span class="literal">null</span>)&#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;Unknown type &quot;</span> + modelClass + <span class="string">&quot;. You must provide a Model of a type for&quot;</span> + <span class="string">&quot; which there is a registered ModelLoader, if you are using a custom model, you must first call&quot;</span>+ <span class="string">&quot; Glide#register with a ModelLoaderFactory for your custom model class&quot;</span>); </span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> optionsApplier.apply( <span class="keyword">new</span> <span class="title class_">DrawableTypeRequest</span>&lt;T&gt;(modelClass, streamModelLoader, fileDescriptorModelLoader, context, glide, requestTracker, lifecycle, optionsApplier));</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>RequestManager</code> 类的代码是非常多的，但是经过我这样简化之后，看上去就比较清爽了。</p>
+<p>在我们只探究加载图片 URL 字符串这一个 load()方法的情况下，那么比较重要的方法就只剩下上述代码中的这三个方法。 </p>
+<p>那么我们先来看 <code>load()</code>方法，这个方法中的逻辑是非常简单的，只有一行代码。</p>
+<p>了 fromString()方法，再调用 load()方法，然后把传入的图片 URL 地址传进去。而 fromString() </p>
+<p>方法也极为简单，就是调用了 loadGeneric()方法，并且指定参数为 String.class，因为 load() </p>
+<p>方法传入的是一个字符串参数。那么看上去，好像主要的工作都是在 loadGeneric()方法中进 </p>
+<p>行的了。 其实 <code>loadGeneric()</code>方法也没几行代码，这里分别调用了 <code>Glide.buildStreamModelLoader()</code>方法和 <code>Glide.buildFileDescriptorModelLoader()</code>方法来获得 <code>ModelLoader</code> 对象。<code>ModelLoader</code> 对象是用于加载图片的，而我们给 load()方法传入不同类型的参数，这里也会得到不同的<code>ModelLoader</code> 对象。由于我们刚才传入的参 数是 <code>String.class</code>，因此最终得到的是 <code>StreamStringLoader</code> 对象，它是实现了 <code>ModelLoader</code> 接口的。</p>
+<p>最后我们可以看到，<code>loadGeneric()</code>方法是要返回一个 <code>DrawableTypeRequest</code> 对象的，因此在<code>loadGeneric()</code>方法的最后又去 new 了一个 <code>DrawableTypeRequest</code> 对象，然后把刚才获得的 <code>ModelLoader</code> 对象，还有一大堆杂七杂八的东西都传了进去。具体每个参数的含义和作用就不解释了，我们只看主线流程。 </p>
+<p><code>DrawableTypeRequest</code> 的作用是什么呢？我们来看下它的源码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DrawableTypeRequest</span>&lt;ModelType&gt; <span class="keyword">extends</span> <span class="title class_">DrawableRequestBuilder</span>&lt;ModelType&gt; <span class="keyword">implements</span> <span class="title class_">DownloadOptions</span> &#123; </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ModelLoader&lt;ModelType, InputStream&gt; streamModelLoader; </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ModelLoader&lt;ModelType, ParcelFileDescriptor&gt; fileDescriptorModelLoader; </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> RequestManager.OptionsApplier optionsApplier; </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> &lt;A, Z, R&gt; FixedLoadProvider&lt;A, ImageVideoWrapper, Z, R&gt; <span class="title function_">buildProvider</span><span class="params">(Glide glide, ModelLoader&lt;A, InputStream&gt; streamModelLoader, ModelLoader&lt;A, ParcelFileDescriptor&gt; fileDescriptorModelLoader, Class&lt;Z&gt; resourceClass, Class&lt;R&gt; transcodedClass, ResourceTranscoder&lt;Z, R&gt; transcoder)</span> &#123; </span><br><span class="line">        <span class="keyword">if</span> (streamModelLoader == <span class="literal">null</span> &amp;&amp; fileDescriptorModelLoader == <span class="literal">null</span>) &#123; </span><br><span class="line">            <span class="keyword">return</span> <span class="literal">null</span>; </span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (transcoder == <span class="literal">null</span>) &#123; </span><br><span class="line">            transcoder = glide.buildTranscoder(resourceClass, transcodedClass); </span><br><span class="line">        &#125;</span><br><span class="line">        DataLoadProvider&lt;ImageVideoWrapper, Z&gt; dataLoadProvider = glide.buildDataProvider(ImageVideoWrapper.class, resourceClass); </span><br><span class="line">        ImageVideoModelLoader&lt;A&gt; modelLoader = <span class="keyword">new</span> <span class="title class_">ImageVideoModelLoader</span>&lt;A&gt;(streamModelLoader, fileDescriptorModelLoader); </span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">FixedLoadProvider</span>&lt;A, ImageVideoWrapper, Z, R&gt;(modelLoader, transcoder, dataLoadProvider); </span><br><span class="line">    &#125;</span><br><span class="line">    DrawableTypeRequest(Class&lt;ModelType&gt; modelClass, ModelLoader&lt;ModelType, InputStream&gt; streamModelLoader, ModelLoader&lt;ModelType, ParcelFileDescriptor&gt; fileDescriptorModelLoader, Context context, Glide glide, RequestTracker requestTracker, Lifecycle lifecycle, RequestManager.OptionsApplier optionsApplier) &#123;</span><br><span class="line">        <span class="built_in">super</span>(context, modelClass, buildProvider(glide, streamModelLoader, fileDescriptorModelLoader, GifBitmapWrapper.class, GlideDrawable.class, <span class="literal">null</span>), glide, requestTracker, lifecycle); </span><br><span class="line">        <span class="built_in">this</span>.streamModelLoader = streamModelLoader; <span class="built_in">this</span>.fileDescriptorModelLoader = fileDescriptorModelLoader; </span><br><span class="line">        <span class="built_in">this</span>.optionsApplier = optionsApplier; </span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Attempts to always load the resource as a &#123;<span class="doctag">@link</span> android.graphics.Bitmap&#125;, even if it could actually be animated. </span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> A new request builder for loading a &#123;<span class="doctag">@link</span> android.graphics.Bitmap&#125; </span></span><br><span class="line"><span class="comment">     */</span> </span><br><span class="line">    <span class="keyword">public</span> BitmapTypeRequest&lt;ModelType&gt; <span class="title function_">asBitmap</span><span class="params">()</span> &#123; </span><br><span class="line">        <span class="keyword">return</span> optionsApplier.apply(<span class="keyword">new</span> <span class="title class_">BitmapTypeRequest</span>&lt;ModelType&gt;(<span class="built_in">this</span>, streamModelLoader,fileDescriptorModelLoader, optionsApplier)); &#125;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Attempts to always load the resource as a &#123;<span class="doctag">@link</span> com.bumptech.glide.load.resource.gif.GifDrawable&#125;. </span></span><br><span class="line"><span class="comment">     * &lt;p&gt; </span></span><br><span class="line"><span class="comment">     * If the underlying data is not a GIF, this will fail. As a result, this should only be used if the model </span></span><br><span class="line"><span class="comment">     * represents an animated GIF and the caller wants to interact with the GIfDrawable directly. Normally using </span></span><br><span class="line"><span class="comment">     * just an &#123;<span class="doctag">@link</span> DrawableTypeRequest&#125; is sufficient because it will determine whether or </span></span><br><span class="line"><span class="comment">     * not the given data represents an animated GIF and return the appropriate animated or not animated </span></span><br><span class="line"><span class="comment">     * &#123;<span class="doctag">@link</span> android.graphics.drawable.Drawable&#125; automatically. </span></span><br><span class="line"><span class="comment">     * &lt;/p&gt; </span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> A new request builder for loading a &#123;<span class="doctag">@link</span> com.bumptech.glide.load.resource.gif.GifDrawable&#125;. </span></span><br><span class="line"><span class="comment">     */</span> </span><br><span class="line">    <span class="keyword">public</span> GifTypeRequest&lt;ModelType&gt; <span class="title function_">asGif</span><span class="params">()</span> &#123; </span><br><span class="line">        <span class="keyword">return</span> optionsApplier.apply(<span class="keyword">new</span> <span class="title class_">GifTypeRequest</span>&lt;ModelType&gt;(<span class="built_in">this</span>, streamModelLoader, optionsApplier)); </span><br><span class="line">    &#125;</span><br><span class="line">    ... </span><br><span class="line">&#125;                        </span><br></pre></td></tr></table></figure>
+
+<p>这个类中的代码本身就不多，我只是稍微做了一点简化。可以看到，最主要的就是它提供了 <code>asBitmap()</code>和 <code>asGif()</code>这两个方法。这两个方法我们在上一篇文章当中都是学过的，分别是用于强制指定加载静态图片和动态图片。而从源码中可以看出，它们分别又创建了一个<code>BitmapTypeRequest</code> 和 <code>GifTypeRequest</code>，如果没有进行强制指定的话，那默认就是使用<code>DrawableTypeRequest</code>。 </p>
+<p>好的，那么我们再回到 <code>RequestManager</code> 的 load()方法中。刚才已经分析过了，<code>fromString()</code>方法会返回一个 <code>DrawableTypeRequest</code> 对象，接下来会调用这个对象的 load()方法，把图片的 URL 地址传进去。但是我们刚才看到了，<code>DrawableTypeRequest</code> 中并没有 load()方法，那么很容易就能猜想到，load()方法是在父类当中的。 </p>
+<p><code>DrawableTypeRequest</code> 的父类是 <code>DrawableRequestBuilder</code>，我们来看下这个类的源码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DrawableRequestBuilder</span>&lt;ModelType&gt; </span><br><span class="line">    <span class="keyword">extends</span> <span class="title class_">GenericRequestBuilder</span>&lt;ModelType, ImageVideoWrapper, GifBitmapWrapper, GlideDrawable&gt; </span><br><span class="line">    <span class="keyword">implements</span> <span class="title class_">BitmapOptions</span>, DrawableOptions &#123; </span><br><span class="line">    </span><br><span class="line">    DrawableRequestBuilder(Context context, Class&lt;ModelType&gt; modelClass, LoadProvider&lt;ModelType, ImageVideoWrapper, GifBitmapWrapper, GlideDrawable&gt; loadProvider, Glide glide, RequestTracker requestTracker, Lifecycle lifecycle) &#123; </span><br><span class="line">        <span class="built_in">super</span>(context, modelClass, loadProvider, GlideDrawable.class, glide, requestTracker, lifecycle);</span><br><span class="line">        <span class="comment">// Default to animating. </span></span><br><span class="line">        crossFade(); </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">thumbnail</span><span class="params">( DrawableRequestBuilder&lt;?&gt; thumbnailRequest)</span> &#123; </span><br><span class="line">        <span class="built_in">super</span>.thumbnail(thumbnailRequest);</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">thumbnail</span><span class="params">( GenericRequestBuilder&lt;?, ?, ?, GlideDrawable&gt; thumbnailRequest)</span> &#123;</span><br><span class="line">        <span class="built_in">super</span>.thumbnail(thumbnailRequest); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">thumbnail</span><span class="params">(<span class="type">float</span> sizeMultiplier)</span> &#123; </span><br><span class="line">        <span class="built_in">super</span>.thumbnail(sizeMultiplier); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">sizeMultiplier</span><span class="params">(<span class="type">float</span> sizeMultiplier)</span> &#123; </span><br><span class="line">        <span class="built_in">super</span>.sizeMultiplier(sizeMultiplier); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">decoder</span><span class="params">(ResourceDecoder&lt;ImageVideoWrapper, GifBitmapWrapper&gt; decoder)</span> &#123; </span><br><span class="line">        <span class="built_in">super</span>.decoder(decoder); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">cacheDecoder</span><span class="params">(ResourceDecoder&lt;File, GifBitmapWrapper&gt; cacheDecoder)</span> &#123; </span><br><span class="line">        <span class="built_in">super</span>.cacheDecoder(cacheDecoder); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">encoder</span><span class="params">(ResourceEncoder&lt;GifBitmapWrapper&gt; encoder)</span> &#123; </span><br><span class="line">        <span class="built_in">super</span>.encoder(encoder); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">priority</span><span class="params">(Priority priority)</span> &#123; </span><br><span class="line">        <span class="built_in">super</span>.priority(priority); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">transform</span><span class="params">(BitmapTransformation... transformations)</span> &#123; </span><br><span class="line">        <span class="keyword">return</span> bitmapTransform(transformations); </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">centerCrop</span><span class="params">()</span> &#123; </span><br><span class="line">        <span class="keyword">return</span> transform(glide.getDrawableCenterCrop()); </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">fitCenter</span><span class="params">()</span> &#123; </span><br><span class="line">        <span class="keyword">return</span> transform(glide.getDrawableFitCenter()); </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">bitmapTransform</span><span class="params">(Transformation&lt;Bitmap&gt;... bitmapTransformations)</span> &#123; </span><br><span class="line">        GifBitmapWrapperTransformation[] transformations = <span class="keyword">new</span> <span class="title class_">GifBitmapWrapperTransformation</span>[bitmapTransformations.length]; </span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; bitmapTransformations.length; i++) &#123; </span><br><span class="line">            transformations[i] = <span class="keyword">new</span> <span class="title class_">GifBitmapWrapperTransformation</span>(glide.getBitmapPool(), bitmapTransformations[i]); </span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> transform(transformations); </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">transform</span><span class="params">(Transformation&lt;GifBitmapWrapper&gt;... transformation)</span> &#123; </span><br><span class="line">        <span class="built_in">super</span>.transform(transformation); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">transcoder</span><span class="params">( ResourceTranscoder&lt;GifBitmapWrapper, GlideDrawable&gt; transcoder)</span> &#123; </span><br><span class="line">        <span class="built_in">super</span>.transcoder(transcoder); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">crossFade</span><span class="params">()</span> &#123; </span><br><span class="line">        <span class="built_in">super</span>.animate(<span class="keyword">new</span> <span class="title class_">DrawableCrossFadeFactory</span>&lt;GlideDrawable&gt;()); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">crossFade</span><span class="params">(<span class="type">int</span> duration)</span> &#123; </span><br><span class="line">        <span class="built_in">super</span>.animate(<span class="keyword">new</span> <span class="title class_">DrawableCrossFadeFactory</span>&lt;GlideDrawable&gt;(duration)); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">crossFade</span><span class="params">(<span class="type">int</span> animationId, <span class="type">int</span> duration)</span> &#123;</span><br><span class="line">        <span class="built_in">super</span>.animate(<span class="keyword">new</span> <span class="title class_">DrawableCrossFadeFactory</span>&lt;GlideDrawable&gt;(context, animationId, duration)); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">dontAnimate</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="built_in">super</span>.dontAnimate(); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;  </span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">animate</span><span class="params">(ViewPropertyAnimation.Animator animator)</span> &#123;</span><br><span class="line">        <span class="built_in">super</span>.animate(animator); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">animate</span><span class="params">(<span class="type">int</span> animationId)</span> &#123; </span><br><span class="line">        <span class="built_in">super</span>.animate(animationId); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">placeholder</span><span class="params">(<span class="type">int</span> resourceId)</span> &#123; </span><br><span class="line">        <span class="built_in">super</span>.placeholder(resourceId); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">placeholder</span><span class="params">(Drawable drawable)</span> &#123; </span><br><span class="line">        <span class="built_in">super</span>.placeholder(drawable); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">fallback</span><span class="params">(Drawable drawable)</span> &#123; </span><br><span class="line">        <span class="built_in">super</span>.fallback(drawable); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">fallback</span><span class="params">(<span class="type">int</span> resourceId)</span> &#123;</span><br><span class="line">        <span class="built_in">super</span>.fallback(resourceId); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">error</span><span class="params">(<span class="type">int</span> resourceId)</span> &#123; </span><br><span class="line">        <span class="built_in">super</span>.error(resourceId); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">error</span><span class="params">(Drawable drawable)</span> &#123; </span><br><span class="line">        <span class="built_in">super</span>.error(drawable); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">listener</span><span class="params">( RequestListener&lt;? <span class="built_in">super</span> ModelType, GlideDrawable&gt; requestListener)</span> &#123; </span><br><span class="line">        <span class="built_in">super</span>.listener(requestListener); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">diskCacheStrategy</span><span class="params">(DiskCacheStrategy strategy)</span> &#123; </span><br><span class="line">        <span class="built_in">super</span>.diskCacheStrategy(strategy); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">skipMemoryCache</span><span class="params">(<span class="type">boolean</span> skip)</span> &#123; </span><br><span class="line">        <span class="built_in">super</span>.skipMemoryCache(skip); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">override</span><span class="params">(<span class="type">int</span> width, <span class="type">int</span> height)</span> &#123; </span><br><span class="line">        <span class="built_in">super</span>.override(width, height); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">sourceEncoder</span><span class="params">(Encoder&lt;ImageVideoWrapper&gt; sourceEncoder)</span> &#123;</span><br><span class="line">        <span class="built_in">super</span>.sourceEncoder(sourceEncoder); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">dontTransform</span><span class="params">()</span> &#123; </span><br><span class="line">        <span class="built_in">super</span>.dontTransform(); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">signature</span><span class="params">(Key signature)</span> &#123; </span><br><span class="line">        <span class="built_in">super</span>.signature(signature); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">load</span><span class="params">(ModelType model)</span> &#123; </span><br><span class="line">        <span class="built_in">super</span>.load(model); </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> DrawableRequestBuilder&lt;ModelType&gt; <span class="title function_">clone</span><span class="params">()</span> &#123; </span><br><span class="line">        <span class="keyword">return</span> (DrawableRequestBuilder&lt;ModelType&gt;) <span class="built_in">super</span>.clone(); </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">public</span> Target&lt;GlideDrawable&gt; <span class="title function_">into</span><span class="params">(ImageView view)</span> &#123; </span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">super</span>.into(view); </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">applyFitCenter</span><span class="params">()</span> &#123; </span><br><span class="line">        fitCenter(); </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span> </span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">applyCenterCrop</span><span class="params">()</span> &#123; </span><br><span class="line">        centerCrop(); </span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>DrawableRequestBuilder</code> 中有很多个方法，这些方法其实就是 Glide 绝大多数的 <code>API</code> 了。里面有 不 少 我 们 在 上 篇 文 章 中 已 经 用 过 了 ， 比 如 说 <code>placeholder()</code> 方 法 、 <code>error()</code> 方 法 、<code>diskCacheStrategy()</code>方法、<code>override()</code>方法等。当然还有很多暂时还没用到的 <code>API</code>，我们会在后面的文章当中学习。 </p>
+<p>到 这 里 ， 第 二 步 <code>load()</code> 方 法 也 就 分 析 结 束 了 。 为 什 么 呢 ？ 因 为 你 会 发 现 <code>DrawableRequestBuilder</code> 类中有一个 into()方法（上述代码第 220 行），也就是说，最终 load() 方法返回的其实就是一个 <code>DrawableTypeRequest</code> 对象。那么接下来我们就要进行第三步了， 分析 into()方法中的逻辑。</p>
+<h4 id="into"><a href="#into" class="headerlink" title="into()"></a><code>into()</code></h4><p>如果说前面两步都是在准备开胃小菜的话，那么现在终于要进入主菜了，因为 <code>into()</code>方法也是整个 Glide 图片加载流程中逻辑最复杂的地方。</p>
+<p>不过从刚才的代码来看，into()方法中并没有任何逻辑，只有一句 <code>super.into(view)</code>。那么很显然，<code>into()</code>方法的具体逻辑都是在 <code>DrawableRequestBuilder</code> 的父类当中了。 <code>DrawableRequestBuilder</code> 的 父 类 是 <code>GenericRequestBuilder</code> ， 我 们 来 看 一 下 <code>GenericRequestBuilder</code> 类中的 <code>into()</code>方法，如下所示： </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> Target&lt;TranscodeType&gt; <span class="title function_">into</span><span class="params">(ImageView view)</span> &#123; </span><br><span class="line">    Util.assertMainThread(); </span><br><span class="line">    <span class="keyword">if</span> (view == <span class="literal">null</span>) &#123; </span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;You must pass in a non null View&quot;</span>); </span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (!isTransformationSet &amp;&amp; view.getScaleType() != <span class="literal">null</span>) &#123; </span><br><span class="line">        <span class="keyword">switch</span> (view.getScaleType()) &#123; </span><br><span class="line">            <span class="keyword">case</span> CENTER_CROP: </span><br><span class="line">                applyCenterCrop(); </span><br><span class="line">                <span class="keyword">break</span>; </span><br><span class="line">            <span class="keyword">case</span> FIT_CENTER: </span><br><span class="line">            <span class="keyword">case</span> FIT_START: </span><br><span class="line">            <span class="keyword">case</span> FIT_END: </span><br><span class="line">                applyFitCenter(); </span><br><span class="line">                <span class="keyword">break</span>; </span><br><span class="line">                <span class="comment">//$CASES-OMITTED$ </span></span><br><span class="line">            <span class="keyword">default</span>: </span><br><span class="line">                <span class="comment">// Do nothing. </span></span><br><span class="line">        &#125; </span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> into(glide.buildImageViewTarget(view, transcodeClass)); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里前面一大堆的判断逻辑我们都可以先不用管，等到后面文章讲 <code>transform</code> 的时候会再进行 解 释 ， 现 在 我 们 只 需 要 关 注 最 后 一 行 代 码 。 最 后 一 行 代 码 先 是调用了<code>glide.buildImageViewTarget()</code>方法，这个方法会构建出一个 Target 对象，Target 对象则是用来最终展示图片用的，如果我们跟进去的话会看到如下代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;R&gt; Target&lt;R&gt; <span class="title function_">buildImageViewTarget</span><span class="params">(ImageView imageView, Class&lt;R&gt; transcodedClass)</span> &#123; </span><br><span class="line">    <span class="keyword">return</span> imageViewTargetFactory.buildTarget(imageView, transcodedClass); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里其实又是调用了 <code>ImageViewTargetFactory</code> 的 <code>buildTarget()</code>方法，我们继续跟进去，代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ImageViewTargetFactory</span> &#123; </span><br><span class="line">    <span class="meta">@SuppressWarnings(&quot;unchecked&quot;)</span> </span><br><span class="line">    <span class="keyword">public</span> &lt;Z&gt; Target&lt;Z&gt; <span class="title function_">buildTarget</span><span class="params">(ImageView view, Class&lt;Z&gt; clazz)</span> &#123; </span><br><span class="line">        <span class="keyword">if</span> (GlideDrawable.class.isAssignableFrom(clazz)) &#123; </span><br><span class="line">            <span class="keyword">return</span> (Target&lt;Z&gt;) <span class="keyword">new</span> <span class="title class_">GlideDrawableImageViewTarget</span>(view); </span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (Bitmap.class.equals(clazz)) &#123; </span><br><span class="line">            <span class="keyword">return</span> (Target&lt;Z&gt;) <span class="keyword">new</span> <span class="title class_">BitmapImageViewTarget</span>(view); </span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (Drawable.class.isAssignableFrom(clazz)) &#123; </span><br><span class="line">            <span class="keyword">return</span> (Target&lt;Z&gt;) <span class="keyword">new</span> <span class="title class_">DrawableImageViewTarget</span>(view); </span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;Unhandled class: &quot;</span> + clazz + <span class="string">&quot;, try .as*(Class).transcode(ResourceTranscoder)&quot;</span>); </span><br><span class="line">        &#125; </span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，在 <code>buildTarget()</code>方法中会根据传入的 <code>class</code> 参数来构建不同的 <code>Target</code> 对象。那如果你要分析这个 <code>class</code> 参数是从哪儿传过来的，这可有得你分析了，简单起见我直接帮大家梳理清楚。这个 <code>class</code> 参数其实基本上只有两种情况，如果你在使用 <code>Glide</code> 加载图片的时候调用了 <code>asBitmap()</code>方法，那么这里就会构建出 <code>BitmapImageViewTarget</code> 对象，否则的话构建的都是 <code>GlideDrawableImageViewTarget</code> 对象。至于上述代码中的 <code>DrawableImageViewTarget</code> 对象，这个通常都是用不到的，我们可以暂时不用管它。也 就 是 说 ， 通 过 <code>glide.buildImageViewTarget()</code> 方 法 ， 我 们 构 建 出 了 一 个<code>GlideDrawableImageViewTarget</code> 对象。那现在回到刚才 <code>into()</code>方法的最后一行，可以看到，这里又将这个参数传入到了 <code>GenericRequestBuilder</code> 另一个接收 <code>Target</code> 对象的 <code>into()</code>方法当中了。 </p>
+<p>我们来看一下这个 <code>into()</code>方法的源码： </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> &lt;Y <span class="keyword">extends</span> <span class="title class_">Target</span>&lt;TranscodeType&gt;&gt; Y <span class="title function_">into</span><span class="params">(Y target)</span> &#123; </span><br><span class="line">    Util.assertMainThread(); </span><br><span class="line">    <span class="keyword">if</span> (target == <span class="literal">null</span>) &#123; </span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;You must pass in a non null Target&quot;</span>); </span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (!isModelSet) &#123; </span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;You must first set a model (try #load())&quot;</span>); </span><br><span class="line">    &#125;</span><br><span class="line">    <span class="type">Request</span> <span class="variable">previous</span> <span class="operator">=</span> target.getRequest();</span><br><span class="line">    <span class="keyword">if</span> (previous != <span class="literal">null</span>) &#123; </span><br><span class="line">        previous.clear(); </span><br><span class="line">        requestTracker.removeRequest(previous); </span><br><span class="line">        previous.recycle(); </span><br><span class="line">    &#125;</span><br><span class="line">    <span class="type">Request</span> <span class="variable">request</span> <span class="operator">=</span> buildRequest(target); </span><br><span class="line">    target.setRequest(request); </span><br><span class="line">    lifecycle.addListener(target); </span><br><span class="line">    requestTracker.runRequest(request); </span><br><span class="line">    <span class="keyword">return</span> target; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里我们还是只抓核心代码，其实只有两行是最关键的，第 15 行调用 <code>buildRequest()</code>方法构建出了一个 <code>Request</code> 对象，还有第 18 行来执行这个 <code>Request</code>。 <code>Request</code> 是用来发出加载图片请求的，它是 <code>Glide</code> 中非常关键的一个组件。</p>
+<p>我们先来看<code>buildRequest()</code>方法是如何构建 <code>Request</code> 对象的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> Request <span class="title function_">buildRequest</span><span class="params">(Target&lt;TranscodeType&gt; target)</span> &#123; </span><br><span class="line">    <span class="keyword">if</span> (priority == <span class="literal">null</span>) &#123; </span><br><span class="line">        priority = Priority.NORMAL; </span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> buildRequestRecursive(target, <span class="literal">null</span>); </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> Request <span class="title function_">buildRequestRecursive</span><span class="params">(Target&lt;TranscodeType&gt; target, ThumbnailRequestCoordinator parentCoordinator)</span> &#123; </span><br><span class="line">    <span class="keyword">if</span> (thumbnailRequestBuilder != <span class="literal">null</span>) &#123; </span><br><span class="line">        <span class="keyword">if</span> (isThumbnailBuilt) &#123; </span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(<span class="string">&quot;You cannot use a request as both the main request and a thumbnail, &quot;</span>+ <span class="string">&quot;consider using clone() on the request(s) passed to thumbnail()&quot;</span>); </span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// Recursive case: contains a potentially recursive thumbnail request builder. </span></span><br><span class="line">        <span class="keyword">if</span> (thumbnailRequestBuilder.animationFactory.equals(NoAnimation.getFactory())) &#123; </span><br><span class="line">            thumbnailRequestBuilder.animationFactory = animationFactory; </span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span> (thumbnailRequestBuilder.priority == <span class="literal">null</span>) &#123; </span><br><span class="line">            thumbnailRequestBuilder.priority = getThumbnailPriority(); </span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span> (Util.isValidDimensions(overrideWidth, overrideHeight) &amp;&amp; !Util.isValidDimensions(thumbnailRequestBuilder.overrideWidth, thumbnailRequestBuilder.overrideHeight)) &#123;</span><br><span class="line">            thumbnailRequestBuilder.override(overrideWidth, overrideHeight); </span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="type">ThumbnailRequestCoordinator</span> <span class="variable">coordinator</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ThumbnailRequestCoordinator</span>(parentCoordinator); </span><br><span class="line">        <span class="type">Request</span> <span class="variable">fullRequest</span> <span class="operator">=</span> obtainRequest(target, sizeMultiplier, priority, coordinator); </span><br><span class="line">        <span class="comment">// Guard against infinite recursion. </span></span><br><span class="line">        isThumbnailBuilt = <span class="literal">true</span>; </span><br><span class="line">        <span class="comment">// Recursively generate thumbnail requests. </span></span><br><span class="line">        <span class="type">Request</span> <span class="variable">thumbRequest</span> <span class="operator">=</span> thumbnailRequestBuilder.buildRequestRecursive(target, coordinator); </span><br><span class="line">        isThumbnailBuilt = <span class="literal">false</span>; </span><br><span class="line">        coordinator.setRequests(fullRequest, thumbRequest); </span><br><span class="line">        <span class="keyword">return</span> coordinator; </span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (thumbSizeMultiplier != <span class="literal">null</span>) &#123; </span><br><span class="line">        <span class="comment">// Base case: thumbnail multiplier generates a thumbnail request, but cannot recurse. </span></span><br><span class="line">        <span class="type">ThumbnailRequestCoordinator</span> <span class="variable">coordinator</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ThumbnailRequestCoordinator</span>(parentCoordinator); </span><br><span class="line">        <span class="type">Request</span> <span class="variable">fullRequest</span> <span class="operator">=</span> obtainRequest(target, sizeMultiplier, priority, coordinator); </span><br><span class="line">        <span class="type">Request</span> <span class="variable">thumbnailRequest</span> <span class="operator">=</span> obtainRequest(target, thumbSizeMultiplier, getThumbnailPriority(), coordinator); </span><br><span class="line">        coordinator.setRequests(fullRequest, thumbnailRequest); </span><br><span class="line">        <span class="keyword">return</span> coordinator; </span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// Base case: no thumbnail. </span></span><br><span class="line">        <span class="keyword">return</span> obtainRequest(target, sizeMultiplier, priority, parentCoordinator); </span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> Request <span class="title function_">obtainRequest</span><span class="params">(Target&lt;TranscodeType&gt; target, <span class="type">float</span> sizeMultiplier, Priority priority, RequestCoordinator requestCoordinator)</span> &#123; </span><br><span class="line">    <span class="keyword">return</span> GenericRequest.obtain( </span><br><span class="line">        loadProvider, </span><br><span class="line">        model, </span><br><span class="line">        signature, </span><br><span class="line">        context, </span><br><span class="line">        priority, </span><br><span class="line">        target, </span><br><span class="line">        sizeMultiplier, </span><br><span class="line">        placeholderDrawable, </span><br><span class="line">        placeholderId, </span><br><span class="line">        errorPlaceholder, </span><br><span class="line">        errorId,</span><br><span class="line">        fallbackDrawable, </span><br><span class="line">        fallbackResource, </span><br><span class="line">        requestListener, </span><br><span class="line">        requestCoordinator, </span><br><span class="line">        glide.getEngine(), </span><br><span class="line">        transformation, </span><br><span class="line">        transcodeClass, </span><br><span class="line">        isCacheable, </span><br><span class="line">        animationFactory, </span><br><span class="line">        overrideWidth, </span><br><span class="line">        overrideHeight, </span><br><span class="line">        diskCacheStrategy); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可 以 看 到 ， <code>buildRequest()</code> 方 法 的 内 部 其 实 又 调 用 了 <code>buildRequestRecursive()</code> 方 法 ， 而<code>buildRequestRecursive()</code>方法中的代码虽然有点长，但是其中 90%的代码都是在处理缩略图的。如果我们只追主线流程的话，那么只需要看第 47 行代码就可以了。这里调用了<code>obtainRequest()</code> 方 法 来 获 取 一 个 <code>Request</code> 对 象 ， 而 <code>obtainRequest()</code> 方 法 中 又 去 调 用 了<code>GenericRequest</code> 的 <code>obtain()</code>方法。注意这个 <code>obtain()</code>方法需要传入非常多的参数，而其中很多的参数我们都是比较熟悉的，像什么 <code>placeholderId</code>、<code>errorPlaceholder</code>、<code>diskCacheStrategy</code> 等等。因此，我们就有理由猜测，刚才在 <code>load()</code>方法中调用的所有 <code>API</code>，其实都是在这里组装到 <code>Request</code> 对象当中的。</p>
+<p>那么我们进入到这个 <code>GenericRequest</code> 的 <code>obtain()</code>方法瞧一瞧：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">GenericRequest</span>&lt;A, T, Z, R&gt; <span class="keyword">implements</span> <span class="title class_">Request</span>, SizeReadyCallback, ResourceCallback &#123; </span><br><span class="line">    ... </span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> &lt;A, T, Z, R&gt; GenericRequest&lt;A, T, Z, R&gt; <span class="title function_">obtain</span><span class="params">( </span></span><br><span class="line"><span class="params">        LoadProvider&lt;A, T, Z, R&gt; loadProvider, </span></span><br><span class="line"><span class="params">        A model, </span></span><br><span class="line"><span class="params">        Key signature, </span></span><br><span class="line"><span class="params">        Context context, </span></span><br><span class="line"><span class="params">        Priority priority, </span></span><br><span class="line"><span class="params">        Target&lt;R&gt; target, </span></span><br><span class="line"><span class="params">        <span class="type">float</span> sizeMultiplier, </span></span><br><span class="line"><span class="params">        Drawable placeholderDrawable, </span></span><br><span class="line"><span class="params">        <span class="type">int</span> placeholderResourceId, </span></span><br><span class="line"><span class="params">        Drawable errorDrawable, </span></span><br><span class="line"><span class="params">        <span class="type">int</span> errorResourceId, </span></span><br><span class="line"><span class="params">        Drawable fallbackDrawable, </span></span><br><span class="line"><span class="params">        <span class="type">int</span> fallbackResourceId, RequestListener&lt;? <span class="built_in">super</span> A, R&gt; requestListener, </span></span><br><span class="line"><span class="params">        RequestCoordinator requestCoordinator, </span></span><br><span class="line"><span class="params">        Engine engine,</span></span><br><span class="line"><span class="params">        Transformation&lt;Z&gt; transformation, </span></span><br><span class="line"><span class="params">        Class&lt;R&gt; transcodeClass, </span></span><br><span class="line"><span class="params">        <span class="type">boolean</span> isMemoryCacheable, </span></span><br><span class="line"><span class="params">        GlideAnimationFactory&lt;R&gt; animationFactory, </span></span><br><span class="line"><span class="params">        <span class="type">int</span> overrideWidth, </span></span><br><span class="line"><span class="params">        <span class="type">int</span> overrideHeight, </span></span><br><span class="line"><span class="params">        DiskCacheStrategy diskCacheStrategy)</span> &#123; </span><br><span class="line">        <span class="meta">@SuppressWarnings(&quot;unchecked&quot;)</span> </span><br><span class="line">        GenericRequest&lt;A, T, Z, R&gt; request = (GenericRequest&lt;A, T, Z, R&gt;) REQUEST_POOL.poll(); </span><br><span class="line">        <span class="keyword">if</span> (request == <span class="literal">null</span>) &#123; </span><br><span class="line">           	request = <span class="keyword">new</span> <span class="title class_">GenericRequest</span>&lt;A, T, Z, R&gt;(); </span><br><span class="line">        &#125;</span><br><span class="line">        request.init(loadProvider, </span><br><span class="line">                     model, </span><br><span class="line">                     signature, </span><br><span class="line">                     context, </span><br><span class="line">                     priority, </span><br><span class="line">                     target, </span><br><span class="line">                     sizeMultiplier, </span><br><span class="line">                     placeholderDrawable, </span><br><span class="line">                     placeholderResourceId, </span><br><span class="line">                     errorDrawable, </span><br><span class="line">                     errorResourceId, </span><br><span class="line">                     fallbackDrawable, </span><br><span class="line">                     fallbackResourceId, </span><br><span class="line">                     requestListener, </span><br><span class="line">                     requestCoordinator, </span><br><span class="line">                     engine, </span><br><span class="line">                     transformation, </span><br><span class="line">                     transcodeClass, </span><br><span class="line">                     isMemoryCacheable, </span><br><span class="line">                     animationFactory, </span><br><span class="line">                     overrideWidth, </span><br><span class="line">                     overrideHeight, </span><br><span class="line">                     diskCacheStrategy</span><br><span class="line">                    ); </span><br><span class="line">        <span class="keyword">return</span> request; </span><br><span class="line">    &#125;</span><br><span class="line">    ... </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，这里在第 33 行去 new 了一个 <code>GenericRequest</code> 对象，并在最后一行返回，也就是说，<code>obtain()</code>方法实际上获得的就是一个 <code>GenericRequest</code> 对象。另外这里又在第 35 行调用了<code>GenericRequest</code> 的 <code>init()</code>，里面主要就是一些赋值的代码，将传入的这些参数赋值到<code>GenericRequest</code> 的成员变量当中，我们就不再跟进去看了。 </p>
+<p>好，那现在解决了构建 <code>Request</code> 对象的问题，接下来我们看一下这个 <code>Request</code> 对象又是怎么 执行的。回到刚才的 <code>into()</code>方法，你会发现在第 18 行调用了 <code>requestTracker.runRequest()</code>方法 来去执行这个 <code>Request</code>，那么我们跟进去瞧一瞧，如下所示： </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Starts tracking the given request. </span></span><br><span class="line"><span class="comment"> */</span> </span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">runRequest</span><span class="params">(Request request)</span> &#123; </span><br><span class="line">    requests.add(request); </span><br><span class="line">    <span class="keyword">if</span> (!isPaused) &#123; </span><br><span class="line">        request.begin(); </span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        pendingRequests.add(request); </span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里有一个简单的逻辑判断，就是先判断 Glide 当前是不是处理暂停状态，如果不是暂停状态就调用 Request 的 <code>begin()</code>方法来执行 <code>Request</code>，否则的话就先将 Request 添加到待执行队列里面，等暂停状态解除了之后再执行。 </p>
+<p>暂停请求的功能仍然不是这篇文章所关心的，这里就直接忽略了，我们重点来看这个 <code>begin()</code> 方法。由于当前的 <code>Request</code> 对象是一个 <code>GenericRequest</code>，因此这里就需要看 <code>GenericRequest</code> 中的 <code>begin()</code>方法了，如下所示： </p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>请我喝杯奶茶吧~</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>Donate</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.jpg" alt=" WeChat Pay"/>
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/%E5%AE%89%E5%8D%93%E7%AC%AC%E4%B8%89%E6%96%B9/" rel="tag"># 安卓第三方</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/3447597586/" rel="next" title="第三方-ARouter">
+                <i class="fa fa-chevron-left"></i> 第三方-ARouter
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/594975625/" rel="prev" title="知识-个人博客相关笔记">
+                知识-个人博客相关笔记 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7Carchive">
+              
+                  <span class="site-state-item-count">248</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">20</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">49</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@qq.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://juejin.im/user/57ea31a1a22b9d0061656f52" target="_blank" title="掘金">
+                      
+                        <i class="fa fa-fw fa-fa fa-fw fa-book"></i>掘金</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/shenbh" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                友情链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://www.wanandroid.com/" title="玩Android" target="_blank">玩Android</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://wuxiaolong.me/" title="吴小龙同学" target="_blank">吴小龙同学</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://hexo.yuanjh.cn/" title="江州司马" target="_blank">江州司马</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://www.yanghujun.com/" title="八归少年" target="_blank">八归少年</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://zhpanvip.gitee.io/" title="马可没有菠萝" target="_blank">马可没有菠萝</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://omooo.top/" title="Omooo" target="_blank">Omooo</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://gityuan.com/" title="Gityuan" target="_blank">Gityuan</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Glide%E6%BA%90%E7%A0%81%E5%B0%B1%E5%AE%9A%E4%B8%80%E4%B8%AA%E4%BB%A5%E4%B8%8B%E7%9B%AE%E6%A0%87%EF%BC%9A"><span class="nav-text">Glide源码就定一个以下目标：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#with"><span class="nav-text">with() </span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#load"><span class="nav-text">load()</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#into"><span class="nav-text">into()</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>
