@@ -86,11 +86,14 @@
 <meta property="og:site_name" content="AB">
 <meta property="og:description" content="屏幕适配概念 像素（pixel）：简写px 分辨率：横纵方向上的像素个数 屏幕尺寸：对角线长度（单位英寸） dip（density independent pixel）：抽象意义上的像素。简写dp dpi（dot per inch）：像素密度，简称密度（即每英寸的像素数）。dpi&#x3D;(√(xx+yy))&#x2F;对角线英寸 标准dpi&#x3D;160 density：是个比例数，单位：">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://shenbh.github.io/.io//image-20220621171850842.png">
+<meta property="og:image" content="http://shenbh.github.io/.io//image-20220621172028482.png">
 <meta property="article:published_time" content="2020-03-16T02:18:58.000Z">
-<meta property="article:modified_time" content="2022-05-05T06:57:05.722Z">
+<meta property="article:modified_time" content="2022-07-04T06:20:11.176Z">
 <meta property="article:author" content="阿炳">
 <meta property="article:tag" content="安卓UI">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://shenbh.github.io/.io//image-20220621171850842.png">
 
 
 
@@ -461,25 +464,183 @@
 </tbody></table>
 </li>
 </ul>
+<p><a target="_blank" rel="noopener" href="https://developer.android.google.cn/training/multiscreen/screendensities">适用于不同像素密度的配置限定符。</a></p>
+<table>
+<thead>
+<tr>
+<th align="left">密度限定符</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>ldpi</code></td>
+<td align="left">适用于低密度 (ldpi) 屏幕 (~ 120dpi) 的资源。</td>
+</tr>
+<tr>
+<td align="left"><code>mdpi</code></td>
+<td align="left">适用于中密度 (mdpi) 屏幕 (~ 160dpi) 的资源（这是基准密度）。</td>
+</tr>
+<tr>
+<td align="left"><code>hdpi</code></td>
+<td align="left">适用于高密度 (hdpi) 屏幕 (~ 240dpi) 的资源。</td>
+</tr>
+<tr>
+<td align="left"><code>xhdpi</code></td>
+<td align="left">适用于加高 (xhdpi) 密度屏幕 (~ 320dpi) 的资源。</td>
+</tr>
+<tr>
+<td align="left"><code>xxhdpi</code></td>
+<td align="left">适用于超超高密度 (xxhdpi) 屏幕 (~ 480dpi) 的资源。</td>
+</tr>
+<tr>
+<td align="left"><code>xxxhdpi</code></td>
+<td align="left">适用于超超超高密度 (xxxhdpi) 屏幕 (~ 640dpi) 的资源。</td>
+</tr>
+<tr>
+<td align="left"><code>nodpi</code></td>
+<td align="left">适用于所有密度的资源。这些是与密度无关的资源。无论当前屏幕的密度是多少，系统都不会缩放以此限定符标记的资源。</td>
+</tr>
+<tr>
+<td align="left"><code>tvdpi</code></td>
+<td align="left">适用于密度介于 mdpi 和 hdpi 之间的屏幕（约 213dpi）的资源。这不属于“主要”密度组。它主要用于电视，而大多数应用都不需要它。对于大多数应用而言，提供 mdpi 和 hdpi 资源便已足够，系统将视情况对其进行缩放。如果您发现有必要提供 tvdpi 资源，应按一个系数来确定其大小，即 1.33*mdpi。例如，如果某张图片在 mdpi 屏幕上的大小为 100px x 100px，那么它在 tvdpi 屏幕上的大小应该为 133px x 133px。</td>
+</tr>
+</tbody></table>
+<ol>
+<li><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/zcn596785154/article/details/77088517">drawable的适配机制</a>是，系统会先到后缀与设备匹配的drawable目录下找对应的图片，当找不到的时候会去‘更高’一级的目录去找，再找不到，继续<code>往高一级</code>的找，再找不到就退而求其次去低一级的找，依次类推。</p>
+<p>例如：在密度为xxhdpi的手机上运行app，会去drawable-xxhdpi目录下找图片资源，找不到就去drawable-xxxhdpi找，如果没有比drawable-xxxhdpi更高的，则再找不到就去drawable-xhdpi找，再找不到就去drawable-hdpi找，直到找到对应的图片资源，当找到后，系统会按密度对图片做缩放处理，然后再显示到屏幕上，所以如果图片放的目录不对的话，有可能造成图片模糊。</p>
+</li>
+<li><p>layout-land-1024x720，layout-1280x720，layout-1920x1080</p>
+<p>layout目录的适配机制是，从“高往低”找最接近的尺寸目录，例如手机是1920x1080分辨率的，但是如果无此layout目录那么便会<code>低一级</code>的layout-1280x720找布局（而不会去高一级的layout-2560x1440找），依次类推，直至找到layout不带后缀的目录为止，如果还没有，就会报错。</p>
+<p>所以考虑以下场景：<br>原本我们的布局文件目录只有layout一个，没有其他带后缀的layout目录<br>实际测试中发现的布局在960x540手机上有问题。<br>那么有些人可能会想到加个layout-960x540目录，然后在此目录下做特殊处理。那么问题来了，加了这个目录之后，layout目录就有两个，layout无后缀和layout-960x540。当在1920x1080手机上运行程序时，按照适配机制，系统会使用layout-960x540目录下的布局文件，而我们当初的初衷是只希望layout-960x540目录下的布局文件在960x540的手机上使用，所以这种情况下布局肯定会有问题。</p>
+<p><strong>注意：因此，千万注意上面这种场景，不要随意添加‘layout-分辨率’的这种目录，除非把各种主流分辨率都添加一遍。碰到这种问题，最好从dimens文件入手做适配。</strong></p>
+</li>
+<li><p>values目录之dimens文件，为了适配不同尺寸的手机，我们可以创建多个values目录，然后在其中定义dimens尺寸，例如values-1280x720，values-1196x720等等。</p>
+<p>dimens适配的机制是，先找跟设备对应的values目录下的dimens文件中的尺寸定义，找不到则往<code>低一级</code>的找，比如，在1280x720分辨率的手机上，如果app中没有创建values-1280x720目录，而只有values-1920x1080、values-1196x720目录和默认的values目录，那么系统会去优先去values-1196x720的目录下找对应的尺寸。如果找不到，则去默认的values找，再找不到就报错（不会去1920x1080目录找）。</p>
+</li>
+</ol>
+<blockquote>
+<p>总结：</p>
+<ol>
+<li>drawable适配过程：找与设备密度对应的目录下的图片—&gt;往更高质量的找—&gt;退而求其次找低质量的</li>
+<li>layout适配过程：找与设备对应的目录，找不到则从比设备分辨率低一级的目录开始依次往下找。</li>
+<li>values适配过程：同layout。</li>
+</ol>
+</blockquote>
+<ol start="4">
+<li><p>自动拉伸位图，即android下特有的.9.png图片格式。</p>
+<p>当我们需要使图片在拉伸后还能保持一定的显示效果，比如，不能使图片中的重要像素拉伸，不能使内容区域受到拉伸的影响，我们就可以使用.9.png图来实现。</p>
+</li>
+</ol>
+<h2 id="主流分辨率启动图"><a href="#主流分辨率启动图" class="headerlink" title="主流分辨率启动图"></a>主流分辨率启动图</h2><p>480*800</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">drawable</span></span><br><span class="line"><span class="attribute">drawable</span>-hdpi </span><br><span class="line"><span class="attribute">drawable</span>-ldpi </span><br><span class="line"><span class="attribute">drawable</span>-mdpi </span><br><span class="line"><span class="attribute">drawable</span>-xhdpi </span><br><span class="line"><span class="attribute">drawable</span>-xxhdpi </span><br><span class="line"><span class="attribute">drawable</span>-xxxhdpi </span><br><span class="line"><span class="attribute">drawable</span>-<span class="number">2340</span>x1080</span><br><span class="line"><span class="attribute">drawable</span>-<span class="number">1920</span>x1080 </span><br><span class="line"><span class="attribute">drawable</span>-<span class="number">1280</span>x800</span><br><span class="line"><span class="attribute">drawable</span>-<span class="number">1280</span>x720</span><br><span class="line"><span class="attribute">drawable</span>-<span class="number">1184</span>x720</span><br><span class="line"><span class="attribute">drawable</span>-<span class="number">960</span>x540</span><br><span class="line"><span class="attribute">drawable</span>-<span class="number">854</span>x480</span><br><span class="line"><span class="attribute">drawable</span>-<span class="number">800</span>x480</span><br><span class="line"><span class="attribute">drawable</span>-<span class="number">480</span>x320</span><br><span class="line"><span class="attribute">layout</span></span><br><span class="line"><span class="attribute">layout</span>-<span class="number">2340</span>x1080</span><br><span class="line"><span class="attribute">layout</span>-<span class="number">1920</span>x1080</span><br><span class="line"><span class="attribute">layout</span>-<span class="number">1280</span>x800</span><br><span class="line"><span class="attribute">layout</span>-<span class="number">1280</span>x720</span><br><span class="line"><span class="attribute">layout</span>-<span class="number">1184</span>x720</span><br><span class="line"><span class="attribute">layout</span>-<span class="number">960</span>x540</span><br><span class="line"><span class="attribute">layout</span>-<span class="number">854</span>x480</span><br><span class="line"><span class="attribute">layout</span>-<span class="number">800</span>x480</span><br><span class="line"><span class="attribute">layout</span>-<span class="number">480</span>x320</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>注意：建立layout-xxxx的时是“大分辨率x小分辨率”，比如layout-1280x720。drawable也是。<br>drawable-xxhdpi和drawable-1920x1080同时存在，最终取的是drawable-xxhdpi的图片</p>
+</blockquote>
+<p>drawable文件夹和屏幕密度（ppi）对应关系</p>
+<table>
+<thead>
+<tr>
+<th>drawable</th>
+<th>ldpi</th>
+<th>mdpi</th>
+<th>hdpi</th>
+<th>xhdpi</th>
+<th>xxhdpi</th>
+<th>xxxhdpi</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>0.75</td>
+<td>1</td>
+<td>1.5</td>
+<td>2</td>
+<td>3</td>
+<td>4</td>
+</tr>
+</tbody></table>
+<blockquote>
+<ul>
+<li><p>以mdpi为基准，相同切图，hdpi文件夹里的图应该是mdpi的1.5倍，xhdpi文件夹里的图应该是mdpi的2倍，以此类推，只有根据这个比例来放切图，在不同分辨率手机上展示才会相对协调。</p>
+</li>
+<li><p>查看手机是xhdpi还是xxhdpi</p>
+<p>windows:</p>
+<figure class="highlight 1c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">adb shell dumpsys <span class="string">| findStr mBaseDisplay</span></span><br></pre></td></tr></table></figure>
+
+<p>mac：</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">adb <span class="keyword">shell</span> dumpsys | <span class="keyword">grep</span> mBaseDispla</span><br></pre></td></tr></table></figure></li>
+</ul>
+</blockquote>
+<p>常见品牌手机相关参数（2014年数据）</p>
+<p><img src="/.io//image-20220621171850842.png" alt="image-20220621171850842"></p>
+<p><img src="/.io//image-20220621172028482.png" alt="image-20220621172028482"></p>
+<p>我的最终</p>
+<p>drawable-xxxhdpi（放1080x2340）</p>
+<p>drawable-xxhdpi（放1080x1920）</p>
+<p>drawable-xhdpi（放720x1080）</p>
+<p>drawable-hdpi（放480x800）</p>
+<p>drawable-mdpi（放320x480）</p>
 <h2 id="头条适配方案"><a href="#头条适配方案" class="headerlink" title="头条适配方案"></a>头条适配方案</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">setCustomDensity</span><span class="params">(<span class="meta">@NonNull</span> Activity activity, <span class="meta">@NonNull</span> <span class="keyword">final</span> Application application)</span> &#123;</span><br><span class="line">    <span class="keyword">final</span> <span class="type">DisplayMetrics</span> <span class="variable">appDisplayMetrics</span> <span class="operator">=</span> application.getResources().getDisplayMetrics();</span><br><span class="line">    <span class="keyword">if</span> (sNoncompatDensity == <span class="number">0</span>) &#123;</span><br><span class="line">        sNoncompatDensity = appDisplayMetrics.density;</span><br><span class="line">        sNoncompatScaledDensity = appDisplayMetrics.scaledDensity;</span><br><span class="line">        <span class="comment">// 监听字体切换</span></span><br><span class="line">        application.registerComponentCallbacks(<span class="keyword">new</span> <span class="title class_">ComponentCallbacks</span>() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onConfigurationChanged</span><span class="params">(Configuration newConfig)</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (newConfig != <span class="literal">null</span> &amp;&amp; newConfig.fontScale &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                    sNoncompatScaledDensity = application.getResources().getDisplayMetrics().scaledDensity;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onLowMemory</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 适配后的dpi将统一为360dpi</span></span><br><span class="line">    <span class="keyword">final</span> <span class="type">float</span> <span class="variable">targetDensity</span> <span class="operator">=</span> appDisplayMetrics.widthPixels / <span class="number">360</span>;</span><br><span class="line">    <span class="keyword">final</span> <span class="type">float</span> <span class="variable">targetScaledDensity</span> <span class="operator">=</span> targetDensity * (sNoncompatScaledDensity / sNoncompatDensity);</span><br><span class="line">    <span class="keyword">final</span> <span class="type">int</span> <span class="variable">targetDensityDpi</span> <span class="operator">=</span> (<span class="type">int</span>)(<span class="number">160</span> * targetDensity);</span><br><span class="line"></span><br><span class="line">    appDisplayMetrics.density = targetDensity;</span><br><span class="line">    appDisplayMetrics.scaledDensity = targetScaledDensity;</span><br><span class="line">    appDisplayMetrics.densityDpi = targetDensityDpi;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">final</span> <span class="type">DisplayMetrics</span> <span class="variable">activityDisplayMetrics</span> <span class="operator">=</span> activity.getResources().getDisplayMetrics();</span><br><span class="line">    activityDisplayMetrics.density = targetDensity;</span><br><span class="line">    activityDisplayMetrics.scaledDensity = targetScaledDensity;</span><br><span class="line">    activityDisplayMetrics.densityDpi = targetDensityDpi</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h2 id="基于头条屏幕方案的-AndroidAutoSize"><a href="#基于头条屏幕方案的-AndroidAutoSize" class="headerlink" title="基于头条屏幕方案的 AndroidAutoSize"></a><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/e874d3dece5d">基于头条屏幕方案的 AndroidAutoSize</a></h2><ol>
+<h2 id="基于头条屏幕方案的-AndroidAutoSize"><a href="#基于头条屏幕方案的-AndroidAutoSize" class="headerlink" title="基于头条屏幕方案的 AndroidAutoSize"></a><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/4aa23d69d481">基于头条屏幕方案的 AndroidAutoSize</a></h2><ol>
+<li><p>在<code>项目根目录/build.gradle</code>（新版gradle是在<code>settings.gradle</code>中）添加</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">allprojects &#123;</span><br><span class="line">    repositories &#123;</span><br><span class="line">        <span class="comment">//...</span></span><br><span class="line">        maven &#123; url <span class="string">&quot;https://jitpack.io&quot;</span> &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
 <li><p>在 <code>module/build.gradle</code></p>
-<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">implementation <span class="string">&#x27;me.jessyan:autosize:1.1.2&#x27;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">implementation <span class="string">&#x27;com.github.JessYanCoding:AndroidAutoSize:v1.2.1&#x27;</span></span><br></pre></td></tr></table></figure>
 </li>
 <li><p>在<code>module/AndroidManifest.xml</code>下增加</p>
-<p>这里用 <code>360*640dp</code>作为尺寸单位</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">manifest</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">application</span>&gt;</span>            </span><br><span class="line">    <span class="tag">&lt;<span class="name">meta-data</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:name</span>=<span class="string">&quot;design_width_in_dp&quot;</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:value</span>=<span class="string">&quot;360&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">meta-data</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:name</span>=<span class="string">&quot;design_height_in_dp&quot;</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:value</span>=<span class="string">&quot;640&quot;</span>/&gt;</span>           </span><br><span class="line">  <span class="tag">&lt;/<span class="name">application</span>&gt;</span>           </span><br><span class="line"><span class="tag">&lt;/<span class="name">manifest</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>这里用 <code>375*667dp</code>作为尺寸单位</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">manifest</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">application</span>&gt;</span>            </span><br><span class="line">    <span class="tag">&lt;<span class="name">meta-data</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:name</span>=<span class="string">&quot;design_width_in_dp&quot;</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:value</span>=<span class="string">&quot;375&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">meta-data</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:name</span>=<span class="string">&quot;design_height_in_dp&quot;</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:value</span>=<span class="string">&quot;667&quot;</span>/&gt;</span>           </span><br><span class="line">  <span class="tag">&lt;/<span class="name">application</span>&gt;</span>           </span><br><span class="line"><span class="tag">&lt;/<span class="name">manifest</span>&gt;</span></span><br></pre></td></tr></table></figure>
 </li>
 <li><p>默认是用宽度来适配的，若要用高度来适配的话需要在自定义的 Application 中进行（全局设置）or 在单个 Activity 中进行（局部设置）</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">App</span>: Application()&#123;</span><br><span class="line">  override fun <span class="title function_">onCreate</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="built_in">super</span>.onCreate()</span><br><span class="line">      <span class="comment">//默认使用宽度适配</span></span><br><span class="line">      AutoSizeConfig.getInstance().isBaseOnWidth = <span class="literal">false</span> <span class="comment">//false 改成用高度适配</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
+<p>特定Activity使用适配</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">HeightActivity</span>: AppCompatActivity(), CustomAdapt&#123;</span><br><span class="line">  <span class="comment">//取消以宽度为基准进行适配</span></span><br><span class="line">  override fun <span class="title function_">isBaseOnWidth</span><span class="params">()</span>:Boolean&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">//返回高度的单位尺寸</span></span><br><span class="line">  override fun <span class="title function_">getSizeInDp</span><span class="params">()</span>:Float&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">640f</span></span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  override fun <span class="title function_">onCreate</span><span class="params">(savedInstanceState:Bundle?)</span>&#123;</span><br><span class="line">    <span class="built_in">super</span>.onCreate(savedInstanceState)</span><br><span class="line">      setContentView(R.layout.activity_height)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>特定Activity放弃适配</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CancelAdaptActivity</span> <span class="keyword">extends</span> <span class="title class_">AppCompatActivity</span> <span class="keyword">implements</span> <span class="title class_">CancelAdapt</span>&#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>特定Fragment使用适配</p>
+<ol>
+<li>在app初始化时开启对Fragment的支持<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">AutoSizeConfig.getInstance().setCustomFragment(<span class="literal">true</span>);</span><br></pre></td></tr></table></figure></li>
+<li>实现CustomAdapt<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CustomAdaptFragment</span> <span class="keyword">extends</span> <span class="title class_">Fragemnt</span> <span class="keyword">implements</span> <span class="title class_">CustomAdapt</span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">isBaseOnWidth</span><span class="params">()</span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">float</span> getSizeInDp90&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">667</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">取消自定义适配</span><br><span class="line">```java</span><br><span class="line"><span class="keyword">public</span> classs CustomAdaptFragment <span class="keyword">extends</span> <span class="title class_">Fragment</span> <span class="keyword">implements</span> <span class="title class_">CancelAdapt</span>&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
 </li>
 <li><p>沉浸式适配</p>
 </li>
 </ol>
-<h2 id="刘海屏适配"><a href="#刘海屏适配" class="headerlink" title="刘海屏适配"></a>刘海屏适配</h2><ul>
+<h2 id="Blankj基于头条适配的最终优化方案"><a href="#Blankj基于头条适配的最终优化方案" class="headerlink" title="Blankj基于头条适配的最终优化方案"></a><a target="_blank" rel="noopener" href="https://blankj.com/2018/12/18/android-adapt-screen-killer/">Blankj基于头条适配的最终优化方案</a></h2><p>基于pt做的适配。即想要适配的那部分单位要改成pt</p>
+<p>其源码、Demo 以及 API 如下所示：</p>
+<p>AdaptScreen 相关 -&gt; [AdaptScreenUtils.java][adaptScreen.java] -&gt; [Demo][adaptScreen.demo]</p>
+<figure class="highlight nestedtext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">adaptWidth</span><span class="punctuation"> :</span> <span class="string">适配宽度</span></span><br><span class="line"><span class="attribute">adaptHeight</span><span class="punctuation">:</span> <span class="string">适配高度</span></span><br><span class="line"><span class="attribute">closeAdapt</span><span class="punctuation"> :</span> <span class="string">关闭适配（pt 等同于 dp）</span></span><br><span class="line"><span class="attribute">pt2Px</span><span class="punctuation">      :</span> <span class="string">pt 转 px</span></span><br><span class="line"><span class="attribute">px2Pt</span><span class="punctuation">      :</span> <span class="string">px 转 pt</span></span><br></pre></td></tr></table></figure>
+
+<p>pt2Px 及 px2Pt 是提供给需要动态操作 <code>View</code> 的。</p>
+<p>如上只需依赖 <a target="_blank" rel="noopener" href="https://github.com/Blankj/AndroidUtilCode">AndroidUtilCode</a> 最新版本即可：</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">implementation</span> &#x27;com.blankj:utilcode:<span class="number">1</span>.<span class="number">23</span>.<span class="number">2</span>&#x27;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="启动页变形适配"><a href="#启动页变形适配" class="headerlink" title="启动页变形适配"></a>启动页变形适配</h2><h3 id="启动页图片四周是纯色的"><a href="#启动页图片四周是纯色的" class="headerlink" title="启动页图片四周是纯色的"></a>启动页图片四周是纯色的</h3><ul>
+<li><p>方案一：用点9图</p>
+</li>
+<li><p>方案二：用layer-list图层 来实现</p>
+<p><code>drawable/startup.xml</code></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=<span class="string">&quot;1.0&quot;</span> encoding=<span class="string">&quot;utf-8&quot;</span>?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">layer-list</span> <span class="attr">xmlns:android</span>=<span class="string">&quot;http://schemas.android.com/apk/res/android&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">item</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">shape</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">solid</span> <span class="attr">android:color</span>=<span class="string">&quot;#CE171C&quot;</span>/&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">shape</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">item</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">item</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">bitmap</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:gravity</span>=<span class="string">&quot;fill&quot;</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:src</span>=<span class="string">&quot;@drawable/qidongye&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">item</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">layer-list</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p><code>res/styles.xml</code></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">resources</span> <span class="attr">xmlns:tools</span>=<span class="string">&quot;http://schemas.android.com/tools&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">style</span> <span class="attr">name</span>=<span class="string">&quot;WithBgTheme&quot;</span> <span class="attr">parent</span>=<span class="string">&quot;Theme.MaterialComponents.Light.NoActionBar&quot;</span>&gt;</span><span class="language-xml"></span></span><br><span class="line"><span class="language-xml">        <span class="tag">&lt;<span class="name">item</span> <span class="attr">name</span>=<span class="string">&quot;android:windowBackground&quot;</span>&gt;</span>@drawable/qidongye<span class="tag">&lt;/<span class="name">item</span>&gt;</span><span class="comment">&lt;!--img_default_launch_page--&gt;</span></span></span><br><span class="line"><span class="language-xml">        <span class="tag">&lt;<span class="name">item</span> <span class="attr">name</span>=<span class="string">&quot;android:windowTranslucentStatus&quot;</span> <span class="attr">tools:targetApi</span>=<span class="string">&quot;19&quot;</span>&gt;</span>true<span class="tag">&lt;/<span class="name">item</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">        <span class="tag">&lt;<span class="name">item</span> <span class="attr">name</span>=<span class="string">&quot;android:windowContentOverlay&quot;</span>&gt;</span>@null<span class="tag">&lt;/<span class="name">item</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">        <span class="tag">&lt;<span class="name">item</span> <span class="attr">name</span>=<span class="string">&quot;android:overScrollMode&quot;</span>&gt;</span>never<span class="tag">&lt;/<span class="name">item</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">    </span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">resources</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>使用 <code>AndroidManifest.xml</code></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">activity</span></span></span><br><span class="line"><span class="tag">          <span class="attr">android:name</span>=<span class="string">&quot;.launcher.activity.LauncherActivity&quot;</span></span></span><br><span class="line"><span class="tag">          <span class="attr">android:configChanges</span>=<span class="string">&quot;orientation|screenSize|keyboardHidden&quot;</span></span></span><br><span class="line"><span class="tag">          <span class="attr">android:screenOrientation</span>=<span class="string">&quot;portrait&quot;</span></span></span><br><span class="line"><span class="tag">          <span class="attr">android:theme</span>=<span class="string">&quot;@style/WithBgTheme&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">intent-filter</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">action</span> <span class="attr">android:name</span>=<span class="string">&quot;android.intent.action.MAIN&quot;</span> /&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">category</span> <span class="attr">android:name</span>=<span class="string">&quot;android.intent.category.LAUNCHER&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">intent-filter</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">activity</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<blockquote>
+<p>bitmap:</p>
+</blockquote>
+<h3 id="启动页图片四周不是纯色的"><a href="#启动页图片四周不是纯色的" class="headerlink" title="启动页图片四周不是纯色的"></a>启动页图片四周不是纯色的</h3><h2 id="刘海屏适配"><a href="#刘海屏适配" class="headerlink" title="刘海屏适配"></a>刘海屏适配</h2><ul>
 <li>Android P 刘海屏适配方案</li>
 </ul>
 <p>Android P 支持最新的全面屏以及为摄像头和扬声器预留空间的凹口屏幕。通过全新的 DisplayCutout 类，可以确定非功能区域的位置和形状，这些区域不应显示内容。要确定这些凹口屏幕区域是否存在及其位置，使用 getDisplayCutout() 函数。</p>
@@ -706,8 +867,8 @@ LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER：不允许window扩展到刘海区。
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/posts/1093970730/" rel="next" title="安卓-权限相关">
-                <i class="fa fa-chevron-left"></i> 安卓-权限相关
+              <a href="/posts/3599255197/" rel="next" title="UI-WebView">
+                <i class="fa fa-chevron-left"></i> UI-WebView
               </a>
             
           </div>
@@ -716,8 +877,8 @@ LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER：不允许window扩展到刘海区。
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/posts/3599255197/" rel="prev" title="UI-WebView">
-                UI-WebView <i class="fa fa-chevron-right"></i>
+              <a href="/posts/4ef08506/" rel="prev" title="问题-Fragment">
+                问题-Fragment <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -799,7 +960,7 @@ LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER：不允许window扩展到刘海区。
               
                 <a href="/archives/%7C%7Carchive">
               
-                  <span class="site-state-item-count">148</span>
+                  <span class="site-state-item-count">146</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -821,7 +982,7 @@ LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER：不允许window扩展到刘海区。
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">30</span>
+                  <span class="site-state-item-count">28</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
@@ -920,7 +1081,7 @@ LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER：不允许window扩展到刘海区。
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B1%8F%E5%B9%95%E9%80%82%E9%85%8D"><span class="nav-text">屏幕适配</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E5%BF%B5"><span class="nav-text">概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%95%E4%BD%8D"><span class="nav-text">单位</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%B4%E6%9D%A1%E9%80%82%E9%85%8D%E6%96%B9%E6%A1%88"><span class="nav-text">头条适配方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8E%E5%A4%B4%E6%9D%A1%E5%B1%8F%E5%B9%95%E6%96%B9%E6%A1%88%E7%9A%84-AndroidAutoSize"><span class="nav-text">基于头条屏幕方案的 AndroidAutoSize</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%98%E6%B5%B7%E5%B1%8F%E9%80%82%E9%85%8D"><span class="nav-text">刘海屏适配</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%98%E6%B5%B7%E5%B1%8F%E9%80%82%E9%85%8D2"><span class="nav-text">刘海屏适配2</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%8E%E4%B8%BA%EF%BC%9A"><span class="nav-text">华为：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%A8%E9%9D%A2%E5%B1%8F%E3%80%81%E6%99%AE%E9%80%9A%E5%B1%8F%E5%92%8C%E5%87%B9%E5%87%B8%E5%B1%8F%EF%BC%9A"><span class="nav-text">全面屏、普通屏和凹凸屏：</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%8D%8E%E4%B8%BA%E5%88%98%E6%B5%B7%E5%B1%8F%E6%89%8B%E6%9C%BA%E5%AE%89%E5%8D%93O%E7%89%88%E6%9C%AC%E9%80%82%E9%85%8D%E6%96%B9%E6%A1%88"><span class="nav-text">华为刘海屏手机安卓O版本适配方案</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#oppo"><span class="nav-text">oppo:</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#vivo"><span class="nav-text">vivo</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B0%8F%E7%B1%B3%EF%BC%9A"><span class="nav-text">小米：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Android-O"><span class="nav-text">Android O</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Android-P"><span class="nav-text">Android P</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%AD%85%E6%97%8F%EF%BC%9A%E7%9B%AE%E5%89%8D%E6%B2%A1%E6%89%BE%E5%88%B0%E5%88%98%E6%B5%B7%E5%B1%8F"><span class="nav-text">魅族：目前没找到刘海屏</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E5%8A%A0%EF%BC%9A%E6%9C%89%E5%88%98%E6%B5%B7%E5%B1%8F%EF%BC%8C%E6%89%BE%E4%B8%8D%E5%88%B0%E9%80%82%E9%85%8D%E6%96%B9%E6%B3%95"><span class="nav-text">一加：有刘海屏，找不到适配方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%81%94%E6%83%B3%EF%BC%9A%E6%9C%89%E5%88%98%E6%B5%B7%E5%B1%8F%EF%BC%8C%E6%89%BE%E4%B8%8D%E5%88%B0%E9%80%82%E9%85%8D%E6%96%B9%E6%B3%95"><span class="nav-text">联想：有刘海屏，找不到适配方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#360%E6%89%8B%E6%9C%BA%EF%BC%9A%E6%B2%A1%E6%9C%89%E6%9C%89%E5%88%98%E6%B5%B7%E5%B1%8F"><span class="nav-text">360手机：没有有刘海屏</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#google%E5%AE%98%E6%96%B9"><span class="nav-text">google官方:</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E7%B1%BB%EF%BC%9A"><span class="nav-text">关键类：</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E5%B0%8F%E5%AE%BD%E5%BA%A6%E9%80%82%E9%85%8D%E6%A1%86%E6%9E%B6"><span class="nav-text">最小宽度适配框架</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B1%8F%E5%B9%95%E9%80%82%E9%85%8D"><span class="nav-text">屏幕适配</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E5%BF%B5"><span class="nav-text">概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%95%E4%BD%8D"><span class="nav-text">单位</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BB%E6%B5%81%E5%88%86%E8%BE%A8%E7%8E%87%E5%90%AF%E5%8A%A8%E5%9B%BE"><span class="nav-text">主流分辨率启动图</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%B4%E6%9D%A1%E9%80%82%E9%85%8D%E6%96%B9%E6%A1%88"><span class="nav-text">头条适配方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8E%E5%A4%B4%E6%9D%A1%E5%B1%8F%E5%B9%95%E6%96%B9%E6%A1%88%E7%9A%84-AndroidAutoSize"><span class="nav-text">基于头条屏幕方案的 AndroidAutoSize</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Blankj%E5%9F%BA%E4%BA%8E%E5%A4%B4%E6%9D%A1%E9%80%82%E9%85%8D%E7%9A%84%E6%9C%80%E7%BB%88%E4%BC%98%E5%8C%96%E6%96%B9%E6%A1%88"><span class="nav-text">Blankj基于头条适配的最终优化方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E9%A1%B5%E5%8F%98%E5%BD%A2%E9%80%82%E9%85%8D"><span class="nav-text">启动页变形适配</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E9%A1%B5%E5%9B%BE%E7%89%87%E5%9B%9B%E5%91%A8%E6%98%AF%E7%BA%AF%E8%89%B2%E7%9A%84"><span class="nav-text">启动页图片四周是纯色的</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E9%A1%B5%E5%9B%BE%E7%89%87%E5%9B%9B%E5%91%A8%E4%B8%8D%E6%98%AF%E7%BA%AF%E8%89%B2%E7%9A%84"><span class="nav-text">启动页图片四周不是纯色的</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%98%E6%B5%B7%E5%B1%8F%E9%80%82%E9%85%8D"><span class="nav-text">刘海屏适配</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%98%E6%B5%B7%E5%B1%8F%E9%80%82%E9%85%8D2"><span class="nav-text">刘海屏适配2</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%8E%E4%B8%BA%EF%BC%9A"><span class="nav-text">华为：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%A8%E9%9D%A2%E5%B1%8F%E3%80%81%E6%99%AE%E9%80%9A%E5%B1%8F%E5%92%8C%E5%87%B9%E5%87%B8%E5%B1%8F%EF%BC%9A"><span class="nav-text">全面屏、普通屏和凹凸屏：</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%8D%8E%E4%B8%BA%E5%88%98%E6%B5%B7%E5%B1%8F%E6%89%8B%E6%9C%BA%E5%AE%89%E5%8D%93O%E7%89%88%E6%9C%AC%E9%80%82%E9%85%8D%E6%96%B9%E6%A1%88"><span class="nav-text">华为刘海屏手机安卓O版本适配方案</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#oppo"><span class="nav-text">oppo:</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#vivo"><span class="nav-text">vivo</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B0%8F%E7%B1%B3%EF%BC%9A"><span class="nav-text">小米：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Android-O"><span class="nav-text">Android O</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Android-P"><span class="nav-text">Android P</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%AD%85%E6%97%8F%EF%BC%9A%E7%9B%AE%E5%89%8D%E6%B2%A1%E6%89%BE%E5%88%B0%E5%88%98%E6%B5%B7%E5%B1%8F"><span class="nav-text">魅族：目前没找到刘海屏</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E5%8A%A0%EF%BC%9A%E6%9C%89%E5%88%98%E6%B5%B7%E5%B1%8F%EF%BC%8C%E6%89%BE%E4%B8%8D%E5%88%B0%E9%80%82%E9%85%8D%E6%96%B9%E6%B3%95"><span class="nav-text">一加：有刘海屏，找不到适配方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%81%94%E6%83%B3%EF%BC%9A%E6%9C%89%E5%88%98%E6%B5%B7%E5%B1%8F%EF%BC%8C%E6%89%BE%E4%B8%8D%E5%88%B0%E9%80%82%E9%85%8D%E6%96%B9%E6%B3%95"><span class="nav-text">联想：有刘海屏，找不到适配方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#360%E6%89%8B%E6%9C%BA%EF%BC%9A%E6%B2%A1%E6%9C%89%E6%9C%89%E5%88%98%E6%B5%B7%E5%B1%8F"><span class="nav-text">360手机：没有有刘海屏</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#google%E5%AE%98%E6%96%B9"><span class="nav-text">google官方:</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E7%B1%BB%EF%BC%9A"><span class="nav-text">关键类：</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E5%B0%8F%E5%AE%BD%E5%BA%A6%E9%80%82%E9%85%8D%E6%A1%86%E6%9E%B6"><span class="nav-text">最小宽度适配框架</span></a></li></ol></li></ol></div>
             
 
           </div>
