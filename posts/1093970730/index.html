@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="安卓版本特性," />
+  <meta name="keywords" content="private,安卓知识点," />
 
 
 
@@ -79,17 +79,18 @@
 
 
 
-<meta name="description" content="Android 10版本特性Android 10适配要点，作用域存储作用域存储，直接颠覆了我们长久以来的外置存储空间的使用方式，因此大量App都将面临着较多代码模块的升级。">
+<meta name="description" content="permission和use-permission的区别两者之间的不同之一就是，作用域不同，在manifest.xml文件中，&lt;uses-permission&gt;是和&lt;application&gt;同级的节点，一般&lt;uses-permission &gt;是在&lt;&#x2F;application&gt;后面的。但&lt;permission&gt;就不同了，是定义在&lt;app">
 <meta property="og:type" content="article">
-<meta property="og:title" content="版本相关-安卓10">
+<meta property="og:title" content="安卓-权限相关">
 <meta property="og:url" content="http://shenbh.github.io/posts/1093970730/index.html">
 <meta property="og:site_name" content="AB">
-<meta property="og:description" content="Android 10版本特性Android 10适配要点，作用域存储作用域存储，直接颠覆了我们长久以来的外置存储空间的使用方式，因此大量App都将面临着较多代码模块的升级。">
+<meta property="og:description" content="permission和use-permission的区别两者之间的不同之一就是，作用域不同，在manifest.xml文件中，&lt;uses-permission&gt;是和&lt;application&gt;同级的节点，一般&lt;uses-permission &gt;是在&lt;&#x2F;application&gt;后面的。但&lt;permission&gt;就不同了，是定义在&lt;app">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2021-02-23T00:49:00.000Z">
-<meta property="article:modified_time" content="2022-05-05T06:52:45.408Z">
+<meta property="article:published_time" content="2020-03-16T02:18:58.000Z">
+<meta property="article:modified_time" content="2022-09-02T06:34:03.264Z">
 <meta property="article:author" content="阿炳">
-<meta property="article:tag" content="安卓版本特性">
+<meta property="article:tag" content="private">
+<meta property="article:tag" content="安卓知识点">
 <meta name="twitter:card" content="summary">
 
 
@@ -126,7 +127,7 @@
 
 
 
-  <title>版本相关-安卓10 | AB</title>
+  <title>安卓-权限相关 | AB</title><meta name="robots" content="noindex">
   
 
 
@@ -304,7 +305,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">版本相关-安卓10</h1>
+          <h1 class="post-title" itemprop="name headline">安卓-权限相关</h1>
         
 
         <div class="post-meta">
@@ -316,8 +317,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-02-23T08:49:00+08:00">
-                2021-02-23
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-03-16T10:18:58+08:00">
+                2020-03-16
               </time>
             
 
@@ -376,75 +377,96 @@
       
 
       
-        <h1 id="Android-10版本特性"><a href="#Android-10版本特性" class="headerlink" title="Android 10版本特性"></a>Android 10版本特性</h1><h2 id="Android-10适配要点，作用域存储"><a href="#Android-10适配要点，作用域存储" class="headerlink" title="Android 10适配要点，作用域存储"></a><a target="_blank" rel="noopener" href="http://mp.weixin.qq.com/s?__biz=MzA5MzI3NjE2MA==&mid=2650249029&idx=1&sn=6ab18477950e5f4e1a14dc47ecc4f763&chksm=8863662abf14ef3c1500d64c106ab2e5a6c95e716ff6e57ba379e2aabca7b6046060ccb78af2&scene=21#wechat_redirect">Android 10适配要点，作用域存储</a></h2><p>作用域存储，直接颠覆了我们长久以来的外置存储空间的使用方式，因此大量App都将面临着较多代码模块的升级。</p>
-<h3 id="理解作用存储"><a href="#理解作用存储" class="headerlink" title="理解作用存储"></a>理解作用存储</h3><p>Android 10以前支持外置存储空间这个空间，即SD卡存储。几乎所有App都喜欢在SD卡的根目录下建立一个自己专属的目录，用来存放各类文件和数据。</p>
-<p>这样做的好处是：</p>
-<ol>
-<li>存储在SD卡的文件不会计入到应用程序的占用空间当中；</li>
-<li>存储在SD卡的文件，即使应用程序被卸载了，这些文件仍被保留下来有助于实现一些数据永久保留的功能。</li>
-</ol>
-<p>缺点：</p>
-<ol>
-<li>导致SD卡空间乱糟糟，卸载应用程序后所产生的垃圾文件扔存在。</li>
-<li>SD卡上的文件属于公有文件，其他应用程序都有权随意访问，导致数据安全性没有保证。</li>
-</ol>
-<p>针对上面的问题，Android 10中加入了作用域存储功能。Android 10之后，每个应用程序只能有权在自己的外置存储空间关联目录下读取和创建文件，获取该关联目录的代码<code>context.getExternalFilesDir()</code>，关联目录对应路径大致如下：</p>
-<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="regexp">/storage/</span>emulated<span class="regexp">/0/</span>Android<span class="regexp">/data/</span>&lt;包名&gt;/files</span><br></pre></td></tr></table></figure>
-
-<p>这个目录中的文件会被计入到应用程序的占用空间中，会随应用程序卸载而被删除。</p>
-<p>访问其他目录（如 读取&#x2F;存储 相册中的图片）。Android系统针对文件类型进行了分类，图片、音频、视频这三类可通过<code>MediaStore API</code>进行访问，其他类型的文件需要使用系统的文件选择器来进行访问。</p>
+        <h1 id="permission和use-permission的区别"><a href="#permission和use-permission的区别" class="headerlink" title="permission和use-permission的区别"></a><a target="_blank" rel="noopener" href="https://blog.csdn.net/lilu_leo/article/details/6940941">permission和use-permission的区别</a></h1><p>两者之间的不同之一就是，作用域不同，在<code>manifest.xml</code>文件中，<code>&lt;uses-permission&gt;</code>是和<code>&lt;application&gt;</code>同级的节点，一般<code>&lt;uses-permission &gt;</code>是在<code>&lt;/application&gt;</code>后面的。但<code>&lt;permission&gt;</code>就不同了，是定义在<code>&lt;application&gt;</code>和<code>&lt;/application&gt;</code>之间，和<code>Activity</code>、<code>Service</code>同级别的，同时使用<code>group</code>的权限组可以大幅减少你同类型相似权限的声明。（这段表述有误，应该是同级别）</p>
+<p>其二可能就是<code>&lt;uses-permission&gt;</code>是官方定义的权限，是调用别人的东西的时候自己需要声明的权限，<code>&lt;permission&gt;</code>是自己定义的权限，就是别人调用这个程序时需要用<code>&lt;uses-permission&gt;</code>来声明。</p>
+<p> 在一般情况下实际上不需要为自己的应用程序声明某个权限，除非你提供了供其他应用程序调用的代码或者数据。这个时候你才需要<strong>使用<code>&lt;permission&gt;</code>这个标签，很显然这个标签可以让我们声明自己程序的权限</strong>。</p>
+<h1 id="运行时权限"><a href="#运行时权限" class="headerlink" title="运行时权限"></a>运行时权限</h1><p>在Android6.0（安卓8）+对于<strong>危险权限</strong>要求运行时权限</p>
+<ul>
+<li>危险权限</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="left">权限组名</th>
+<th>权限名</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">CALENDAR</td>
+<td>READ_CALENDAR、WRITE_CALENDAR</td>
+</tr>
+<tr>
+<td align="left">CAMERA</td>
+<td>CAMERA</td>
+</tr>
+<tr>
+<td align="left">CONTACTS</td>
+<td>READ_CONTACTS、WRITE_CONTACTS、GET_ACCOUNTS</td>
+</tr>
+<tr>
+<td align="left">LOCATION</td>
+<td>ACCESS_FINE_LOCATION、ACCESS_COARSE_LOCATION</td>
+</tr>
+<tr>
+<td align="left">MICROPHONE</td>
+<td>RECORD_AUDIO</td>
+</tr>
+<tr>
+<td align="left">PHONE</td>
+<td>READ_PHONE_STATE、CALL_PHONE、READ_CALL_LOG、WRITE_CALL_LOG、ADD_VOICEMAIL、USE_SIP、PROCESS_OUTGOING_CALLS</td>
+</tr>
+<tr>
+<td align="left">SENSORS</td>
+<td>BODY_SENSORS</td>
+</tr>
+<tr>
+<td align="left">SMS</td>
+<td>SEND_SMS、RECEIVE_SMS、READ_SMS、RECEIVE_WAP_PUSH、RECEIVE_MMS</td>
+</tr>
+<tr>
+<td align="left">STORAGE</td>
+<td>READ_EXTERNAL_STORAGE、WRITE_EXTERNAL_STORAGE</td>
+</tr>
+</tbody></table>
 <blockquote>
-<p>应用程序向媒体库贡献的图片、音频、视频，自动拥有读写权限，不需要额外申请<code>READ_EXTERNAL_STORAGE</code>和<code>WRITE_EXTERNAL_STORAGE</code>权限。</p>
-<p>应用程序访问其他应用程序向媒体库共享的图片、音频、视频，则必须申请<code>READ_EXTERNAL_STORAGE</code>权限才行。<code>WRITE_EXTERNAL_STORAGE</code>在未来将被废弃。</p>
+<p>运行时权限处理用的是权限名，用户同意授权后，该权限所对应的权限组中的其他权限也会同时被授权</p>
 </blockquote>
-<h3 id="我们一定要升级吗？"><a href="#我们一定要升级吗？" class="headerlink" title="我们一定要升级吗？"></a>我们一定要升级吗？</h3><p>暂时可以不用升级，因为之前传统外置存储空间的用法太广泛了。即项目指定<code>targetSdkVersion</code>低于 29，即使不做任何作用域存储方面的适配也可以成功运行在Android 10手机上。不过需要在 <code>AndroidManifest.xml</code> 中加入如下配置：</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">manifest</span> <span class="attr">...</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">application</span> <span class="attr">android:requestLegacyExternalStorage</span>=<span class="string">&quot;true&quot;</span> <span class="attr">...</span>&gt;</span></span><br><span class="line">    ...</span><br><span class="line">    <span class="tag">&lt;/<span class="name">application</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">manifest</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<p>这段配置在Android 11预览版上还不会失效。</p>
-<h3 id="针对作用域存储进行适配"><a href="#针对作用域存储进行适配" class="headerlink" title="针对作用域存储进行适配"></a>针对作用域存储进行适配</h3><p>本篇文章中演示的所有示例，都可以到ScopedStorageDemo这个开源库中找到其对应的<a target="_blank" rel="noopener" href="https://github.com/guolindev/ScopedStorageDemo">源码</a></p>
-<h4 id="获取相册中的图片"><a href="#获取相册中的图片" class="headerlink" title="获取相册中的图片"></a>获取相册中的图片</h4><blockquote>
-<p>PS 获取音频、适配的用法也基本相同</p>
-</blockquote>
-<p>不同于过去的直接获取到相册中图片的绝对路径，在作用域存储当中，需要借助<code>MediaStore API</code>获取到图片的<code>Uri</code>，示例代码：</p>
-<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> cursor = contentResolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, <span class="literal">null</span>, <span class="literal">null</span>, <span class="literal">null</span>, <span class="string">&quot;<span class="subst">$&#123;MediaStore.MediaColumns.DATE_ADDED&#125;</span> desc&quot;</span>)</span><br><span class="line"><span class="keyword">if</span> (cursor != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">while</span> (cursor.moveToNext()) &#123;</span><br><span class="line">        <span class="keyword">val</span> id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID))</span><br><span class="line">        <span class="keyword">val</span> uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)</span><br><span class="line">        println(<span class="string">&quot;image uri is <span class="variable">$uri</span>&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    cursor.close()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>先通过 ContentResolver 获取到相册中所有图片的id，再借助 ContentUris 将id拼装成一个完整的 Uri 对象。</p>
-<p>一张图的 Uri 格式大致如下：</p>
-<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">content:<span class="regexp">//m</span>edia<span class="regexp">/external/im</span>ages<span class="regexp">/media/</span><span class="number">321</span></span><br></pre></td></tr></table></figure>
-</blockquote>
-<p><strong>图片显示</strong>有多种方法，如借助第三方库Glide</p>
-<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Glide.with(context).load(uri).into(imageView)</span><br></pre></td></tr></table></figure>
-
-<p>不借助第三方库的做法：将Uri对象解析成图片</p>
-<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> fd = contentResolver.openFileDescriptor(uri, <span class="string">&quot;r&quot;</span>)<span class="comment">//打开文件句柄</span></span><br><span class="line"><span class="keyword">if</span>(fd != <span class="literal">null</span>)&#123;</span><br><span class="line">    <span class="keyword">val</span> bitmap = BitmapFactory.decodeFileDescriptor(fd.fileDescriptor)<span class="comment">//将文件句柄解析成Bitmap对象</span></span><br><span class="line">    fd.close()</span><br><span class="line">    imageView.setImageBitmap(bitmap)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="将图片添加到相册"><a href="#将图片添加到相册" class="headerlink" title="将图片添加到相册"></a>将图片添加到相册</h4><figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 将一个Bitmap对象添加到手机相册中</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">addBitmapToAlbum</span><span class="params">(bitmap: <span class="type">Bitmap</span>, displayName: <span class="type">String</span>, mimeType: <span class="type">String</span>, compressFormat: <span class="type">Bitmap</span>.<span class="type">CompressFormat</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">val</span> values = ContentValues()<span class="comment">//构建一个ContentValues对象，并向这个对象添加三个重要数据</span></span><br><span class="line">    values.put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)<span class="comment">//DISPLAY_NAME图片显示的名称</span></span><br><span class="line">    values.put(MediaStore.MediaColumns.MIME_TYPE, mimeType)<span class="comment">//MIME_TYPE图片的mime类型</span></span><br><span class="line">    <span class="keyword">if</span> (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.Q) &#123;</span><br><span class="line">        values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DCIM)<span class="comment">//图片的存储路径（拼装成绝对路径）。RELATIVE_PATH表示文件存储的相对路径，可选值有DIRECTORY_DCIM、DIRECTORY_PICTURES、DIRECTORY_MOVIES、DIRECTORY_MUSIC等，分别表示相册、图片、电影、音乐等目录</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        values.put(MediaStore.MediaColumns.DATA, <span class="string">&quot;<span class="subst">$&#123;Environment.getExternalStorageDirectory().path&#125;</span>/<span class="subst">$&#123;Environment.DIRECTORY_DCIM&#125;</span>/<span class="variable">$displayName</span>&quot;</span>)<span class="comment">//图片的存储路径</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">val</span> uri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)<span class="comment">//插入图片的Uri</span></span><br><span class="line">    <span class="keyword">if</span> (uri != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="comment">//向该Uri所对应的图片写入数据</span></span><br><span class="line">        <span class="keyword">val</span> outputStream = contentResolver.openOutputStream(uri)<span class="comment">//获取文件的输出流</span></span><br><span class="line">        <span class="keyword">if</span> (outputStream != <span class="literal">null</span>) &#123;</span><br><span class="line">            bitmap.compress(compressFormat, <span class="number">100</span>, outputStream)<span class="comment">//将Bitmap对象写入到该输出流中</span></span><br><span class="line">            outputStream.close()</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 将网络上的图片存储到手机相册</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">writeInputStreamToAlbum</span><span class="params">(inputStream: <span class="type">InputStream</span>, displayName: <span class="type">String</span>, mimeType: <span class="type">String</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">val</span> values = ContentValues()</span><br><span class="line">    values.put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)</span><br><span class="line">    values.put(MediaStore.MediaColumns.MIME_TYPE, mimeType)</span><br><span class="line">    <span class="keyword">if</span> (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.Q) &#123;</span><br><span class="line">        values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DCIM)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        values.put(MediaStore.MediaColumns.DATA, <span class="string">&quot;<span class="subst">$&#123;Environment.getExternalStorageDirectory().path&#125;</span>/<span class="subst">$&#123;Environment.DIRECTORY_DCIM&#125;</span>/<span class="variable">$displayName</span>&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">val</span> bis = BufferedInputStream(inputStream)</span><br><span class="line">    <span class="keyword">val</span> uri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)</span><br><span class="line">    <span class="keyword">if</span> (uri != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">val</span> outputStream = contentResolver.openOutputStream(uri)</span><br><span class="line">        <span class="keyword">if</span> (outputStream != <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">val</span> bos = BufferedOutputStream(outputStream)</span><br><span class="line">            <span class="keyword">val</span> buffer = ByteArray(<span class="number">1024</span>)</span><br><span class="line">            <span class="keyword">var</span> bytes = bis.read(buffer)</span><br><span class="line">            <span class="keyword">while</span> (bytes &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">                bos.write(buffer, <span class="number">0</span> , bytes)</span><br><span class="line">                bos.flush()</span><br><span class="line">                bytes = bis.read(buffer)</span><br><span class="line">            &#125;</span><br><span class="line">            bos.close()</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    bis.close()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="下载文件到Download目录"><a href="#下载文件到Download目录" class="headerlink" title="下载文件到Download目录"></a>下载文件到Download目录</h4><p>Android 10上两种解决方式：</p>
-<p>第一种较简单，更改文件的下载目录，将文件下载到应用程序关联目录下。这样不改任何代码即可让程序在Android 10上正常工作。缺点：文件会被计入到应用程序的占用空间中，程序被卸载文件也会被删除。</p>
-<p>第二种，对Android 10系统进行代码视频，仍将文件下载Download目录下</p>
-<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 将文件下载到Download目录</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">downloadFile</span><span class="params">(fileUrl: <span class="type">String</span>, fileName: <span class="type">String</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (Build.VERSION.SDK_INT &lt; Build.VERSION_CODES.Q) &#123;</span><br><span class="line">        Toast.makeText(<span class="keyword">this</span>, <span class="string">&quot;You must use device running Android 10 or higher&quot;</span>, Toast.LENGTH_SHORT).show()</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line">    thread &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">val</span> url = URL(fileUrl)</span><br><span class="line">            <span class="keyword">val</span> connection = url.openConnection() <span class="keyword">as</span> HttpURLConnection</span><br><span class="line">            connection.requestMethod = <span class="string">&quot;GET&quot;</span></span><br><span class="line">            connection.connectTimeout = <span class="number">8000</span></span><br><span class="line">            connection.readTimeout = <span class="number">8000</span></span><br><span class="line">            <span class="keyword">val</span> inputStream = connection.inputStream</span><br><span class="line">            <span class="keyword">val</span> bis = BufferedInputStream(inputStream)</span><br><span class="line">            <span class="keyword">val</span> values = ContentValues()</span><br><span class="line">            values.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)</span><br><span class="line">            values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)</span><br><span class="line">            <span class="keyword">val</span> uri = contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)</span><br><span class="line">            <span class="keyword">if</span> (uri != <span class="literal">null</span>) &#123;</span><br><span class="line">                <span class="keyword">val</span> outputStream = contentResolver.openOutputStream(uri)</span><br><span class="line">                <span class="keyword">if</span> (outputStream != <span class="literal">null</span>) &#123;</span><br><span class="line">                    <span class="keyword">val</span> bos = BufferedOutputStream(outputStream)</span><br><span class="line">                    <span class="keyword">val</span> buffer = ByteArray(<span class="number">1024</span>)</span><br><span class="line">                    <span class="keyword">var</span> bytes = bis.read(buffer)</span><br><span class="line">                    <span class="keyword">while</span> (bytes &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">                        bos.write(buffer, <span class="number">0</span> , bytes)</span><br><span class="line">                        bos.flush()</span><br><span class="line">                        bytes = bis.read(buffer)</span><br><span class="line">                    &#125;</span><br><span class="line">                    bos.close()</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            bis.close()</span><br><span class="line">        &#125; <span class="keyword">catch</span>(e: Exception) &#123;</span><br><span class="line">            e.printStackTrace()</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>与向相册中添加一张图片的过程差不多，Android 10在MediaStore中新增一个 Downloads 稽核，专门用于执行文件下载操作。</p>
-<p>主要添加了一些Http请求，并将<code>MeadiaStore.Images.Media</code>改成<code>MediaStore.Downloads</code></p>
-</blockquote>
-<h4 id="使用文件选择器"><a href="#使用文件选择器" class="headerlink" title="使用文件选择器"></a>使用文件选择器</h4><p>读取SD卡上非图片、音频、视频类的文件，此时不能用MediaStore API，需用文件选择器。</p>
-<p>调用系统内置的文件选择器：</p>
-<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 调用系统内置的文件选择器</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">const</span> <span class="keyword">val</span> PICK_FILE = <span class="number">1</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 通过Intent启动系统的文件选择。</span></span><br><span class="line"><span class="comment">* 注意：</span></span><br><span class="line"><span class="comment">* 	Intent的action和category是固定不变的。</span></span><br><span class="line"><span class="comment">* 	type用于对文件类型进行过滤，如指定成 image/* 即可只显示图片类型的文件</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">fun</span> <span class="title">pickFile</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">val</span> intent = Intent(Intent.ACTION_OPEN_DOCUMENT)</span><br><span class="line">    intent.addCategory(Intent.CATEGORY_OPENABLE)</span><br><span class="line">    intent.type = <span class="string">&quot;*/*&quot;</span> <span class="comment">//显示所有类型文件</span></span><br><span class="line">    startActivityForResult(intent, PICK_FILE)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onActivityResult</span><span class="params">(requestCode: <span class="type">Int</span>, resultCode: <span class="type">Int</span>, <span class="keyword">data</span>: <span class="type">Intent</span>?)</span></span> &#123;</span><br><span class="line">    <span class="keyword">super</span>.onActivityResult(requestCode, resultCode, <span class="keyword">data</span>)</span><br><span class="line">    <span class="keyword">when</span> (requestCode) &#123;</span><br><span class="line">        PICK_FILE -&gt; &#123;</span><br><span class="line">            <span class="keyword">if</span> (resultCode == Activity.RESULT_OK &amp;&amp; <span class="keyword">data</span> != <span class="literal">null</span>) &#123;</span><br><span class="line">                <span class="keyword">val</span> uri = <span class="keyword">data</span>.<span class="keyword">data</span></span><br><span class="line">                <span class="keyword">if</span> (uri != <span class="literal">null</span>) &#123;</span><br><span class="line">                    <span class="keyword">val</span> inputStream = contentResolver.openInputStream(uri)<span class="comment">//打开文件输入流</span></span><br><span class="line">                    <span class="comment">// 执行文件读取操作</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="第三方SDK不支持怎么办"><a href="#第三方SDK不支持怎么办" class="headerlink" title="第三方SDK不支持怎么办"></a>第三方SDK不支持怎么办</h4><p>如七牛云SDK，它的文件上传功能要求你传入一个文件的绝对路径，不支持传入Uri对象。</p>
-<ol>
-<li>由于我们是没有权限修改第三方SDK的，因此最简单直接的办法就是等待第三方SDK的提供者对这部分功能进行更新，在那之前我们先不要将targetSdkVersion指定到29，或者先在AndroidManifest文件中配置一下requestLegacyExternalStorage属性。</li>
-<li>另一个方法，自己编写一个文件复制功能，将Uri对象所对应的文件复制到应用程序的关联目录下，然后将关联目录下这个文件的绝对路径传递给第三方SDK，即可完美适配</li>
+<ul>
+<li>普通权限</li>
+</ul>
+<p>不在上面危险权限表内的普通权限直接在AndroidManifest.xml中添加权限声明即可</p>
+<h2 id="在程序运行时申请权限"><a href="#在程序运行时申请权限" class="headerlink" title="在程序运行时申请权限"></a>在程序运行时申请权限</h2><ol>
+<li><p>危险权限跟普通权限一样也要在AndroidManifest.xml中进行权限申明</p>
+</li>
+<li><p>&#96;&#96;&#96;java<br>&#x2F;&#x2F;比如申请拨打电话权限<br>protected void onCreate(Bundle savedInstanceState){<br>super.onCreate(savedInstanceState);<br>setContentView(R.layout.activity_main);<br>Button makeCall &#x3D; findViewById(R.id.make_call);<br>makeCall.setOnClickListener(new View.OnClickListener(){<br>    if(ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CALL_PHONE) !&#x3D; PackageManager.PERMISSION_GRANTED){<br>        ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CALL_PHONE}, 1);<br>    } else {<br>        call();<br>    }<br>});<br>}</p>
+<p>private void call(){<br>try{<br>    Intent intent &#x3D; new Intent(Intent.ACTION_CALL);<br>    intent.setData(Uri.parse(“tel:10086”));<br>    startActivity(intent);<br>} catch (SecurityException e){<br>    e.printStackTrace();<br>}<br>}</p>
+<p>@Override<br>public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults){<br>switch(requestCode){<br>    case 1:<br>        if (grantResults.length &gt; 0 &amp;&amp; grantResults[0] &#x3D;&#x3D; PackageManager.PERMISSION_GRANTED){<br>            call();<br>        } else {<br>            Toast.makeText(this, “You denied the permission”, Toast.LENGTH_SHORT).show();<br>        }<br>        break;<br>    default:<br>}<br>}</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="section"># [<span class="string">自定义应用权限</span>](<span class="link">https://developer.android.google.cn/guide/topics/permissions/defining?hl=zh-cn</span>)</span></span><br><span class="line"></span><br></pre></td></tr></table></figure></li>
 </ol>
-<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 将文件Uri对象复制到应用程序关联的目录下</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">copyUriToExternalFilesDir</span><span class="params">(uri: <span class="type">Uri</span>, fileName: <span class="type">String</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">val</span> inputStream = contentResolver.openInputStream(uri)</span><br><span class="line">    <span class="keyword">val</span> tempDir = getExternalFilesDir(<span class="string">&quot;temp&quot;</span>)</span><br><span class="line">    <span class="keyword">if</span> (inputStream != <span class="literal">null</span> &amp;&amp; tempDir != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">val</span> file = File(<span class="string">&quot;<span class="variable">$tempDir</span>/<span class="variable">$fileName</span>&quot;</span>)</span><br><span class="line">        <span class="keyword">val</span> fos = FileOutputStream(file)</span><br><span class="line">        <span class="keyword">val</span> bis = BufferedInputStream(inputStream)</span><br><span class="line">        <span class="keyword">val</span> bos = BufferedOutputStream(fos)</span><br><span class="line">        <span class="keyword">val</span> byteArray = ByteArray(<span class="number">1024</span>)</span><br><span class="line">        <span class="keyword">var</span> bytes = bis.read(byteArray)</span><br><span class="line">        <span class="keyword">while</span> (bytes &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            bos.write(byteArray, <span class="number">0</span>, bytes)</span><br><span class="line">            bos.flush()</span><br><span class="line">            bytes = bis.read(byteArray)</span><br><span class="line">        &#125;</span><br><span class="line">        bos.close()</span><br><span class="line">        fos.close()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注意：系统不允许多个软件包声明同名权限，除非所有软件包均使用同一证书进行签名。如果软件包声明了某个权限，系统不会允许用户安装其他具有相同权限名称的软件包，除非这些软件包使用与第一个软件包相同的证书进行签名。在为自定义权限命名时，为了避免命名冲突，我们建议采用反向域名方式，例如 com.example.myapp.ENGAGE_HYPERSPACE。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">## 定义并强制执行权限</span><br><span class="line"></span><br><span class="line">自定义应用权限的例子 ：</span><br><span class="line"></span><br><span class="line">```xml</span><br><span class="line"><span class="tag">&lt;<span class="name">manifest</span></span></span><br><span class="line"><span class="tag">  <span class="attr">xmlns:android</span>=<span class="string">&quot;http://schemas.android.com/apk/res/android&quot;</span></span></span><br><span class="line"><span class="tag">  <span class="attr">package</span>=<span class="string">&quot;com.example.myapp&quot;</span> &gt;</span></span><br><span class="line">    </span><br><span class="line">    <span class="tag">&lt;<span class="name">permission</span></span></span><br><span class="line"><span class="tag">      <span class="attr">android:name</span>=<span class="string">&quot;com.example.myapp.permission.DEADLY_ACTIVITY&quot;</span></span></span><br><span class="line"><span class="tag">      <span class="attr">android:label</span>=<span class="string">&quot;@string/permlab_deadlyActivity&quot;</span></span></span><br><span class="line"><span class="tag">      <span class="attr">android:description</span>=<span class="string">&quot;@string/permdesc_deadlyActivity&quot;</span></span></span><br><span class="line"><span class="tag">      <span class="attr">android:permissionGroup</span>=<span class="string">&quot;android.permission-group.COST_MONEY&quot;</span></span></span><br><span class="line"><span class="tag">      <span class="attr">android:protectionLevel</span>=<span class="string">&quot;dangerous&quot;</span> /&gt;</span></span><br><span class="line">    ...</span><br><span class="line"><span class="tag">&lt;/<span class="name">manifest</span>&gt;</span></span><br></pre></td></tr></table></figure>
 
-<p><a target="_blank" rel="noopener" href="https://github.com/guolindev/ScopedStorageDemo">示例代码</a></p>
-
+<blockquote>
+<ul>
+<li><p><code>protectionLevel</code> 属性为必需项，用于指示系统如何向用户告知哪些应用正在请求权限或者谁可以获得该权限，如链接的文档中所述。</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://developer.android.google.cn/guide/topics/manifest/permission-group-element?hl=zh-cn"><code>android:permissionGroup</code></a> 属性为可选项，仅用于帮助系统向用户显示权限。在大多数情况下，您应将其设置为标准系统组（在 <code>android.Manifest.permission_group</code> 中列出），但您也可以<a target="_blank" rel="noopener" href="https://developer.android.google.cn/guide/topics/permissions/defining?hl=zh-cn#groups">自行定义组</a>。最好使用现有的组，因为这可以简化用户看到的权限界面。</p>
+</li>
+<li><p>您需要为权限提供标签和说明。这些是用户在查看权限列表 (<a target="_blank" rel="noopener" href="https://developer.android.google.cn/guide/topics/manifest/permission-element?hl=zh-cn#label"><code>android:label</code></a>) 或有关单个权限的详细信息 (<a target="_blank" rel="noopener" href="https://developer.android.google.cn/guide/topics/manifest/permission-element?hl=zh-cn#desc"><code>android:description</code></a>) 时能够看到的字符串资源。标签应当简短，用几个词描述该权限所保护的关键功能。说明应该用几个句子描述权限允许权限获得者执行哪些操作。我们通常会使用包含两个句子的说明：第一句描述权限；第二句提醒用户在向应用授予权限后可能会出现哪类错误。</p>
+<p>以下示例展示了 <code>CALL_PHONE</code> 权限的标签和说明：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">string</span> <span class="attr">name</span>=<span class="string">&quot;permlab_callPhone&quot;</span>&gt;</span>directly call phone numbers<span class="tag">&lt;/<span class="name">string</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">string</span> <span class="attr">name</span>=<span class="string">&quot;permdesc_callPhone&quot;</span>&gt;</span>Allows the app to call</span><br><span class="line">    phone numbers without your intervention. Malicious apps may</span><br><span class="line">    cause unexpected calls on your phone bill. Note that this does not</span><br><span class="line">    allow the app to call emergency numbers.<span class="tag">&lt;/<span class="name">string</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+</blockquote>
+<h3 id="创建权限组"><a href="#创建权限组" class="headerlink" title="创建权限组"></a>创建权限组</h3><p>如上一部分中所示，您可以使用 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/guide/topics/manifest/permission-group-element?hl=zh-cn"><code>android:permissionGroup</code></a> 属性帮助系统向用户说明权限。在大多数情况下，您需要将此属性设置为标准系统组（在 <code>android.Manifest.permission_group</code> 中列出），但您也可以使用 <code>&lt;permission-group&gt;</code> 定义自己的组。</p>
+<p><code>&lt;permission-group&gt;</code> 元素为一组权限定义标签，这一组权限可以包括使用 <code>&lt;permission&gt;</code> 元素在清单中声明的权限和在其他位置声明的权限。此元素只会影响权限在向用户显示时的分组方式。<code>&lt;permission-group&gt;</code> 元素并不指定属于该组的权限，而是为该组提供名称。</p>
+<p>将组名称分配给 <code>&lt;permission&gt;</code> 元素的 <code>permissionGroup</code> 属性可将权限放入组中。</p>
+<p><code>&lt;permission-tree&gt;</code> 元素为代码中定义的一组权限声明命名空间。</p>
+<h3 id="自定义权限建议"><a href="#自定义权限建议" class="headerlink" title="自定义权限建议"></a>自定义权限建议</h3><p>应用可以定义自己的自定义权限，还可以通过定义  <a target="_blank" rel="noopener" href="https://developer.android.google.cn/guide/topics/manifest/uses-permission-element?hl=zh-cn"><code>&lt;uses-permission&gt;</code></a>  元素向其他应用请求自定义权限。不过，您应该仔细评估应用是否有必要这样做。</p>
+<ul>
+<li>如果要设计一套向彼此公开功能的应用，请尽可能将应用设计为每个权限仅定义一次。如果这些应用并非全都使用同一证书进行签名，那么您就必须这样做。即使应用均使用同一证书进行签名，每个权限仅定义一次也是最佳做法。</li>
+<li>如果功能仅适用于与提供该功能的应用具有相同签名的应用，您也许能使用签名检查功能来避免定义自定义权限。如果您的某个应用向您的另一个应用发出请求，后者会先验证两者是否使用相同的证书进行签名，只有证书相同时才会遵照该请求行事。</li>
+</ul>
+<!-- flag of hidden posts -->
       
     </div>
     
@@ -485,7 +507,9 @@
       
         <div class="post-tags">
           
-            <a href="/tags/%E5%AE%89%E5%8D%93%E7%89%88%E6%9C%AC%E7%89%B9%E6%80%A7/" rel="tag"># 安卓版本特性</a>
+            <a href="/tags/private/" rel="tag"># private</a>
+          
+            <a href="/tags/%E5%AE%89%E5%8D%93%E7%9F%A5%E8%AF%86%E7%82%B9/" rel="tag"># 安卓知识点</a>
           
         </div>
       
@@ -494,26 +518,6 @@
       
       
 
-      
-        <div class="post-nav">
-          <div class="post-nav-next post-nav-item">
-            
-              <a href="/posts/2551784276/" rel="next" title="版本相关-安卓11">
-                <i class="fa fa-chevron-left"></i> 版本相关-安卓11
-              </a>
-            
-          </div>
-
-          <span class="post-nav-divider"></span>
-
-          <div class="post-nav-prev post-nav-item">
-            
-              <a href="/posts/dec5709/" rel="prev" title="唯一设备码">
-                唯一设备码 <i class="fa fa-chevron-right"></i>
-              </a>
-            
-          </div>
-        </div>
       
 
       
@@ -591,7 +595,7 @@
               
                 <a href="/archives/%7C%7Carchive">
               
-                  <span class="site-state-item-count">147</span>
+                  <span class="site-state-item-count">124</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -613,7 +617,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">28</span>
+                  <span class="site-state-item-count">26</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
@@ -712,7 +716,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Android-10%E7%89%88%E6%9C%AC%E7%89%B9%E6%80%A7"><span class="nav-text">Android 10版本特性</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Android-10%E9%80%82%E9%85%8D%E8%A6%81%E7%82%B9%EF%BC%8C%E4%BD%9C%E7%94%A8%E5%9F%9F%E5%AD%98%E5%82%A8"><span class="nav-text">Android 10适配要点，作用域存储</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%90%86%E8%A7%A3%E4%BD%9C%E7%94%A8%E5%AD%98%E5%82%A8"><span class="nav-text">理解作用存储</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%88%91%E4%BB%AC%E4%B8%80%E5%AE%9A%E8%A6%81%E5%8D%87%E7%BA%A7%E5%90%97%EF%BC%9F"><span class="nav-text">我们一定要升级吗？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%92%88%E5%AF%B9%E4%BD%9C%E7%94%A8%E5%9F%9F%E5%AD%98%E5%82%A8%E8%BF%9B%E8%A1%8C%E9%80%82%E9%85%8D"><span class="nav-text">针对作用域存储进行适配</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E7%9B%B8%E5%86%8C%E4%B8%AD%E7%9A%84%E5%9B%BE%E7%89%87"><span class="nav-text">获取相册中的图片</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B0%86%E5%9B%BE%E7%89%87%E6%B7%BB%E5%8A%A0%E5%88%B0%E7%9B%B8%E5%86%8C"><span class="nav-text">将图片添加到相册</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%8B%E8%BD%BD%E6%96%87%E4%BB%B6%E5%88%B0Download%E7%9B%AE%E5%BD%95"><span class="nav-text">下载文件到Download目录</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E6%96%87%E4%BB%B6%E9%80%89%E6%8B%A9%E5%99%A8"><span class="nav-text">使用文件选择器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E6%96%B9SDK%E4%B8%8D%E6%94%AF%E6%8C%81%E6%80%8E%E4%B9%88%E5%8A%9E"><span class="nav-text">第三方SDK不支持怎么办</span></a></li></ol></li></ol></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#permission%E5%92%8Cuse-permission%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-text">permission和use-permission的区别</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C%E6%97%B6%E6%9D%83%E9%99%90"><span class="nav-text">运行时权限</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8%E7%A8%8B%E5%BA%8F%E8%BF%90%E8%A1%8C%E6%97%B6%E7%94%B3%E8%AF%B7%E6%9D%83%E9%99%90"><span class="nav-text">在程序运行时申请权限</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E6%9D%83%E9%99%90%E7%BB%84"><span class="nav-text">创建权限组</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E6%9D%83%E9%99%90%E5%BB%BA%E8%AE%AE"><span class="nav-text">自定义权限建议</span></a></li></ol></li></ol></li></ol></div>
             
 
           </div>
