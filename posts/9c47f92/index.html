@@ -86,14 +86,14 @@
 <meta property="og:site_name" content="AB">
 <meta property="og:description" content="Android性能优化之内存优化众所周知，内存优化可以说是性能优化中最重要的优化点之一，可以说，如果你没有掌握系统的内存优化方案，就不能说你对Android的性能优化有过多的研究与探索。本篇，笔者将带领大家一起来系统地学习Android中的内存优化。 可能有不少读者都知道，在内存管理上，JVM拥有垃圾内存回收的机制，自身会在虚拟机层面自动分配和释放内存，因此不需要像使用C&#x2F;C++一样在代">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://shenbh.github.io/https:/p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d65535569570482aaa9a1da747abe27f~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d65535569570482aaa9a1da747abe27f~tplv-k3u1fbpfcp-zoom-1.image">
 <meta property="article:published_time" content="2020-09-03T02:31:58.000Z">
-<meta property="article:modified_time" content="2022-11-02T06:08:54.304Z">
+<meta property="article:modified_time" content="2022-11-02T07:22:54.406Z">
 <meta property="article:author" content="阿炳">
 <meta property="article:tag" content="private">
 <meta property="article:tag" content="安卓优化">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://shenbh.github.io/https:/p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d65535569570482aaa9a1da747abe27f~tplv-k3u1fbpfcp-zoom-1.image">
+<meta name="twitter:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d65535569570482aaa9a1da747abe27f~tplv-k3u1fbpfcp-zoom-1.image">
 
 
 
@@ -379,7 +379,7 @@
       
 
       
-        <h1 id="Android性能优化之内存优化"><a href="#Android性能优化之内存优化" class="headerlink" title="Android性能优化之内存优化"></a><a href="./https://juejin.cn/post/6844904096541966350">Android性能优化之内存优化</a></h1><p>众所周知，内存优化可以说是性能优化中最重要的优化点之一，可以说，<strong>如果你没有掌握系统的内存优化方案，就不能说你对Android的性能优化有过多的研究与探索</strong>。本篇，笔者将带领大家一起来系统地学习Android中的内存优化。</p>
+        <h1 id="Android性能优化之内存优化"><a href="#Android性能优化之内存优化" class="headerlink" title="Android性能优化之内存优化"></a><a target="_blank" rel="noopener" href="https://juejin.cn/post/6844904096541966350">Android性能优化之内存优化</a></h1><p>众所周知，内存优化可以说是性能优化中最重要的优化点之一，可以说，<strong>如果你没有掌握系统的内存优化方案，就不能说你对Android的性能优化有过多的研究与探索</strong>。本篇，笔者将带领大家一起来系统地学习Android中的内存优化。</p>
 <p>可能有不少读者都知道，在内存管理上，JVM拥有垃圾内存回收的机制，自身会在虚拟机层面自动分配和释放内存，因此不需要像使用C&#x2F;C++一样在代码中分配和释放某一块内存。Android系统的内存管理类似于JVM，通过new关键字来为对象分配内存，内存的释放由GC来回收。并且Android系统在内存管理上有一个 <strong>Generational Heap Memory模型</strong>，当内存达到某一个阈值时，系统会根据不同的规则自动释放可以释放的内存。即便有了内存管理机制，但是，如果不合理地使用内存，也会造成一系列的性能问题，比如 <strong>内存泄漏、内存抖动、短时间内分配大量的内存对象</strong> 等等。下面，我就先来谈谈Android的内存管理机制。</p>
 <h1 id="Android-内存管理机制"><a href="#Android-内存管理机制" class="headerlink" title="Android 内存管理机制"></a>Android 内存管理机制</h1><p>我们都知道，应用程序的内存分配和垃圾回收都是由Android虚拟机完成的，<strong>在Android 5.0以下，使用的是Dalvik虚拟机，5.0及以上，则使用的是ART虚拟机</strong>。</p>
 <h2 id="Java-对象生命周期"><a href="#Java-对象生命周期" class="headerlink" title="Java 对象生命周期"></a>Java 对象生命周期</h2><p>Java代码编译后生成的字节码.class文件从文件系统中加载到虚拟机之后，便有了JVM上的Java对象，Java对象在JVM上运行有7个阶段，如下：</p>
@@ -485,7 +485,7 @@
 <li><strong>Permanent Generation（持久代）</strong></li>
 </ul>
 <p>模型示意图如下所示：</p>
-<p><img src="/./https:/p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d65535569570482aaa9a1da747abe27f~tplv-k3u1fbpfcp-zoom-1.image" alt="img"></p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d65535569570482aaa9a1da747abe27f~tplv-k3u1fbpfcp-zoom-1.image" alt="img"></p>
 <h3 id="Young-Generation"><a href="#Young-Generation" class="headerlink" title="Young Generation"></a>Young Generation</h3><p>由<strong>一个Eden区和两个Survivor区</strong>组成，程序中生成的<strong>大部分新的对象都在Eden区</strong>中，<strong>当Eden区满时，还存活的对象将被复制到其中一个Survivor区，当此Survivor区满时，此区存活的对象又被复制到另一个Survivor区，当这个Survivor区也满时，会将其中存活的对象复制到年老代</strong>。</p>
 <h3 id="Old-Generation"><a href="#Old-Generation" class="headerlink" title="Old Generation"></a>Old Generation</h3><p>一般情况下，年老代中的对象<strong>生命周期都比较长</strong>。</p>
 <h3 id="Permanent-Generation"><a href="#Permanent-Generation" class="headerlink" title="Permanent Generation"></a>Permanent Generation</h3><p>用于<strong>存放静态的类和方法</strong>，持久代对垃圾回收没有显著影响。（在 JDK 1.8 及之后的版本，在本地内存中实现的元空间（Meta-space）已经代替了永久代）</p>
@@ -556,7 +556,7 @@
 <h1 id="避免内存泄漏"><a href="#避免内存泄漏" class="headerlink" title="避免内存泄漏"></a>避免内存泄漏</h1><h2 id="内存泄漏的定义"><a href="#内存泄漏的定义" class="headerlink" title="内存泄漏的定义"></a>内存泄漏的定义</h2><p><code>Android</code>系统虚拟机的垃圾回收是通过虚拟机<code>GC</code>机制来实现的。<code>GC</code>会选择一些还存活的对象作为内存遍历的根节点<code>GC Roots</code>，通过对<code>GC Roots</code>的可达性来判断是否需要回收。内存泄漏就是<strong>在当前应用周期内不再使用的对象被<code>GC Roots</code>引用，导致不能回收，使实际可使用内存变小</strong>。</p>
 <h2 id="使用MAT来查找内存泄漏"><a href="#使用MAT来查找内存泄漏" class="headerlink" title="使用MAT来查找内存泄漏"></a>使用MAT来查找内存泄漏</h2><p><code>MAT</code>工具可以帮助开发者定位导致内存泄漏的对象，以及发现大的内存对象，然后解决内存泄漏并通过优化内存对象，以达到减少内存消耗的目的。</p>
 <h3 id="使用步骤"><a href="#使用步骤" class="headerlink" title="使用步骤"></a>使用步骤</h3><ul>
-<li><p>在<a href="./https://link.juejin.cn/?target=https://eclipse.org/mat/downloads.php%E4%B8%8B%E8%BD%BDMAT%E5%AE%A2%E6%88%B7%E7%AB%AF%E3%80%82">eclipse.org&#x2F;mat&#x2F;downloa…</a></p>
+<li><p>在<a href="https://link.juejin.cn/?target=https://eclipse.org/mat/downloads.php%E4%B8%8B%E8%BD%BDMAT%E5%AE%A2%E6%88%B7%E7%AB%AF%E3%80%82">eclipse.org&#x2F;mat&#x2F;downloa…</a></p>
 </li>
 <li><p>从<code>Android Studio</code>进入<code>Profile</code>的<code>Memory</code>视图，选择需要分析的应用进程，对应用进行怀疑有内存问题的操作，结束操作后，主动GC几次，最后export dump文件。</p>
 </li>
@@ -628,7 +628,7 @@
 <h3 id="容器中的对象没清理造成的内存泄漏"><a href="#容器中的对象没清理造成的内存泄漏" class="headerlink" title="容器中的对象没清理造成的内存泄漏"></a>容器中的对象没清理造成的内存泄漏</h3><p>在退出程序之前，将集合里的东西clear，然后置为null，再退出程序</p>
 <h3 id="WebView"><a href="#WebView" class="headerlink" title="WebView"></a>WebView</h3><p>WebView都存在内存泄漏的问题，在应用中只要使用一次WebView，内存就不会被释放掉。我们可以为WebView开启一个独立的进程，使用AIDL与应用的主进程进行通信，WebView所在的进程可以根据业务的需要选择合适的时机进行销毁，达到正常释放内存的目的。</p>
 <h3 id="使用ListView时造成的内存泄漏"><a href="#使用ListView时造成的内存泄漏" class="headerlink" title="使用ListView时造成的内存泄漏"></a>使用ListView时造成的内存泄漏</h3><p>在构造Adapter时，使用缓存的convertView。</p>
-<h2 id="内存泄漏监控"><a href="#内存泄漏监控" class="headerlink" title="内存泄漏监控"></a>内存泄漏监控</h2><p>一般使用LeakCanary进行内存泄漏的监控即可，具体使用和原理分析请参见我之前的文章<a href="./https://juejin.im/post/6844904070977749005">Android主流三方库源码分析（六、深入理解Leakcanary源码）</a>。</p>
+<h2 id="内存泄漏监控"><a href="#内存泄漏监控" class="headerlink" title="内存泄漏监控"></a>内存泄漏监控</h2><p>一般使用LeakCanary进行内存泄漏的监控即可，具体使用和原理分析请参见我之前的文章<a target="_blank" rel="noopener" href="https://juejin.im/post/6844904070977749005">Android主流三方库源码分析（六、深入理解Leakcanary源码）</a>。</p>
 <p>除了基本使用外，我们还可以自定义处理结果，首先，继承DisplayLeakService实现一个自定义的监控处理Service，代码如下：</p>
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public <span class="class"><span class="keyword">class</span> <span class="title">LeakCnaryService</span> <span class="keyword">extends</span> <span class="title">DisplayLeakServcie</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">String</span> <span class="type">TAG</span> = “<span class="type">LeakCanaryService</span>”；</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> void afterDefaultHandling(<span class="type">HeapDump</span> heapDump， <span class="type">AnalysisResult</span> result， <span class="type">String</span> leakInfo) &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
@@ -785,7 +785,7 @@
 <p>最后，要注意读取并解码Bitmap数据和保存图片数据都是有一定耗时的IO操作。所以这些方法都是在ImageLoader中的doInBackground方法中调用，代码如下所示：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">protected</span> Bitmap <span class="title function_">doInBackground</span><span class="params">(Void... params)</span> &#123;</span><br><span class="line">   </span><br><span class="line">    <span class="type">Bitmap</span> <span class="variable">bitmap</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">synchronized</span> (mPauseWorkLock) &#123;</span><br><span class="line">        <span class="keyword">while</span> (mPauseWork &amp;&amp; !isCancelled()) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                mPauseWorkLock.wait();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (bitmap == <span class="literal">null</span> &amp;&amp; !isCancelled()</span><br><span class="line">            &amp;&amp; imageViewReference.get() != <span class="literal">null</span> &amp;&amp; !mExitTasksEarly) &#123;</span><br><span class="line">        bitmap = getmImageCache().getBitmapFromDisk(mUrl, mBitmapConfig);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (bitmap == <span class="literal">null</span> &amp;&amp; !isCancelled()</span><br><span class="line">            &amp;&amp; imageViewReference.get() != <span class="literal">null</span> &amp;&amp; !mExitTasksEarly) &#123;</span><br><span class="line">        bitmap = downLoadBitmap(mUrl, mBitmapConfig);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (bitmap != <span class="literal">null</span>) &#123;</span><br><span class="line">        getmImageCache().addToCache(mUrl, bitmap);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> bitmap;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
 </ol>
-<h2 id="图片加载三方库"><a href="#图片加载三方库" class="headerlink" title="图片加载三方库"></a>图片加载三方库</h2><p>目前使用最广泛的有Picasso、Glide和Fresco。Glide和Picasso比较相似，但是Glide相对于Picasso来说，功能更丰富，内部实现更复杂，对Glide有兴趣的同学可以阅读这篇文章<a href="./https://juejin.im/post/6844904049595121672">Android主流三方库源码分析（三、深入理解Glide源码）</a>。Fresco最大的亮点在于它的内存管理，特别是在低端机和Android 5.0以下的机器上的优势更加明显，而使用Fresco将很好地解决图片占用内存大的问题。因为，Fresco会将图片放到一个特别的内存区域，当图片不再显示时，占用的内存会自动释放。这类总结下<strong>Fresco的优点</strong>，如下所示：</p>
+<h2 id="图片加载三方库"><a href="#图片加载三方库" class="headerlink" title="图片加载三方库"></a>图片加载三方库</h2><p>目前使用最广泛的有Picasso、Glide和Fresco。Glide和Picasso比较相似，但是Glide相对于Picasso来说，功能更丰富，内部实现更复杂，对Glide有兴趣的同学可以阅读这篇文章<a target="_blank" rel="noopener" href="https://juejin.im/post/6844904049595121672">Android主流三方库源码分析（三、深入理解Glide源码）</a>。Fresco最大的亮点在于它的内存管理，特别是在低端机和Android 5.0以下的机器上的优势更加明显，而使用Fresco将很好地解决图片占用内存大的问题。因为，Fresco会将图片放到一个特别的内存区域，当图片不再显示时，占用的内存会自动释放。这类总结下<strong>Fresco的优点</strong>，如下所示：</p>
 <ul>
 <li>1、<strong>内存管理</strong>。</li>
 <li>2、<strong>渐进式呈现</strong>：先呈现大致的图片轮廓，然后随着图片下载的继续，呈现逐渐清晰的图片。</li>

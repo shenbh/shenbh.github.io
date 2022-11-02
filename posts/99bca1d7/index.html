@@ -89,7 +89,7 @@
 <meta property="og:image" content="http://shenbh.github.io/posts/99bca1d7/image-20220114180639237.png">
 <meta property="og:image" content="http://shenbh.github.io/posts/99bca1d7/image-20220114180748942.png">
 <meta property="article:published_time" content="2022-01-14T09:14:51.000Z">
-<meta property="article:modified_time" content="2022-11-02T06:08:54.305Z">
+<meta property="article:modified_time" content="2022-11-02T07:22:54.650Z">
 <meta property="article:author" content="阿炳">
 <meta property="article:tag" content="private">
 <meta property="article:tag" content="安卓优化">
@@ -411,12 +411,12 @@
 <ul>
 <li>&#x2F;system 分区：它是存放所有Google提供的Android组件的地方。这个分区只能以只读方式mount。这样主要是基于稳定性和安全性考虑，即使发生用户突然断点的情况，也依然需要保证&#x2F;system分区的内容不会收到破坏和篡改。</li>
 <li>&#x2F;data 分区：它是所有用户数据存放的地方。主要是为了实现数据隔离，即系统升级和恢复的时候会擦除整个 &#x2F;system 分区，但不会影响 &#x2F;data 的用户数据。而恢复出厂设置，只会擦除 &#x2F;data 的数据。</li>
-<li>&#x2F;vendor 分区：它是存放厂商特殊系统修改的地方。特别是在 Android 8.0 以后，隆重推出了 <a href="./https://source.android.com/devices/architecture">“Treble”项目</a>。厂商 OTA 时可以只更新自己的 &#x2F;vendor 分区即可，让厂商能够以更低的成本，更轻松、更快速地将设备更新到最新版 Android 系统。</li>
+<li>&#x2F;vendor 分区：它是存放厂商特殊系统修改的地方。特别是在 Android 8.0 以后，隆重推出了 <a target="_blank" rel="noopener" href="https://source.android.com/devices/architecture">“Treble”项目</a>。厂商 OTA 时可以只更新自己的 &#x2F;vendor 分区即可，让厂商能够以更低的成本，更轻松、更快速地将设备更新到最新版 Android 系统。</li>
 </ul>
 <h2 id="Android-存储安全"><a href="#Android-存储安全" class="headerlink" title="Android 存储安全"></a>Android 存储安全</h2><p>除了分区隔离，存储安全也是 Android 系统非常重要的一部分，存储安全首先考虑的是权限控制。</p>
 <p><strong>第一，权限控制</strong></p>
-<p>Android 的每个应用都在自己的<a href="./https://source.android.google.cn/security/app-sandbox">应用沙盒</a>内运行，在 Android 4.3 之前的版本中，这些沙盒使用了标准 Linux 的保护机制，通过为每个应用创建独一无二的 Linux UID 来定义。简单来说，我们需要保证微信不能访问淘宝的数据，并且在没有权限的情况下也不能访问系统的一些保护文件。</p>
-<p>在 Android 4.3 引入了<a href="./https://source.android.google.cn/security/selinux">SELinux</a>（Security Enhanced Linux）机制进一步定义 Android 应用沙盒的边界。那它有什么特别的呢？它的作用是即使我们进程有 root 权限也不能为所欲为，如果想在 SELinux 系统中干任何事情，都必须先在专门的安全策略配置文件中赋予权限。</p>
+<p>Android 的每个应用都在自己的<a target="_blank" rel="noopener" href="https://source.android.google.cn/security/app-sandbox">应用沙盒</a>内运行，在 Android 4.3 之前的版本中，这些沙盒使用了标准 Linux 的保护机制，通过为每个应用创建独一无二的 Linux UID 来定义。简单来说，我们需要保证微信不能访问淘宝的数据，并且在没有权限的情况下也不能访问系统的一些保护文件。</p>
+<p>在 Android 4.3 引入了<a target="_blank" rel="noopener" href="https://source.android.google.cn/security/selinux">SELinux</a>（Security Enhanced Linux）机制进一步定义 Android 应用沙盒的边界。那它有什么特别的呢？它的作用是即使我们进程有 root 权限也不能为所欲为，如果想在 SELinux 系统中干任何事情，都必须先在专门的安全策略配置文件中赋予权限。</p>
 <p><strong>第二，数据加密</strong></p>
 <h3 id="常见的数据存储方法"><a href="#常见的数据存储方法" class="headerlink" title="常见的数据存储方法"></a>常见的数据存储方法</h3><p>存储的数据格式可以是二进制的，也可以是XML、JSON、Protocol Buffer。</p>
 <p>对于闪存来说，一切归根到底还是二进制的，XML、JSON它们只是提供了一套通用的二进制编解码格式规范。我们选择存储方法时，一般考虑以下的一些关键要素：</p>
@@ -491,7 +491,7 @@
 <li><p>可以替换通过 复写 Application 的 getSharedPreferences 方法替换系统默认实现，比如优化卡顿、合并多次 apply 操作、支持跨进程操作等。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MyApplication</span> <span class="keyword">extends</span> <span class="title class_">Application</span> &#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> SharedPreferences <span class="title function_">getSharedPreferences</span><span class="params">(String name, <span class="type">int</span> mode)</span> &#123;</span><br><span class="line">     <span class="keyword">return</span> SharedPreferencesImpl.getSharedPreferences(name, mode);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 </li>
-<li><p>上述的依然不能彻底解决问题。基本每个大公司都会自己研究一套替代的存储方案，比如微信开源的 <a href="./https://github.com/Tencent/MMKV">MMKV</a></p>
+<li><p>上述的依然不能彻底解决问题。基本每个大公司都会自己研究一套替代的存储方案，比如微信开源的 <a target="_blank" rel="noopener" href="https://github.com/Tencent/MMKV">MMKV</a></p>
 <table>
 <thead>
 <tr>
@@ -529,7 +529,7 @@
 </li>
 </ol>
 <h4 id="ContentProvider-的使用"><a href="#ContentProvider-的使用" class="headerlink" title="ContentProvider 的使用"></a>ContentProvider 的使用</h4><p>为什么 Android 系统不把 SharedPreferences 设计成跨进程安全的呢？那是因为 Android 系统更希望我们在这个场景选择使用 ContentProvider 作为存储方式。ContentProvider 作为 Android 四大组件中的一种，为我们提供了不同进程甚至是不同应用程序之间共享数据的机制。</p>
-<p>Android 系统中比如相册、日历、音频、视频、通讯录等模块都提供了 ContentProvider 的访问支持。它的使用十分简单，你可以参考<a href="./https://developer.android.com/guide/topics/providers/content-providers">官方文档</a>。</p>
+<p>Android 系统中比如相册、日历、音频、视频、通讯录等模块都提供了 ContentProvider 的访问支持。它的使用十分简单，你可以参考<a target="_blank" rel="noopener" href="https://developer.android.com/guide/topics/providers/content-providers">官方文档</a>。</p>
 <p>当然，在使用过程也有下面几点需要注意。</p>
 <ul>
 <li><p>启动性能</p>
