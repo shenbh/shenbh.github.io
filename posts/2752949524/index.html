@@ -86,15 +86,15 @@
 <meta property="og:site_name" content="AB">
 <meta property="og:description" content="数据存储   存储方式 说明    SharedPreferences 在键值对中存储私有原始数据   内部存储 在设备内存中存储私有数据   外部存储 在共享的外部存储中存储公共数据   SQLite 数据库 在私有数据库中存储结构化数据   SharedPreferencesSharedPreferences采用key-value（键值对）形式, 主要用于轻量级的数据存储, 尤其适合保存应用的">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://shenbh.github.io/.io//img/shared_preference.jpg">
-<meta property="og:image" content="http://shenbh.github.io/.io//SharedPreference.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/2752949524/img/shared_preference.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/2752949524/SharedPreference.png">
 <meta property="article:published_time" content="2019-12-23T02:48:00.000Z">
-<meta property="article:modified_time" content="2022-09-02T06:32:54.074Z">
+<meta property="article:modified_time" content="2022-11-02T06:08:54.305Z">
 <meta property="article:author" content="阿炳">
 <meta property="article:tag" content="private">
 <meta property="article:tag" content="安卓知识点">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://shenbh.github.io/.io//img/shared_preference.jpg">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/2752949524/img/shared_preference.jpg">
 
 
 
@@ -419,7 +419,7 @@
 <h3 id="getSharedPreferences"><a href="#getSharedPreferences" class="headerlink" title="getSharedPreferences"></a>getSharedPreferences</h3><p>直接调用Context.getSharedPreferences(name, mode)，所有的方法最终都是调用到如下方法：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">ContextImpl</span> <span class="keyword">extends</span> <span class="title class_">Context</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> ArrayMap&lt;String, File&gt; mSharedPrefsPaths;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> SharedPreferences <span class="title function_">getSharedPreferences</span><span class="params">(String name, <span class="type">int</span> mode)</span> &#123;</span><br><span class="line">        File file;</span><br><span class="line">        <span class="keyword">synchronized</span> (ContextImpl.class) &#123;</span><br><span class="line">            <span class="keyword">if</span> (mSharedPrefsPaths == <span class="literal">null</span>) &#123;</span><br><span class="line">                mSharedPrefsPaths = <span class="keyword">new</span> <span class="title class_">ArrayMap</span>&lt;&gt;();</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">//先从mSharedPrefsPaths查询是否存在相应文件</span></span><br><span class="line">            file = mSharedPrefsPaths.get(name);</span><br><span class="line">            <span class="keyword">if</span> (file == <span class="literal">null</span>) &#123;</span><br><span class="line">                <span class="comment">//如果文件不存在, 则创建新的文件 </span></span><br><span class="line">                file = getSharedPreferencesPath(name);</span><br><span class="line">                mSharedPrefsPaths.put(name, file);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"> </span><br><span class="line">        <span class="keyword">return</span> getSharedPreferences(file, mode);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h2 id="架构"><a href="#架构" class="headerlink" title="架构"></a>架构</h2><p><img src="/.io//img/shared_preference.jpg"></p>
+<h2 id="架构"><a href="#架构" class="headerlink" title="架构"></a>架构</h2><p><img src="/posts/2752949524/img/shared_preference.jpg"></p>
 <p>SharedPreferences与Editor只是两个接口. SharedPreferencesImpl和EditorImpl分别实现了对应接口. 另外, ContextImpl记录着SharedPreferences的重要数据。</p>
 <p><code>putxxx()</code>操作把数据写入到EditorImpl.mModified；</p>
 <p><code>apply()/commit()</code>操作先调用commitToMemory(&#96;, 将数据同步到SharedPreferencesImpl的mMap, 并保存到MemoryCommitResult的mapToWriteToDisk，再调用enqueueDiskWrite(), 写入到磁盘文件; 先之前把原有数据保存到.bak为后缀的文件,用于在写磁盘的过程出现任何异常可恢复数据;</p>
@@ -436,7 +436,7 @@
 <li>高频写操作的key与高频读操作的key可以适当地拆分文件，由于减少同步锁竞争</li>
 <li>不要连续多次edit()，应该获取一次获取edit()，然后多次执行putxxx()，减少内存波动</li>
 </ul>
-<p><img src="/.io//SharedPreference.png" alt="Android/SharedPreference"></p>
+<p><img src="/posts/2752949524/SharedPreference.png" alt="Android/SharedPreference"></p>
 <h1 id="第三方-数据库"><a href="#第三方-数据库" class="headerlink" title="第三方-数据库"></a>第三方-数据库</h1><h2 id="GreenDao相关"><a href="#GreenDao相关" class="headerlink" title="GreenDao相关"></a>GreenDao相关</h2><h3 id="关系注解"><a href="#关系注解" class="headerlink" title="关系注解"></a>关系注解</h3><p>在greenDAO，实体使用<code>@to-one</code> 或<code>@to-many</code> 关联起来</p>
 <p><code>@ToOne</code>一对一</p>
 <figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Order</span> </span>&#123;</span><br><span class="line">	<span class="meta">@Id</span> <span class="keyword">private</span> <span class="built_in">Long</span> id;</span><br><span class="line">	<span class="keyword">private</span> long customerId;<span class="comment">//定义外间</span></span><br><span class="line">	<span class="meta">@ToOne(joinProperty = <span class="string">&quot;customerId&quot;</span>)</span></span><br><span class="line">	<span class="keyword">private</span> Customer customer;持有目标。</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>

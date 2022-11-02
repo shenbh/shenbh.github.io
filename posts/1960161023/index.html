@@ -87,7 +87,7 @@
 <meta property="og:description" content="Auc之兼容Gradle6.0以上config.json中 appConfig只放[launcher、feature0、feature1] pkgConfig不为空（调试模式）则不会用 :feature:mock。 调试模式下，正常是feature0:app对应feature0:pkg，即appConfig中要加feature0，pkgConfig中要加 feature0  原文：AucFrame">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2020-01-07T07:00:34.000Z">
-<meta property="article:modified_time" content="2022-05-05T06:52:45.541Z">
+<meta property="article:modified_time" content="2022-11-02T06:08:57.515Z">
 <meta property="article:author" content="阿炳">
 <meta property="article:tag" content="private">
 <meta property="article:tag" content="Gradle">
@@ -382,7 +382,7 @@
 <p><code>pkgConfig</code>不为空（调试模式）则不会用 <code>:feature:mock</code>。</p>
 <p>调试模式下，正常是<code>feature0:app</code>对应<code>feature0:pkg</code>，即<code>appConfig中</code>要加<code>feature0</code>，<code>pkgConfig</code>中要加 <code>feature0</code></p>
 <hr>
-<h1 id="原文：AucFrame-之兼容-Gradle-6-0-及以上"><a href="#原文：AucFrame-之兼容-Gradle-6-0-及以上" class="headerlink" title="原文：AucFrame 之兼容 Gradle 6.0 及以上"></a>原文：AucFrame 之兼容 Gradle 6.0 及以上</h1><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>由于 Gradle 6.0 版本 <code>settings.gradle</code> 运行的时机早于 <code>buildSrc</code> 导致了之前 <code>settings.gradle</code> 写的 <code>ConfigUtils.addBuildListener(gradle)</code> 的 <code>ConfigUtils</code> 会查找不到，相关更新在此：<a target="_blank" rel="noopener" href="https://docs.gradle.org/current/userguide/upgrading_version_5.html#classes_from_buildsrc_are_no_longer_visible_to_settings_scripts">Classes from buildSrc are no longer visible to settings scripts</a>。</p>
+<h1 id="原文：AucFrame-之兼容-Gradle-6-0-及以上"><a href="#原文：AucFrame-之兼容-Gradle-6-0-及以上" class="headerlink" title="原文：AucFrame 之兼容 Gradle 6.0 及以上"></a>原文：AucFrame 之兼容 Gradle 6.0 及以上</h1><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>由于 Gradle 6.0 版本 <code>settings.gradle</code> 运行的时机早于 <code>buildSrc</code> 导致了之前 <code>settings.gradle</code> 写的 <code>ConfigUtils.addBuildListener(gradle)</code> 的 <code>ConfigUtils</code> 会查找不到，相关更新在此：<a href="./https://docs.gradle.org/current/userguide/upgrading_version_5.html#classes_from_buildsrc_are_no_longer_visible_to_settings_scripts">Classes from buildSrc are no longer visible to settings scripts</a>。</p>
 <p>所以，目前需要做的操作就是把 <code>include</code> 的操作放回到 <code>settings.gradle</code> 中，但相关配置都是放在 <code>Config.groovy</code> 文件中，它也是访问不到的，现在需要考虑的就是把 <code>include</code> 的相关配置放到另一个地方，然后动态添加到 <code>Config.groovy</code> 中。</p>
 <h2 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h2><p>怎么查看 Gradle 的版本？在项目根目录的 <code>gradle/wrapper/gradle-wrapper.properties</code> 文件的最后一行就有版本号，我推荐不要直接在 6.0 及以上版本进行改造，等全部修改完后，我们再替换到 6.0 及以上版本即可。</p>
 <p>先替换下 <code>DepConfig</code> 构造函数的参数顺序，让 <code>isApply</code> 参数在最前面，增强其可读性，相关代码如下所示：</p>
@@ -427,7 +427,7 @@
 
 <p>可以看到初始化具体做了哪些配置更简洁明了了，此时再运行一下 <code>./gradlew clean</code> 命令，发现已经可以正常通过了，接下来你就可以切换到 Gradle 6.0 试试了哦。</p>
 <p>友情提醒：如果你项目中使用到了 kotlin，切换到 Gradle 6.0 情况下 kotlin 版本需不小于 1.3.50 版本。</p>
-<p>所有文件变动可以查看该次提交：<a target="_blank" rel="noopener" href="https://github.com/Blankj/AucFrameTemplate/commit/ae83a128c55ea3ae527b26b0ffb7314fd921f514">「AucFrame 之兼容 Gradle 6.0 及以上」文件变动</a></p>
+<p>所有文件变动可以查看该次提交：<a href="./https://github.com/Blankj/AucFrameTemplate/commit/ae83a128c55ea3ae527b26b0ffb7314fd921f514">「AucFrame 之兼容 Gradle 6.0 及以上」文件变动</a></p>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>此次兼容 Gradle 6.0 花费了一周的零碎时间思考解决的，也让 AucFrame 更为优雅，本地项目配置只需写在 <code>config.json</code> 即可，AucFrame 本来就是很骚的操作，再结合这次操作，简直骚到离谱，如果大家有更骚的操作，欢迎一起交流。</p>
 <p>后续规划的话，在本组件化的基础上，利用谷歌官方提供的插件化技术 <code>app-bundle</code>，我们可以完成插件（也就是我们现在的组件）修改完代码后，直接跑到宿主中替换插件，注意，这里消耗的时间只是插件编译的时间，所以，编译效率便会大大提升，再也不需要「<em>coding 五分钟，build 两小时</em>」了，是不是很期待哈，大家静候我的佳音吧。</p>
 <!-- flag of hidden posts -->
