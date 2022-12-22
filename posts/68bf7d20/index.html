@@ -87,7 +87,7 @@
 <meta property="og:description" content="函数 函数 函数">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2020-03-23T02:17:01.000Z">
-<meta property="article:modified_time" content="2022-11-02T07:22:57.106Z">
+<meta property="article:modified_time" content="2022-12-20T05:33:02.508Z">
 <meta property="article:author" content="阿炳">
 <meta property="article:tag" content="Kotlin知识点">
 <meta name="twitter:card" content="summary">
@@ -474,7 +474,7 @@
 
 
 
-<h1 id="几种特殊函数"><a href="#几种特殊函数" class="headerlink" title="几种特殊函数"></a>几种特殊函数</h1><h2 id="泛型函数"><a href="#泛型函数" class="headerlink" title="泛型函数"></a>泛型函数</h2><h2 id="内联函数"><a href="#内联函数" class="headerlink" title="内联函数"></a>内联函数</h2><p>调用内联函数（作用于函数），在编译期间，被定义的内联函数的代码将被拷贝到每个调用方法体内。</p>
+<h1 id="几种特殊函数"><a href="#几种特殊函数" class="headerlink" title="几种特殊函数"></a>几种特殊函数</h1><h2 id="泛型函数"><a href="#泛型函数" class="headerlink" title="泛型函数"></a>泛型函数</h2><h2 id="内联函数"><a href="#内联函数" class="headerlink" title="内联函数"></a>内联函数</h2><p>调用内联函数（作用于函数），在编译期间，被定义的内联函数的代码将<strong>被拷贝</strong>到每个调用方法体内。</p>
 <p><strong>优点</strong>：渠道默认的压栈调用，消除压栈、对象转换产生的内存分配、回调等开销。</p>
 <p><strong>缺点</strong>：编译后的代码膨胀，消耗更多内存空间。</p>
 <blockquote>
@@ -525,9 +525,20 @@
 
 
 
+<h2 id="简化函数"><a href="#简化函数" class="headerlink" title="简化函数"></a>简化函数</h2><p>函数可当作一种特殊的变量，变量可通过等号赋值，所以函数也允许使用等号对输出参数赋值。</p>
+<p>具体地说，如果一个函数的表达式比较简单，一两行代码可以搞定的，那么Kotlin允许使用等号代替大括号。</p>
+<p>如：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">factorial</span><span class="params">(n: <span class="type">Int</span>)</span></span>: <span class="built_in">Int</span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (n &lt;= <span class="number">1</span>) n</span><br><span class="line">    <span class="keyword">else</span> n * factorial(n - <span class="number">1</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//简化成</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">factorial</span><span class="params">(n: <span class="type">Int</span>)</span></span>: <span class="built_in">Int</span> = <span class="keyword">if</span> (n &lt;= <span class="number">1</span>) n <span class="keyword">else</span> n * factorial(n - <span class="number">1</span>)</span><br></pre></td></tr></table></figure>
 
 
-<h2 id="简化函数"><a href="#简化函数" class="headerlink" title="简化函数"></a>简化函数</h2><h2 id="尾递归函数"><a href="#尾递归函数" class="headerlink" title="尾递归函数"></a>尾递归函数</h2><h2 id="高阶函数"><a href="#高阶函数" class="headerlink" title="高阶函数"></a>高阶函数</h2><h1 id="增强系统函数"><a href="#增强系统函数" class="headerlink" title="增强系统函数"></a>增强系统函数</h1>
+
+<h2 id="尾递归函数"><a href="#尾递归函数" class="headerlink" title="尾递归函数"></a>尾递归函数</h2><p>上面“简化函数”的例子是个普通的递归函数。Kotlin体系还存在一种特殊的递归函数–“尾递归函数”，即函数末尾的返回值重复调用了自身函数。</p>
+<p>要在<code>fun</code>前加<code>tailrec</code>，告诉编译器这是一个尾递归函数，则编译器会相应的进行优化，从而提高程序性能。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//例：求余弦不动点</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//如果函数尾部递归调用自身，那么可加上关键字 tailrec 表示这是个尾递归函数</span></span><br><span class="line"><span class="comment">//此时编译器会自动优化递归，即用循环方式代替递归，从而避免栈溢出的情况</span></span><br><span class="line"><span class="keyword">tailrec</span> <span class="function"><span class="keyword">fun</span> <span class="title">findFixPoint</span><span class="params">(x: <span class="type">Double</span> = <span class="number">1.0</span>)</span></span>: <span class="built_in">Double</span> = <span class="keyword">if</span> (x == Math.cos(x)) x <span class="keyword">else</span> findFixPoint(Math.cos(x))</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="高阶函数"><a href="#高阶函数" class="headerlink" title="高阶函数"></a>高阶函数</h2><h1 id="增强系统函数"><a href="#增强系统函数" class="headerlink" title="增强系统函数"></a>增强系统函数</h1>
       
     </div>
     
@@ -581,8 +592,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/posts/37aa0536/" rel="next" title="Kotlin控制语句">
-                <i class="fa fa-chevron-left"></i> Kotlin控制语句
+              <a href="/posts/8ea8818a/" rel="next" title="Kotlin数据类型">
+                <i class="fa fa-chevron-left"></i> Kotlin数据类型
               </a>
             
           </div>
@@ -591,8 +602,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/posts/f0a9905a/" rel="prev" title="问题-通信">
-                问题-通信 <i class="fa fa-chevron-right"></i>
+              <a href="/posts/3704792000/" rel="prev" title="安卓-网络">
+                安卓-网络 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -674,7 +685,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">124</span>
+                  <span class="site-state-item-count">106</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -685,7 +696,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-count">13</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
@@ -696,7 +707,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">25</span>
+                  <span class="site-state-item-count">30</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>

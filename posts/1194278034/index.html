@@ -88,7 +88,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://shenbh.github.io/posts/1194278034/%E5%B9%BF%E6%92%AD%E6%B3%A8%E5%86%8C%E8%BF%87%E7%A8%8B.jpg">
 <meta property="article:published_time" content="2019-12-26T02:16:58.000Z">
-<meta property="article:modified_time" content="2022-11-02T06:08:54.306Z">
+<meta property="article:modified_time" content="2022-12-21T07:15:54.818Z">
 <meta property="article:author" content="阿炳">
 <meta property="article:tag" content="private">
 <meta property="article:tag" content="安卓知识点">
@@ -427,6 +427,14 @@
 <li><p>退出后的注销</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onDestroy</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="built_in">super</span>.onDestroy();</span><br><span class="line">    unregisterReceiver(broadcastReceiver);<span class="comment">// 注销广播</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
 </ol>
+<h1 id="BroadcastReceiver问题"><a href="#BroadcastReceiver问题" class="headerlink" title="BroadcastReceiver问题"></a>BroadcastReceiver问题</h1><h2 id="动态注册Receiver风险"><a href="#动态注册Receiver风险" class="headerlink" title="动态注册Receiver风险"></a>动态注册Receiver风险</h2><p>使用BroadcastReceiver组件需要动态注册或者静态注册，如果动态注册广播，即在代码中使用registerReceiver()方法注册BroadcastReceiver，只有当registerReceiver()的代码执行到了才进行注册，取消时则调用unregisterReceiver()方法。但registerReceiver()方法注册的BroadcastReceiver是全局的并且默认可导出的，如果没有限制访问权限，可以被任意外部APP访问，向其传递Intent来执行特定的功能。因此，动态注册的BroadcastReceive可能会导致拒绝服务攻击、APP数据泄漏或是越权调用等安全风险。</p>
+<p><strong>解决方案</strong></p>
+<p>1：在 AndroidManifest.xml 文件中使用静态注册 BroadcastReceiver，同时设置 exported&#x3D;”false”。（关于这个属性后面会说）</p>
+<p>2：必须动态注册 BroadcastReceiver时，使用registerReceiver(BroadcastReceiver,IntentFilter,broadcastPermission,android.os.Handle)函数注册。</p>
+<p>3：Android8.0新特性想要支持静态广播、需要添加intent.setComponent(new ComponentName（）），详情可以自行查阅。</p>
+<h2 id="公共组件配置风险"><a href="#公共组件配置风险" class="headerlink" title="公共组件配置风险"></a>公共组件配置风险</h2><p>Activity、Service、Provider、Receiver四大组件若配置为android:exported &#x3D;”true”，将可以被外部应用调用，这样存在安全隐患的风险。</p>
+<p><strong>解决方案</strong></p>
+<p>在应用的AndroidManifest.xml文件中，设置组件的android:exported 属性为false或者通过设置自定义权限来限制对这些组件的访问。值得一提的是，若部分功能使用前提是配置必须使用exported为true，这种情况开发者应该根据实际情况来进行集成。</p>
 <!-- flag of hidden posts -->
       
     </div>
@@ -556,7 +564,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">124</span>
+                  <span class="site-state-item-count">106</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -567,7 +575,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-count">13</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
@@ -578,7 +586,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">25</span>
+                  <span class="site-state-item-count">30</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
@@ -639,7 +647,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#BroadcastReceiver"><span class="nav-text">BroadcastReceiver</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B3%A8%E5%86%8C%E8%BF%87%E7%A8%8B"><span class="nav-text">注册过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B9%BF%E6%92%AD%E5%88%86%E7%B1%BB"><span class="nav-text">广播分类</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%87%E5%87%86%E5%B9%BF%E6%92%AD%EF%BC%88%E6%97%A0%E5%BA%8F%EF%BC%89"><span class="nav-text">标准广播（无序）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%89%E5%BA%8F%E5%B9%BF%E6%92%AD%EF%BC%88abortBroadcast-%E5%8F%AF%E4%BB%A5%E4%B8%AD%E6%96%AD%EF%BC%89"><span class="nav-text">有序广播（abortBroadcast()可以中断）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%82%E6%AD%A5%E5%B9%BF%E6%92%AD"><span class="nav-text">异步广播</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%91%E5%90%AC%E5%B9%BF%E6%92%ADIntent%E6%AD%A5%E9%AA%A4"><span class="nav-text">监听广播Intent步骤</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B9%BF%E6%92%AD%E4%BE%8B%E5%AD%90"><span class="nav-text">广播例子</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%80%E5%8D%95%E4%BE%8B%E5%AD%90%EF%BC%88%E6%97%A0%E5%BA%8F%EF%BC%89"><span class="nav-text">简单例子（无序）</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#BroadcastReceiver"><span class="nav-text">BroadcastReceiver</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B3%A8%E5%86%8C%E8%BF%87%E7%A8%8B"><span class="nav-text">注册过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B9%BF%E6%92%AD%E5%88%86%E7%B1%BB"><span class="nav-text">广播分类</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%87%E5%87%86%E5%B9%BF%E6%92%AD%EF%BC%88%E6%97%A0%E5%BA%8F%EF%BC%89"><span class="nav-text">标准广播（无序）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%89%E5%BA%8F%E5%B9%BF%E6%92%AD%EF%BC%88abortBroadcast-%E5%8F%AF%E4%BB%A5%E4%B8%AD%E6%96%AD%EF%BC%89"><span class="nav-text">有序广播（abortBroadcast()可以中断）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%82%E6%AD%A5%E5%B9%BF%E6%92%AD"><span class="nav-text">异步广播</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%91%E5%90%AC%E5%B9%BF%E6%92%ADIntent%E6%AD%A5%E9%AA%A4"><span class="nav-text">监听广播Intent步骤</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B9%BF%E6%92%AD%E4%BE%8B%E5%AD%90"><span class="nav-text">广播例子</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%80%E5%8D%95%E4%BE%8B%E5%AD%90%EF%BC%88%E6%97%A0%E5%BA%8F%EF%BC%89"><span class="nav-text">简单例子（无序）</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#BroadcastReceiver%E9%97%AE%E9%A2%98"><span class="nav-text">BroadcastReceiver问题</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A8%E6%80%81%E6%B3%A8%E5%86%8CReceiver%E9%A3%8E%E9%99%A9"><span class="nav-text">动态注册Receiver风险</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AC%E5%85%B1%E7%BB%84%E4%BB%B6%E9%85%8D%E7%BD%AE%E9%A3%8E%E9%99%A9"><span class="nav-text">公共组件配置风险</span></a></li></ol></li></ol></div>
             
 
           </div>

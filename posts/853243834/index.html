@@ -81,7 +81,7 @@
 
 <meta name="description" content="摘要：  Fragment生命周期 Fragment与Activity通信 Fragment的使用陷阱  Fragment特点 Fragment 解决Activity间的切换不流畅，轻量切换 可以从startActivityForResult中接收到返回结果,但是View不能 只能在 Activity 保存其状态（用户离开 Activity）之前使用 commit() 提交事务。如果您试图在该时间">
 <meta property="og:type" content="article">
-<meta property="og:title" content="安卓-Fragment">
+<meta property="og:title" content="Fragment">
 <meta property="og:url" content="http://shenbh.github.io/posts/853243834/index.html">
 <meta property="og:site_name" content="AB">
 <meta property="og:description" content="摘要：  Fragment生命周期 Fragment与Activity通信 Fragment的使用陷阱  Fragment特点 Fragment 解决Activity间的切换不流畅，轻量切换 可以从startActivityForResult中接收到返回结果,但是View不能 只能在 Activity 保存其状态（用户离开 Activity）之前使用 commit() 提交事务。如果您试图在该时间">
@@ -89,7 +89,7 @@
 <meta property="og:image" content="https://tva4.sinaimg.cn/large/981009fdgy1gcvl6eooqkj208t0njjs8.jpg">
 <meta property="og:image" content="https://tvax4.sinaimg.cn/large/981009fdgy1gcvl6mg6v3j209g0iraac.jpg">
 <meta property="article:published_time" content="2020-03-16T02:58:34.000Z">
-<meta property="article:modified_time" content="2022-11-02T07:22:54.650Z">
+<meta property="article:modified_time" content="2022-12-21T06:57:46.268Z">
 <meta property="article:author" content="阿炳">
 <meta property="article:tag" content="private">
 <meta property="article:tag" content="安卓知识点">
@@ -130,7 +130,7 @@
 
 
 
-  <title>安卓-Fragment | AB</title><meta name="robots" content="noindex">
+  <title>Fragment | AB</title><meta name="robots" content="noindex">
   
 
 
@@ -308,7 +308,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">安卓-Fragment</h1>
+          <h1 class="post-title" itemprop="name headline">Fragment</h1>
         
 
         <div class="post-meta">
@@ -447,6 +447,33 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="type">long</span> <span class="variable">refreshTime</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setUserVisibleHint</span><span class="params">(<span class="type">boolean</span> isVisibleToUser)</span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(isVisibleToUser &amp;&amp; isVisible())&#123;</span><br><span class="line">        <span class="comment">//只有当超过一定的时效后，Fragment可见时，才进行数据的重新请求</span></span><br><span class="line">        <span class="keyword">if</span>(refreshTime == <span class="number">0</span> ||(refreshTime != <span class="number">0</span> &amp;&amp; (System.currentTimeMillis() - refreshTime) &gt; <span class="number">30</span>*<span class="number">60</span>*<span class="number">1000</span>))&#123;</span><br><span class="line">            initData();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">super</span>.setUserVisibleHint(isVisibleToUser);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">initData</span><span class="params">()</span>&#123;</span><br><span class="line">    refreshTime = System.currentTimeMillis();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> View <span class="title function_">onCreateView</span><span class="params">(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)</span>&#123;</span><br><span class="line">    refreshTime = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>上面的写法，可用进一步，比如把网络请求回来的json数据进行缓存。再次网络请求直接加载这个缓存来节省流量。</p>
+<h1 id="Fragment问题"><a href="#Fragment问题" class="headerlink" title="Fragment问题"></a>Fragment问题</h1><h2 id="关于fragment的onHidden的问题"><a href="#关于fragment的onHidden的问题" class="headerlink" title="关于fragment的onHidden的问题"></a>关于fragment的onHidden的问题</h2><ol>
+<li><p>这个只有在hide，show的时候会触发  在add 的时候是不会触发的 首次加载的时候是不触发的onHiddenChanged</p>
+</li>
+<li><p>activity 上有4个fragment 当前的fragment 为A activity finish掉的时候， B fragment不走生命周期的 除非是已经被调用.add的时候才会走生命周期</p>
+</li>
+</ol>
+<h2 id="关于fragment的onHiddenChanged-onResume-问题"><a href="#关于fragment的onHiddenChanged-onResume-问题" class="headerlink" title="关于fragment的onHiddenChanged+onResume+问题"></a>关于fragment的onHiddenChanged+onResume+问题</h2><ol>
+<li>viewpager+fragment 情况：</li>
+</ol>
+<p>onHiddenOnChange()+onResume()的区别：</p>
+<p> 第一次可见的时候生命周期都是onHiddenOnChange–&gt;onResume</p>
+<p> 其它都只走onHiddenOnChange。除非是activity切换了走了生命周期，这个时候会走onPause跟onResume但是不走onHiddenOnChange</p>
+<ol start="2">
+<li>不带有viewpager情况：</li>
+</ol>
+<h2 id="Activity-has-been-destroyed"><a href="#Activity-has-been-destroyed" class="headerlink" title="Activity has been destroyed"></a>Activity has been destroyed</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//在 activity 的 onCreate 中</span></span><br><span class="line">mFragmentManager.beginTransaction()</span><br><span class="line">	.add(resId, <span class="keyword">new</span> <span class="title class_">OneFragment</span>())</span><br><span class="line">	<span class="comment">//这里会报异常，activity has been destroyed</span></span><br><span class="line">	.commit();</span><br></pre></td></tr></table></figure>
+
+<p>原因：Fragmenttransaction也是在 onCreate 中初始化，也许是异步初始化。这就涉及到执行顺序问题。<br>解决：add(redId,Fragment)放到onCreate()后的生命周期onResume()</p>
+<h2 id="DilogFragment生命周期和和设置布局大小无效问题"><a href="#DilogFragment生命周期和和设置布局大小无效问题" class="headerlink" title="DilogFragment生命周期和和设置布局大小无效问题"></a><a target="_blank" rel="noopener" href="https://blog.csdn.net/u013309870/article/details/85162630">DilogFragment生命周期和和设置布局大小无效问题</a></h2><h2 id="FragmentManag-beginTransaction-add-Res-fragment-commit-报错-Activity-has-been-destroyed"><a href="#FragmentManag-beginTransaction-add-Res-fragment-commit-报错-Activity-has-been-destroyed" class="headerlink" title="FragmentManag.beginTransaction().add(Res,fragment).commit 报错 Activity has been destroyed"></a>FragmentManag.beginTransaction().add(Res,fragment).commit 报错 Activity has been destroyed</h2><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">java<span class="selector-class">.lang</span><span class="selector-class">.RuntimeException</span>: Unable to start activity ComponentInfo&#123;&#125;java<span class="selector-class">.lang</span><span class="selector-class">.IllegalStateException</span>: Activity has been destroyed</span><br><span class="line"></span><br><span class="line">Caused by: java<span class="selector-class">.lang</span><span class="selector-class">.IllegalStateException</span>: Activity has been destroyed</span><br><span class="line">                           at android<span class="selector-class">.support</span><span class="selector-class">.v4</span><span class="selector-class">.app</span><span class="selector-class">.FragmentManagerImpl</span><span class="selector-class">.enqueueAction</span>(FragmentManager<span class="selector-class">.java</span>:<span class="number">1560</span>)</span><br><span class="line">                           at android<span class="selector-class">.support</span><span class="selector-class">.v4</span><span class="selector-class">.app</span><span class="selector-class">.BackStackRecord</span><span class="selector-class">.commitInternal</span>(BackStackRecord<span class="selector-class">.java</span>:<span class="number">696</span>)</span><br><span class="line">                           at android<span class="selector-class">.support</span><span class="selector-class">.v4</span><span class="selector-class">.app</span><span class="selector-class">.BackStackRecord</span><span class="selector-class">.commit</span>(BackStackRecord<span class="selector-class">.java</span>:<span class="number">662</span>)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">fragment = <span class="keyword">new</span> <span class="constructor">OneFragment()</span>;</span><br><span class="line">mFragmentManager.<span class="keyword">begin</span><span class="constructor">Transaction()</span></span><br><span class="line">    .add(com.handsomeyang.mango.<span class="module-access"><span class="module"><span class="identifier">R</span>.</span></span>id.root_relative_layout, fragment)</span><br><span class="line">    <span class="comment">//这里会报异常，activity has been destroyed</span></span><br><span class="line">    .commit<span class="literal">()</span>;</span><br></pre></td></tr></table></figure>
+
+<p>当我在Activity 的onCreate 中初始化fragment 并且用事务添加到Activity 的时候报错，说是Activity 已被销毁，然而怎么也不能理解，commit 源码点进去没找到，百度了好一会，在stackoverflow 上一个出现类似问题的评论中发现一句话： 说是Fragmentranscation 也是在onCrate中初始化的，也许是异步初始化，这样就涉及到代码执行顺序问题，最好把addFragment 往后提一提，我把这段同样的代码写在OnResume中就能顺利添加上fragment 并且不报错了。</p>
+<h2 id="getActivity-有时候为null"><a href="#getActivity-有时候为null" class="headerlink" title="getActivity() 有时候为null"></a>getActivity() 有时候为null</h2><h2 id="fragment-not-attached-to-a-context"><a href="#fragment-not-attached-to-a-context" class="headerlink" title="fragment not attached to a context"></a>fragment not attached to a context</h2><p>解决：<code>getString()</code>替换成<code>getActivity().getString()</code></p>
+<blockquote>
+<p>而我用<code>getActivity().getString()</code>和<code>getActivity().getResource().getString()</code>都不行，直接在这个页面写死文案。</p>
+</blockquote>
 <!-- flag of hidden posts -->
       
     </div>
@@ -576,7 +603,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">124</span>
+                  <span class="site-state-item-count">106</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -587,7 +614,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-count">13</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
@@ -598,7 +625,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">25</span>
+                  <span class="site-state-item-count">30</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
@@ -659,7 +686,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Fragment"><span class="nav-text">Fragment</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%B9%E7%82%B9"><span class="nav-text">特点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-text">生命周期</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8EActivity%E9%80%9A%E4%BF%A1"><span class="nav-text">与Activity通信</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Fragment%E4%BD%BF%E7%94%A8%E9%99%B7%E9%98%B1"><span class="nav-text">Fragment使用陷阱</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%87%8D%E5%A4%8D%E5%88%9B%E5%BB%BAFragment"><span class="nav-text">重复创建Fragment</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E6%95%B0%E4%BC%A0%E9%80%92"><span class="nav-text">参数传递</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8EViewPager%E4%BA%A4%E4%BA%92%EF%BC%8CgetActivity-%E4%B8%BA%E7%A9%BA%E9%97%AE%E9%A2%98"><span class="nav-text">与ViewPager交互，getActivity()为空问题</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%98%B2%E6%AD%A2ViewPager-Fragment%E7%BB%93%E5%90%88%E4%BD%BF%E7%94%A8%E6%97%B6%E7%9A%84%E6%95%B0%E6%8D%AE%E9%A2%84%E5%8A%A0%E8%BD%BD"><span class="nav-text">防止ViewPager+Fragment结合使用时的数据预加载</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Fragment"><span class="nav-text">Fragment</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%B9%E7%82%B9"><span class="nav-text">特点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-text">生命周期</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8EActivity%E9%80%9A%E4%BF%A1"><span class="nav-text">与Activity通信</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Fragment%E4%BD%BF%E7%94%A8%E9%99%B7%E9%98%B1"><span class="nav-text">Fragment使用陷阱</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%87%8D%E5%A4%8D%E5%88%9B%E5%BB%BAFragment"><span class="nav-text">重复创建Fragment</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E6%95%B0%E4%BC%A0%E9%80%92"><span class="nav-text">参数传递</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8EViewPager%E4%BA%A4%E4%BA%92%EF%BC%8CgetActivity-%E4%B8%BA%E7%A9%BA%E9%97%AE%E9%A2%98"><span class="nav-text">与ViewPager交互，getActivity()为空问题</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%98%B2%E6%AD%A2ViewPager-Fragment%E7%BB%93%E5%90%88%E4%BD%BF%E7%94%A8%E6%97%B6%E7%9A%84%E6%95%B0%E6%8D%AE%E9%A2%84%E5%8A%A0%E8%BD%BD"><span class="nav-text">防止ViewPager+Fragment结合使用时的数据预加载</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Fragment%E9%97%AE%E9%A2%98"><span class="nav-text">Fragment问题</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E4%BA%8Efragment%E7%9A%84onHidden%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-text">关于fragment的onHidden的问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E4%BA%8Efragment%E7%9A%84onHiddenChanged-onResume-%E9%97%AE%E9%A2%98"><span class="nav-text">关于fragment的onHiddenChanged+onResume+问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Activity-has-been-destroyed"><span class="nav-text">Activity has been destroyed</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DilogFragment%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E5%92%8C%E5%92%8C%E8%AE%BE%E7%BD%AE%E5%B8%83%E5%B1%80%E5%A4%A7%E5%B0%8F%E6%97%A0%E6%95%88%E9%97%AE%E9%A2%98"><span class="nav-text">DilogFragment生命周期和和设置布局大小无效问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#FragmentManag-beginTransaction-add-Res-fragment-commit-%E6%8A%A5%E9%94%99-Activity-has-been-destroyed"><span class="nav-text">FragmentManag.beginTransaction().add(Res,fragment).commit 报错 Activity has been destroyed</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#getActivity-%E6%9C%89%E6%97%B6%E5%80%99%E4%B8%BAnull"><span class="nav-text">getActivity() 有时候为null</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#fragment-not-attached-to-a-context"><span class="nav-text">fragment not attached to a context</span></a></li></ol></li></ol></div>
             
 
           </div>

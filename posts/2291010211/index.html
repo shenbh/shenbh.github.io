@@ -86,12 +86,14 @@
 <meta property="og:site_name" content="AB">
 <meta property="og:description" content="安装相关手动安装 aab（Android App Bundle）   自 Android Studio3.2 起，输出 Android App 时就可以用官方推荐的新格式Andorid APp Bundle(aab)。上传 aab 至 Google Play 商店后，当使用者下载 App 时，只需要下载目前手机需要使用到的资源即可。例如一台像素密度为xhdpi的手机，只需要下载xhdpi的内容即可">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://shenbh.github.io/posts/2291010211/20201125133250283.png">
 <meta property="article:published_time" content="2019-12-24T09:23:13.000Z">
-<meta property="article:modified_time" content="2022-11-02T07:22:54.651Z">
+<meta property="article:modified_time" content="2022-12-21T06:33:58.104Z">
 <meta property="article:author" content="阿炳">
 <meta property="article:tag" content="private">
 <meta property="article:tag" content="安卓后期">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/2291010211/20201125133250283.png">
 
 
 
@@ -401,6 +403,83 @@
 <li>另外，可以通过“探索 App Bundle”下载指定设定的 apk</li>
 <li>未使用 Android App Bundle 之前可以先设定完<a target="_blank" rel="noopener" href="https://support.google.com/googleplay/android-developer/answer/7384423">Google Play 应用程序签署</a>，才能开始用 App Bundle。</li>
 </ul>
+<h1 id="安装相关问题"><a href="#安装相关问题" class="headerlink" title="安装相关问题"></a>安装相关问题</h1><h2 id="安装失败"><a href="#安装失败" class="headerlink" title="安装失败"></a>安装失败</h2><ul>
+<li><p>失败原因：应用组件的命名与已安装应用有冲突</p>
+<ul>
+<li><p>可能是包名问题（已安装 app 有相同包名）</p>
+<p>解决：需要重新定一个包名，同时在相关第三方平台上要改掉包名</p>
+</li>
+<li><p>可能是provider的authorities问题（已安装的 app 有相同的 authorities）</p>
+</li>
+</ul>
+<p>解决：正在安装的 app 的 authorities 改另一个名称（随便改，可以带上 applicationId）</p>
+</li>
+<li><p><code>Failure [INSTALL_FAILED_DUPLICATE_PERMISSION: Package com.rcw597.app attempting to redeclare permission com.rcw597.app.permission.C2D_MESSAGE already owned by com.xm597.app]</code></p>
+<p>原因：不同签名的安装包中有相同的自定义的permission</p>
+<p>解决：把<code>com.rcw597.app</code>这个前缀用<code>$&#123;APPLICATION_ID&#125;</code>替换，当然要确保不同app的<code>APPLICATION_ID</code>的值是不一样的</p>
+</li>
+</ul>
+<h2 id="解析包出现错误"><a href="#解析包出现错误" class="headerlink" title="解析包出现错误"></a>解析包出现错误</h2><ul>
+<li>可能问题：包名有大写</li>
+<li>可能问题：下载下来的apk与服务器的apk大小不一样</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> path下载地址 </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> filePath存储路径 </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> progressDialog进度条 </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@throws</span> Exception </span></span><br><span class="line"><span class="comment"> */</span>  </span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> File <span class="title function_">getFile</span><span class="params">(String path,String filePath,ProgressDialog progressDialog)</span> <span class="keyword">throws</span> Exception&#123;</span><br><span class="line">		<span class="type">URL</span> <span class="variable">url</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">URL</span>(path);  </span><br><span class="line">    <span class="type">HttpURLConnection</span> <span class="variable">connection</span> <span class="operator">=</span> (HttpURLConnection) url.openConnection();  </span><br><span class="line">    connection.setConnectTimeout(<span class="number">2000</span>);  </span><br><span class="line">    connection.setRequestMethod(<span class="string">&quot;GET&quot;</span>);  </span><br><span class="line">    <span class="keyword">if</span>(connection.getResponseCode() == <span class="number">200</span>)&#123;  </span><br><span class="line">    		<span class="type">int</span> <span class="variable">total</span> <span class="operator">=</span> connection.getContentLength();  </span><br><span class="line">        progressDialog.setMax(total);</span><br><span class="line">        </span><br><span class="line">        <span class="type">InputStream</span> <span class="variable">is</span> <span class="operator">=</span> connection.getInputStream();<span class="comment">//获得socket输入流  </span></span><br><span class="line">        <span class="type">File</span> <span class="variable">file</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">File</span>(filePath);  </span><br><span class="line">        <span class="type">FileOutputStream</span> <span class="variable">fos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FileOutputStream</span>(file);<span class="comment">//file输出流  </span></span><br><span class="line">        <span class="type">byte</span>[] buffer = <span class="keyword">new</span> <span class="title class_">byte</span>[<span class="number">1024</span>];  </span><br><span class="line">        <span class="type">int</span> len;  </span><br><span class="line">        <span class="type">int</span> <span class="variable">progress</span> <span class="operator">=</span> <span class="number">0</span>;  </span><br><span class="line">        <span class="keyword">while</span>((len = is.read(buffer)) != -<span class="number">1</span>)&#123;  </span><br><span class="line">        		fos.write(buffer);  </span><br><span class="line">            progress += len;  </span><br><span class="line">            progressDialog.setProgress(progress);  </span><br><span class="line">        &#125;  </span><br><span class="line">        fos.flush();  </span><br><span class="line">        is.close();  </span><br><span class="line">        fos.close();  </span><br><span class="line">        connection.disconnect();  </span><br><span class="line">        <span class="keyword">return</span> file;  </span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span>;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>解决：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">byte</span>[] buffer = <span class="keyword">new</span> <span class="title class_">byte</span>[<span class="number">1024</span>];</span><br></pre></td></tr></table></figure>
+
+<p>这行代码，把1024改成了128，又改成了64，结果就没问题了。</p>
+<ul>
+<li>可能问题：已经安装完毕，点“返回“报错是代码中在安装完毕后加了回调 startActivityForResult..</li>
+</ul>
+<p>解决：在安装完毕后加 return</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 安装apk</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">installApk</span><span class="params">(File file)</span> &#123;</span><br><span class="line">	<span class="type">Intent</span> <span class="variable">intent</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Intent</span>(Intent.ACTION_VIEW);</span><br><span class="line">	<span class="keyword">if</span> (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.N) &#123;</span><br><span class="line">		intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);</span><br><span class="line">		<span class="type">Uri</span> <span class="variable">contentUri</span> <span class="operator">=</span> FileProvider.getUriForFile(activity, BuildConfig.APPLICATION_ID + <span class="string">&quot;.updateProvider&quot;</span>, file);</span><br><span class="line">		intent.setDataAndType(contentUri, <span class="string">&quot;application/vnd.android.package-archive&quot;</span>);</span><br><span class="line">		<span class="comment">//兼容8.0-26</span></span><br><span class="line">		<span class="keyword">if</span> (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.O) &#123;</span><br><span class="line">			AppUtils.installApp(file, BuildConfig.APPLICATION_ID + <span class="string">&quot;.updateProvider&quot;</span>);</span><br><span class="line">			<span class="comment">//兼容8.0以上的安装完毕需要加return，否则有安装成功但是弹出“解析包失败”的页面来误导用户</span></span><br><span class="line">			<span class="keyword">return</span>;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		intent.setDataAndType(Uri.fromFile(file), <span class="string">&quot;application/vnd.android.package-archive&quot;</span>);</span><br><span class="line">		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);</span><br><span class="line">	&#125;</span><br><span class="line">	activity.startActivityForResult(intent, <span class="number">999</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="安卓8下不跳转安装页问题"><a href="#安卓8下不跳转安装页问题" class="headerlink" title="安卓8下不跳转安装页问题"></a>安卓8下不跳转安装页问题</h2><p>低版本的blankj.utilcode（如”com.blankj:utilcode:1.10.0”）需要在App.java中添加初始化操作。</p>
+<p>在升级页面<code>VersionUpgradePresenter.java</code>的安装apk逻辑中添加</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//兼容8.0 （API26）</span></span><br><span class="line"><span class="keyword">if</span>(Build.VERSION.SDDK_INT &gt; Build.VERSION_CODES.N)&#123;</span><br><span class="line">    AppUtils.installApp(file, BuildConfig.APPLICATION_ID + <span class="string">&quot;.updateProvider&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>完整安装apk的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">installApk</span><span class="params">(File file)</span> &#123;</span><br><span class="line">    <span class="comment">//这是在 com.blankj:utilcode:1.10.0版本下的处理方式</span></span><br><span class="line"><span class="comment">//    Intent intent = new Intent(Intent.ACTION_VIEW);</span></span><br><span class="line"><span class="comment">//    if (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.N) &#123;</span></span><br><span class="line"><span class="comment">//        intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);</span></span><br><span class="line"><span class="comment">//        Uri contentUri = FileProvider.getUriForFile(this, BuildConfig.APPLICATION_ID + &quot;.updateProvider&quot;, file);</span></span><br><span class="line"><span class="comment">//        intent.setDataAndType(contentUri, &quot;application/vnd.android.package-archive&quot;);</span></span><br><span class="line"><span class="comment">//        // 兼容8.0-26---新增兼容代码,里面使用到了BlankJ的工具类库</span></span><br><span class="line"><span class="comment">//        if (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.O) &#123;</span></span><br><span class="line"><span class="comment">//            AppUtils.installApp(file, BuildConfig.APPLICATION_ID + &quot;.updateProvider&quot;);</span></span><br><span class="line"><span class="comment">//        &#125;</span></span><br><span class="line"><span class="comment">//    &#125; else &#123;</span></span><br><span class="line"><span class="comment">//        intent.setDataAndType(Uri.fromFile(file), &quot;application/vnd.android.package-archive&quot;);</span></span><br><span class="line"><span class="comment">//        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);</span></span><br><span class="line"><span class="comment">//    &#125;</span></span><br><span class="line"><span class="comment">//    startActivityForResult(intent, INSTALL_DG_APP_REQUEST_CODE);</span></span><br><span class="line">    <span class="comment">//在高版本 com.blankj:utilcode:1.23.4以上直接用以下语句即可</span></span><br><span class="line">    AppUtils.installApp(<span class="built_in">this</span>,file,INSTALL_DG_APP_REQUEST_CODE);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="AS运行安装失败“Installation-failed-due-to-‘null‘-”"><a href="#AS运行安装失败“Installation-failed-due-to-‘null‘-”" class="headerlink" title="AS运行安装失败“Installation failed due to: ‘null‘ ”"></a><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_42199359/article/details/110124723">AS运行安装失败“Installation failed due to: ‘null‘ ”</a></h2><ul>
+<li>把包通过adb命令行进行安装，如果提示 <img src="/posts/2291010211/20201125133250283.png" alt="该文件包与具有同一名称的现有文件包存在冲突。"></li>
+</ul>
+<p>查看是否有另一个安装包的 <code>&lt;provider</code>标签下的<code>authorities</code>值一致。</p>
+<p>解决：现在的安装包改个<code>authorities</code>值即可（这个值不影响使用）</p>
+<h2 id="Installation-failed-due-to-‘null’"><a href="#Installation-failed-due-to-‘null’" class="headerlink" title="Installation failed due to: ‘null’"></a>Installation failed due to: ‘null’</h2><p>Android Studio 中的消息<br>如果您的应用包含使用 intent 过滤器的 activity、服务或广播接收器但未声明 <code>android:exported</code>，系统会显示以下警告消息，具体取决于您使用的 Android Studio 版本：</p>
+<p>Android Studio 2020.3.1 Canary 11 或更高版本<br>系统会显示以下消息：</p>
+<p>清单文件中会显示以下 lint 警告：</p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">When</span> <span class="keyword">using</span> intent filters, please specify android:exported <span class="keyword">as</span> well</span><br></pre></td></tr></table></figure>
+
+<p>当您尝试编译应用时，系统会显示以下 build 错误消息：</p>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Manifest merger failed : Apps targeting Android <span class="number">12</span> <span class="keyword">and</span> higher are required \</span><br><span class="line"><span class="built_in">to</span> specify <span class="keyword">an</span> explicit <span class="built_in">value</span> <span class="keyword">for</span> android:exported when <span class="keyword">the</span> corresponding \</span><br><span class="line">component has <span class="keyword">an</span> intent <span class="built_in">filter</span> defined.</span><br></pre></td></tr></table></figure>
+
+<p>较低的 Android Studio 版本<br>如果您尝试安装应用，Logcat 会显示以下错误消息：</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">Installation </span><span class="keyword">did </span>not succeed.</span><br><span class="line">The application could not <span class="keyword">be </span><span class="keyword">installed: </span><span class="keyword">INSTALL_FAILED_VERIFICATION_FAILURE</span></span><br><span class="line"><span class="keyword"></span>List of apks:</span><br><span class="line">[<span class="number">0</span>] <span class="string">&#x27;.../build/outputs/apk/debug/app-debug.apk&#x27;</span></span><br><span class="line"><span class="keyword">Installation </span>failed due to: <span class="string">&#x27;null&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+<h2 id="INSTALL-FAILED-DUPLICATE-PERMISSION"><a href="#INSTALL-FAILED-DUPLICATE-PERMISSION" class="headerlink" title="INSTALL_FAILED_DUPLICATE_PERMISSION"></a>INSTALL_FAILED_DUPLICATE_PERMISSION</h2><figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">Installation </span><span class="keyword">did </span>not succeed.</span><br><span class="line">The application could not <span class="keyword">be </span><span class="keyword">installed: </span><span class="keyword">INSTALL_FAILED_DUPLICATE_PERMISSION</span></span><br><span class="line"><span class="keyword"></span></span><br><span class="line">List of apks:</span><br><span class="line">[<span class="number">0</span>] <span class="string">&#x27;D:\code\xm597\app\build\outputs\apk\debug\app-debug.apk&#x27;</span></span><br><span class="line"><span class="keyword">Installation </span>failed due to: <span class="string">&#x27;null&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>原因：</p>
+<ol>
+<li>正要安装的APP的自定义权限与手机上已有的APP的自定义权限名字相同，但两个APP具有不同的签名信息导致安装失败；</li>
+<li>Android L（android 5.0）以上系统限制。</li>
+</ol>
+<p>解决：</p>
+<ol>
+<li>俩不同包的签名弄成一致；</li>
+<li>若只想验证当前包，卸载掉已安装的 app（有相同权限冲突的安装包）</li>
+</ol>
+<h2 id="运行项目，桌面图标不见了"><a href="#运行项目，桌面图标不见了" class="headerlink" title="运行项目，桌面图标不见了"></a>运行项目，桌面图标不见了</h2><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/baidu_36583608/article/details/103165853">android APP图标消失不见的 第 三 种 情况_baidu_36583608的博客-CSDN博客</a></p>
+<p>我的解决：打开手机设置找到这个应用，点卸载。重新运行项目，图标出现了。</p>
+<p>同事曾经解决方案：1. 重启手机解决。2. 补全对应分辨率的图标解决。3. 还有可能原因是部分手机不支持圆角图标。</p>
+<h2 id="The-APK-does-not-exist"><a href="#The-APK-does-not-exist" class="headerlink" title="The APK does not exist"></a><code>The APK does not exist</code></h2><p>问题：<code>The APK file xxx.apk does not exist on disk. Error while Installing APK</code></p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">variant.outputs.<span class="keyword">each</span> &#123; output -&gt;</span><br><span class="line">	<span class="keyword">def</span> outputFile = output.outputFile</span><br><span class="line">	<span class="keyword">if</span> (outputFile != <span class="keyword">null</span> &amp;&amp; outputFile.name.endsWith(<span class="string">&#x27;.apk&#x27;</span>)) &#123;</span><br><span class="line">	   <span class="comment">// apk_渠道名-版本号-版本名称-编译时间.apk</span></span><br><span class="line">	   <span class="keyword">def</span> fileName = <span class="string">&quot;xxx.apk&quot;</span></span><br><span class="line">	   tput.outputFile = <span class="keyword">new</span> <span class="keyword">File</span>(outputFile.parent, fileName)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>给<code>apk</code>文件重命名时发生了问题, 如果除<code>.apk</code>之外的文件名中还包含<code>.</code> 的话, 可能会出现这个问题,<br>好吧 将重命名格式改的简单点, 问题就解决了</p>
 <!-- flag of hidden posts -->
       
     </div>
@@ -530,7 +609,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">124</span>
+                  <span class="site-state-item-count">106</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -541,7 +620,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-count">13</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
@@ -552,7 +631,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">25</span>
+                  <span class="site-state-item-count">30</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
@@ -613,7 +692,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E7%9B%B8%E5%85%B3"><span class="nav-text">安装相关</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%8B%E5%8A%A8%E5%AE%89%E8%A3%85-aab%EF%BC%88Android-App-Bundle%EF%BC%89"><span class="nav-text">手动安装 aab（Android App Bundle）</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E7%9B%B8%E5%85%B3"><span class="nav-text">安装相关</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%8B%E5%8A%A8%E5%AE%89%E8%A3%85-aab%EF%BC%88Android-App-Bundle%EF%BC%89"><span class="nav-text">手动安装 aab（Android App Bundle）</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E7%9B%B8%E5%85%B3%E9%97%AE%E9%A2%98"><span class="nav-text">安装相关问题</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E5%A4%B1%E8%B4%A5"><span class="nav-text">安装失败</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%A3%E6%9E%90%E5%8C%85%E5%87%BA%E7%8E%B0%E9%94%99%E8%AF%AF"><span class="nav-text">解析包出现错误</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E5%8D%938%E4%B8%8B%E4%B8%8D%E8%B7%B3%E8%BD%AC%E5%AE%89%E8%A3%85%E9%A1%B5%E9%97%AE%E9%A2%98"><span class="nav-text">安卓8下不跳转安装页问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AS%E8%BF%90%E8%A1%8C%E5%AE%89%E8%A3%85%E5%A4%B1%E8%B4%A5%E2%80%9CInstallation-failed-due-to-%E2%80%98null%E2%80%98-%E2%80%9D"><span class="nav-text">AS运行安装失败“Installation failed due to: ‘null‘ ”</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Installation-failed-due-to-%E2%80%98null%E2%80%99"><span class="nav-text">Installation failed due to: ‘null’</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#INSTALL-FAILED-DUPLICATE-PERMISSION"><span class="nav-text">INSTALL_FAILED_DUPLICATE_PERMISSION</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C%E9%A1%B9%E7%9B%AE%EF%BC%8C%E6%A1%8C%E9%9D%A2%E5%9B%BE%E6%A0%87%E4%B8%8D%E8%A7%81%E4%BA%86"><span class="nav-text">运行项目，桌面图标不见了</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#The-APK-does-not-exist"><span class="nav-text">The APK does not exist</span></a></li></ol></li></ol></div>
             
 
           </div>
