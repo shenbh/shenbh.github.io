@@ -86,15 +86,23 @@
 <meta property="og:site_name" content="AB">
 <meta property="og:description" content="幕布笔记：安卓复习 笔记 appium运行后会在手机上自行安装了appiumtest这几个东西，会影响app的软键盘弹出">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://shenbh.github.io/posts/1736361658/640.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/1736361658/640-1679361850665.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/1736361658/640-1679361879837.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/1736361658/640-1679361937853.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/1736361658/640-1679362062692.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/1736361658/640-1679363179225.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/1736361658/640-1679363179301.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/1736361658/640-1679363698527.png">
 <meta property="og:image" content="http://shenbh.github.io/posts/1736361658/res%E7%9B%AE%E5%BD%95.jpg">
 <meta property="og:image" content="http://shenbh.github.io/posts/1736361658/%E5%AE%89%E5%8D%93%E7%B3%BB%E7%BB%9F5%E5%B1%82%E6%9E%B6%E6%9E%84.png">
 <meta property="og:image" content="http://shenbh.github.io/posts/1736361658/context%E7%B1%BB%E5%9B%BE.jpg">
 <meta property="article:published_time" content="2020-03-16T02:18:58.000Z">
-<meta property="article:modified_time" content="2023-02-02T09:54:21.983Z">
+<meta property="article:modified_time" content="2023-03-21T02:31:59.633Z">
 <meta property="article:author" content="阿炳">
 <meta property="article:tag" content="安卓知识点">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://shenbh.github.io/posts/1736361658/res%E7%9B%AE%E5%BD%95.jpg">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/1736361658/640.png">
 
 
 
@@ -384,6 +392,146 @@
 <h1 id="笔记"><a href="#笔记" class="headerlink" title="笔记"></a>笔记</h1><ul>
 <li>appium运行后会在手机上自行安装了appiumtest这几个东西，会影响app的软键盘弹出</li>
 </ul>
+<h2 id="默认创建的Android工程都有什么"><a href="#默认创建的Android工程都有什么" class="headerlink" title="默认创建的Android工程都有什么"></a><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzUxMzk2ODI1NQ==&mid=2247484032&idx=1&sn=da2740910b6df7d7f1ee9e2903f5ca27&scene=21#wechat_redirect">默认创建的Android工程都有什么</a></h2><img src="/posts/1736361658/640.png" alt="图片" style="zoom: 33%;">
+
+<h3 id="gradle-与-idea"><a href="#gradle-与-idea" class="headerlink" title=".gradle 与 .idea"></a>.gradle 与 .idea</h3><p>点击sync后，AS会在每个工程下生成<code>.iml</code>文件，他们与<code>.gradle</code>、<code>.idea</code>配合为我们提供了代码提示等常见功能。如果代码飘红而你确认依赖没有问题，可以尝试以下步骤清除AS缓存：</p>
+<ol>
+<li>删<code>.gradle</code>、<code>.idea</code>文件</li>
+<li>命令行执行 <code>./gradlew clean</code></li>
+<li>选择 <code>File -&gt; invalidate caches/restart</code></li>
+<li><code>Sync</code></li>
+</ol>
+<h3 id="gradle-x2F-wrapper-与-gradlew-gradlew-bat"><a href="#gradle-x2F-wrapper-与-gradlew-gradlew-bat" class="headerlink" title="gradle&#x2F;wrapper 与 gradlew gradlew.bat"></a>gradle&#x2F;wrapper 与 gradlew gradlew.bat</h3><p>当我们初次配置Android环境时，需要安装Java，安装AS但不需要安装Gradle，这其中就是 <code>gradle/wrapper</code> 的功劳。</p>
+<p>当执行 gradlew 脚本时，可以保证每个项目都用自己期望的 Gradle 版本，奥秘就在 gradlew 的这段代码中：</p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">exec &quot;$JAVACMD&quot; &quot;$&#123;JVM_OPTS[@]&#125;&quot; -classpath &quot;$CLASSPATH&quot; org.gradle.<span class="keyword">wrapper</span>.GradleWrapperMain &quot;$@&quot;</span><br></pre></td></tr></table></figure>
+
+<p>gradlew 并没有直接启动 Gradle 二是启动 <code>gradle-wrapper.jar</code>，它会判断如果没有 Gradle 环境，从 gradle-wrapper.properties 中的 distributionUrl 中下载相应环境，并启动 Gradle。</p>
+<h3 id="setting-gradle"><a href="#setting-gradle" class="headerlink" title="setting.gradle"></a>setting.gradle</h3><p>其提供的include方法，通过这个方法可以指定哪些工程需要参与编译，每个参与编译的工程Gradle会为它创建一个Project对象</p>
+<h3 id="根目录-build-gradle"><a href="#根目录-build-gradle" class="headerlink" title="根目录 build.gradle"></a>根目录 build.gradle</h3><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Top-level build file where you can add configuration options common to all sub-projects/modules.</span></span><br><span class="line">buildscript &#123;</span><br><span class="line">    repositories &#123;</span><br><span class="line">        google()</span><br><span class="line">        mavenCentral()</span><br><span class="line">    &#125;</span><br><span class="line">    dependencies &#123;</span><br><span class="line">        classpath <span class="string">&#x27;com.android.tools.build:gradle:7.2.0&#x27;</span></span><br><span class="line">        <span class="comment">// <span class="doctag">NOTE:</span> Do not place your application dependencies here; they belong</span></span><br><span class="line">        <span class="comment">// in the individual module build.gradle files</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">allprojects &#123;</span><br><span class="line">    repositories &#123;</span><br><span class="line">        google()</span><br><span class="line">        mavenCentral()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">task clean(<span class="attr">type:</span> Delete) &#123;</span><br><span class="line">    delete rootProject.buildDir</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li><p>buildscript代码块</p>
+<p>gradle默认是自顶向下执行，无论buildscript代码块在哪，它都是第一执行</p>
+</li>
+<li><p>repositories和dependencies</p>
+<p>repositories 表示 dependencies 声明的依赖去哪些仓库找，google、jcenter、mavenCentral 都是第三方 Maven 仓库。同时，也可以通过 <code>maven</code> 方法添加自己的 Maven 仓库。需要注意的是，不应该假设组件一定会从特定仓库拉取，如果 Gradle 请求一个仓库超时，它会自动请求其他仓库。</p>
+<p>dependencies：代表 Gradle 执行需要哪些依赖。比如需要 Android Gradle Plugin 插件为我们打包 apk 包，就需要添加</p>
+<ol>
+<li><code>classpath &#39;com.android.tools.build:gradle:3.4.0&#39;</code></li>
+</ol>
+</li>
+<li><p>allprojects 和 repositories：<br>   在 allprojects 中的配置会对<strong>所有工程</strong>生效而里面的 repositories 则表示工程声明的 dependencies 去哪些仓库查找</p>
+</li>
+</ol>
+<h3 id="app-build-gradle"><a href="#app-build-gradle" class="headerlink" title="app build.gradle"></a>app build.gradle</h3><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">apply <span class="attr">plugin:</span> <span class="string">&#x27;com.android.application&#x27;</span></span><br><span class="line"></span><br><span class="line">android&#123;</span><br><span class="line">    compileSdkVersion <span class="number">28</span></span><br><span class="line">    defaultConfig&#123;</span><br><span class="line">        applicationId <span class="string">&quot;com.baidu.newproject&quot;</span></span><br><span class="line">        minSdkVersion <span class="number">19</span></span><br><span class="line">        targetSdkVersion <span class="number">28</span></span><br><span class="line">        versionCode <span class="number">1</span></span><br><span class="line">        versionName <span class="string">&quot;1.0&quot;</span></span><br><span class="line">        testInstrumentationRunner <span class="string">&quot;androidx.test.runner.AndroidJUnitRunner&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">    buildTypes&#123;</span><br><span class="line">        release&#123;</span><br><span class="line">            minifyEnabled <span class="literal">false</span></span><br><span class="line">            proguardFiles getDefaultProguardFile(<span class="string">&#x27;proguard-android-optimize.txt&#x27;</span>), <span class="string">&#x27;proguard-rules.pro&#x27;</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">dependencies&#123;</span><br><span class="line">    implementation fileTree(<span class="attr">dir:</span> <span class="string">&#x27;libs&#x27;</span>, <span class="attr">include:</span> [<span class="string">&#x27;*.jar&#x27;</span>])</span><br><span class="line">    implementation <span class="string">&#x27;androidx.appcompat:appcompat:1.0.2&#x27;</span></span><br><span class="line">    implementation <span class="string">&#x27;androidx.constraintlayout:constraintlayout:1.1.3&#x27;</span></span><br><span class="line">    testImplementation <span class="string">&#x27;junit:junit:4.12&#x27;</span></span><br><span class="line">    androidTestImplementation <span class="string">&#x27;androidx.test.runner:1.2.0&#x27;</span></span><br><span class="line">    androidTestImplementation <span class="string">&#x27;androidx.test.espresso:espresso-core:3.2.0&#x27;</span></span><br><span class="line">    implementation <span class="string">&#x27;com.baidu.searchbox.services:ubc:10.13.106&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当应用这个插件 <code>apply plugin: &#39;com.android.application&#39;</code>后，它会为我们创建一系列<code>Task</code>，比如 assembleDebug、assembleRelease，执行这些 task 就会得到最终的 APK。</p>
+<p>android 代码块是插件为我们提供的 API 允许我们修改 Task 的行为。</p>
+<p>dependencies 代码块的内容决定当前 Project 依赖哪些组件，而不同的依赖声明会有不同的结果。</p>
+<h2 id="依赖管理"><a href="#依赖管理" class="headerlink" title="依赖管理"></a>依赖管理</h2><h3 id="依赖配置"><a href="#依赖配置" class="headerlink" title="依赖配置"></a><strong>依赖配置</strong></h3><p>在 Android Gradle Plugin 3.0 时代，Google 使用 implementation 和 api 取代过去的 compile。其他配置项也进行了改名，方便大家理解其配置的含义。（老版本的接口没有被立刻删除但会在下一个主要版本中进行删除）</p>
+<table>
+<thead>
+<tr>
+<th>新配置</th>
+<th>已启用配置</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>implementation</td>
+<td>compile</td>
+<td>依赖项在编译时对模块可用，并且<strong>仅在运行时</strong>对模块的消费者可用。对于大型多项目构建，使用 implementation 而不是 api&#x2F;compile 可以显著缩短构建时间，因为它可以减少构建系统需要重新编译的项目量。大多数应用和测试模块都应使用此配置。</td>
+</tr>
+<tr>
+<td>api</td>
+<td>compile</td>
+<td>依赖项在编译时对模块可用，并且在编译时和运行时还对模块的消费者可用。此配置的行为类似于 compile（现已弃用），一般情况下，您应当仅在<strong>库模块</strong>中使用它。应用模块应使用 implementation，除非您想要将其 API 公开给单独的测试模块。</td>
+</tr>
+<tr>
+<td>compileOnly</td>
+<td>provided</td>
+<td>依赖项<strong>仅在编译时</strong>对模块可用，并且在编译或运行时对其消费者不可用。此配置的行为类似于 provided（现已弃用）。</td>
+</tr>
+<tr>
+<td>runtimeOnly</td>
+<td>apk</td>
+<td>依赖项<strong>仅在运行时</strong>对模块及其消费者可用。此配置的行为类似于 apk（现已弃用）。</td>
+</tr>
+</tbody></table>
+<p>举个例子：<br>假设 A 依赖 B，B 依赖 C。<br>如果 B 对 C 使用 implementation 依赖，则 A 无法调用 C 的代码<br>如果 B 对 C 使用 api 依赖，则 A 可以调用 C 的代码<br>如果 B 对 C 使用 compileOnly 依赖，则 A 无法调用 C 的代码，且 C 的代码不会被打包到 APK 中<br>如果 B 对 C 使用 runtimeOnly 依赖，则 A、B 无法调用 C 的代码，但 C 的代码会被打包到 APK 中</p>
+<p>实际上每一个组件都有自己的 compileClasspath 和 runtimeClasspath<br>当一个组件参与编译时，Gradle 就会将其放在 compileClasspath 中<br>当一个组件参与打包时，Gradle 就会将其放在 runtimeClasspath 中</p>
+<p>不同的依赖配置项，其实就是将声明的依赖放入不同组件的不同的 classpath 中，回到上面的例子<br>对于 implementation ，其实就是将 C 放入 B 的 compileClasspath 和 runtimeClasspath，放入 A 的 runtimeClasspath 中，从而实现 A 如果调用 C 的代码，在 A 的编译阶段 javac 报错，但最终 C 会被打包到 APK 包中</p>
+<p>对于 api、compileOnly、runtimeOnly 原理相同</p>
+<h3 id="源码与二进制"><a href="#源码与二进制" class="headerlink" title="源码与二进制"></a>源码与二进制</h3><p>当想要依赖一个源码工程时只需要这样写</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">implementation project(<span class="string">&#x27;:demo:mylibrary&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>而且我们可以明确知道 mylibrary 中的依赖都会被正确打包到 APK 中</p>
+<p>当我们依赖二进制需要这样写</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">implementation <span class="string">&#x27;androidx.appcompat:appcompat:1.0.2&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>当执行依赖命令（只输出 release 包的 runtimeClasspath）</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew <span class="symbol">:app</span><span class="symbol">:dependencies</span> --configuration releaseRuntimeClasspath &gt; dependencies.txt</span><br></pre></td></tr></table></figure>
+
+<p>输出依赖关系图时会看到并不是仅仅依赖一个 appcompat 组件（只显示部分依赖），还包含该组件自己的依赖，以及依赖的依赖，直到组件自身没有依赖，这样的特性叫做依赖传递</p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">releaseRuntimeClasspath - Resolved configuration <span class="keyword">for</span> runtime <span class="keyword">for</span> <span class="symbol">variant:</span> release</span><br><span class="line">\--- androidx.<span class="symbol">appcompat:</span><span class="symbol">appcompat:</span><span class="number">1.0</span>.<span class="number">2</span></span><br><span class="line">+--- androidx.<span class="symbol">annotation:</span><span class="keyword">annotation</span>:1.0.0</span><br><span class="line">+--- androidx.<span class="symbol">core:</span><span class="symbol">core:</span><span class="number">1.0</span>.<span class="number">1</span></span><br><span class="line">| +--- androidx.a<span class="symbol">nnotation:</span><span class="keyword">annotation</span>:1.0.0</span><br><span class="line">| +--- androidx.<span class="symbol">collection:</span><span class="symbol">collection:</span><span class="number">1.0</span>.<span class="number">0</span></span><br><span class="line">| | \--- androidx.a<span class="symbol">nnotation:</span><span class="keyword">annotation</span>:1.0.0</span><br><span class="line">| +--- androidx.<span class="symbol">lifecycle:</span>lifecycle-<span class="symbol">runtime:</span><span class="number">2.0</span>.<span class="number">0</span></span><br><span class="line">| | +--- androidx.<span class="symbol">lifecycle:</span>lifecycle-<span class="symbol">common:</span><span class="number">2.0</span>.<span class="number">0</span></span><br><span class="line">| | | \--- androidx.a<span class="symbol">nnotation:</span><span class="keyword">annotation</span>:1.0.0</span><br><span class="line">| | +--- androidx.arch.<span class="symbol">core:</span>core-<span class="symbol">common:</span><span class="number">2.0</span>.<span class="number">0</span></span><br><span class="line">| | | \--- androidx.a<span class="symbol">nnotation:</span><span class="keyword">annotation</span>:1.0.0</span><br><span class="line">| | \--- androidx.a<span class="symbol">nnotation:</span><span class="keyword">annotation</span>:1.0.0</span><br><span class="line">| \--- androidx.<span class="symbol">versionedparcelable:</span><span class="symbol">versionedparcelable:</span><span class="number">1.0</span>.<span class="number">0</span></span><br><span class="line">| +--- androidx.a<span class="symbol">nnotation:</span><span class="keyword">annotation</span>:1.0.0</span><br><span class="line">| \--- androidx.<span class="symbol">collection:</span><span class="symbol">collection:</span><span class="number">1.0</span>.<span class="number">0</span> (*)</span><br><span class="line">+--- androidx.<span class="symbol">collection:</span><span class="symbol">collection:</span><span class="number">1.0</span>.<span class="number">0</span> (*)</span><br><span class="line">+--- androidx.<span class="symbol">cursoradapter:</span><span class="symbol">cursoradapter:</span><span class="number">1.0</span>.<span class="number">0</span></span><br></pre></td></tr></table></figure>
+
+<p>那么Gradle是怎么确定这些依赖呢？当使用Maven规范上传组件时，不单单会上传组件的二进制，还会上传一个<code>pom.xml</code>文件，依赖信息就在这个文件当中。</p>
+<p>看看二进制被上传后在服务器是以怎样的结构存放的：</p>
+<p><img src="/posts/1736361658/640-1679361850665.png" alt="图片"></p>
+<p>点击一项查看：</p>
+<p><img src="/posts/1736361658/640-1679361879837.png" alt="图片"></p>
+<p>有上传的二进制 aar，也有 pom 文件，还有我们在上传时自定义的文件 readme</p>
+<p>再看看当二进制被下载后在本地是如何存放的：</p>
+<p><img src="/posts/1736361658/640-1679361937853.png" alt="图片"></p>
+<p>下面是个简单的POM文件</p>
+<p><img src="/posts/1736361658/640-1679362062692.png" alt="图片"></p>
+<p>可用看到有两个 dependency，需要注意的是 scope，也会分为 runtime 和 compile，runtime 不会参与编译，但会参与打包，compile 会参与编译和打包</p>
+<p>两个实际例子：<br>一：假设 A 依赖 B，B 依赖 C</p>
+<p><img src="/posts/1736361658/640-1679363179225.png" alt="图片"></p>
+<p>B 对 C 使用 implementation 依赖<br>B 中有类 Foo 继承于 C中的 Bar<br>在 A 中使用类 Foo 时会报错找不到类 Bar，解决办法只能让 A 再依赖 C，所以应该<strong>尽量避免使用继承</strong></p>
+<p>二：假设 A 依赖 B，B 依赖 C<br>BC 是二进制， B 的 POM 中对 C 的依赖是 runtime<br>在 Gradle 4.4 中，A 依然可以调用 C 的代码，这个问题在 Gradle 5.0 后被修复</p>
+<h3 id="依赖冲突"><a href="#依赖冲突" class="headerlink" title="依赖冲突"></a>依赖冲突</h3><p>什么是依赖冲突：</p>
+<p><img src="/posts/1736361658/640-1679363179301.png" alt="图片"></p>
+<p>假设 ABC 是源码，D 是二进制，A 声明依赖 B，A 声明依赖 C，B 声明依赖 D 1.0 版本，C 声明依赖 D 1.1版本，这时，D 有依赖冲突，需要确定是使用 1.0 还是 1.1 版本</p>
+<p>如何解决依赖冲突：</p>
+<ol>
+<li>进行编译时，B 编译时依赖 D 的1.0版本，C 编译时依赖 D 的1.1版本，但最终打包到 apk 中 D 的版本是 1.1，因为<code>版本号冲突默认选择最高版本</code></li>
+<li>Gradle 为我们提供了一系列解决依赖冲突的规则如：不允许依赖传递，exclude 移除一个依赖，替换一个组件为另一个组件，这些方法就不一一介绍了，按需百度即可</li>
+<li>百度app在此基础上增加规则：如果最终应用的版本号高于在 version.properties 定义的版本号则报错</li>
+</ol>
+<blockquote>
+<p>注意：</p>
+<ol>
+<li>假设 D 发布 1.2 版本，但 B、C 都没有基于 D 1.2 版本发布新版本，则最终打包还是 D 的 1.1 版本，所以所有组件最终被打包到 APK 包中的版本都为 version.properties 中定义的版本</li>
+<li>假设 D 的 MavenId 由 D 改成了 E，C 基于 E 发布二进制，B 还是老样子，在实际打包中会报类重复的错误，原因就是 B 的 POM 文件中依赖的还是 D，所以需要让 B 基于 D 改名后的 E重新发一个二进制</li>
+</ol>
+</blockquote>
+<h2 id="打包流程"><a href="#打包流程" class="headerlink" title="打包流程"></a>打包流程</h2><p>有了前面这些铺垫，让我们实际看看在执行打包 Task 时，实际还执行了哪些 Task。环境配置如下：</p>
+<ol>
+<li><code>Gradle 5.1.1</code></li>
+<li><code>Android Gradle Plugin 3.1.2</code></li>
+<li><code>org.gradle.parallel=true</code> 开启并行编译</li>
+<li><code>release</code> 包 <code>minifyEnabled true</code></li>
+</ol>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># --dry-run 表示不实际执行每个 <span class="built_in">Task</span></span><br><span class="line">gradlew assembleRelease --dry-run</span><br></pre></td></tr></table></figure>
+
+
+
+<p>Task 很多，接下来为大家介绍几个重点的 Task，其余没介绍的感兴趣的同学可以找找对应的实现类，看看它的实现。</p>
+<h3 id="preBuild"><a href="#preBuild" class="headerlink" title="preBuild"></a>preBuild</h3><p>描述：做一些编译前的检查<br>一个例子：有的人可能遇到下面的错误</p>
+<figure class="highlight mizar"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&quot;Android dependency &quot;+ display+ &quot;<span class="keyword">is</span> <span class="keyword">set</span> to compileOnly/<span class="keyword">provided</span> which <span class="keyword">is</span> <span class="keyword">not</span> supported&quot;</span><br></pre></td></tr></table></figure>
+
+<p>这个的原因就是由前面说过的 compileClasspath 和 runtimeClasspath 引起的。<br>当一个组件因为不同的依赖配置项导致它的 compileClasspath 比如为 1.1.1版本，但他的 runtimeClasspath 是 1.1.2版本，preBuild 就会检测出这个问题并报错我们处理</p>
+<h3 id="compileReleaseAidl"><a href="#compileReleaseAidl" class="headerlink" title="compileReleaseAidl"></a>compileReleaseAidl</h3><p>类：AidlCompile<br>描述：内部使用 AidlProcessor 调用 call 方法使用 build-tool 下的 aidl 执行编译。</p>
+<h3 id="各类-generate和-merge"><a href="#各类-generate和-merge" class="headerlink" title="各类 generate和 merge"></a>各类 generate和 merge</h3><p>这些 Task 允许我们在整个编译工程中动态的生成一些代码，生成好的资源需要和已有的资源进行合并，并且需要注意有可能覆盖已有资源，就不再详细介绍了，</p>
+<h3 id="过程"><a href="#过程" class="headerlink" title="过程"></a>过程</h3><p><img src="/posts/1736361658/640-1679363698527.png" alt="图片"></p>
+<p>第一步：我们有 app 工程下的 Java 源文件，还有 <code>AIDL</code>、<code>generate</code>、<code>R.java</code> 等生成的 Java 源文件，还有本身依赖，源码子工程的 jar 包、远端 aar 解压的 jar 包等一系列二进制文件，源码文件是 javac 需要编译的内容，二进制文件 <code>.jar/.class</code> 则是当 javac 编译遇到一个类名等符号时，如果发现在现有的源文件找不到，该去哪找的集合，对应的 javac 参数就是 -classpath</p>
+<p>而这个参数，其实就是 compileClasspath 的一个应用，如果你源文件引用了一个类，它的 jar 包不在 compileClasspath 中，那么在编译时 javac 就会报错找不到符号了</p>
+<p>第二步：当源文件被编译成类文件后，Google 提供了 Transform 机制允许我们对二进制文件在打包前进行修改，比如前面图片中的 <code>:app:transformClassesWithXXXForRelease SKIPPED</code> 就是我们自定义的 Transform。通过 <code>:app:transformClassesAndResourcesWithProguardForRelease SKIPPED</code> 也可以看到 Proguard 也是通过 Transform 机制实现的，这里图片中一个 <code>.class</code> 文件，一个是 <code>.jar/.class</code> 文件，第一个显然是 <code>javac</code> 编译后的产物，第二个则是 <code>runtimeClasspath</code>，就是那些需要被打包的二进制。相信大家这样就理解了 <code>compileClasspath</code> 和 <code>runtimeClasspath</code> 是如何影响打包过程</p>
+<p>第三步：当 Transform 处理好所有的 class 文件后，接下来就是将 <code>.class</code> 文件转换为 <code>.dex</code> 文件。值得注意的是，javac 只能发现源码的问题，不会发现那些未参与编译的二进制的问题。而在 dex 转换过程中则可以发现比如类重复问题或者一个类，名字不变，但是由 Class 变成了 Interface 这类严重的代码问题。</p>
+<p>第四步：就是将前面的和资源进行打包。对应的类是 <code>PackageApplication</code>，得到这个 Task 后可以对打包的内容进行自定义</p>
 <h1 id="初识Android"><a href="#初识Android" class="headerlink" title="初识Android"></a>初识Android</h1><ol>
 <li><p>Android历史</p>
 <p>Android之父是谁？</p>
@@ -684,7 +832,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">135</span>
+                  <span class="site-state-item-count">137</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -706,7 +854,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">38</span>
+                  <span class="site-state-item-count">41</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
@@ -767,7 +915,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%AC%94%E8%AE%B0"><span class="nav-text">笔记</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%9D%E8%AF%86Android"><span class="nav-text">初识Android</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#res%E7%9B%AE%E5%BD%95"><span class="nav-text">res目录</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Android-%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%EF%BC%885-%E5%B1%82%EF%BC%89"><span class="nav-text">Android 系统架构（5 层）</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BC%96%E8%AF%91%E5%9E%8B%E8%AF%AD%E8%A8%80%E3%80%81%E8%A7%A3%E9%87%8A%E5%9E%8B%E8%AF%AD%E8%A8%80"><span class="nav-text">编译型语言、解释型语言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Dalvik-%E5%92%8C-ART"><span class="nav-text">Dalvik 和 ART</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Serializable-x2F-Parcelable"><span class="nav-text">Serializable&#x2F;Parcelable</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%89%8B%E6%9C%BA%E6%8C%89%E4%B8%8B%E7%94%B5%E6%BA%90"><span class="nav-text">手机按下电源</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Context"><span class="nav-text">Context</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Builder"><span class="nav-text">Builder</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B3%A8%E8%A7%A3"><span class="nav-text">注解</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#DialogmentFragment%E8%AF%A6%E7%BB%86%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-text">DialogmentFragment详细生命周期</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%93%BE%E6%8E%A5"><span class="nav-text">链接</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%BD%E5%86%85Android%E5%A4%A7%E4%BD%ACgithub%E7%BB%9F%E8%AE%A1"><span class="nav-text">国内Android大佬github统计</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Android-%E7%AC%94%E8%AE%B0%E5%8F%8A%E9%9D%A2%E8%AF%95%E9%A2%98"><span class="nav-text">Android 笔记及面试题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#AndroidInterview-Q-A"><span class="nav-text">AndroidInterview-Q-A</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CharonChui-x2F-AndroidNote"><span class="nav-text">CharonChui&#x2F;AndroidNote</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#linsir6-x2F-AndroidNote"><span class="nav-text">linsir6&#x2F;AndroidNote</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Awesome-Android-Interview"><span class="nav-text">Awesome-Android-Interview</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Android-Daily-Interview"><span class="nav-text">Android-Daily-Interview</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AndroidOfferKiller"><span class="nav-text">AndroidOfferKiller</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Android-QA"><span class="nav-text">Android_QA</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AndroidBookmark"><span class="nav-text">AndroidBookmark</span></a></li></ol></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%AC%94%E8%AE%B0"><span class="nav-text">笔记</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%BB%98%E8%AE%A4%E5%88%9B%E5%BB%BA%E7%9A%84Android%E5%B7%A5%E7%A8%8B%E9%83%BD%E6%9C%89%E4%BB%80%E4%B9%88"><span class="nav-text">默认创建的Android工程都有什么</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#gradle-%E4%B8%8E-idea"><span class="nav-text">.gradle 与 .idea</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#gradle-x2F-wrapper-%E4%B8%8E-gradlew-gradlew-bat"><span class="nav-text">gradle&#x2F;wrapper 与 gradlew gradlew.bat</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#setting-gradle"><span class="nav-text">setting.gradle</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%B9%E7%9B%AE%E5%BD%95-build-gradle"><span class="nav-text">根目录 build.gradle</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#app-build-gradle"><span class="nav-text">app build.gradle</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BE%9D%E8%B5%96%E7%AE%A1%E7%90%86"><span class="nav-text">依赖管理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BE%9D%E8%B5%96%E9%85%8D%E7%BD%AE"><span class="nav-text">依赖配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%BA%90%E7%A0%81%E4%B8%8E%E4%BA%8C%E8%BF%9B%E5%88%B6"><span class="nav-text">源码与二进制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BE%9D%E8%B5%96%E5%86%B2%E7%AA%81"><span class="nav-text">依赖冲突</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%93%E5%8C%85%E6%B5%81%E7%A8%8B"><span class="nav-text">打包流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#preBuild"><span class="nav-text">preBuild</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#compileReleaseAidl"><span class="nav-text">compileReleaseAidl</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%84%E7%B1%BB-generate%E5%92%8C-merge"><span class="nav-text">各类 generate和 merge</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%87%E7%A8%8B"><span class="nav-text">过程</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%9D%E8%AF%86Android"><span class="nav-text">初识Android</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#res%E7%9B%AE%E5%BD%95"><span class="nav-text">res目录</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Android-%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%EF%BC%885-%E5%B1%82%EF%BC%89"><span class="nav-text">Android 系统架构（5 层）</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BC%96%E8%AF%91%E5%9E%8B%E8%AF%AD%E8%A8%80%E3%80%81%E8%A7%A3%E9%87%8A%E5%9E%8B%E8%AF%AD%E8%A8%80"><span class="nav-text">编译型语言、解释型语言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Dalvik-%E5%92%8C-ART"><span class="nav-text">Dalvik 和 ART</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Serializable-x2F-Parcelable"><span class="nav-text">Serializable&#x2F;Parcelable</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%89%8B%E6%9C%BA%E6%8C%89%E4%B8%8B%E7%94%B5%E6%BA%90"><span class="nav-text">手机按下电源</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Context"><span class="nav-text">Context</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Builder"><span class="nav-text">Builder</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B3%A8%E8%A7%A3"><span class="nav-text">注解</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#DialogmentFragment%E8%AF%A6%E7%BB%86%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-text">DialogmentFragment详细生命周期</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%93%BE%E6%8E%A5"><span class="nav-text">链接</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%BD%E5%86%85Android%E5%A4%A7%E4%BD%ACgithub%E7%BB%9F%E8%AE%A1"><span class="nav-text">国内Android大佬github统计</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Android-%E7%AC%94%E8%AE%B0%E5%8F%8A%E9%9D%A2%E8%AF%95%E9%A2%98"><span class="nav-text">Android 笔记及面试题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#AndroidInterview-Q-A"><span class="nav-text">AndroidInterview-Q-A</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CharonChui-x2F-AndroidNote"><span class="nav-text">CharonChui&#x2F;AndroidNote</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#linsir6-x2F-AndroidNote"><span class="nav-text">linsir6&#x2F;AndroidNote</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Awesome-Android-Interview"><span class="nav-text">Awesome-Android-Interview</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Android-Daily-Interview"><span class="nav-text">Android-Daily-Interview</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AndroidOfferKiller"><span class="nav-text">AndroidOfferKiller</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Android-QA"><span class="nav-text">Android_QA</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AndroidBookmark"><span class="nav-text">AndroidBookmark</span></a></li></ol></li></ol></li></ol></div>
             
 
           </div>
