@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="安卓知识点," />
+  <meta name="keywords" content="private,安卓知识点," />
 
 
 
@@ -86,17 +86,17 @@
 <meta property="og:site_name" content="AB">
 <meta property="og:description" content="通信《Android开发艺术探索》 Handler是Android消息机制的上层接口，使得在开发过程中只需要和Handler交互即可。  Handler的运行需要底层的MessageQueue（消息队列：存储消息数据）【单链表】和Looper（循环：无限循环地去遍历）支撑。  Looper中有特殊概念ThreadLocal【不是线程，在每个线程中存储数据】。 Handler创建时会采用当前线程的L">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://i.loli.net/2021/04/27/mMpIYSgioLVn8XC.png">
 <meta property="og:image" content="http://shenbh.github.io/posts/1445596874/Handler%E3%80%81Looper%E3%80%81MessegeQueue%E5%85%B3%E7%B3%BB.jpg">
 <meta property="og:image" content="http://shenbh.github.io/posts/1445596874/Looper%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9E%8B.jpg">
 <meta property="og:image" content="http://shenbh.github.io/posts/1445596874/Handler%E7%9A%84%E5%B7%A5%E4%BD%9C%E8%BF%87%E7%A8%8B.jpg">
 <meta property="og:image" content="https://img-blog.csdnimg.cn/20181220142659447">
 <meta property="article:published_time" content="2020-03-24T08:03:08.000Z">
-<meta property="article:modified_time" content="2022-12-27T02:19:08.502Z">
+<meta property="article:modified_time" content="2023-11-14T02:04:48.543Z">
 <meta property="article:author" content="阿炳">
+<meta property="article:tag" content="private">
 <meta property="article:tag" content="安卓知识点">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://i.loli.net/2021/04/27/mMpIYSgioLVn8XC.png">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/1445596874/Handler%E3%80%81Looper%E3%80%81MessegeQueue%E5%85%B3%E7%B3%BB.jpg">
 
 
 
@@ -132,7 +132,7 @@
 
 
 
-  <title>安卓-通信 | AB</title>
+  <title>安卓-通信 | AB</title><meta name="robots" content="noindex">
   
 
 
@@ -391,11 +391,11 @@
 <p><code>Handler</code>创建时会采用当前线程的<code>Looper</code>来构造消息循环系统。</p>
 <p><code>Handler</code>内部通过<code>ThreadLocal</code>获取到当前线程的<code>Looper</code>。</p>
 </li>
-<li><p><code>ThreadLocal</code>可以在不同的线程中<strong>互不干扰</strong>地存储并提供数据，通过<code>ThreadLocal</code>可轻松获取每个线程地<code>Looper</code>。</p>
+<li><p><code>ThreadLocal</code>可以在不同的线程中<strong>互不干扰</strong>地存储并提供数据，通过<code>ThreadLocal</code>可轻松获取每个线程的<code>Looper</code>。</p>
 </li>
 <li><p>线程默认没有<code>Looper</code>，若需要使用<code>Handler</code>就必须为线程创建<code>Looper</code>。</p>
 </li>
-<li><p><code>UI</code>线程（<code>ActivityThread</code>）在创建时就会初始化<code>Looper</code>，也即<code>Handler</code>可以在主线程中默认使用地原因。</p>
+<li><p><code>UI</code>线程（<code>ActivityThread</code>）在创建时就会初始化<code>Looper</code>，也即<code>Handler</code>可以在主线程中默认使用的原因。</p>
 </li>
 </ul>
 <h3 id="Android只能主线程访问UI"><a href="#Android只能主线程访问UI" class="headerlink" title="Android只能主线程访问UI"></a>Android只能主线程访问UI</h3><p><code>ViewRootImpl</code>的<code>checkThread</code>方法对UI操作做了验证（限制UI只能在主线程中访问）</p>
@@ -409,7 +409,52 @@
 <li>加上锁机制会降低<code>UI</code>访问的效率，因为锁机制会阻塞某些线程的执行</li>
 </ol>
 <h2 id="消息机制"><a href="#消息机制" class="headerlink" title="消息机制"></a>消息机制</h2><p>相关概念</p>
-<p><img src="https://i.loli.net/2021/04/27/mMpIYSgioLVn8XC.png" alt="相关概念"></p>
+<table>
+<thead>
+<tr>
+<th>概念</th>
+<th>定义</th>
+<th>作用</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>主线程<br>（UI线程、Main Thread）</td>
+<td>当应用程序第1次启动时，会同时自动开启1条主线程</td>
+<td>处理与UI相关的事件<br>（如更新、操作等）</td>
+<td>主线程与子线程通信媒介&#x3D;Handler</td>
+</tr>
+<tr>
+<td>子线程<br>（工作线程）</td>
+<td>认为手动开启的线程</td>
+<td>执行耗时操作<br>（如网络请求、数据加载等）</td>
+<td>主线程与子线程通信媒介&#x3D;Handler</td>
+</tr>
+<tr>
+<td>消息<br>（Message）</td>
+<td>线程间通讯的数据单元<br>（即Handler接受 &amp; 处理的消息对象）</td>
+<td>存储需操作的通信信息</td>
+<td>&#x2F;</td>
+</tr>
+<tr>
+<td>消息队列<br>（Message Queue）</td>
+<td>一种数据结构<br>（存储特点：先进先出）</td>
+<td>存储 Handler 发送过来的消息（Message）</td>
+<td>&#x2F;</td>
+</tr>
+<tr>
+<td>处理者<br>（Handler）</td>
+<td>* 主线程与子线程的通信媒介<br>* 线程消息的主要处理者</td>
+<td>* 添加消息（Message）到消息队列（Message Queue）<br>* 处理循环器（Looper）分派过来的消息（Message）</td>
+<td>&#x2F;</td>
+</tr>
+<tr>
+<td>循环器<br>（Looper）</td>
+<td>消息队列（Message Queue）与处理者（Handler）的通信媒介</td>
+<td>消息循环，即<br>* 消息获取：循环取出消息队列（Message Queue）的消息（Message）<br>* 消息分发：将取出的消息（Message）发送给对应的处理者（Handler）</td>
+<td>* 每个线程中只能拥有1个Looper<br>* 1个Looper可绑定多个线程的Handler<br>* 即多个线程可往1个Looper所持有的MessageQueue中发送消息，提供了线程间通信的可能</td>
+</tr>
+</tbody></table>
 <blockquote>
 <ul>
 <li>主线程（UI线程、Main Thread）<ul>
@@ -568,7 +613,7 @@
 
 
 <h2 id="sending-message-to-a-Handler-on-dead-thread"><a href="#sending-message-to-a-Handler-on-dead-thread" class="headerlink" title="sending message to a Handler on dead thread"></a>sending message to a Handler on dead thread</h2><p>toast报这个异常。解决：在主线程创建个Handler，toast写里面，需要吐司的地方去发送消息给这个handler</p>
-
+<!-- flag of hidden posts -->
       
     </div>
     
@@ -580,7 +625,7 @@
     
       <div>
         <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
-  <div>请我喝杯奶茶吧~</div>
+  <div></div>
   <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
     <span>Donate</span>
   </button>
@@ -609,6 +654,8 @@
       
         <div class="post-tags">
           
+            <a href="/tags/private/" rel="tag"># private</a>
+          
             <a href="/tags/%E5%AE%89%E5%8D%93%E7%9F%A5%E8%AF%86%E7%82%B9/" rel="tag"># 安卓知识点</a>
           
         </div>
@@ -618,26 +665,6 @@
       
       
 
-      
-        <div class="post-nav">
-          <div class="post-nav-next post-nav-item">
-            
-              <a href="/posts/68bf7d20/" rel="next" title="Kotlin函数">
-                <i class="fa fa-chevron-left"></i> Kotlin函数
-              </a>
-            
-          </div>
-
-          <span class="post-nav-divider"></span>
-
-          <div class="post-nav-prev post-nav-item">
-            
-              <a href="/posts/3704792000/" rel="prev" title="安卓-网络">
-                安卓-网络 <i class="fa fa-chevron-right"></i>
-              </a>
-            
-          </div>
-        </div>
       
 
       
@@ -715,7 +742,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">139</span>
+                  <span class="site-state-item-count">72</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -726,7 +753,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">14</span>
+                  <span class="site-state-item-count">12</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
@@ -737,7 +764,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">42</span>
+                  <span class="site-state-item-count">31</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
