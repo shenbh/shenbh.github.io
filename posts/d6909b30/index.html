@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="private,Gradle,groovy," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="原文：https:&#x2F;&#x2F;juejin.cn&#x2F;post&#x2F;7215579793261117501 前言依赖是我们在开发中最常用的配置，通过声明依赖项来引入项目所需技术，从而实现相关功能。 但是可能很多人都遇到过这种场景，编译运行后新增的接口或类找不到，又或者只是升级了一下某个Library，编译就提示找不到类或接口。这类问题在开发中是比较常见的，多数属于依赖版本冲突导致的，而在大型项目中，复杂度更高，这">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Y6Gradle的依赖管理和版本决议">
+<meta property="og:url" content="http://shenbh.github.io/posts/d6909b30/index.html">
+<meta property="og:site_name" content="AB">
+<meta property="og:description" content="原文：https:&#x2F;&#x2F;juejin.cn&#x2F;post&#x2F;7215579793261117501 前言依赖是我们在开发中最常用的配置，通过声明依赖项来引入项目所需技术，从而实现相关功能。 但是可能很多人都遇到过这种场景，编译运行后新增的接口或类找不到，又或者只是升级了一下某个Library，编译就提示找不到类或接口。这类问题在开发中是比较常见的，多数属于依赖版本冲突导致的，而在大型项目中，复杂度更高，这">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://shenbh.github.io/posts/d6909b30/image-20231129114937388.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/d6909b30/image-20231129115145604.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/d6909b30/image-20231129115951950.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/d6909b30/image-20231129133806728.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/d6909b30/image-20231129133831379.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/d6909b30/image-20231129140845631.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/d6909b30/image-20231129142211035.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/d6909b30/image-20231129163021954.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/d6909b30/image-20231130160338094.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/d6909b30/image-20231129174636318.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/d6909b30/image-20231201114031487.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/d6909b30/image-20231201115800048.png">
+<meta property="article:published_time" content="2023-11-29T02:54:00.000Z">
+<meta property="article:modified_time" content="2023-12-01T05:34:11.989Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="private">
+<meta property="article:tag" content="Gradle">
+<meta property="article:tag" content="groovy">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/d6909b30/image-20231129114937388.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/d6909b30/"/>
+
+
+
+
+
+  <title>Y6Gradle的依赖管理和版本决议 | AB</title><meta name="robots" content="noindex">
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">AB</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Just do IT Now.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/d6909b30/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="AB">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Y6Gradle的依赖管理和版本决议</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2023-11-29T10:54:00+08:00">
+                2023-11-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Gradle/" itemprop="url" rel="index">
+                    <span itemprop="name">Gradle</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>原文：<a target="_blank" rel="noopener" href="https://juejin.cn/post/7215579793261117501">https://juejin.cn/post/7215579793261117501</a></p>
+<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>依赖是我们在开发中最常用的配置，通过声明依赖项来引入项目所需技术，从而实现相关功能。</p>
+<p>但是可能很多人都遇到过这种场景，编译运行后新增的接口或类找不到，又或者只是升级了一下某个Library，编译就提示找不到类或接口。这类问题在开发中是比较常见的，多数属于依赖版本冲突导致的，而在大型项目中，复杂度更高，这类问题出现的频率也很高。</p>
+<p>所以，搞清楚依赖配置，并能快速的解决依赖冲突，就变成开发中必不可少的技能了。</p>
+<p>本文介绍重点：</p>
+<p><img src="/posts/d6909b30/image-20231129114937388.png" alt="image-20231129114937388"></p>
+<h1 id="依赖管理"><a href="#依赖管理" class="headerlink" title="依赖管理"></a>依赖管理</h1><p>为什么会有依赖管理这个东西呢？</p>
+<p>这得回想到远古时期，那时候我们的依赖是怎么做的，我们需要先找到依赖，然后下载下来jar&#x2F;aar，然后导进项目，再添加依赖配置，很繁琐，特别是在<code>版本管理</code>上更是如此，每次升级一个版本都要重复上述操作，维护成本巨大，开发同学叫苦不迭。</p>
+<p>而后有了maven。maven引入了标准依赖库对依赖进行管理，比远古时期的刀耕火种方便太多了，你只要维护好pom文件就完事了。Gradle在这方面其实跟maven很像，毕竟也是站在前辈的肩上。maven的pom跟Gradle的build.gradle文件很像，甚至可以说在思想上是一毛一样的，只是在写法上有些不同。</p>
+<p>而现在我们基于Gradle来开发，声明依赖项之后其实就不用管了，Gradle提供了很好的<code>依赖管理</code>支持，Gradle自己会帮我们去找到所需Library，主打的就是一个省心。</p>
+<p>那么Gradle是如何去找所需Library的呢？</p>
+<p><img src="/posts/d6909b30/image-20231129115145604.png" alt="image-20231129115145604"></p>
+<p>在构建过程中，Gradle首先会先从本地检索，找不到就挨个从远端仓库（中央仓库）找，找到之后会下载下来缓存到本地，默认缓存<strong>24h</strong>，可以加速下次构建，也避免了不必要的网络下载。</p>
+<blockquote>
+<p>不要把依赖管理和版本管理搞混淆了。</p>
+</blockquote>
+<h2 id="声明依赖项"><a href="#声明依赖项" class="headerlink" title="声明依赖项"></a>声明依赖项</h2><p>我们通常是在app&gt;build.gradle&gt;dependencies中添加依赖：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">dependencies&#123;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">    implementation <span class="string">&#x27;com.google.android.material:material:1.8.0&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>仓库配置：</p>
+<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">scss复制代码pluginManagement &#123;</span><br><span class="line">    repositories &#123;</span><br><span class="line">        <span class="built_in">gradlePluginPortal</span>()</span><br><span class="line">        <span class="built_in">google</span>()</span><br><span class="line">        <span class="built_in">mavenCentral</span>()</span><br><span class="line">        <span class="comment">// others </span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果不是google、maven仓库的话，需要自己手动在repositories{ }里配置仓库地址，新建项目这俩默认就有了。</p>
+<p>Gradle7.0之后，repositories{ }配置由build.gradle迁移到settings.gradle文件，如上。</p>
+<h3 id="依赖类型"><a href="#依赖类型" class="headerlink" title="依赖类型"></a>依赖类型</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">plugins &#123;</span><br><span class="line">  id <span class="string">&#x27;com.android.application&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">android &#123; ... &#125;</span><br><span class="line"></span><br><span class="line">dependencies &#123;</span><br><span class="line">    <span class="comment">// Dependency on a local library module</span></span><br><span class="line">    implementation <span class="title function_">project</span><span class="params">(<span class="string">&#x27;:mylibrary&#x27;</span>)</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// Dependency on local binaries</span></span><br><span class="line">    implementation <span class="title function_">fileTree</span><span class="params">(dir: <span class="string">&#x27;libs&#x27;</span>, include: [<span class="string">&#x27;*.jar&#x27;</span>])</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// Dependency on a remote binary</span></span><br><span class="line">    implementation <span class="string">&#x27;com.example.android:app-magic:12.3&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>本地模块：需要在settings.gradle中include声明；</li>
+<li>本地二进制文件：需要在build.gradle声明路径；</li>
+<li>远端二进制文件：上述示例，也是用的最多的一种；</li>
+</ul>
+<h2 id="远端仓库"><a href="#远端仓库" class="headerlink" title="远端仓库"></a>远端仓库</h2><p>我们在repositories{ }里配置的url就是依赖项上传到远端仓库(中央仓库)的url，远端仓库起到一个桥梁作用，把开发者和作者连接起来。</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">pluginManagement &#123;</span><br><span class="line">    repositories &#123;</span><br><span class="line">        gradlePluginPortal()</span><br><span class="line">        google()</span><br><span class="line">        mavenCentral()</span><br><span class="line">        <span class="comment">// others </span></span><br><span class="line">        <span class="comment">// maven &#123; url &quot;https://jitpack.io&quot; &#125;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>大概是这么一个关系：</p>
+<p><img src="/posts/d6909b30/image-20231129115951950.png" alt="image-20231129115951950"></p>
+<ol>
+<li>左侧是我们开发过程，通过配置声明依赖项和远端仓库地址，从而找到我们想要的Lib；</li>
+<li>中间就是远端仓库，包含了丰富的Library&#x2F;组件&#x2F;插件等等；</li>
+<li>后侧是其他开发作者，把代码通过aar&#x2F;jar的方式打包上传到远端仓库提供给使用方；</li>
+</ol>
+<p>这就是大概的流程，那么开发者如何找到自己想要的额依赖呢，而作者又是如何保证自己的SDK被找到呢？</p>
+<h2 id="GAV"><a href="#GAV" class="headerlink" title="GAV"></a>GAV</h2><p>上面我们讲到通常是在app &gt; build.gradle &gt; dependencies 中添加依赖：</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">arduino复制代码dependencies &#123;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">    implementation <span class="string">&#x27;com.google.android.material:material:1.8.0&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面这个是简写，全称是这样的：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">csharp复制代码implementation <span class="keyword">group</span>: <span class="string">&#x27;com.google.android.material&#x27;</span>, name: <span class="string">&#x27;material&#x27;</span>, version: <span class="string">&#x27;1.8.0&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>可以看到，信息比较全，但也不如第一种方式简洁，所以我们一般都是使用第一种方式来声明依赖项，并用冒号<code>:</code>分割。</p>
+<p>那么有人会好奇了，我怎么知道有哪些Lib上传了远端仓库呢？</p>
+<p>我们先想一下，这种依赖的远程库是在哪里的，常见的是发布在maven之类的仓库的对吧。</p>
+<p>当我们清楚这一点之后，我们就可以去maven仓库去找我们要依赖的库，然后在库的信息页面，会有不同的依赖方式，比如maven、gradle、Ivy等等。</p>
+<p>比如我们要找google官方的material库，除了在github仓库的readme文件找到声明方式之外，我们还可以在maven上去搜。</p>
+<p>打开<a target="_blank" rel="noopener" href="https://mvnrepository.com/">maven</a>，搜索material，第一条就是我们要找的</p>
+<p><img src="/posts/d6909b30/image-20231129133806728.png" alt="image-20231129133806728"></p>
+<p>然后点进去，并选择一个版本</p>
+<p><img src="/posts/d6909b30/image-20231129133831379.png" alt="image-20231129133831379"></p>
+<p>如上图，除了Library的基础信息之外，下方也介绍了不同构建工具是如何声明依赖的。</p>
+<p>当我们添加好依赖之后，需要sync同步一下，然后Gradle就会根据你的配置去找依赖并添加到项目里了，sync完就可以在项目的<code>External Libraries</code>目录下找到它了。</p>
+<p><img src="/posts/d6909b30/image-20231129140845631.png" alt="image-20231129140845631"></p>
+<p>回到刚才的问题，作者是如何保证自己的Library被准备的找到呢？</p>
+<p>这就跟app安装必须得是唯一id一样，有唯一性才能被准确定位，maven同样遵循着这样一个协议来保证唯一性，也就是<strong>GAV（坐标）：</strong> <strong>groupId + artifactId + version</strong> 。</p>
+<p>还是上面的maven信息页面，我们切到maven tab看看：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">xml复制代码<span class="comment">&lt;!-- https://mvnrepository.com/artifact/com.google.android.material/material --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.google.android.material<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>material<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.8.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">scope</span>&gt;</span>runtime<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>通过maven的依赖方式可以清晰的看出GAV分别代表的是什么。</p>
+<ul>
+<li><strong>groupId：</strong> 组织名称，一般是公司域名倒写，包名；</li>
+<li><strong>artifactId：</strong> 项目名称，如果groupId包含了项目名称，这里就是子项目名称；</li>
+<li><strong>version：</strong> 版本号，一般由3位数字组成（x.y.z）；</li>
+</ul>
+<p>这样，通过GAV我们就可以准确的找到一个Library了，不同的是在Gradle的声明中，artifactId用name表示。</p>
+<p><img src="/posts/d6909b30/image-20231129142211035.png" alt="image-20231129142211035"></p>
+<h2 id="依赖传递"><a href="#依赖传递" class="headerlink" title="依赖传递"></a>依赖传递</h2><p>Gradle除了会帮我们下载依赖之外，还提供了依赖传递的能力。试想一下上面远古时期的操作，如果另一个项目也需要同样的依赖，是不是就得copy一份了，又是繁琐++。</p>
+<p>Gradle的依赖传递其实对应着maven里面的Scope，比如我们常用的implementation、api，不同的依赖方式决定了依赖传递的不同效果，搞不清楚这个，也会经常遇到编译问题，不知道怎么解决。</p>
+<h3 id="依赖方式"><a href="#依赖方式" class="headerlink" title="依赖方式"></a>依赖方式</h3><table>
+<thead>
+<tr>
+<th>方式</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>implementation</td>
+<td>Gradle 会将依赖项添加到编译类路径，并将依赖项打包到 build 输出。不过，当您的模块配置 implementation 依赖项时，会让 Gradle 了解您不希望该模块在编译时将该依赖项泄露给其他模块。也就是说，其他模块只有在运行时才能使用该依赖项。使用此依赖项配置代替 api 或 compile（已废弃）可以显著缩短构建时间，因为这样可以减少构建系统需要重新编译的模块数。例如，如果 implementation 依赖项更改了其 API，Gradle 只会重新编译该依赖项以及直接依赖于它的模块。大多数应用和测试模块都应使用此配置。</td>
+</tr>
+<tr>
+<td>api</td>
+<td>Gradle 会将依赖项添加到编译类路径和 build 输出。当一个模块包含 api 依赖项时，会让 Gradle 了解该模块要以传递方式将该依赖项导出到其他模块，以便这些模块在运行时和编译时都可以使用该依赖项。此配置的行为类似于 compile（现已废弃），但使用它时应格外小心，只能对您需要以传递方式导出到其他上游消费者的依赖项使用它。 这是因为，如果 api 依赖项更改了其外部 API，Gradle 会在编译时重新编译所有有权访问该依赖项的模块。 因此，拥有大量的 api 依赖项会显著增加构建时间。 除非要将依赖项的 API 公开给单独的模块，否则库模块应改用 implementation 依赖项。</td>
+</tr>
+<tr>
+<td>compile</td>
+<td>Gradle 会将依赖项添加到编译类路径和 build 输出，并将依赖项导出到其他模块。此配置已废弃（在 AGP 1.0-4.2 中可用）。</td>
+</tr>
+<tr>
+<td>compileOnly</td>
+<td>Gradle 只会将依赖项添加到编译类路径（也就是说，不会将其添加到 build 输出）。如果您创建 Android 模块时在编译期间需要相应依赖项，但它在运行时可有可无，此配置会很有用。如果您使用此配置，那么您的库模块必须包含一个运行时条件，用于检查是否提供了相应依赖项，然后适当地改变该模块的行为，以使该模块在未提供相应依赖项的情况下仍可正常运行。这样做不会添加不重要的瞬时依赖项，因而有助于减小最终应用的大小。 此配置的行为类似于 provided（现已废弃）。</td>
+</tr>
+<tr>
+<td>provided</td>
+<td>Gradle 只会将依赖项添加到编译类路径（也就是说，不会将其添加到 build 输出）。此配置已废弃（在 AGP 1.0-4.2 中可用）。</td>
+</tr>
+<tr>
+<td>annotationProcessor</td>
+<td>如需添加对作为注解处理器的库的依赖，您必须使用 annotationProcessor 配置将其添加到注解处理器的类路径。这是因为，使用此配置可以将编译类路径与注解处理器类路径分开，从而提高 build 性能。如果 Gradle 在编译类路径上找到注解处理器，则会禁用避免编译功能，这样会对构建时间产生负面影响（Gradle 5.0 及更高版本会忽略在编译类路径上找到的注解处理器）。如果 JAR 文件包含以下文件，则 Android Gradle 插件会假定依赖项是注解处理器：META-INF&#x2F;services&#x2F;javax.annotation.processing.Processor如果插件检测到编译类路径上包含注解处理器，则会产生 build 错误。Kotlin使用kapt&#x2F;ksp。</td>
+</tr>
+<tr>
+<td>testXxx</td>
+<td>…</td>
+</tr>
+</tbody></table>
+<p>比较常用的是implementation和api(compile)，implementation支持依赖关系颗粒度更细的范围界定，而api(compile)与之相反，具有依赖传递性，这不仅会影响编译速度，更严重的是，依赖传递会出现版本冲突，比如你用的Kotlin版本是1.5，依赖了一个三方库的Kotlin版本是1.8，然后这个1.8的版本就跟你的项目各种不兼容，比如出现找不到类、接口、函数等情况，就会出现编译错误。</p>
+<p>所以下面介绍Gradle是如何做版本决议的，以及保证版本一致性、可用性的一些解决方案。</p>
+<h1 id="版本决议"><a href="#版本决议" class="headerlink" title="版本决议"></a>版本决议</h1><p>当我们项目出现版本冲突的时候，要先能定位问题，然后才是解决问题。</p>
+<h2 id="依赖信息"><a href="#依赖信息" class="headerlink" title="依赖信息"></a>依赖信息</h2><p>定位问题一般会从依赖关系下手。</p>
+<p>查看依赖关系比较常用的手段是打依赖树，即：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew app:dependencies</span><br></pre></td></tr></table></figure>
+
+<p>除了cli命令之外，还可以使用build –scan，或者AS右上角的Gradle&gt;app&gt;help&gt;dependencies，点击执行也可。</p>
+<p>执行结果如下：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">+<span class="comment">--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.10</span></span><br><span class="line">|    +<span class="comment">--- org.jetbrains.kotlin:kotlin-stdlib:1.7.10</span></span><br><span class="line">|    |    +<span class="comment">--- org.jetbrains.kotlin:kotlin-stdlib-common:1.7.10</span></span><br><span class="line">|    |    <span class="comment">--- org.jetbrains:annotations:13.0</span></span><br><span class="line">|    <span class="comment">--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.7.10</span></span><br><span class="line">|         <span class="comment">--- org.jetbrains.kotlin:kotlin-stdlib:1.7.10 (*)</span></span><br><span class="line">+<span class="comment">--- androidx.core:core-ktx:1.7.0</span></span><br><span class="line">|    +<span class="comment">--- org.jetbrains.kotlin:kotlin-stdlib:1.5.31 -&gt; 1.7.10 (*)</span></span><br><span class="line">|    +<span class="comment">--- androidx.annotation:annotation:1.1.0 -&gt; 1.3.0</span></span><br><span class="line">|    <span class="comment">--- androidx.core:core:1.7.0 -&gt; 1.8.0</span></span><br><span class="line">|         +<span class="comment">--- androidx.annotation:annotation:1.2.0 -&gt; 1.3.0</span></span><br><span class="line">|         +<span class="comment">--- androidx.annotation:annotation-experimental:1.1.0</span></span><br><span class="line">|         +<span class="comment">--- androidx.lifecycle:lifecycle-runtime:2.3.1 -&gt; 2.5.0</span></span><br><span class="line">|         |    +<span class="comment">--- androidx.annotation:annotation:1.1.0 -&gt; 1.3.0</span></span><br><span class="line">|         |    +<span class="comment">--- androidx.arch.core:core-common:2.1.0</span></span><br><span class="line">|         |    |    <span class="comment">--- androidx.annotation:annotation:1.1.0 -&gt; 1.3.0</span></span><br><span class="line">|         |    <span class="comment">--- androidx.lifecycle:lifecycle-common:2.5.0</span></span><br><span class="line">|         |         <span class="comment">--- androidx.annotation:annotation:1.1.0 -&gt; 1.3.0</span></span><br><span class="line">|         <span class="comment">--- androidx.versionedparcelable:versionedparcelable:1.1.1</span></span><br><span class="line">|              +<span class="comment">--- androidx.annotation:annotation:1.1.0 -&gt; 1.3.0</span></span><br><span class="line">|              <span class="comment">--- androidx.collection:collection:1.0.0 -&gt; 1.1.0</span></span><br><span class="line">|                   <span class="comment">--- androidx.annotation:annotation:1.1.0 -&gt; 1.3.0</span></span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>这个里面包含了所有的依赖信息，比如A引入了B，B引入了C，C的版本在哪被拉高的等等。</p>
+<p>一般为了方便查看和搜索，我会选择输出到文件，即：<code>./gradlew app:dependencies &gt; dependencies.txt</code></p>
+<p>这个依赖树的信息怎么看呢，简单介绍一下：</p>
+<p>首先它是一个树状的结构来表示依赖的信息，一级就是项目里面依赖的配置，属于直接依赖，比如<code>core-ktx</code>，<code>kotlin-stdlib-jdk8</code>虽然不是dependencies{ }里面配置的，但是由kotlin plugin引进来的，跟kotlin plugin的版本也能对应上，也算是直接依赖。</p>
+<p>然后看直接依赖的下一级甚至下下级，都是直接依赖的库所依赖的，也可以说是引进来的。往往这部分我们其实是没有感知的，也比较容易被忽略，而恰恰这部分引入的库是很有可能出问题的。</p>
+<p>比如这个：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">+<span class="comment">--- androidx.core:core-ktx:1.7.0</span></span><br><span class="line">|    +<span class="comment">--- org.jetbrains.kotlin:kotlin-stdlib:1.5.31 -&gt; 1.7.10 (*)</span></span><br></pre></td></tr></table></figure>
+
+<p>它表示core-ktx中依赖的kt标准库由1.5.31被拉高到1.7.10了。</p>
+<p>最后是看依赖项的版本信息，比如：1.5.31 -&gt; 1.7.10 (*)。</p>
+<p>版本信息正常应该是这样的：</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">androidx.activity:activity:1.5.0</span></span><br></pre></td></tr></table></figure>
+
+<p>不正常的就有多样了：</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">androidx.annotation:annotation:1.1.0 -&gt; 1.3.0</span></span><br><span class="line"></span><br><span class="line"><span class="section">org.jetbrains.kotlin:kotlin-stdlib:1.5.31 -&gt; 1.7.10 (*)</span></span><br><span class="line"></span><br><span class="line"><span class="section">org.jetbrains.kotlin:kotlin-stdlib:1.7.10 (*)</span></span><br><span class="line"></span><br><span class="line"><span class="section">androidx.test:core:&#123;strictly 1.4.0&#125; -&gt; 1.4.0 (c)</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>-&gt;</code>：表示冲突，比如这个1.1.0 -&gt; 1.3.0，<code>-&gt;</code> 后面的版本表示Gradle决议之后的版本，这里表示1.1.0版本被拉高到1.3.0；</li>
+<li><code>*</code>：<code>*</code>其实是省略的意思，层级太深，Gradle就省略了一部分，而越深的信息也不太重要，就显的冗余，往往重要的信息都在前几层；</li>
+<li><code>c</code>：c是<code>constraints</code>的简称，主要是用来保证当前依赖项所需要的依赖的版本的一致性，白话讲就是为了防止其他依赖项把我需要的依赖给拉高而导致我自己不可用的情况。</li>
+<li><code>strictly</code>：strictly跟force一样表示强制使用该版本，区别在于strictly可以在依赖树里标示出来，而force则没有任何标示，所以force在高版本里也被废弃了。</li>
+</ul>
+<h2 id="决议规则"><a href="#决议规则" class="headerlink" title="决议规则"></a>决议规则</h2><p><strong>版本决议是指在某个依赖出现多个版本的时候（版本冲突），Gradle如何选择最终的版本来参与编译。</strong></p>
+<p>版本决议这个空讲不如上代码来的直接，我们就用常用的网络库<code>okhttp</code>来举例吧。</p>
+<p>我们先去maven上搜一下okhttp的版本都有哪些：</p>
+<p><img src="/posts/d6909b30/image-20231129163021954.png" alt="image-20231129163021954"></p>
+<h3 id="示例1："><a href="#示例1：" class="headerlink" title="示例1："></a>示例1：</h3><p>我们先在app&gt;build.gradle里面依赖一个最新的正式版4.10.0，同时再依赖一个老版本4.9.3。</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">    implementation <span class="string">&#x27;com.squareup.okhttp3:okhttp:4.10.0&#x27;</span></span><br><span class="line">    implementation <span class="string">&#x27;com.squareup.okhttp3:okhttp:4.9.3&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>sync之后执行<code>./gradlew app:dependencies &gt; dependencies.txt</code></p>
+<p>然后看看决策结果是多少，输出如下：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">+<span class="comment">--- com.squareup.okhttp3:okhttp:4.10.0</span></span><br><span class="line">|    +<span class="comment">--- com.squareup.okio:okio:3.0.0</span></span><br><span class="line">|    |    <span class="comment">--- com.squareup.okio:okio-jvm:3.0.0</span></span><br><span class="line">|    |         +<span class="comment">--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.31 -&gt; 1.7.10 (*)</span></span><br><span class="line">|    |         <span class="comment">--- org.jetbrains.kotlin:kotlin-stdlib-common:1.5.31 -&gt; 1.7.10</span></span><br><span class="line">|    <span class="comment">--- org.jetbrains.kotlin:kotlin-stdlib:1.6.20 -&gt; 1.7.10 (*)</span></span><br><span class="line">+<span class="comment">--- com.squareup.okhttp3:okhttp:4.9.3 -&gt; 4.10.0 (*)</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="结论1："><a href="#结论1：" class="headerlink" title="结论1："></a>结论1：</h3><p>同一个模块的多个相同依赖，优先选择最高版本。</p>
+<h3 id="示例2："><a href="#示例2：" class="headerlink" title="示例2："></a>示例2：</h3><p>新建一个名为<code>plugin</code>的Module，来模拟多Module情况下版本冲突的场景。</p>
+<p>在plugin Module里依赖okhttp4.9.3，在app Module里依赖4.10.0；</p>
+<p>plugin&gt;build.gradle：</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">    implementation <span class="string">&#x27;com.squareup.okhttp3:okhttp:4.9.3&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>app&gt;build.gradle：</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">    implementation <span class="string">&#x27;com.squareup.okhttp3:okhttp:4.10.0&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行，输出如下：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">+--- com<span class="selector-class">.squareup</span><span class="selector-class">.okhttp3</span>:okhttp:&#123;strictly <span class="number">4.10</span>.<span class="number">0</span>&#125; -&gt; <span class="number">4.10</span>.<span class="number">0</span> (c)</span><br></pre></td></tr></table></figure>
+
+<p>然后反过来，在plugin Module里依赖okhttp4.10.0，在app Module里依赖4.9.3</p>
+<p>运行，输出如下：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">+--- com<span class="selector-class">.squareup</span><span class="selector-class">.okhttp3</span>:okhttp:&#123;strictly <span class="number">4.9</span>.<span class="number">3</span>&#125; -&gt; <span class="number">4.9</span>.<span class="number">3</span> (c)</span><br></pre></td></tr></table></figure>
+
+<h3 id="结论2："><a href="#结论2：" class="headerlink" title="结论2："></a>结论2：</h3><p>多个模块的多个相同依赖，优先选择主模块(app)的版本，并默认有<code>strictly</code>关键字约束；</p>
+<h3 id="示例3："><a href="#示例3：" class="headerlink" title="示例3："></a>示例3：</h3><p>在plugin Module里<code>强制</code>依赖okhttp4.9.3，在app Module里依赖4.10.0。</p>
+<p><img src="/posts/d6909b30/image-20231130160338094.png" alt="image-20231130160338094"></p>
+<p>我们这里用force的话可以看到被废弃了，源码让我们用strictly代替：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Sets whether or not the version of this dependency should be enforced in the case of version conflicts.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> force Whether to force this version or not.</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> this</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@deprecated</span> Use &#123;<span class="doctag">@link</span> MutableVersionConstraint#strictly(String) instead.&#125;</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Deprecated</span></span><br><span class="line">ExternalDependency <span class="title function_">setForce</span><span class="params">(<span class="type">boolean</span> force)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>那我们用strictly改一下：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">implementation(<span class="string">&#x27;com.squareup.okhttp3:okhttp&#x27;</span>) &#123;</span><br><span class="line">    version&#123;</span><br><span class="line">        strictly(<span class="string">&quot;4.9.3&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行，输出如下：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">+--- com<span class="selector-class">.squareup</span><span class="selector-class">.okhttp3</span>:okhttp:&#123;strictly <span class="number">4.10</span>.<span class="number">0</span>&#125; -&gt; <span class="number">4.10</span>.<span class="number">0</span> (c)</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，plugin Module的强制版本4.9.3没起到效果。</p>
+<p>那么我们反过来，在app Module里<code>强制</code>依赖okhttp4.9.3，在plugin Module里依赖4.10.0试试；</p>
+<p>app&gt;build.gradle：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">implementation(<span class="string">&#x27;com.squareup.okhttp3:okhttp&#x27;</span>) &#123;</span><br><span class="line">    version&#123;</span><br><span class="line">        strictly(<span class="string">&quot;4.9.3&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>plugin&gt;build.gradle：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">implementation <span class="string">&#x27;com.squareup.okhttp3:okhttp:4.10.0&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>运行，输出如下：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">+--- com<span class="selector-class">.squareup</span><span class="selector-class">.okhttp3</span>:okhttp:&#123;strictly <span class="number">4.9</span>.<span class="number">3</span>&#125; -&gt; <span class="number">4.9</span>.<span class="number">3</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="结论3："><a href="#结论3：" class="headerlink" title="结论3："></a>结论3：</h3><p>因为默认有strictly关键字的约束，所以子模块的强制版本是失效的，即使子模块的版本比app模块的版本高，也<strong>优先选择主模块(app)中依赖的版本</strong>。虽然版本降级的情况少见，但这也不失为一种解决方案…</p>
+<p>ps：如果上面strictly的用法你觉得有些繁琐，也可以选择用<code>!!</code>简写的方式代替：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">implementation <span class="string">&#x27;com.squareup.okhttp3:okhttp:4.10.0!!&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="示例4："><a href="#示例4：" class="headerlink" title="示例4："></a>示例4：</h3><p>在app 同时依赖okhttp4.10.0和5.0.0-alpha.11，看看如何决议</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">    implementation <span class="string">&#x27;com.squareup.okhttp3:okhttp:4.10.0&#x27;</span></span><br><span class="line">    implementation <span class="string">&#x27;com.squareup.okhttp3:okhttp:5.0.0-alpha.11&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行，输出如下：</p>
+<figure class="highlight diff"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="addition">+--- com.squareup.okhttp3:okhttp:4.10.0 -&gt; 5.0.0-alpha.11</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="结论4："><a href="#结论4：" class="headerlink" title="结论4："></a>结论4：</h3><p>虽然版本号带字母，但是前面的基础版本5.0.0高于4.10.0，所以选择5.0.0-alpha.11，修饰词其次；</p>
+<h3 id="示例5："><a href="#示例5：" class="headerlink" title="示例5："></a>示例5：</h3><p>在app 同时依赖okhttp4.10.0和5.0.0-alpha.11，但4.10.0版本使用force强制依赖版本</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line"></span><br><span class="line">    implementation( <span class="string">&#x27;com.squareup.okhttp3:okhttp:4.10.0&#x27;</span>)&#123;</span><br><span class="line">        force(<span class="literal">true</span>)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    implementation <span class="string">&#x27;com.squareup.okhttp3:okhttp:5.0.0-alpha.11&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行，输出如下：</p>
+<figure class="highlight diff"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="addition">+--- com.squareup.okhttp3:okhttp:5.0.0-alpha.11 -&gt; 4.10.0</span></span><br></pre></td></tr></table></figure>
+
+<p>可以看到，版本是被拉低了的。</p>
+<p>那给5.0.0-alpha.11版本用strictly的方式强制一下试试</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">implementation <span class="string">&#x27;com.squareup.okhttp3:okhttp:5.0.0-alpha.11!!&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>运行，输出如下：</p>
+<figure class="highlight diff"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="addition">+--- com.squareup.okhttp3:okhttp:4.10.0 FAILED</span></span><br><span class="line"><span class="addition">+--- com.squareup.okhttp3:okhttp:&#123;strictly 5.0.0-alpha.11&#125; FAILED</span></span><br></pre></td></tr></table></figure>
+
+<p>可以看到报错了，并且在<code>External Libraries</code>里面找不到okhttp的依赖。</p>
+<h3 id="结论5："><a href="#结论5：" class="headerlink" title="结论5："></a>结论5：</h3><p><strong>force优先级高于strictly，如果二者同时显式声明，则会报错</strong>。</p>
+<h3 id="示例6："><a href="#示例6：" class="headerlink" title="示例6："></a>示例6：</h3><p>在app 同时依赖okhttp4.10.0和5.0.0-alpha.11，并同时都使用force强制依赖版本</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line"></span><br><span class="line">    implementation( <span class="string">&#x27;com.squareup.okhttp3:okhttp:4.10.0&#x27;</span>)&#123;</span><br><span class="line">        force(<span class="literal">true</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    implementation( <span class="string">&#x27;com.squareup.okhttp3:okhttp:5.0.0-alpha.11&#x27;</span>)&#123;</span><br><span class="line">        force(<span class="literal">true</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行，输出如下：</p>
+<figure class="highlight diff"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="addition">+--- com.squareup.okhttp3:okhttp:5.0.0-alpha.11 -&gt; 4.10.0 (*)</span></span><br></pre></td></tr></table></figure>
+
+<p>4.10.0和5.0.0-alpha.11版本的依赖顺序换一下试试</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line"></span><br><span class="line">    implementation( <span class="string">&#x27;com.squareup.okhttp3:okhttp:5.0.0-alpha.11&#x27;</span>)&#123;</span><br><span class="line">        force(<span class="literal">true</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    implementation( <span class="string">&#x27;com.squareup.okhttp3:okhttp:4.10.0&#x27;</span>)&#123;</span><br><span class="line">        force(<span class="literal">true</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行，输出如下：</p>
+<figure class="highlight diff"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="addition">+--- com.squareup.okhttp3:okhttp:4.10.0 -&gt; 5.0.0-alpha.11 (*)</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="结论6："><a href="#结论6：" class="headerlink" title="结论6："></a>结论6：</h3><p>同时使用force强制依赖版本时，版本决议的结果跟依赖顺序有关，<strong>最早force的版本优先。</strong></p>
+<h3 id="示例7："><a href="#示例7：" class="headerlink" title="示例7："></a>示例7：</h3><p>模拟一个三方库依赖传递的场景。</p>
+<p>Android开发的应该都知道<code>retrofit</code>，而retrofit也依赖了okhttp，那我们把retrofit也引进来看看</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">    implementation <span class="string">&#x27;com.squareup.okhttp3:okhttp:4.10.0&#x27;</span></span><br><span class="line">    implementation <span class="string">&#x27;com.squareup.retrofit2:retrofit:2.9.0&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行，输出如下：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">+<span class="comment">--- com.squareup.retrofit2:retrofit:2.9.0</span></span><br><span class="line">|    <span class="comment">--- com.squareup.okhttp3:okhttp:3.14.9 -&gt; 4.10.0 (*)</span></span><br></pre></td></tr></table></figure>
+
+<p>可以看到，retrofit中依赖的okhttp3.14.9被拉高到4.10.0了。</p>
+<p>那么现在，我们去掉项目中依赖的okhttp4.10.0，然后再依赖一个更低版本的retrofit，看看okhttp的版本是多少</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line"><span class="comment">//    implementation &#x27;com.squareup.okhttp3:okhttp:4.10.0&#x27;</span></span><br><span class="line">    implementation <span class="string">&#x27;com.squareup.retrofit2:retrofit:2.9.0&#x27;</span></span><br><span class="line">    implementation <span class="string">&#x27;com.squareup.retrofit2:retrofit:2.0.0&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行，输出如下：</p>
+<figure class="highlight diff"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="addition">+--- com.squareup.retrofit2:retrofit:2.0.0 -&gt; 2.9.0 (*)</span></span><br></pre></td></tr></table></figure>
+
+<p>可以看到，retrofit的版本2.0.0拉高到2.9.0，并且没有子级。</p>
+<h3 id="结论7："><a href="#结论7：" class="headerlink" title="结论7："></a>结论7：</h3><p>当项目中的依赖与三方库中的依赖相同时，<strong>优先选择高版本</strong>；</p>
+<p>当多个三方库参与版本决议时，优先高版本，且子级跟随父级，即选择一级依赖版本决议结果的子级；</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>ok，示例了这么多，我们再把结论总结一下：</p>
+<ol>
+<li><strong>当有多个相同依赖时，不管是哪里引入的，gradle总会优先选择最高版本；</strong></li>
+<li><strong>当多个相同依赖没有版本约束条件时，优先选择主模块(app)中的版本，且默认有strictly约束版本；</strong></li>
+<li><strong>force优先级高于strictly，如果二者同时显式声明，则会报错，推荐使用strictly；</strong></li>
+<li><strong>同时使用force强制依赖版本时，版本决议的结果跟依赖顺序有关，最早force的版本优先；</strong></li>
+</ol>
+<h2 id="版本号规则"><a href="#版本号规则" class="headerlink" title="版本号规则"></a>版本号规则</h2><table>
+<thead>
+<tr>
+<th><strong>分类</strong></th>
+<th><strong>示例</strong></th>
+<th><strong>决议结果</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>全数字，段数不同</td>
+<td>1.2.3 vs 1.4</td>
+<td>1.4</td>
+<td>段数依次比较，数字大的胜出</td>
+</tr>
+<tr>
+<td>全数字，段数相同，位数相同</td>
+<td>1.2.3 vs 1.2.4</td>
+<td>1.2.4</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>全数字，段数相同，位数不同</td>
+<td>1.2.3 vs 1.2.10</td>
+<td>1.2.10</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>全数字，段数不同</td>
+<td>1.2.3 vs 1.2.3.0</td>
+<td>1.2.3.0</td>
+<td>段数多的胜出</td>
+</tr>
+<tr>
+<td>段数相同，字母比较</td>
+<td>1.2.a vs 1.2.b</td>
+<td>1.2.b</td>
+<td>字母大的胜出</td>
+</tr>
+<tr>
+<td>段数相同，数字与非数字</td>
+<td>1.2.3 vs 1.2.abc</td>
+<td>1.2.3</td>
+<td><strong>数字优先字母</strong></td>
+</tr>
+</tbody></table>
+<p>Gradle也支持版本号的范围选择，比如[1.0,)、[1.1, 2.0)、(1.2, 1.5]、1.+、latest.release等，但是这种一般很少用，感兴趣的可以去看<a target="_blank" rel="noopener" href="https://docs.gradle.org/current/userguide/single_versions.html#version_ordering">Gradle文档</a>，或<a target="_blank" rel="noopener" href="https://maven.apache.org/pom.html#version-order-specification">maven文档</a>。</p>
+<h2 id="解决冲突"><a href="#解决冲突" class="headerlink" title="解决冲突"></a>解决冲突</h2><p>当项目复杂到一定程度的时候（依赖多），很多依赖传递就变得不可控了，随之而来的就是各种依赖版本冲突。不管是主工程的模式也好，还是单独搞个模块管理依赖，我们都需要有一个决议机制，用来保证依赖版本全局的唯一性、可用性。</p>
+<p>此外，因为Gradle版本决议的默认规则是选择最高的版本，但是最高的版本很有可能是与项目不兼容的，所以这时候我们就要去干预Gradle的版本决议来保证项目的编译运行。</p>
+<p>不干预的情况下，我们项目里面就可能会存在一个库多个版本的情况。</p>
+<p>比如：</p>
+<p><img src="/posts/d6909b30/image-20231129174636318.png" alt="image-20231129174636318"></p>
+<p>所谓决议机制，就是我们面对多个版本、版本冲突时的解决方案。</p>
+<p>一般解决方案会有如下几种。</p>
+<h3 id="版本管理"><a href="#版本管理" class="headerlink" title="版本管理"></a>版本管理</h3><p>解决冲突最好的办法就是避免冲突。</p>
+<p>尽管版本管理在项目初期可以做的非常好，但是在项目和开发人员的双重迭代下，劣化只是时间的问题而已，所以建议在项目初期就做好版本管理的规划，因为这玩意儿越往后，真的越难改，也不是能力问题，主要是投入产出比实在是不高。</p>
+<p>那么问题来了，版本管理有哪些方式呢？</p>
+<ol>
+<li>早期的方案是新建一个或多个<code>.gradle</code>文件来做依赖和版本的双重管理，比如version.gradle；</li>
+<li>后来新建项目就会有默认的<code>ext &#123; &#125;</code>了，属于是官方在版本管理上又迈了一步；</li>
+<li>再后来就是<code>buildSrc</code>了，相比于ext，buildSrc可以把依赖和版本都单独的抽出去，支持提示和跳转算是它的最大优势了；</li>
+<li>最新的就是Gradle7.0以后的<code>Catalog</code>了，“对所有module可见，可统一管理所有module的依赖，支持在项目间共享依赖”；</li>
+<li>其实这中间还有一个很多人不知道的东西，<code>java-platform</code>插件，准确的说它属于依赖管理，也包含了版本管理，也支持多项目共享；</li>
+<li>…</li>
+</ol>
+<p>大概介绍这些，有机会的话再展开吧…</p>
+<p>如果说版本管理是提前规划，那下面的操作就属于后期人为干预了。</p>
+<h3 id="强制版本"><a href="#强制版本" class="headerlink" title="强制版本"></a>强制版本</h3><p>如果没有版本管理，或者版本管理的能力比较弱，那就只能强制版本了。</p>
+<p>强制版本分两部分，一是修改依赖配置添加版本约束，二是编译期修改版本决议规则。</p>
+<p>当我们使用依赖配置进行版本约束时，形式如下：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">implementation(<span class="string">&#x27;com.squareup.okhttp3:okhttp:4.10.0&#x27;</span>) &#123;</span><br><span class="line">    force(<span class="literal">true</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>那我们如何知道implementation后面可以跟哪些约束呢，这些约束又是代表什么意思呢？</p>
+<p><code>implementation</code>本质上是添加依赖嘛，依赖项配置对应的就是Dependency对象，它在dependencies { }中对应的其实是多个集合，也就是多个依赖集合，对应不同的依赖形式，比如implementation、testImplementation、fileXXX等。</p>
+<p>既然依赖项配置对应的就是Dependency对象，那支持哪些约束条件，就在这个类及其子类里。</p>
+<p>我翻了源码，总结了一下Dependency及其子类下提供的常用的约束条件：</p>
+<ul>
+<li>ExternalDependency &gt; <code>setForce</code>：版本冲突的情况下，是否强制此依赖项的版本。</li>
+<li>ExternalDependency &gt; <code>version</code>：配置此依赖项的版本约束。是一个闭包，其下可接收strictly、require、prefer、reject。</li>
+<li>ModuleDependency &gt; <code>exclude</code>：通过排除规则，来排除此依赖的可传递性依赖。</li>
+<li>ModuleDependency &gt; <code>setTransitive</code>：是否排除当前依赖里包含的可传递依赖项。</li>
+<li>ExternalModuleDependency &gt; <code>setChanging</code>：设置Gradle是否始终检查远程仓库中的更改。常用于快照版本SNAPSHOT的变更检查，因为Gradle默认会有缓存机制(默认24h)，而SNAPSHOT版本的变更相对更频繁一些。或者使用resolutionStrategy提供的<code>cacheChangingModulesFor(0, &#39;SECONDS&#39;)</code>来设置缓存时长（check for updates every build）。</li>
+</ul>
+<p>下面再来分别简单介绍一下。</p>
+<h4 id="force"><a href="#force" class="headerlink" title="force"></a>force</h4><p>版本冲突的情况下，是否强制此依赖项的版本。</p>
+<p>虽然Gradle已经开启8.0时代了，但是使用老版本的项目依然有很多，所以使用force强制版本的方式依然可用。</p>
+<p>force的结果跟依赖顺序有关，最早force的版本优先。</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">implementation(<span class="string">&#x27;com.squareup.okhttp3:okhttp:4.10.0&#x27;</span>) &#123;</span><br><span class="line">    force(<span class="literal">true</span>)</span><br><span class="line">    <span class="comment">// or</span></span><br><span class="line">    <span class="comment">// force = true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="strictly"><a href="#strictly" class="headerlink" title="strictly"></a>strictly</h4><p>声明强制版本，上面我们演示过了，高版本中默认就有strictly的隐式声明，如果显式声明的版本无法解析，编译期会报错。代替force的新方式，推荐使用。</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">implementation <span class="string">&#x27;com.squareup.okhttp3:okhttp:4.10.0!!&#x27;</span></span><br><span class="line"><span class="comment">// or</span></span><br><span class="line">implementation(<span class="string">&#x27;com.squareup.okhttp3:okhttp&#x27;</span>) &#123;</span><br><span class="line">    version&#123;</span><br><span class="line">        strictly(<span class="string">&quot;4.10.0&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="exclude"><a href="#exclude" class="headerlink" title="exclude"></a>exclude</h4><p>通过排除规则，来排除此依赖的可传递性依赖。</p>
+<p>排除规则（还是基于GAV）：</p>
+<ul>
+<li>group</li>
+<li>module</li>
+<li>group + module</li>
+</ul>
+<p>比如排除retrofit里面自带的okhttp：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">implementation(<span class="string">&#x27;com.squareup.retrofit2:retrofit:2.9.0&#x27;</span>) &#123;</span><br><span class="line">    exclude(<span class="attr">group:</span> <span class="string">&quot;com.squareup.okhttp3&quot;</span>, <span class="attr">module:</span> <span class="string">&quot;okhttp&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>排除前：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">+<span class="comment">--- com.squareup.retrofit2:retrofit:2.9.0</span></span><br><span class="line">|    <span class="comment">--- com.squareup.okhttp3:okhttp:3.14.9 -&gt; 4.10.0</span></span><br><span class="line">|         +<span class="comment">--- com.squareup.okio:okio:3.0.0</span></span><br><span class="line">|         |    <span class="comment">--- com.squareup.okio:okio-jvm:3.0.0</span></span><br><span class="line">|         |         +<span class="comment">--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.31 -&gt; 1.7.10 (*)</span></span><br><span class="line">|         |         <span class="comment">--- org.jetbrains.kotlin:kotlin-stdlib-common:1.5.31 -&gt; 1.7.10</span></span><br><span class="line">|         <span class="comment">--- org.jetbrains.kotlin:kotlin-stdlib:1.6.20 -&gt; 1.7.10 (*)</span></span><br></pre></td></tr></table></figure>
+
+<p>排除后：</p>
+<figure class="highlight diff"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="addition">+--- com.squareup.retrofit2:retrofit:2.9.0</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>慎用</strong>，因为你不确定排除后原来依赖是否还正常可用，比如retrofit就是需要okhttp，你给干掉了，不就G了吗…</p>
+<h4 id="transitive"><a href="#transitive" class="headerlink" title="transitive"></a>transitive</h4><p>是否排除当前依赖里包含的可传递依赖项。</p>
+<ul>
+<li>false：不传递</li>
+<li>true：传递</li>
+</ul>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">implementation(<span class="string">&#x27;com.squareup.retrofit2:retrofit:2.9.0&#x27;</span>) &#123;</span><br><span class="line">    transitive(<span class="literal">false</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="configurations"><a href="#configurations" class="headerlink" title="configurations"></a>configurations</h4><p>基于Gradle生命周期hook的后置操作，算是终极方案，也是目前比较有效的解决方案。</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">configurations.all &#123;</span><br><span class="line">    resolutionStrategy.eachDependency &#123; DependencyResolveDetails details -&gt;</span><br><span class="line">        <span class="keyword">def</span> requested = details.requested</span><br><span class="line">        <span class="keyword">if</span> (requested.group == <span class="string">&#x27;com.squareup.okhttp3&#x27;</span> &amp;&amp; requested.name == <span class="string">&#x27;okhttp&#x27;</span>) &#123;</span><br><span class="line">            details.useVersion <span class="string">&#x27;4.10.0&#x27;</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>details.useVersion ‘4.10.0’ 这里的版本号也支持<code>gradle.properties</code>中定义的变量，比如：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">configurations.all &#123;</span><br><span class="line">    resolutionStrategy.eachDependency &#123; DependencyResolveDetails details -&gt;</span><br><span class="line">        <span class="keyword">def</span> requested = details.requested</span><br><span class="line">        <span class="keyword">if</span> (requested.group == <span class="string">&#x27;com.yechaoa.plugin&#x27;</span> &amp;&amp; requested.name == <span class="string">&#x27;plugin&#x27;</span>) &#123;</span><br><span class="line">            details.useVersion PLUGIN_VERSION</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>或者我们也可以直接force某个具体的依赖项</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">configurations.all &#123;</span><br><span class="line">    resolutionStrategy.force <span class="string">&#x27;com.squareup.okhttp3:okhttp:4.10.0&#x27;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// or</span></span><br><span class="line">    resolutionStrategy &#123;</span><br><span class="line">        force(<span class="string">&#x27;com.squareup.okhttp3:okhttp:4.10.0&#x27;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面的代码可能有的同学搜到过，但好像没人分析过，因为是比较有效的解决方案，我姑且从源码的阶段来分析一下。</p>
+<h3 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h3><p>我们前文（<a target="_blank" rel="noopener" href="https://juejin.cn/post/7170684769083555877">【Gradle-4】Gradle的生命周期</a>）讲到的声明周期的第二阶段Configuration，Gradle会去解析build.gradle配置生成Project对象。</p>
+<p>依赖配置的闭包dependencies { } 其实调用的就是Project对象的dependencies(Closure configureClosure)方法，dependencies()方法接收一个闭包对象，这个闭包就是我们的配置项。</p>
+<p>然后这个闭包通过DependencyHandler对象代理解析给Project，但也不是直接解析，这中间还涉及到一些操作，DependencyHandler会把依赖项分组到Configuration中。</p>
+<p>那Configuration又是个什么东西？</p>
+<p>Configuration表示一组dependencies，也就是Dependency集合。</p>
+<p>为什么是个集合？</p>
+<p>因为对应不同的依赖形式，比如implementation、testImplementation、fileXXX等，也就是说对应着不同的Configuration对象，所以，一个项目有多个Project对象，一个Project对象有多个Configuration对象。</p>
+<p><img src="/posts/d6909b30/image-20231201114031487.png" alt="image-20231201114031487"></p>
+<p>ok，回到hook生命周期的问题上来。</p>
+<p>我们配置依赖项是在dependencies { } 中配置的，但是解析是在编译时做的对吧。</p>
+<p>那么再次回溯下我们的诉求，要在编译期把版本给强制了。</p>
+<p>Gradle生命周期有三个阶段，初始化、配置、执行，执行阶段肯定是不行了，而配置阶段正好是解析build.gradle文件的时候，那么，我们就可以在解析完build.gradle之后，再去找到我们需要强制版本的依赖项，然后去强制版本。</p>
+<p>ok，思路清晰了，那么就是开搞！</p>
+<p>前面提到我们的依赖配置项dependencies { }解析完就是Project对象下的多个Configuration对象对吧，所以我们就需要找到Project对象下所有的Configuration对象，既然Configuration对象有多个，肯定得有个容器吧，确实有，就是ConfigurationContainer，就是负责管理Configuration的。</p>
+<p>Project对象也提供了获取所有的Configuration对象的方法，就是getConfigurations()，返回一个ConfigurationContainer对象，</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">Project</span> <span class="keyword">extends</span> <span class="title class_">Comparable</span>&lt;Project&gt;, ExtensionAware, PluginAware &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">    ConfigurationContainer <span class="title function_">getConfigurations</span><span class="params">()</span>;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当我们拿到所有的Configuration对象之后，就是遍历Configuration了。</p>
+<p>而Configuration对象其实已经给我们提供了一个解析策略，就是ResolutionStrategy对象，</p>
+<p><strong>ResolutionStrategy对象就是专门用来处理依赖关系的</strong>，比如强制某些依赖版本、替换、解决冲突或快照版本超时等。</p>
+<p>所以，遍历Configuration之后，就是获取ResolutionStrategy对象，然后继续遍历，获取我们具体的依赖项。</p>
+<p>我们具体的依赖项配置的时候是这样的：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">implementation <span class="string">&#x27;com.squareup.retrofit2:retrofit:2.9.0&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>但是解析之后是由DependencyResolveDetails对象承载的，但是它其实是一个中间层，具体的接收对象是ModuleVersionSelector对象，</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">ModuleVersionSelector</span> &#123;</span><br><span class="line">    String <span class="title function_">getGroup</span><span class="params">()</span>;</span><br><span class="line">    String <span class="title function_">getName</span><span class="params">()</span>;</span><br><span class="line">    <span class="meta">@Nullable</span></span><br><span class="line">    String <span class="title function_">getVersion</span><span class="params">()</span>;</span><br><span class="line">    <span class="type">boolean</span> <span class="title function_">matchesStrictly</span><span class="params">(ModuleVersionIdentifier identifier)</span>;</span><br><span class="line">    ModuleIdentifier <span class="title function_">getModule</span><span class="params">()</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过ModuleVersionSelector对象，我们可以获取Group、Name、Version，这就对应着我们前面讲到的GAV。</p>
+<p>那么中间层DependencyResolveDetails对象是干嘛的呢，DependencyResolveDetails对象除了获取原始数据之外，提供了解决版本冲突的方法，比如useVersion、useTarget，这个我们在前文生命周期的插件管理小节上提到过，与PluginResolveDetails同出一辙。</p>
+<p>所以，最终就有了如下的代码：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">configurations.all &#123;</span><br><span class="line">    resolutionStrategy.eachDependency &#123; DependencyResolveDetails details -&gt;</span><br><span class="line">        <span class="keyword">def</span> requested = details.requested</span><br><span class="line">        <span class="keyword">if</span> (requested.group == <span class="string">&#x27;com.squareup.okhttp3&#x27;</span> &amp;&amp; requested.name == <span class="string">&#x27;okhttp&#x27;</span>) &#123;</span><br><span class="line">            details.useVersion <span class="string">&#x27;4.10.0&#x27;</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>再来分析下这段代码：</p>
+<ol>
+<li>首先获取Project对象下所有的Configuration对象，即configurations</li>
+<li>然后遍历所有的Configuration对象，即all</li>
+<li>然后获取Configuration对象提供的专门处理依赖关系的ResolutionStrategy对象，即resolutionStrategy</li>
+<li>然后遍历Configuration下所有的依赖项，即eachDependency</li>
+<li>然后获取具体的某个依赖项，接收对象是ModuleVersionSelector，即details.requested</li>
+<li>然后进行条件匹配，即group &#x3D;&#x3D; 、name &#x3D;&#x3D;</li>
+<li>最后，匹配成功，就使用DependencyResolveDetails对象提供的方法进行强制版本，即details.useVersion</li>
+</ol>
+<p>流程图：</p>
+<p><img src="/posts/d6909b30/image-20231201115800048.png" alt="image-20231201115800048"></p>
+<p>两条线，分别对应着<code>配置流程</code>和<code>解析流程</code>。</p>
+<h3 id="额外一个小知识"><a href="#额外一个小知识" class="headerlink" title="额外一个小知识"></a>额外一个小知识</h3><p>如果你想对版本冲突的依赖项做版本管理，但是又不知道当前项目中有哪些依赖是重复的，从External Libraries里面一个一个的看又太费劲。</p>
+<p>那么，我告诉你一个小技巧，开启版本冲突报错模式：</p>
+<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">configurations<span class="selector-class">.all</span> &#123;</span><br><span class="line">    resolutionStrategy&#123;</span><br><span class="line">        <span class="built_in">failOnVersionConflict</span>()</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>加上<code>failOnVersionConflict()</code>之后，编译解析的时候只要有重复的版本，也就是版本冲突的时候，就会直接报错，控制台会输出具体的依赖项和版本。</p>
+<h1 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h1><p>本文主要介绍了Gradle的<code>依赖管理</code>和<code>版本决议</code>。</p>
+<p>依赖管理里面需要关注的是依赖方式，不同的依赖方式决定了是否会依赖传递；</p>
+<p>版本决议里面具体介绍了Gradle决议规则和版本号规则，以及多种解决方案；</p>
+<p>最后还有一个源码分析和版本管理的小技巧。</p>
+<p>总的来说，信息量还是挺大的，记不住没关系，知道有这篇文章就行，用到了再回来看…</p>
+<!-- flag of hidden posts -->
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div></div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>Donate</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.jpg" alt=" WeChat Pay"/>
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/private/" rel="tag"># private</a>
+          
+            <a href="/tags/Gradle/" rel="tag"># Gradle</a>
+          
+            <a href="/tags/groovy/" rel="tag"># groovy</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">72</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">31</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@qq.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/shenbh" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://gitee.com/shen_bh" target="_blank" title="Gitee">
+                      
+                        <i class="fa fa-fw fa-git"></i>Gitee</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BE%9D%E8%B5%96%E7%AE%A1%E7%90%86"><span class="nav-text">依赖管理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A3%B0%E6%98%8E%E4%BE%9D%E8%B5%96%E9%A1%B9"><span class="nav-text">声明依赖项</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BE%9D%E8%B5%96%E7%B1%BB%E5%9E%8B"><span class="nav-text">依赖类型</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9C%E7%AB%AF%E4%BB%93%E5%BA%93"><span class="nav-text">远端仓库</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GAV"><span class="nav-text">GAV</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BE%9D%E8%B5%96%E4%BC%A0%E9%80%92"><span class="nav-text">依赖传递</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BE%9D%E8%B5%96%E6%96%B9%E5%BC%8F"><span class="nav-text">依赖方式</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%89%88%E6%9C%AC%E5%86%B3%E8%AE%AE"><span class="nav-text">版本决议</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BE%9D%E8%B5%96%E4%BF%A1%E6%81%AF"><span class="nav-text">依赖信息</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%B3%E8%AE%AE%E8%A7%84%E5%88%99"><span class="nav-text">决议规则</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B1%EF%BC%9A"><span class="nav-text">示例1：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%93%E8%AE%BA1%EF%BC%9A"><span class="nav-text">结论1：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B2%EF%BC%9A"><span class="nav-text">示例2：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%93%E8%AE%BA2%EF%BC%9A"><span class="nav-text">结论2：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B3%EF%BC%9A"><span class="nav-text">示例3：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%93%E8%AE%BA3%EF%BC%9A"><span class="nav-text">结论3：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B4%EF%BC%9A"><span class="nav-text">示例4：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%93%E8%AE%BA4%EF%BC%9A"><span class="nav-text">结论4：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B5%EF%BC%9A"><span class="nav-text">示例5：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%93%E8%AE%BA5%EF%BC%9A"><span class="nav-text">结论5：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B6%EF%BC%9A"><span class="nav-text">示例6：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%93%E8%AE%BA6%EF%BC%9A"><span class="nav-text">结论6：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B7%EF%BC%9A"><span class="nav-text">示例7：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%93%E8%AE%BA7%EF%BC%9A"><span class="nav-text">结论7：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%88%E6%9C%AC%E5%8F%B7%E8%A7%84%E5%88%99"><span class="nav-text">版本号规则</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E5%86%B2%E7%AA%81"><span class="nav-text">解决冲突</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%89%88%E6%9C%AC%E7%AE%A1%E7%90%86"><span class="nav-text">版本管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%BA%E5%88%B6%E7%89%88%E6%9C%AC"><span class="nav-text">强制版本</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#force"><span class="nav-text">force</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#strictly"><span class="nav-text">strictly</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#exclude"><span class="nav-text">exclude</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#transitive"><span class="nav-text">transitive</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#configurations"><span class="nav-text">configurations</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90"><span class="nav-text">源码分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A2%9D%E5%A4%96%E4%B8%80%E4%B8%AA%E5%B0%8F%E7%9F%A5%E8%AF%86"><span class="nav-text">额外一个小知识</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93-1"><span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>
