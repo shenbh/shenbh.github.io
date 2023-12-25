@@ -2923,6 +2923,67 @@
       </tags>
   </entry>
   <entry>
+    <title>版本相关-Android11</title>
+    <url>/posts/9f0098a5/</url>
+    <content><![CDATA[<h2 id="Android-11版本特性"><a href="#Android-11版本特性" class="headerlink" title="Android 11版本特性"></a>Android 11版本特性</h2><h3 id="Android-11-新特性，Scoped-Storage又有了新花样"><a href="#Android-11-新特性，Scoped-Storage又有了新花样" class="headerlink" title="Android 11 新特性，Scoped Storage又有了新花样"></a><a href="https://mp.weixin.qq.com/s/bEHTMAn9LB8SAUyf8WyF6A">Android 11 新特性，Scoped Storage又有了新花样</a></h3><p><strong>Android 11上强制启用了 <code>Scoped Storage</code></strong></p>
+<p>需要适配的地方：关注Android 11的权限变更，这部分内容在 <a href="http://mp.weixin.qq.com/s?__biz=MzA5MzI3NjE2MA==&mid=2650250310&idx=1&sn=dec8886482432b1000bfa9e03d49e4e6&chksm=88636d29bf14e43f9b60e037ce19d32d3249d0c403984e6f3901b788d4a53bb7f3903ecb92fc&scene=21#wechat_redirect">PermissionX现在支持Java了！还有Android 11权限变更讲解</a> 这篇有比较详细的详解。</p>
+<p>下文是关于 Scoped Storage 的探讨</p>
+<p>Scoped Storage不是Android 11上新推的功能，在Android 10上就有，可以参考 <a href="http://mp.weixin.qq.com/s?__biz=MzA5MzI3NjE2MA==&mid=2650249029&idx=1&sn=6ab18477950e5f4e1a14dc47ecc4f763&chksm=8863662abf14ef3c1500d64c106ab2e5a6c95e716ff6e57ba379e2aabca7b6046060ccb78af2&scene=21#wechat_redirect">Android 10适配要点，作用域存储</a> ，之前这篇并没有过时在Android 11上依然适用。</p>
+<figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">manifest</span> <span class="attr">...</span> &gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">application</span> <span class="attr">android:requestLegacyExternalStorage</span>=<span class="string">&quot;true&quot;</span> <span class="attr">...</span>&gt;</span></span><br><span class="line">    ...</span><br><span class="line">  <span class="tag">&lt;/<span class="name">application</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">manifest</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>这个配置在Android 11上依然有效，前提是 targetSdkVersion 必须小于等于 29</p>
+<p>在 targetSdkVersion 等于 30 时强制启用了 Scoped Storage（上述配置不起效）</p>
+</blockquote>
+<p>强制启用 Scoped Storage 后应用程序按照 Android 10适配要点适配就可以了。</p>
+<p>但有一类应用程序非常特殊，即文件浏览器，如Root Explorer、ES Explorer等。就会有影响，无法以文件的真实路径来对文件进行管理。针对这类应用的解决方案：</p>
+<h4 id="管理设备上所有的文件"><a href="#管理设备上所有的文件" class="headerlink" title="管理设备上所有的文件"></a>管理设备上所有的文件</h4><p>大部分应用程序来说，使用 MediaStore API 就可以满足开发需求了。以下是针对文件浏览器应用的。</p>
+<p>文件浏览器需要对设备的整个SD卡进行管理，这类危险程度比较高的权限，Google通常采用的做法是，使用Intent跳转到一个专门的授权页面，引导用户手动授权，比如悬浮窗，无障碍服务等。</p>
+<p>在Android 11上想要管理整个设备的文件也是使用类似的技术。做法：</p>
+<ol>
+<li><p>在 <code>AndroidManifest.xml</code>中声明<code>MANAGE_EXTERNAL_STORAGE</code>权限</p>
+<figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">manifest</span> <span class="attr">xmlns:android</span>=<span class="string">&quot;http://schemas.android.com/apk/res/android&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:tools</span>=<span class="string">&quot;http://schemas.android.com/tools&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">package</span>=<span class="string">&quot;com.example.scopedstoragedemo&quot;</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">uses-permission</span> <span class="attr">android:name</span>=<span class="string">&quot;android.permission.MANAGE_EXTERNAL_STORAGE&quot;</span></span></span><br><span class="line"><span class="tag">        <span class="attr">tools:ignore</span>=<span class="string">&quot;ScopedStorage&quot;</span> /&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">manifest</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>多了tools:ignore&#x3D;”ScopedStorage”，不加这个的话 Android Studio会用一个警告提醒我们不应该申请这个权限。</p>
+</blockquote>
+</li>
+<li><p>使用ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION这个action来跳转到指定的授权页面，可以通过Environment.isExternalStorageManager()这个函数来判断用户是否已授权</p>
+<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> (Build.VERSION.SDK_INT &lt; Build.VERSION_CODES.R ||</span><br><span class="line">        Environment.isExternalStorageManager()) &#123;<span class="comment">//低于Android 11或已经拥有管理整个SD卡的权限，即可直接使用传统的写法，以文件真实路径的形式对文件进行操作</span></span><br><span class="line">    Toast.makeText(<span class="keyword">this</span>, <span class="string">&quot;已获得访问所有文件权限&quot;</span>, Toast.LENGTH_SHORT).show()</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">//没有管理SD卡的权限。弹出一个对话框，告知用户申请权限的原因，然后使用Intent跳转到指定的授权页面，让用户手动授权</span></span><br><span class="line">    <span class="keyword">val</span> builder = AlertDialog.Builder(<span class="keyword">this</span>)</span><br><span class="line">        .setMessage(<span class="string">&quot;本程序需要您同意允许访问所有文件权限&quot;</span>)</span><br><span class="line">        .setPositiveButton(<span class="string">&quot;确定&quot;</span>) &#123; _, _ -&gt;</span><br><span class="line">            <span class="keyword">val</span> intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)</span><br><span class="line">            startActivity(intent)</span><br><span class="line">        &#125;</span><br><span class="line">    builder.show()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意：就算获得了管理SD卡的权限，对于Android这个目录下的很多资源仍然是访问受限的。比如<code>Android/data</code>这个目录在Android 11是无法访问的，它放的是其他应用程序的数据信息。</p>
+</blockquote>
+</li>
+</ol>
+<h4 id="Batch-operations"><a href="#Batch-operations" class="headerlink" title="Batch operations"></a>Batch operations</h4><p>Scoped Storage规定，每个应用程序都有权向MediaStore贡献数据，也可以权读取其他应用程序贡献的数据，但不能修改其他应用程序贡献的数据。但有些应用需要修改其他应用程序共享的数据（如美图秀秀、Photoshop等），针对这个问题，Android 10中提供了一种解决方案：</p>
+<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 作用：修改一张图片的灰度</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    contentResolver.openFileDescriptor(imageContentUri, <span class="string">&quot;w&quot;</span>)?.use &#123;</span><br><span class="line">        Toast.makeText(<span class="keyword">this</span>, <span class="string">&quot;现在可以修改图片的灰度了&quot;</span>, Toast.LENGTH_SHORT).show()</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="keyword">catch</span> (securityException: SecurityException) &#123;<span class="comment">//没有权限操作的情况会走底下的异常</span></span><br><span class="line">    <span class="keyword">if</span> (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.Q) &#123;<span class="comment">//大于等于Android 10的异常类型是RecoverableSecurityException，是由于Scoped Storage限制导致操作没有权限的异常</span></span><br><span class="line">        <span class="keyword">val</span> recoverableSecurityException = securityException <span class="keyword">as</span>?</span><br><span class="line">            RecoverableSecurityException ?:</span><br><span class="line">            <span class="keyword">throw</span> RuntimeException(securityException.message, securityException)</span><br><span class="line"></span><br><span class="line">        <span class="comment">//获取一个intentSender对象，借助它进行页面跳转，引导用户手动授予我们修改这张图片的权限</span></span><br><span class="line">        <span class="keyword">val</span> intentSender = recoverableSecurityException.userAction.actionIntent.intentSender</span><br><span class="line">        intentSender?.let &#123;</span><br><span class="line">            startIntentSenderForResult(intentSender, IMAGE_REQUEST_CODE,</span><br><span class="line">                    <span class="literal">null</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="literal">null</span>)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">throw</span> RuntimeException(securityException.message, securityException)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上述方法缺点是操作每张图片都要授权。Android 11中引入一个新功能<code>Batch operations</code>允许我们一次性对多个文件的操作权限进行申请。</p>
+<p>关于Batch operations的用法也很好理解，Google一共提供了4种类型的权限申请API，如下所示：</p>
+<ul>
+<li>createWriteRequest() 用于请求对多个文件的写入权限。</li>
+<li>createFavoriteRequest() 用于请求将多个文件加入到Favorite（收藏）的权限。</li>
+<li>createTrashRequest() 用于请求将多个文件移至回收站的权限。</li>
+<li>createDeleteRequest() 用于请求将多个文件删除的权限。</li>
+</ul>
+<p>以<code>createWriteRequest()</code>举例：</p>
+<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.R) &#123;</span><br><span class="line">    <span class="keyword">val</span> urisToModify = listOf(uri1, uri2, uri3, uri4)</span><br><span class="line">    <span class="keyword">val</span> editPendingIntent = MediaStore.createWriteRequest(contentResolver, urisToModify)<span class="comment">//调用createWriteRequest()对多个文件集合，创建一个PendingIntent</span></span><br><span class="line">    startIntentSenderForResult(editPendingIntent.intentSender, EDIT_REQUEST_CODE,</span><br><span class="line">            <span class="literal">null</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>)<span class="comment">//调用startIntentSenderForResult进行权限申请</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对于权限申请结果，在<code>onActivityResult()</code>中进行监听：</p>
+<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onActivityResult</span><span class="params">(requestCode: <span class="type">Int</span>, resultCode: <span class="type">Int</span>, <span class="keyword">data</span>: <span class="type">Intent</span>?)</span></span> &#123;</span><br><span class="line">    <span class="keyword">super</span>.onActivityResult(requestCode, resultCode, <span class="keyword">data</span>)</span><br><span class="line">    <span class="keyword">when</span> (requestCode) &#123;</span><br><span class="line">        EDIT_REQUEST_CODE -&gt; &#123;</span><br><span class="line">            <span class="keyword">if</span> (resultCode == Activity.RESULT_OK) &#123;</span><br><span class="line">                Toast.makeText(<span class="keyword">this</span>, <span class="string">&quot;用户已授权&quot;</span>, Toast.LENGTH_SHORT).show()</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                Toast.makeText(<span class="keyword">this</span>, <span class="string">&quot;用户没有授权&quot;</span>, Toast.LENGTH_SHORT).show()</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上述的Android 10（依赖异常捕获机制）和Android 11（依赖Batch operations）的API用法不一样。如果不想在一个项目中写两套代码进行适配的话，那么做法是在代码中使用 Batch operations只针对 Android 11进行适配，在<code>AndroidManifest.xml</code>中添加<code>requestLegacyExternalStorage</code>标记让Android 10不需要适配。</p>
+<p><a href="https://github.com/guolindev/ScopedStorageDemo">示例代码</a></p>
+<h2 id="Android11开发手册"><a href="#Android11开发手册" class="headerlink" title="Android11开发手册"></a><a href="http://services.google.cn/fh/files/misc/android_11_dev_booklet.pdf">Android11开发手册</a></h2>]]></content>
+      <categories>
+        <category>Android</category>
+      </categories>
+      <tags>
+        <tag>安卓版本</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>版本相关-Android10</title>
     <url>/posts/1093970730/</url>
     <content><![CDATA[<h1 id="Android10"><a href="#Android10" class="headerlink" title="Android10"></a>Android10</h1><h2 id="Android-10版本特性"><a href="#Android-10版本特性" class="headerlink" title="Android 10版本特性"></a>Android 10版本特性</h2><h3 id="Android-10适配要点，作用域存储"><a href="#Android-10适配要点，作用域存储" class="headerlink" title="Android 10适配要点，作用域存储"></a><a href="http://mp.weixin.qq.com/s?__biz=MzA5MzI3NjE2MA==&mid=2650249029&idx=1&sn=6ab18477950e5f4e1a14dc47ecc4f763&chksm=8863662abf14ef3c1500d64c106ab2e5a6c95e716ff6e57ba379e2aabca7b6046060ccb78af2&scene=21#wechat_redirect">Android 10适配要点，作用域存储</a></h3><p>作用域存储，直接颠覆了我们长久以来的外置存储空间的使用方式，因此大量App都将面临着较多代码模块的升级。</p>
@@ -2994,67 +3055,6 @@
 
 <p><a href="https://github.com/guolindev/ScopedStorageDemo">示例代码</a></p>
 ]]></content>
-      <categories>
-        <category>Android</category>
-      </categories>
-      <tags>
-        <tag>安卓版本</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>版本相关-Android11</title>
-    <url>/posts/9f0098a5/</url>
-    <content><![CDATA[<h2 id="Android-11版本特性"><a href="#Android-11版本特性" class="headerlink" title="Android 11版本特性"></a>Android 11版本特性</h2><h3 id="Android-11-新特性，Scoped-Storage又有了新花样"><a href="#Android-11-新特性，Scoped-Storage又有了新花样" class="headerlink" title="Android 11 新特性，Scoped Storage又有了新花样"></a><a href="https://mp.weixin.qq.com/s/bEHTMAn9LB8SAUyf8WyF6A">Android 11 新特性，Scoped Storage又有了新花样</a></h3><p><strong>Android 11上强制启用了 <code>Scoped Storage</code></strong></p>
-<p>需要适配的地方：关注Android 11的权限变更，这部分内容在 <a href="http://mp.weixin.qq.com/s?__biz=MzA5MzI3NjE2MA==&mid=2650250310&idx=1&sn=dec8886482432b1000bfa9e03d49e4e6&chksm=88636d29bf14e43f9b60e037ce19d32d3249d0c403984e6f3901b788d4a53bb7f3903ecb92fc&scene=21#wechat_redirect">PermissionX现在支持Java了！还有Android 11权限变更讲解</a> 这篇有比较详细的详解。</p>
-<p>下文是关于 Scoped Storage 的探讨</p>
-<p>Scoped Storage不是Android 11上新推的功能，在Android 10上就有，可以参考 <a href="http://mp.weixin.qq.com/s?__biz=MzA5MzI3NjE2MA==&mid=2650249029&idx=1&sn=6ab18477950e5f4e1a14dc47ecc4f763&chksm=8863662abf14ef3c1500d64c106ab2e5a6c95e716ff6e57ba379e2aabca7b6046060ccb78af2&scene=21#wechat_redirect">Android 10适配要点，作用域存储</a> ，之前这篇并没有过时在Android 11上依然适用。</p>
-<figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">manifest</span> <span class="attr">...</span> &gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">application</span> <span class="attr">android:requestLegacyExternalStorage</span>=<span class="string">&quot;true&quot;</span> <span class="attr">...</span>&gt;</span></span><br><span class="line">    ...</span><br><span class="line">  <span class="tag">&lt;/<span class="name">application</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">manifest</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>这个配置在Android 11上依然有效，前提是 targetSdkVersion 必须小于等于 29</p>
-<p>在 targetSdkVersion 等于 30 时强制启用了 Scoped Storage（上述配置不起效）</p>
-</blockquote>
-<p>强制启用 Scoped Storage 后应用程序按照 Android 10适配要点适配就可以了。</p>
-<p>但有一类应用程序非常特殊，即文件浏览器，如Root Explorer、ES Explorer等。就会有影响，无法以文件的真实路径来对文件进行管理。针对这类应用的解决方案：</p>
-<h4 id="管理设备上所有的文件"><a href="#管理设备上所有的文件" class="headerlink" title="管理设备上所有的文件"></a>管理设备上所有的文件</h4><p>大部分应用程序来说，使用 MediaStore API 就可以满足开发需求了。以下是针对文件浏览器应用的。</p>
-<p>文件浏览器需要对设备的整个SD卡进行管理，这类危险程度比较高的权限，Google通常采用的做法是，使用Intent跳转到一个专门的授权页面，引导用户手动授权，比如悬浮窗，无障碍服务等。</p>
-<p>在Android 11上想要管理整个设备的文件也是使用类似的技术。做法：</p>
-<ol>
-<li><p>在 <code>AndroidManifest.xml</code>中声明<code>MANAGE_EXTERNAL_STORAGE</code>权限</p>
-<figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">manifest</span> <span class="attr">xmlns:android</span>=<span class="string">&quot;http://schemas.android.com/apk/res/android&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:tools</span>=<span class="string">&quot;http://schemas.android.com/tools&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">package</span>=<span class="string">&quot;com.example.scopedstoragedemo&quot;</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">uses-permission</span> <span class="attr">android:name</span>=<span class="string">&quot;android.permission.MANAGE_EXTERNAL_STORAGE&quot;</span></span></span><br><span class="line"><span class="tag">        <span class="attr">tools:ignore</span>=<span class="string">&quot;ScopedStorage&quot;</span> /&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">manifest</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>多了tools:ignore&#x3D;”ScopedStorage”，不加这个的话 Android Studio会用一个警告提醒我们不应该申请这个权限。</p>
-</blockquote>
-</li>
-<li><p>使用ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION这个action来跳转到指定的授权页面，可以通过Environment.isExternalStorageManager()这个函数来判断用户是否已授权</p>
-<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> (Build.VERSION.SDK_INT &lt; Build.VERSION_CODES.R ||</span><br><span class="line">        Environment.isExternalStorageManager()) &#123;<span class="comment">//低于Android 11或已经拥有管理整个SD卡的权限，即可直接使用传统的写法，以文件真实路径的形式对文件进行操作</span></span><br><span class="line">    Toast.makeText(<span class="keyword">this</span>, <span class="string">&quot;已获得访问所有文件权限&quot;</span>, Toast.LENGTH_SHORT).show()</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">//没有管理SD卡的权限。弹出一个对话框，告知用户申请权限的原因，然后使用Intent跳转到指定的授权页面，让用户手动授权</span></span><br><span class="line">    <span class="keyword">val</span> builder = AlertDialog.Builder(<span class="keyword">this</span>)</span><br><span class="line">        .setMessage(<span class="string">&quot;本程序需要您同意允许访问所有文件权限&quot;</span>)</span><br><span class="line">        .setPositiveButton(<span class="string">&quot;确定&quot;</span>) &#123; _, _ -&gt;</span><br><span class="line">            <span class="keyword">val</span> intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)</span><br><span class="line">            startActivity(intent)</span><br><span class="line">        &#125;</span><br><span class="line">    builder.show()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>注意：就算获得了管理SD卡的权限，对于Android这个目录下的很多资源仍然是访问受限的。比如<code>Android/data</code>这个目录在Android 11是无法访问的，它放的是其他应用程序的数据信息。</p>
-</blockquote>
-</li>
-</ol>
-<h4 id="Batch-operations"><a href="#Batch-operations" class="headerlink" title="Batch operations"></a>Batch operations</h4><p>Scoped Storage规定，每个应用程序都有权向MediaStore贡献数据，也可以权读取其他应用程序贡献的数据，但不能修改其他应用程序贡献的数据。但有些应用需要修改其他应用程序共享的数据（如美图秀秀、Photoshop等），针对这个问题，Android 10中提供了一种解决方案：</p>
-<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 作用：修改一张图片的灰度</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    contentResolver.openFileDescriptor(imageContentUri, <span class="string">&quot;w&quot;</span>)?.use &#123;</span><br><span class="line">        Toast.makeText(<span class="keyword">this</span>, <span class="string">&quot;现在可以修改图片的灰度了&quot;</span>, Toast.LENGTH_SHORT).show()</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="keyword">catch</span> (securityException: SecurityException) &#123;<span class="comment">//没有权限操作的情况会走底下的异常</span></span><br><span class="line">    <span class="keyword">if</span> (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.Q) &#123;<span class="comment">//大于等于Android 10的异常类型是RecoverableSecurityException，是由于Scoped Storage限制导致操作没有权限的异常</span></span><br><span class="line">        <span class="keyword">val</span> recoverableSecurityException = securityException <span class="keyword">as</span>?</span><br><span class="line">            RecoverableSecurityException ?:</span><br><span class="line">            <span class="keyword">throw</span> RuntimeException(securityException.message, securityException)</span><br><span class="line"></span><br><span class="line">        <span class="comment">//获取一个intentSender对象，借助它进行页面跳转，引导用户手动授予我们修改这张图片的权限</span></span><br><span class="line">        <span class="keyword">val</span> intentSender = recoverableSecurityException.userAction.actionIntent.intentSender</span><br><span class="line">        intentSender?.let &#123;</span><br><span class="line">            startIntentSenderForResult(intentSender, IMAGE_REQUEST_CODE,</span><br><span class="line">                    <span class="literal">null</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="literal">null</span>)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">throw</span> RuntimeException(securityException.message, securityException)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>上述方法缺点是操作每张图片都要授权。Android 11中引入一个新功能<code>Batch operations</code>允许我们一次性对多个文件的操作权限进行申请。</p>
-<p>关于Batch operations的用法也很好理解，Google一共提供了4种类型的权限申请API，如下所示：</p>
-<ul>
-<li>createWriteRequest() 用于请求对多个文件的写入权限。</li>
-<li>createFavoriteRequest() 用于请求将多个文件加入到Favorite（收藏）的权限。</li>
-<li>createTrashRequest() 用于请求将多个文件移至回收站的权限。</li>
-<li>createDeleteRequest() 用于请求将多个文件删除的权限。</li>
-</ul>
-<p>以<code>createWriteRequest()</code>举例：</p>
-<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.R) &#123;</span><br><span class="line">    <span class="keyword">val</span> urisToModify = listOf(uri1, uri2, uri3, uri4)</span><br><span class="line">    <span class="keyword">val</span> editPendingIntent = MediaStore.createWriteRequest(contentResolver, urisToModify)<span class="comment">//调用createWriteRequest()对多个文件集合，创建一个PendingIntent</span></span><br><span class="line">    startIntentSenderForResult(editPendingIntent.intentSender, EDIT_REQUEST_CODE,</span><br><span class="line">            <span class="literal">null</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>)<span class="comment">//调用startIntentSenderForResult进行权限申请</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>对于权限申请结果，在<code>onActivityResult()</code>中进行监听：</p>
-<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onActivityResult</span><span class="params">(requestCode: <span class="type">Int</span>, resultCode: <span class="type">Int</span>, <span class="keyword">data</span>: <span class="type">Intent</span>?)</span></span> &#123;</span><br><span class="line">    <span class="keyword">super</span>.onActivityResult(requestCode, resultCode, <span class="keyword">data</span>)</span><br><span class="line">    <span class="keyword">when</span> (requestCode) &#123;</span><br><span class="line">        EDIT_REQUEST_CODE -&gt; &#123;</span><br><span class="line">            <span class="keyword">if</span> (resultCode == Activity.RESULT_OK) &#123;</span><br><span class="line">                Toast.makeText(<span class="keyword">this</span>, <span class="string">&quot;用户已授权&quot;</span>, Toast.LENGTH_SHORT).show()</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                Toast.makeText(<span class="keyword">this</span>, <span class="string">&quot;用户没有授权&quot;</span>, Toast.LENGTH_SHORT).show()</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>上述的Android 10（依赖异常捕获机制）和Android 11（依赖Batch operations）的API用法不一样。如果不想在一个项目中写两套代码进行适配的话，那么做法是在代码中使用 Batch operations只针对 Android 11进行适配，在<code>AndroidManifest.xml</code>中添加<code>requestLegacyExternalStorage</code>标记让Android 10不需要适配。</p>
-<p><a href="https://github.com/guolindev/ScopedStorageDemo">示例代码</a></p>
-<h2 id="Android11开发手册"><a href="#Android11开发手册" class="headerlink" title="Android11开发手册"></a><a href="http://services.google.cn/fh/files/misc/android_11_dev_booklet.pdf">Android11开发手册</a></h2>]]></content>
       <categories>
         <category>Android</category>
       </categories>
@@ -9353,102 +9353,6 @@
       </tags>
   </entry>
   <entry>
-    <title>命令相关-Aapt</title>
-    <url>/posts/5934b6dd/</url>
-    <content><![CDATA[<h1 id="aapt相关"><a href="#aapt相关" class="headerlink" title="aapt相关"></a>aapt相关</h1><p>要使用aapt命令前提是要把它加入到环境变量中</p>
-<p>如：<code>%SDK_HOME%\build-tools\33.0.0\</code></p>
-<h2 id="查看apk有哪些权限"><a href="#查看apk有哪些权限" class="headerlink" title="查看apk有哪些权限"></a>查看apk有哪些权限</h2> <figure class="highlight arduino"><table><tr><td class="code"><pre><span class="line">aapt d permissions app-release.apk</span><br></pre></td></tr></table></figure>
-
-
-
-
-
-
-
-<h1 id="lint相关"><a href="#lint相关" class="headerlink" title="lint相关"></a>lint相关</h1><h2 id="从命令行运行lint"><a href="#从命令行运行lint" class="headerlink" title="从命令行运行lint"></a><a href="https://developer.android.google.cn/studio/write/lint?hl=zh-cn">从命令行运行lint</a></h2><ul>
-<li><p>在Windows上</p>
-<figure class="highlight ebnf"><table><tr><td class="code"><pre><span class="line"><span class="attribute">gradlew lint</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>在Linux或Mac上</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">./gradlew lint</span><br></pre></td></tr></table></figure></li>
-</ul>
-<p>如果项目包含“<a href="https://developer.android.google.cn/studio/build/build-variants?hl=zh-cn">构建变体</a>”，而您只想对某个特定的构建变体运行 <code>lint</code> 任务，您必须大写变体名称并在其前面加上 <code>lint</code> 前缀。</p>
-<figure class="highlight ebnf"><table><tr><td class="code"><pre><span class="line"><span class="attribute">gradlew lintDebug</span></span><br></pre></td></tr></table></figure>
-
-
-
-
-
-<h2 id="检查无用资源"><a href="#检查无用资源" class="headerlink" title="检查无用资源"></a>检查无用资源</h2><ul>
-<li><p>AS 上 【推荐使用】</p>
-<figure class="highlight xl"><table><tr><td class="code"><pre><span class="line">A<span class="function"><span class="title">nalyze</span> -&gt;</span> R<span class="function"><span class="title">un</span> Inspection <span class="keyword">by</span> Name -&gt;</span> 输入：U<span class="function"><span class="title">nused</span> resources -&gt;</span> 跳出弹框选择范围即可</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>命令方式</p>
-<figure class="highlight ada"><table><tr><td class="code"><pre><span class="line">lint <span class="comment">--check UnusedResources &lt;project dir&gt;</span></span><br></pre></td></tr></table></figure></li>
-</ul>
-<h1 id="keytool-相关"><a href="#keytool-相关" class="headerlink" title="keytool 相关"></a>keytool 相关</h1><h2 id="查看apk的签名"><a href="#查看apk的签名" class="headerlink" title="查看apk的签名"></a>查看apk的签名</h2><p>首先用解压软件解压出META-INF目录下的CERT.RSA文件</p>
-<figure class="highlight applescript"><table><tr><td class="code"><pre><span class="line">keytool -printcert -<span class="built_in">file</span> D:\Desktop\CERT.RSA</span><br></pre></td></tr></table></figure>
-
-
-<h2 id="查看keystore的签名"><a href="#查看keystore的签名" class="headerlink" title="查看keystore的签名"></a>查看keystore的签名</h2><figure class="highlight livescript"><table><tr><td class="code"><pre><span class="line">keytool -<span class="keyword">list</span> -keystore D:<span class="string">\Desktop\app_key</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="查看keystore的签名-1"><a href="#查看keystore的签名-1" class="headerlink" title="查看keystore的签名"></a>查看keystore的签名</h2><figure class="highlight isbl"><table><tr><td class="code"><pre><span class="line"><span class="variable">keytool</span> -<span class="variable">list</span> -<span class="variable">v</span> -<span class="variable">keystore</span> <span class="variable">e</span>:\<span class="variable">debug.keystore</span> -<span class="variable">storepass</span> <span class="function"><span class="title">xxx</span>(密匙)</span></span><br></pre></td></tr></table></figure>
-
-<p><img src="/posts/5934b6dd/keytool%E5%BE%97%E5%88%B0%E7%9A%84%E5%BA%94%E7%94%A8%E7%AD%BE%E5%90%8D%E5%92%8C%E5%AE%89%E5%85%A8%E7%A0%81.jpg" alt="keytool得到的应用签名和安全码.png"></p>
-<blockquote>
-<p>其中的MD5去掉冒号就是”微信签名工具“得到的那串32位数（第三方参数文档中的”应用签名”)</p>
-<p>SHA1（对应第三方参数文档中”安全码“）</p>
-<p>去掉冒号的js代码：”CD:B0:3E:73:53:2B:C2:A2:54:5D:2E:75:67:74:BB:92”.replace(&#x2F;:&#x2F;g,””)</p>
-</blockquote>
-<h3 id="查看AS自带签名文件"><a href="#查看AS自带签名文件" class="headerlink" title="查看AS自带签名文件"></a>查看AS自带签名文件</h3><p><strong>Android Studio自带签名文件路径：（密码：android）</strong></p>
-<p><code>C:\Users\Administrator\.android\debug.keystore</code></p>
-<figure class="highlight moonscript"><table><tr><td class="code"><pre><span class="line">keytool -list -v -keystore <span class="name">C</span>:\Users\Administrator\.android\debug.keystore</span><br></pre></td></tr></table></figure>
-
-
-
-
-
-
-
-<h1 id="MonkeyRunner"><a href="#MonkeyRunner" class="headerlink" title="MonkeyRunner"></a>MonkeyRunner</h1><h2 id="执行键盘录制"><a href="#执行键盘录制" class="headerlink" title="执行键盘录制"></a>执行键盘录制</h2><h3 id="配置bat脚本，设置jdk环境"><a href="#配置bat脚本，设置jdk环境" class="headerlink" title="配置bat脚本，设置jdk环境"></a>配置bat脚本，设置jdk环境</h3><p>把 <a href="https://gist.github.com/LieutenantChips/ac05405324e40bb37da17a2d15408920">monkeyrunner.bat</a> 设置到环境变量中：把<code>D:\Android\SDK\tools\bin</code>添加到环境变量中；同时更改环境变量为jdk8</p>
-<h3 id="配置python脚本"><a href="#配置python脚本" class="headerlink" title="配置python脚本"></a>配置python脚本</h3><p><code>record.py</code></p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env monkeyrunner</span></span><br><span class="line"><span class="comment"># Copyright 2010, The Android Open Source Project#</span></span><br><span class="line"><span class="comment"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span></span><br><span class="line"><span class="comment"># you may not use this file except in compliance with the License.</span></span><br><span class="line"><span class="comment"># You may obtain a copy of the License at#</span></span><br><span class="line"><span class="comment"># http://www.apache.org/licenses/LICENSE-2.0#</span></span><br><span class="line"><span class="comment"># Unless required by applicable law or agreed to in writing, software</span></span><br><span class="line"><span class="comment"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span></span><br><span class="line"><span class="comment"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span></span><br><span class="line"><span class="comment"># See the License for the specific language governing permissions and</span></span><br><span class="line"><span class="comment"># limitations under the License.</span></span><br><span class="line"><span class="keyword">from</span> com.android.monkeyrunner <span class="keyword">import</span> MonkeyRunner <span class="keyword">as</span> mr</span><br><span class="line"><span class="keyword">from</span> com.android.monkeyrunner.recorder <span class="keyword">import</span> MonkeyRecorder <span class="keyword">as</span> recorder</span><br><span class="line">device = mr.waitForConnection()</span><br><span class="line">recorder.start(device)</span><br></pre></td></tr></table></figure>
-
-<p><code>playback.py</code></p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env monkeyrunner  </span></span><br><span class="line"><span class="comment"># Copyright 2010, The Android Open Source Project  </span></span><br><span class="line"><span class="comment">#  </span></span><br><span class="line"><span class="comment"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);  </span></span><br><span class="line"><span class="comment"># you may not use this file except in compliance with the License.  </span></span><br><span class="line"><span class="comment"># You may obtain a copy of the License at  </span></span><br><span class="line"><span class="comment">#  </span></span><br><span class="line"><span class="comment"># http://www.apache.org/licenses/LICENSE-2.0  </span></span><br><span class="line"><span class="comment">#  </span></span><br><span class="line"><span class="comment"># Unless required by applicable law or agreed to in writing, software  </span></span><br><span class="line"><span class="comment"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,  </span></span><br><span class="line"><span class="comment"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  </span></span><br><span class="line"><span class="comment"># See the License for the specific language governing permissions and  </span></span><br><span class="line"><span class="comment"># limitations under the License.   </span></span><br><span class="line"><span class="keyword">import</span> sys  </span><br><span class="line"><span class="keyword">from</span> com.android.monkeyrunner <span class="keyword">import</span> MonkeyRunner   </span><br><span class="line"><span class="comment"># The format of the file we are parsing is very carfeully constructed.  </span></span><br><span class="line"><span class="comment"># Each line corresponds to a single command. The line is split into 2  </span></span><br><span class="line"><span class="comment"># parts with a | character. Text to the left of the pipe denotes  </span></span><br><span class="line"><span class="comment"># which command to run. The text to the right of the pipe is a python  </span></span><br><span class="line"><span class="comment"># dictionary (it can be evaled into existence) that specifies the  </span></span><br><span class="line"><span class="comment"># arguments for the command. In most cases, this directly maps to the  </span></span><br><span class="line"><span class="comment"># keyword argument dictionary that could be passed to the underlying  </span></span><br><span class="line"><span class="comment"># command.   </span></span><br><span class="line"><span class="comment"># Lookup table to map command strings to functions that implement that  </span></span><br><span class="line"><span class="comment"># command.  </span></span><br><span class="line">CMD_MAP = &#123;  </span><br><span class="line">    <span class="string">&#x27;TOUCH&#x27;</span>: <span class="keyword">lambda</span> dev, arg: dev.touch(**arg),  </span><br><span class="line">    <span class="string">&#x27;DRAG&#x27;</span>: <span class="keyword">lambda</span> dev, arg: dev.drag(**arg),  </span><br><span class="line">    <span class="string">&#x27;PRESS&#x27;</span>: <span class="keyword">lambda</span> dev, arg: dev.press(**arg),  </span><br><span class="line">    <span class="string">&#x27;TYPE&#x27;</span>: <span class="keyword">lambda</span> dev, arg: dev.<span class="built_in">type</span>(**arg),  </span><br><span class="line">    <span class="string">&#x27;WAIT&#x27;</span>: <span class="keyword">lambda</span> dev, arg: MonkeyRunner.sleep(**arg)  </span><br><span class="line">    &#125;  </span><br><span class="line"><span class="comment"># Process a single file for the specified device.  </span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">process_file</span>(<span class="params">fp, device</span>):  </span><br><span class="line">    <span class="keyword">for</span> line <span class="keyword">in</span> fp:  </span><br><span class="line">        (cmd, rest) = line.split(<span class="string">&#x27;|&#x27;</span>)  </span><br><span class="line">        <span class="keyword">try</span>:  </span><br><span class="line">            <span class="comment"># Parse the pydict  </span></span><br><span class="line">            rest = <span class="built_in">eval</span>(rest)  </span><br><span class="line">        <span class="keyword">except</span>:  </span><br><span class="line">            <span class="built_in">print</span> <span class="string">&#x27;unable to parse options&#x27;</span>  </span><br><span class="line">            <span class="keyword">continue</span>   </span><br><span class="line">        <span class="keyword">if</span> cmd <span class="keyword">not</span> <span class="keyword">in</span> CMD_MAP:  </span><br><span class="line">            <span class="built_in">print</span> <span class="string">&#x27;unknown command: &#x27;</span> + cmd  </span><br><span class="line">            <span class="keyword">continue</span>   </span><br><span class="line">        CMD_MAP[cmd](device, rest)  </span><br><span class="line"><span class="keyword">def</span> <span class="title function_">main</span>():  </span><br><span class="line">    file = sys.argv[<span class="number">1</span>]  </span><br><span class="line">    fp = <span class="built_in">open</span>(file, <span class="string">&#x27;r&#x27;</span>)   </span><br><span class="line">    device = MonkeyRunner.waitForConnection()     </span><br><span class="line">    process_file(fp, device)  </span><br><span class="line">    fp.close();     </span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:  </span><br><span class="line">    main()</span><br></pre></td></tr></table></figure>
-
-<h3 id="执行录制脚本"><a href="#执行录制脚本" class="headerlink" title="执行录制脚本"></a>执行录制脚本</h3><figure class="highlight ada"><table><tr><td class="code"><pre><span class="line">monkeyrunner d:\replay\<span class="keyword">record</span>.py</span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>wait： 用来插入下一次操作的时间间隔，点击后即可设置时间，单位是秒</p>
-<p>Press a Button：用来确定需要点击的按钮，包括menu、home、search，以及对按钮的press、down、up属性</p>
-<p>Type Something：用来输入内容到输入框</p>
-<p>Fling：用来进行拖动操作，可以向上、下、左、右，以及操作的范围</p>
-<p>Export Actions：用来导出脚本，不需要后缀名，也可以添加后缀名</p>
-<p>Refresh Display：用来刷新手机界面，估计只有在断开手机后，重新连接时才会用到</p>
-</blockquote>
-<p>点击“export actions”保存录制脚本到 <code>d:\replay\r</code></p>
-<h3 id="执行回放脚本"><a href="#执行回放脚本" class="headerlink" title="执行回放脚本"></a>执行回放脚本</h3><figure class="highlight livescript"><table><tr><td class="code"><pre><span class="line">monkeyrunner d:<span class="string">\replay\playback.py</span> d:<span class="string">\replay\r</span></span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>其中r是上面录制的脚本文件</p>
-</blockquote>
-<h1 id="MonkeyRunner相关问题"><a href="#MonkeyRunner相关问题" class="headerlink" title="MonkeyRunner相关问题"></a>MonkeyRunner相关问题</h1><h2 id="如果录制脚本的时候报SWT-folder-39-framework-x86-64-39-does-not-exist-错误："><a href="#如果录制脚本的时候报SWT-folder-39-framework-x86-64-39-does-not-exist-错误：" class="headerlink" title="如果录制脚本的时候报SWT folder &#39;..\framework\x86_64&#39; does not exist.错误："></a><a href="https://www.jianshu.com/p/744324ac6ce8">如果录制脚本的时候报<code>SWT folder &#39;..\framework\x86_64&#39; does not exist.</code>错误：</a></h2><p>那么打开 <a href="https://gist.github.com/LieutenantChips/ac05405324e40bb37da17a2d15408920">monkeyrunner.bat</a> 更改：</p>
-<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">.<span class="built_in">set</span> <span class="attribute">frameworkdir</span>=lib （纠正）==》<span class="built_in">set</span> <span class="attribute">frameworkdir</span>=..\lib </span><br><span class="line"></span><br><span class="line">.Dcom.android.monkeyrunner.<span class="attribute">bindir</span>=..\framework -jar %jarpath% %* （纠正）==》Dcom.android.monkeyrunner.<span class="attribute">bindir</span>=..\..\platform-tools -jar %jarpath% %*</span><br></pre></td></tr></table></figure>
-
-
-
-
-
-]]></content>
-      <categories>
-        <category>Android</category>
-      </categories>
-      <tags>
-        <tag>安卓命令相关</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>命令相关-ADB</title>
     <url>/posts/172981137/</url>
     <content><![CDATA[<p><a href="https://developer.android.google.cn/studio/command-line/adb?hl=zh-cn">adb官方链接</a></p>
@@ -9958,6 +9862,102 @@
 <p>原因：类包中gson包不能export出去，一export出去那么就不能启动另一个程序CloudTestWeb</p>
 <p>CloudTest的类包导出情况截图如下：</p>
 <p><img src="http://ww1.sinaimg.cn/large/981009fdly1gi4ctbalxtj20kt0ki77w.jpg" alt="程序中用命令行启动另一个程序失败.png"></p>
+]]></content>
+      <categories>
+        <category>Android</category>
+      </categories>
+      <tags>
+        <tag>安卓命令相关</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>命令相关-Aapt</title>
+    <url>/posts/5934b6dd/</url>
+    <content><![CDATA[<h1 id="aapt相关"><a href="#aapt相关" class="headerlink" title="aapt相关"></a>aapt相关</h1><p>要使用aapt命令前提是要把它加入到环境变量中</p>
+<p>如：<code>%SDK_HOME%\build-tools\33.0.0\</code></p>
+<h2 id="查看apk有哪些权限"><a href="#查看apk有哪些权限" class="headerlink" title="查看apk有哪些权限"></a>查看apk有哪些权限</h2> <figure class="highlight arduino"><table><tr><td class="code"><pre><span class="line">aapt d permissions app-release.apk</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<h1 id="lint相关"><a href="#lint相关" class="headerlink" title="lint相关"></a>lint相关</h1><h2 id="从命令行运行lint"><a href="#从命令行运行lint" class="headerlink" title="从命令行运行lint"></a><a href="https://developer.android.google.cn/studio/write/lint?hl=zh-cn">从命令行运行lint</a></h2><ul>
+<li><p>在Windows上</p>
+<figure class="highlight ebnf"><table><tr><td class="code"><pre><span class="line"><span class="attribute">gradlew lint</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在Linux或Mac上</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">./gradlew lint</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>如果项目包含“<a href="https://developer.android.google.cn/studio/build/build-variants?hl=zh-cn">构建变体</a>”，而您只想对某个特定的构建变体运行 <code>lint</code> 任务，您必须大写变体名称并在其前面加上 <code>lint</code> 前缀。</p>
+<figure class="highlight ebnf"><table><tr><td class="code"><pre><span class="line"><span class="attribute">gradlew lintDebug</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="检查无用资源"><a href="#检查无用资源" class="headerlink" title="检查无用资源"></a>检查无用资源</h2><ul>
+<li><p>AS 上 【推荐使用】</p>
+<figure class="highlight xl"><table><tr><td class="code"><pre><span class="line">A<span class="function"><span class="title">nalyze</span> -&gt;</span> R<span class="function"><span class="title">un</span> Inspection <span class="keyword">by</span> Name -&gt;</span> 输入：U<span class="function"><span class="title">nused</span> resources -&gt;</span> 跳出弹框选择范围即可</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>命令方式</p>
+<figure class="highlight ada"><table><tr><td class="code"><pre><span class="line">lint <span class="comment">--check UnusedResources &lt;project dir&gt;</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h1 id="keytool-相关"><a href="#keytool-相关" class="headerlink" title="keytool 相关"></a>keytool 相关</h1><h2 id="查看apk的签名"><a href="#查看apk的签名" class="headerlink" title="查看apk的签名"></a>查看apk的签名</h2><p>首先用解压软件解压出META-INF目录下的CERT.RSA文件</p>
+<figure class="highlight applescript"><table><tr><td class="code"><pre><span class="line">keytool -printcert -<span class="built_in">file</span> D:\Desktop\CERT.RSA</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="查看keystore的签名"><a href="#查看keystore的签名" class="headerlink" title="查看keystore的签名"></a>查看keystore的签名</h2><figure class="highlight livescript"><table><tr><td class="code"><pre><span class="line">keytool -<span class="keyword">list</span> -keystore D:<span class="string">\Desktop\app_key</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="查看keystore的签名-1"><a href="#查看keystore的签名-1" class="headerlink" title="查看keystore的签名"></a>查看keystore的签名</h2><figure class="highlight isbl"><table><tr><td class="code"><pre><span class="line"><span class="variable">keytool</span> -<span class="variable">list</span> -<span class="variable">v</span> -<span class="variable">keystore</span> <span class="variable">e</span>:\<span class="variable">debug.keystore</span> -<span class="variable">storepass</span> <span class="function"><span class="title">xxx</span>(密匙)</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/posts/5934b6dd/keytool%E5%BE%97%E5%88%B0%E7%9A%84%E5%BA%94%E7%94%A8%E7%AD%BE%E5%90%8D%E5%92%8C%E5%AE%89%E5%85%A8%E7%A0%81.jpg" alt="keytool得到的应用签名和安全码.png"></p>
+<blockquote>
+<p>其中的MD5去掉冒号就是”微信签名工具“得到的那串32位数（第三方参数文档中的”应用签名”)</p>
+<p>SHA1（对应第三方参数文档中”安全码“）</p>
+<p>去掉冒号的js代码：”CD:B0:3E:73:53:2B:C2:A2:54:5D:2E:75:67:74:BB:92”.replace(&#x2F;:&#x2F;g,””)</p>
+</blockquote>
+<h3 id="查看AS自带签名文件"><a href="#查看AS自带签名文件" class="headerlink" title="查看AS自带签名文件"></a>查看AS自带签名文件</h3><p><strong>Android Studio自带签名文件路径：（密码：android）</strong></p>
+<p><code>C:\Users\Administrator\.android\debug.keystore</code></p>
+<figure class="highlight moonscript"><table><tr><td class="code"><pre><span class="line">keytool -list -v -keystore <span class="name">C</span>:\Users\Administrator\.android\debug.keystore</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<h1 id="MonkeyRunner"><a href="#MonkeyRunner" class="headerlink" title="MonkeyRunner"></a>MonkeyRunner</h1><h2 id="执行键盘录制"><a href="#执行键盘录制" class="headerlink" title="执行键盘录制"></a>执行键盘录制</h2><h3 id="配置bat脚本，设置jdk环境"><a href="#配置bat脚本，设置jdk环境" class="headerlink" title="配置bat脚本，设置jdk环境"></a>配置bat脚本，设置jdk环境</h3><p>把 <a href="https://gist.github.com/LieutenantChips/ac05405324e40bb37da17a2d15408920">monkeyrunner.bat</a> 设置到环境变量中：把<code>D:\Android\SDK\tools\bin</code>添加到环境变量中；同时更改环境变量为jdk8</p>
+<h3 id="配置python脚本"><a href="#配置python脚本" class="headerlink" title="配置python脚本"></a>配置python脚本</h3><p><code>record.py</code></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env monkeyrunner</span></span><br><span class="line"><span class="comment"># Copyright 2010, The Android Open Source Project#</span></span><br><span class="line"><span class="comment"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span></span><br><span class="line"><span class="comment"># you may not use this file except in compliance with the License.</span></span><br><span class="line"><span class="comment"># You may obtain a copy of the License at#</span></span><br><span class="line"><span class="comment"># http://www.apache.org/licenses/LICENSE-2.0#</span></span><br><span class="line"><span class="comment"># Unless required by applicable law or agreed to in writing, software</span></span><br><span class="line"><span class="comment"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span></span><br><span class="line"><span class="comment"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span></span><br><span class="line"><span class="comment"># See the License for the specific language governing permissions and</span></span><br><span class="line"><span class="comment"># limitations under the License.</span></span><br><span class="line"><span class="keyword">from</span> com.android.monkeyrunner <span class="keyword">import</span> MonkeyRunner <span class="keyword">as</span> mr</span><br><span class="line"><span class="keyword">from</span> com.android.monkeyrunner.recorder <span class="keyword">import</span> MonkeyRecorder <span class="keyword">as</span> recorder</span><br><span class="line">device = mr.waitForConnection()</span><br><span class="line">recorder.start(device)</span><br></pre></td></tr></table></figure>
+
+<p><code>playback.py</code></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env monkeyrunner  </span></span><br><span class="line"><span class="comment"># Copyright 2010, The Android Open Source Project  </span></span><br><span class="line"><span class="comment">#  </span></span><br><span class="line"><span class="comment"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);  </span></span><br><span class="line"><span class="comment"># you may not use this file except in compliance with the License.  </span></span><br><span class="line"><span class="comment"># You may obtain a copy of the License at  </span></span><br><span class="line"><span class="comment">#  </span></span><br><span class="line"><span class="comment"># http://www.apache.org/licenses/LICENSE-2.0  </span></span><br><span class="line"><span class="comment">#  </span></span><br><span class="line"><span class="comment"># Unless required by applicable law or agreed to in writing, software  </span></span><br><span class="line"><span class="comment"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,  </span></span><br><span class="line"><span class="comment"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  </span></span><br><span class="line"><span class="comment"># See the License for the specific language governing permissions and  </span></span><br><span class="line"><span class="comment"># limitations under the License.   </span></span><br><span class="line"><span class="keyword">import</span> sys  </span><br><span class="line"><span class="keyword">from</span> com.android.monkeyrunner <span class="keyword">import</span> MonkeyRunner   </span><br><span class="line"><span class="comment"># The format of the file we are parsing is very carfeully constructed.  </span></span><br><span class="line"><span class="comment"># Each line corresponds to a single command. The line is split into 2  </span></span><br><span class="line"><span class="comment"># parts with a | character. Text to the left of the pipe denotes  </span></span><br><span class="line"><span class="comment"># which command to run. The text to the right of the pipe is a python  </span></span><br><span class="line"><span class="comment"># dictionary (it can be evaled into existence) that specifies the  </span></span><br><span class="line"><span class="comment"># arguments for the command. In most cases, this directly maps to the  </span></span><br><span class="line"><span class="comment"># keyword argument dictionary that could be passed to the underlying  </span></span><br><span class="line"><span class="comment"># command.   </span></span><br><span class="line"><span class="comment"># Lookup table to map command strings to functions that implement that  </span></span><br><span class="line"><span class="comment"># command.  </span></span><br><span class="line">CMD_MAP = &#123;  </span><br><span class="line">    <span class="string">&#x27;TOUCH&#x27;</span>: <span class="keyword">lambda</span> dev, arg: dev.touch(**arg),  </span><br><span class="line">    <span class="string">&#x27;DRAG&#x27;</span>: <span class="keyword">lambda</span> dev, arg: dev.drag(**arg),  </span><br><span class="line">    <span class="string">&#x27;PRESS&#x27;</span>: <span class="keyword">lambda</span> dev, arg: dev.press(**arg),  </span><br><span class="line">    <span class="string">&#x27;TYPE&#x27;</span>: <span class="keyword">lambda</span> dev, arg: dev.<span class="built_in">type</span>(**arg),  </span><br><span class="line">    <span class="string">&#x27;WAIT&#x27;</span>: <span class="keyword">lambda</span> dev, arg: MonkeyRunner.sleep(**arg)  </span><br><span class="line">    &#125;  </span><br><span class="line"><span class="comment"># Process a single file for the specified device.  </span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">process_file</span>(<span class="params">fp, device</span>):  </span><br><span class="line">    <span class="keyword">for</span> line <span class="keyword">in</span> fp:  </span><br><span class="line">        (cmd, rest) = line.split(<span class="string">&#x27;|&#x27;</span>)  </span><br><span class="line">        <span class="keyword">try</span>:  </span><br><span class="line">            <span class="comment"># Parse the pydict  </span></span><br><span class="line">            rest = <span class="built_in">eval</span>(rest)  </span><br><span class="line">        <span class="keyword">except</span>:  </span><br><span class="line">            <span class="built_in">print</span> <span class="string">&#x27;unable to parse options&#x27;</span>  </span><br><span class="line">            <span class="keyword">continue</span>   </span><br><span class="line">        <span class="keyword">if</span> cmd <span class="keyword">not</span> <span class="keyword">in</span> CMD_MAP:  </span><br><span class="line">            <span class="built_in">print</span> <span class="string">&#x27;unknown command: &#x27;</span> + cmd  </span><br><span class="line">            <span class="keyword">continue</span>   </span><br><span class="line">        CMD_MAP[cmd](device, rest)  </span><br><span class="line"><span class="keyword">def</span> <span class="title function_">main</span>():  </span><br><span class="line">    file = sys.argv[<span class="number">1</span>]  </span><br><span class="line">    fp = <span class="built_in">open</span>(file, <span class="string">&#x27;r&#x27;</span>)   </span><br><span class="line">    device = MonkeyRunner.waitForConnection()     </span><br><span class="line">    process_file(fp, device)  </span><br><span class="line">    fp.close();     </span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:  </span><br><span class="line">    main()</span><br></pre></td></tr></table></figure>
+
+<h3 id="执行录制脚本"><a href="#执行录制脚本" class="headerlink" title="执行录制脚本"></a>执行录制脚本</h3><figure class="highlight ada"><table><tr><td class="code"><pre><span class="line">monkeyrunner d:\replay\<span class="keyword">record</span>.py</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>wait： 用来插入下一次操作的时间间隔，点击后即可设置时间，单位是秒</p>
+<p>Press a Button：用来确定需要点击的按钮，包括menu、home、search，以及对按钮的press、down、up属性</p>
+<p>Type Something：用来输入内容到输入框</p>
+<p>Fling：用来进行拖动操作，可以向上、下、左、右，以及操作的范围</p>
+<p>Export Actions：用来导出脚本，不需要后缀名，也可以添加后缀名</p>
+<p>Refresh Display：用来刷新手机界面，估计只有在断开手机后，重新连接时才会用到</p>
+</blockquote>
+<p>点击“export actions”保存录制脚本到 <code>d:\replay\r</code></p>
+<h3 id="执行回放脚本"><a href="#执行回放脚本" class="headerlink" title="执行回放脚本"></a>执行回放脚本</h3><figure class="highlight livescript"><table><tr><td class="code"><pre><span class="line">monkeyrunner d:<span class="string">\replay\playback.py</span> d:<span class="string">\replay\r</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>其中r是上面录制的脚本文件</p>
+</blockquote>
+<h1 id="MonkeyRunner相关问题"><a href="#MonkeyRunner相关问题" class="headerlink" title="MonkeyRunner相关问题"></a>MonkeyRunner相关问题</h1><h2 id="如果录制脚本的时候报SWT-folder-39-framework-x86-64-39-does-not-exist-错误："><a href="#如果录制脚本的时候报SWT-folder-39-framework-x86-64-39-does-not-exist-错误：" class="headerlink" title="如果录制脚本的时候报SWT folder &#39;..\framework\x86_64&#39; does not exist.错误："></a><a href="https://www.jianshu.com/p/744324ac6ce8">如果录制脚本的时候报<code>SWT folder &#39;..\framework\x86_64&#39; does not exist.</code>错误：</a></h2><p>那么打开 <a href="https://gist.github.com/LieutenantChips/ac05405324e40bb37da17a2d15408920">monkeyrunner.bat</a> 更改：</p>
+<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">.<span class="built_in">set</span> <span class="attribute">frameworkdir</span>=lib （纠正）==》<span class="built_in">set</span> <span class="attribute">frameworkdir</span>=..\lib </span><br><span class="line"></span><br><span class="line">.Dcom.android.monkeyrunner.<span class="attribute">bindir</span>=..\framework -jar %jarpath% %* （纠正）==》Dcom.android.monkeyrunner.<span class="attribute">bindir</span>=..\..\platform-tools -jar %jarpath% %*</span><br></pre></td></tr></table></figure>
+
+
+
+
+
 ]]></content>
       <categories>
         <category>Android</category>
@@ -11196,133 +11196,6 @@ false里的false被认为是一个Boolean类型的变量，而不是个字符串
       </tags>
   </entry>
   <entry>
-    <title>第三方相关</title>
-    <url>/posts/3257296232/</url>
-    <content><![CDATA[<h1 id="申请第三方参数所需数据"><a href="#申请第三方参数所需数据" class="headerlink" title="申请第三方参数所需数据"></a>申请第三方参数所需数据</h1><ol>
-<li>定包名</li>
-<li>定签名文件（生成签名文件）</li>
-<li>取签名文件的SHA1（第三方参数文档中的“安全码”）</li>
-<li>取签名文件的MD5值（要去掉冒号）（或者用微信签名工具输入包名得到的）32位数字（第三方参数文档中的“应用签名”）</li>
-<li>给运维打好的包<br>js中字符串全部替换<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="string">&quot;CD:B0:3E:73:53:2B:C2:A2:54:5D:2E:75:67:74:BB:92&quot;</span>.<span class="title function_">replace</span>(<span class="regexp">/\:/g</span>,<span class="string">&quot;&quot;</span>)</span><br></pre></td></tr></table></figure></li>
-</ol>
-<h1 id="支付宝支付"><a href="#支付宝支付" class="headerlink" title="支付宝支付"></a>支付宝支付</h1><h2 id="支付宝sdk升级"><a href="#支付宝sdk升级" class="headerlink" title="支付宝sdk升级"></a>支付宝sdk升级</h2><p><a href="https://docs.open.alipay.com/54/104509">支付宝sdk改版为aar的升级</a></p>
-<p>升级步骤：</p>
-<ul>
-<li>删除AliSDK–》libs下的alipaySDK-20150818.jar</li>
-<li>往AliSKD的libs目录下增加alipaySdk-15.6.8-20191021122455-noUtdid.aar</li>
-<li>在AliSDK的build.gradle中dependencies添加</li>
-</ul>
-<figure class="highlight stylus"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="title">compile</span><span class="params">(name: <span class="string">&#x27;alipaySdk-15.6.8-20191021122455-noUtdid&#x27;</span>, ext:<span class="string">&#x27;aar&#x27;</span>)</span></span></span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>另外，调用支付的方法的参数列表有变动</li>
-</ul>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">AliPayHelper.java的 alipay.pay(payInfo,<span class="literal">true</span>);<span class="regexp">//</span>添加了<span class="literal">true</span></span><br></pre></td></tr></table></figure>
-
-<h1 id="微信支付"><a href="#微信支付" class="headerlink" title="微信支付"></a>微信支付</h1><p><img src="https://pay.weixin.qq.com/wiki/doc/api/img/chapter8_3_1.png" alt="微信支付业务流程图"></p>
-<p>结合来电易项目理解：</p>
-<p>一进入支付页面就会调用查询订单状态（对应图中14步之后的“后台查询实际支付结果”）</p>
-<p>完整流程：app一进入支付页面就向接口请求这个单的状态（是否已经支付）；若查到未支付，则向接口请求生成支付订单（对应图中3）；接口去跟微信平台调用统一下单API（对应图中4）；微信平台返回预付单给接口（对应图中5）；接口把预付单信息和调起微信支付sdk所需的参数sign等返回给app（对应图中7）；app根据这些参数调起微信sdk，弹出微信支付输入密码页面，输入密码后，微信客户端告知微信平台（对应图中9、10、11、12、13）；微信平台告知微信客户端支付成功，微信客户端跳到微信支付成功页（对应图中14）；此时用户点“返回商户”，返回到App的订单页面（此时会调用刚开始的那个查询订单状态的接口）</p>
-<h2 id="微信sdk升级"><a href="#微信sdk升级" class="headerlink" title="微信sdk升级"></a>微信sdk升级</h2><p><a href="https://developers.weixin.qq.com/community/develop/doc/00062412e00e4878f8290f35457801?from=singlemessage">兼容android10的升级</a></p>
-<p>升级到5.5.8步骤：</p>
-<ul>
-<li>删除UmengCenter–》libs下<code>wechat-sdk-android-without-mta-5.1.4.jar</code></li>
-<li>UmengCenter的build.gradle的dependencies下增加<code>compile &#39;com.tencent.mm.opensdk:wechat-sdk-android-without-mta:5.5.8&#39;</code></li>
-<li>WXPayHelper.java内注释掉<code>m_WXApi.isWXAppSupportAPI()</code>相关的部分</li>
-</ul>
-<h2 id="微信支付调换AppId可以正常调起支付（安卓ios都这样）"><a href="#微信支付调换AppId可以正常调起支付（安卓ios都这样）" class="headerlink" title="微信支付调换AppId可以正常调起支付（安卓ios都这样）"></a>微信支付调换AppId可以正常调起支付（安卓ios都这样）</h2><p>做法：微信开放平台上有两套参数（本来是两个不一样的包名、不一样的AppId），然后两个AppId底下的包名和应用签名都改成一样。（可以推广到多套AppId的情况）</p>
-<p>最终效果：“调换AppId”可以正常调起微信支付。（即微信开放平台上多个应用底下的包名和应用签名配置成一样的，appId的取值直接从接口获取，包名和应用签名影响的是支付完成返回和）</p>
-<p>结论：包名和应用签名与微信开放平台配置的有关。AppId是获取的接口返回的，与微信开放平台配置的AppId无关。</p>
-<p>但是：微信分享只会显示的原来那一套参数的</p>
-<h1 id="森马app-使用腾讯加固流程"><a href="#森马app-使用腾讯加固流程" class="headerlink" title="森马app 使用腾讯加固流程"></a>森马app 使用腾讯加固流程</h1><p>1、登录腾讯云平台</p>
-<p><a href="https://console.cloud.tencent.com/ms/index#">https://console.cloud.tencent.com/ms/index#</a></p>
-<p>2、在线方式上传要加固的app包</p>
-<p>3、等待加固成功后，下载加固包</p>
-<p>4、用签名文件重新把已加固的包二次打包</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">jarsigner -verbose -keystore /Users/zhuojianhai/Desktop/senma/smldy.jks -signedjar /Users/zhuojianhai/Desktop/senma/qb_customer.apk  /Users/zhuojianhai/Desktop/senma/qb_customer_legu.apk smldy</span><br></pre></td></tr></table></figure>
-
-<p>输入秘钥库密码：123456</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">jarsigner -verbose -keystore /Users/zhuojianhai/Desktop/senma/smldy.jks -signedjar /Users/zhuojianhai/Desktop/senma/verificationed.apk /Users/zhuojianhai/Desktop/senma/com.xiaomi.appstore.signature.verification.apk  smldy</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">jarsigner -verbose -keystore /Users/zhuojianhai/Desktop/senma/smldy.jks -signedjar /Users/zhuojianhai/Desktop/senma/Qihuunsigned.apk  /Users/zhuojianhai/Desktop/senma/Qihuunsign.apk smldy </span><br></pre></td></tr></table></figure>
-
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">jarsigner -verbose -keystore /Users/zhuojianhai/Desktop/senma/smldy.jks -signedjar</span><br><span class="line">/Users/zhuojianhai/Desktop/signfile/meizuemptyapk-release-signed.apk /Users/zhuojianhai/Desktop/signfile/meizuemptyapk-release-unsigned.apk smldy </span><br></pre></td></tr></table></figure>
-
-
-
-<h1 id="apk-上架之前需要加固"><a href="#apk-上架之前需要加固" class="headerlink" title="apk 上架之前需要加固"></a>apk 上架之前需要加固</h1><ul>
-<li>乐固只有 exe，会把签名去掉，只有加固的功能</li>
-<li>360 加固宝，会把签名去掉，有加固和重新签名的功能</li>
-<li>jarsigner 命令可以（给加固后未签名的）重新签名<br><code>jarsigner -verbose -keystore [私钥存放路径] -signedjar [签名后文件存放路径][未签名文件路径][证书名称]</code><br>例：<code>jarsigner -verbose -keystore /Users/用户名/mykeystore -signedjar ./signed.apk ./unsigned.apk haha</code><br>注意：证书名称即 Alias（你设置的别名）；去掉 keystore 的扩展名称即可解决<code>“keystore No such file or directory”</code>问题；</li>
-</ul>
-<h1 id="热修复"><a href="#热修复" class="headerlink" title="热修复"></a>热修复</h1><h2 id="腾讯系（类加载方案）"><a href="#腾讯系（类加载方案）" class="headerlink" title="腾讯系（类加载方案）"></a>腾讯系（类加载方案）</h2><h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><blockquote>
-<p> 当有多个dex文件时，他们会组成一个有序数组，按顺序加载。对于已经加载的class是不会重新加载–》得出热修复方案：把需要修复的类打包成一个dex文件下发，并在APP启动时通过反射，将这个dex文件放在dexElements的最前面，这样修复类的Class就会比有Bug的Class优先加载了。</p>
-</blockquote>
-<h3 id="Qzone"><a href="#Qzone" class="headerlink" title="Qzone"></a>Qzone</h3><blockquote>
-<p><strong>最核心的东西</strong></p>
-<p>反射修改dexElements</p>
-<p><strong>弊端</strong></p>
-<p>在实现过程中，会遇到unexpected DEX problem异常，Qzone方案为了解决这个问题采用了插&gt; 桩的策略来规避这个异常</p>
-<ul>
-<li>牺牲类加载速度：</li>
-</ul>
-<p>在Dalvik虚拟机，APP在安装的时候会被执行dexopt操作，同一个dex文件内的Class会被打上CLASS_ISPREVERIFIED标志，而补丁包中的类并没有打上此标志，因此抛出异常。解决方法就是在第一次打包APK时让所有类都引用另一个dex文件中的类，这样所有的类始终不会打上CLASS_ISPREVERIFIED标志，因此补丁包可以顺利加载，但是Dalvik虚拟机在检测到一个类未打上CLASS_ISPREVERIFIED之后会再次在类加载的时候进行dexopt相关的操作，如果一次性加载很多类，速度将明显变慢。</p>
-<ul>
-<li>牺牲补丁包大小：</li>
-</ul>
-<p>在Art虚拟机，dex文件最终会编译成本地机器码，在dex2oat时fast *已经将各个类的地址写死，若补丁包中的类出现字段或者方法的修改，会出现内存地址错乱，解决办法是将这个类的父类和调用这个类的类都加入补丁包。但这样会导致补丁包急剧增大。(实际上要理解清楚这个问题需要熟悉Dalvik和Art的完整流程，并非三言两语能解释清楚)</p>
-</blockquote>
-<h3 id="Tinker"><a href="#Tinker" class="headerlink" title="Tinker"></a>Tinker</h3><blockquote>
-<ul>
-<li>因为Qzone的缺陷，在参考Instant Run的冷插拔与buck的exopackage后，Tinker采用了全量替换的策略<br>全量替换可以避免插桩和地址写死问题，但是补丁包会很大，因此可以在新旧两个Dex的差异放在补丁包中，下发到移动端后再在本地合成完整的dex文件。由于需要下发的全量补丁包体积过大，Tinker采用了后台求diff，下发diff文件，移动端合成全量包的策略。</li>
-<li>创新处一：Tinker采用了全量替换的策略<br>全量替换可以避免插桩和地址写死问题</li>
-<li>创新处二：（只要有diff&#x2F;patch算法，就可以开发Tinker）采用了自研的DexDiff算法，大大优化了下发差异包的大小。</li>
-</ul>
-</blockquote>
-<h2 id="阿里系（底层替换方案）"><a href="#阿里系（底层替换方案）" class="headerlink" title="阿里系（底层替换方案）"></a>阿里系（底层替换方案）</h2><h3 id="HotFix"><a href="#HotFix" class="headerlink" title="HotFix"></a>HotFix</h3><h2 id="美团"><a href="#美团" class="headerlink" title="美团"></a>美团</h2><h3 id="Robust"><a href="#Robust" class="headerlink" title="Robust"></a>Robust</h3><h1 id="项目接入Bugly"><a href="#项目接入Bugly" class="headerlink" title="项目接入Bugly"></a>项目接入Bugly</h1><p><a href="https://bugly.qq.com/docs/user-guide/instruction-manual-android/?v=20200312155538">官方文档地址</a></p>
-<p><code>SBC</code>添加<code>Bugly</code>步骤（供参考）：</p>
-<ol>
-<li><code>U1cityAndroidFrame/build.gradle</code>中添加依赖</li>
-</ol>
-<figure class="highlight groovy"><table><tr><td class="code"><pre><span class="line">dependencies&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">//bugly</span></span><br><span class="line">    compile <span class="string">&#x27;com.tencent.bugly:crashreport:3.1.0&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ol start="2">
-<li><code>U1CityApplication.java</code>中添加俩公共方法</li>
-</ol>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">buglyInit</span><span class="params">(String buglyAppId, <span class="type">boolean</span> isRelease)</span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">Context</span> <span class="variable">context</span> <span class="operator">=</span> getApplicationContext();</span><br><span class="line">        <span class="comment">// 获取当前包名</span></span><br><span class="line">        <span class="type">String</span> <span class="variable">packageName</span> <span class="operator">=</span> context.getPackageName();</span><br><span class="line">        <span class="comment">// 获取当前进程名</span></span><br><span class="line">        <span class="type">String</span> <span class="variable">processName</span> <span class="operator">=</span> getProcessName(android.os.Process.myPid());</span><br><span class="line">        <span class="comment">// 设置是否为上报进程</span></span><br><span class="line">        CrashReport.<span class="type">UserStrategy</span> <span class="variable">strategy</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CrashReport</span>.UserStrategy(context);</span><br><span class="line">        strategy.setUploadProcess(processName == <span class="literal">null</span> || processName.equals(packageName));</span><br><span class="line">        <span class="comment">// 初始化Bugly</span></span><br><span class="line">        CrashReport.initCrashReport(context, buglyAppId, isRelease, strategy);</span><br><span class="line">        <span class="comment">// 如果通过“AndroidManifest.xml”来配置APP信息，初始化方法如下</span></span><br><span class="line">        <span class="comment">// CrashReport.initCrashReport(context, strategy);</span></span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 获取进程号对应的进程名</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> pid 进程号</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> 进程名</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> String <span class="title function_">getProcessName</span><span class="params">(<span class="type">int</span> pid)</span> &#123;</span><br><span class="line">    <span class="type">BufferedReader</span> <span class="variable">reader</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        reader = <span class="keyword">new</span> <span class="title class_">BufferedReader</span>(<span class="keyword">new</span> <span class="title class_">FileReader</span>(<span class="string">&quot;/proc/&quot;</span> + pid + <span class="string">&quot;/cmdline&quot;</span>));</span><br><span class="line">        <span class="type">String</span> <span class="variable">processName</span> <span class="operator">=</span> reader.readLine();</span><br><span class="line">        <span class="keyword">if</span> (!TextUtils.isEmpty(processName)) &#123;</span><br><span class="line">            processName = processName.trim();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> processName;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Throwable throwable) &#123;</span><br><span class="line">        throwable.printStackTrace();</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (reader != <span class="literal">null</span>) &#123;</span><br><span class="line">                reader.close();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException exception) &#123;</span><br><span class="line">            exception.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ol start="3">
-<li>在导购端、顾客端、商家端的<code>App.java</code>中添加调用</li>
-</ol>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//App.java中</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onCreate</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="comment">//在super.onCreate();下方添加</span></span><br><span class="line">    <span class="comment">//新项目在bugly后台创建产品后用新的appId替换底下的&quot;8b1782d99b&quot;参数</span></span><br><span class="line">    <span class="comment">//bugly初始化</span></span><br><span class="line">    buglyInit(<span class="string">&quot;8b1782d99b&quot;</span>, !isRelease());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<h1 id="定位"><a href="#定位" class="headerlink" title="定位"></a>定位</h1><h2 id="GPS强弱"><a href="#GPS强弱" class="headerlink" title="GPS强弱"></a><a href="https://juejin.cn/post/7144313606329335815">GPS强弱</a></h2><figure class="highlight typescript"><table><tr><td class="code"><pre><span class="line"><span class="meta">@SuppressWarnings</span>(<span class="string">&quot;MissingPermission&quot;</span>)</span><br><span class="line"><span class="keyword">private</span> <span class="built_in">void</span> <span class="title function_">requestLocationUpdates</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        locationManager.<span class="title function_">requestLocationUpdates</span>(<span class="title class_">LocationManager</span>.<span class="property">GPS_PROVIDER</span>, <span class="number">2000</span>, <span class="number">5</span>, locationListener);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (<span class="title class_">Exception</span> e) &#123;</span><br><span class="line">        <span class="title class_">DebugLog</span>.<span class="title function_">e</span>(<span class="variable constant_">TAG</span>,e.<span class="title function_">getMessage</span>());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">private</span> <span class="built_in">void</span> <span class="title function_">removeUpdates</span>(<span class="params"></span>) &#123;</span><br><span class="line">    locationManager.<span class="title function_">removeUpdates</span>(locationListener);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//gps强弱</span></span><br><span class="line"><span class="keyword">private</span> <span class="title class_">Boolean</span> gnssStatusListenerAdded = <span class="literal">false</span>;</span><br><span class="line"><span class="keyword">private</span> <span class="title class_">LocationListener</span> locationListener = <span class="keyword">new</span> <span class="title class_">LocationListener</span>() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="built_in">void</span> <span class="title function_">onLocationChanged</span>(<span class="params"><span class="meta">@NonNull</span> Location location</span>) &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="title class_">LocationManager</span> locationManager;</span><br><span class="line"><span class="keyword">private</span> <span class="title class_">GnssStatusCompat</span>.<span class="property">Callback</span> gnssStatusListener;</span><br><span class="line"><span class="keyword">private</span> <span class="built_in">void</span> <span class="title function_">gnssCallback</span>(<span class="params"></span>) &#123;</span><br><span class="line">    locationManager = (<span class="title class_">LocationManager</span>) <span class="title function_">getSystemService</span>(<span class="title class_">Context</span>.<span class="property">LOCATION_SERVICE</span>);</span><br><span class="line">    gnssStatusListener = <span class="keyword">new</span> <span class="title class_">GnssStatusCompat</span>.<span class="title class_">Callback</span>() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> <span class="built_in">void</span> <span class="title function_">onSatelliteStatusChanged</span>(<span class="params"><span class="meta">@NonNull</span> GnssStatusCompat status</span>) &#123;</span><br><span class="line">            <span class="variable language_">super</span>.<span class="title function_">onSatelliteStatusChanged</span>(status);</span><br><span class="line">            <span class="comment">//载波噪声密度大于30，并且卫星数量大于等于3就可以获取到定位信息。</span></span><br><span class="line">            <span class="comment">// 那么可以简单的定义载波噪声密度大于30的卫星数量小于等于3时为信号弱，大于3小于7为信号中等，大于等于7为信号强。</span></span><br><span class="line">            int satelliteCount = status.<span class="title function_">getSatelliteCount</span>();</span><br><span class="line">            int cn0DbHz30SatelliteCount = <span class="number">0</span>;<span class="comment">// 可以搜索到的卫星总数</span></span><br><span class="line">            int cn0DbHz37SatelliteCount = <span class="number">0</span>;</span><br><span class="line">            <span class="title class_">String</span> satelliteInfo = <span class="string">&quot;&quot;</span>;</span><br><span class="line">            <span class="keyword">for</span> (int index = <span class="number">0</span>, size = satelliteCount; index &lt; size; index++) &#123;</span><br><span class="line">                float cn0DbHz = status.<span class="title function_">getCn0DbHz</span>(index);<span class="comment">// 每个卫星的载波噪声密度</span></span><br><span class="line">                satelliteInfo += (<span class="string">&quot;svid:&quot;</span> + status.<span class="title function_">getSvid</span>(index) + <span class="string">&quot;,cnoDbHz:&quot;</span> + cn0DbHz);</span><br><span class="line">                <span class="keyword">if</span> (cn0DbHz &gt;= <span class="number">30</span>) &#123;</span><br><span class="line">                    cn0DbHz30SatelliteCount++;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (cn0DbHz &gt;= <span class="number">37</span>) &#123;</span><br><span class="line">                    cn0DbHz37SatelliteCount++;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="title class_">System</span>.<span class="property">out</span>.<span class="title function_">println</span>(<span class="title class_">String</span>.<span class="title function_">format</span>(<span class="string">&quot;total satellite count ：%s&quot;</span>, satelliteCount));</span><br><span class="line">            <span class="title class_">System</span>.<span class="property">out</span>.<span class="title function_">println</span>(<span class="title class_">String</span>.<span class="title function_">format</span>(<span class="string">&quot;cno &gt;37 count ：%s ---cno &gt;30 count %s&quot;</span>, cn0DbHz37SatelliteCount, cn0DbHz30SatelliteCount));</span><br><span class="line">            <span class="title class_">System</span>.<span class="property">out</span>.<span class="title function_">println</span>(<span class="title class_">String</span>.<span class="title function_">format</span>(<span class="string">&quot;satellite info ：%s&quot;</span>,satelliteInfo));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">@SuppressWarnings</span>(<span class="string">&quot;MissingPermission&quot;</span>)</span><br><span class="line"><span class="keyword">private</span> <span class="built_in">void</span> <span class="title function_">registerGnssStatusListener</span>(<span class="params"></span>)&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (!gnssStatusListenerAdded)&#123;</span><br><span class="line">            gnssStatusListenerAdded =</span><br><span class="line">                     <span class="title class_">LocationManagerCompat</span>.<span class="title function_">registerGnssStatusCallback</span>(locationManager,</span><br><span class="line">                    gnssStatusListener,</span><br><span class="line">                    <span class="keyword">new</span> <span class="title class_">Handler</span>(<span class="title class_">Looper</span>.<span class="title function_">myLooper</span>()==<span class="literal">null</span>?<span class="title class_">Looper</span>.<span class="title function_">getMainLooper</span>():<span class="title class_">Looper</span>.<span class="title function_">myLooper</span>()) );</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (<span class="title class_">Exception</span> e) &#123;</span><br><span class="line">        <span class="title class_">DebugLog</span>.<span class="title function_">e</span>(<span class="variable constant_">TAG</span>,e.<span class="title function_">getMessage</span>());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">private</span> <span class="built_in">void</span> <span class="title function_">unRegisterGnssStatusListener</span>(<span class="params"></span>)&#123;</span><br><span class="line">    <span class="keyword">if</span> (gnssStatusListenerAdded)&#123;</span><br><span class="line">        <span class="title class_">LocationManagerCompat</span>.<span class="title function_">unregisterGnssStatusCallback</span>(locationManager, gnssStatusListener);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Activity#onCreate()中调用 gnssCallback();</span><br><span class="line"></span><br><span class="line">授权方法成功后调  registerGnssStatusListener(); 开始requestLocationUpdates();</span><br><span class="line"></span><br><span class="line">停止 removeUpdates();</span><br><span class="line"></span><br><span class="line">Activity#onDestroy()中调 unRegisterGnssStatusListener();</span><br></pre></td></tr></table></figure>
-
-
-
-
-
-
-
-<h1 id="地图"><a href="#地图" class="headerlink" title="地图"></a>地图</h1><h2 id="高德地图"><a href="#高德地图" class="headerlink" title="高德地图"></a>高德地图</h2><h3 id="高德静态地图"><a href="#高德静态地图" class="headerlink" title="高德静态地图"></a>高德静态地图</h3><p><a href="https://restapi.amap.com/v3/staticmap?location=118.162963,24.528373&amp;zoom=17&amp;size=540*275&amp;markers=mid,,A:118.162963,24.528373&amp;key=bff4a194db711cd52b1d98531b79d842">https://restapi.amap.com/v3/staticmap?location=118.162963,24.528373&amp;zoom=17&amp;size=540*275&amp;markers=mid,,A:118.162963,24.528373&amp;key=bff4a194db711cd52b1d98531b79d842</a></p>
-<p>size是宽高，zoom是缩放比例，17最大。key换成自己应用申请的</p>
-<h2 id="百度地图"><a href="#百度地图" class="headerlink" title="百度地图"></a>百度地图</h2><h3 id="百度静态地图"><a href="#百度静态地图" class="headerlink" title="百度静态地图"></a>百度静态地图</h3><p><a href="http://api.map.baidu.com/staticimage?width=300&amp;height=200&amp;center=118.162963,24.528373&amp;zoom=18&amp;markers=118.162963,24.528373&amp;markerStyles=m,A">http://api.map.baidu.com/staticimage?width=300&amp;height=200&amp;center=118.162963,24.528373&amp;zoom=18&amp;markers=118.162963,24.528373&amp;markerStyles=m,A</a></p>
-<p>width、height：宽高；center是经纬度；markers是marker的经纬度位置；zoom是缩放比例，19最大</p>
-<h1 id="框架"><a href="#框架" class="headerlink" title="框架"></a>框架</h1><h2 id="MVPArms"><a href="#MVPArms" class="headerlink" title="MVPArms"></a>MVPArms</h2><p><a href="https://github.com/JessYanCoding/MVPArms-Module-Template.git">module级模板</a></p>
-<p><a href="https://github.com/JessYanCoding/MVPArmsTemplate">页面级模板</a></p>
-]]></content>
-      <categories>
-        <category>Android</category>
-      </categories>
-      <tags>
-        <tag>安卓第三方</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>第三方-Dagger2</title>
     <url>/posts/1993249214/</url>
     <content><![CDATA[<h1 id="dagger2相关"><a href="#dagger2相关" class="headerlink" title="dagger2相关"></a>dagger2相关</h1><h2 id="dagger2笔记："><a href="#dagger2笔记：" class="headerlink" title="dagger2笔记："></a>dagger2笔记：</h2><p>是个依赖注入框架。Dagger2是第一个用生成的代码实现完整堆栈的。指导原则是生成代码，模仿用户可能已经手写的代码，以确保依赖注入尽可能简单、可跟踪和高性能。</p>
@@ -11650,6 +11523,133 @@ false里的false被认为是一个Boolean类型的变量，而不是个字符串
 <li>Application需要继承DaggerApplication类，并且在applicationInjector构建并返回全剧唯一的Component实例</li>
 <li>其它需要使用依赖注入的组建都需要继承<strong>Dagger组件名字</strong>类，并且需要在相应的Modules中通过@ContributesAndroidInjector注解标记需要注入依赖的组建。</li>
 </ol>
+]]></content>
+      <categories>
+        <category>Android</category>
+      </categories>
+      <tags>
+        <tag>安卓第三方</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>第三方相关</title>
+    <url>/posts/3257296232/</url>
+    <content><![CDATA[<h1 id="申请第三方参数所需数据"><a href="#申请第三方参数所需数据" class="headerlink" title="申请第三方参数所需数据"></a>申请第三方参数所需数据</h1><ol>
+<li>定包名</li>
+<li>定签名文件（生成签名文件）</li>
+<li>取签名文件的SHA1（第三方参数文档中的“安全码”）</li>
+<li>取签名文件的MD5值（要去掉冒号）（或者用微信签名工具输入包名得到的）32位数字（第三方参数文档中的“应用签名”）</li>
+<li>给运维打好的包<br>js中字符串全部替换<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="string">&quot;CD:B0:3E:73:53:2B:C2:A2:54:5D:2E:75:67:74:BB:92&quot;</span>.<span class="title function_">replace</span>(<span class="regexp">/\:/g</span>,<span class="string">&quot;&quot;</span>)</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h1 id="支付宝支付"><a href="#支付宝支付" class="headerlink" title="支付宝支付"></a>支付宝支付</h1><h2 id="支付宝sdk升级"><a href="#支付宝sdk升级" class="headerlink" title="支付宝sdk升级"></a>支付宝sdk升级</h2><p><a href="https://docs.open.alipay.com/54/104509">支付宝sdk改版为aar的升级</a></p>
+<p>升级步骤：</p>
+<ul>
+<li>删除AliSDK–》libs下的alipaySDK-20150818.jar</li>
+<li>往AliSKD的libs目录下增加alipaySdk-15.6.8-20191021122455-noUtdid.aar</li>
+<li>在AliSDK的build.gradle中dependencies添加</li>
+</ul>
+<figure class="highlight stylus"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="title">compile</span><span class="params">(name: <span class="string">&#x27;alipaySdk-15.6.8-20191021122455-noUtdid&#x27;</span>, ext:<span class="string">&#x27;aar&#x27;</span>)</span></span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>另外，调用支付的方法的参数列表有变动</li>
+</ul>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">AliPayHelper.java的 alipay.pay(payInfo,<span class="literal">true</span>);<span class="regexp">//</span>添加了<span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="微信支付"><a href="#微信支付" class="headerlink" title="微信支付"></a>微信支付</h1><p><img src="https://pay.weixin.qq.com/wiki/doc/api/img/chapter8_3_1.png" alt="微信支付业务流程图"></p>
+<p>结合来电易项目理解：</p>
+<p>一进入支付页面就会调用查询订单状态（对应图中14步之后的“后台查询实际支付结果”）</p>
+<p>完整流程：app一进入支付页面就向接口请求这个单的状态（是否已经支付）；若查到未支付，则向接口请求生成支付订单（对应图中3）；接口去跟微信平台调用统一下单API（对应图中4）；微信平台返回预付单给接口（对应图中5）；接口把预付单信息和调起微信支付sdk所需的参数sign等返回给app（对应图中7）；app根据这些参数调起微信sdk，弹出微信支付输入密码页面，输入密码后，微信客户端告知微信平台（对应图中9、10、11、12、13）；微信平台告知微信客户端支付成功，微信客户端跳到微信支付成功页（对应图中14）；此时用户点“返回商户”，返回到App的订单页面（此时会调用刚开始的那个查询订单状态的接口）</p>
+<h2 id="微信sdk升级"><a href="#微信sdk升级" class="headerlink" title="微信sdk升级"></a>微信sdk升级</h2><p><a href="https://developers.weixin.qq.com/community/develop/doc/00062412e00e4878f8290f35457801?from=singlemessage">兼容android10的升级</a></p>
+<p>升级到5.5.8步骤：</p>
+<ul>
+<li>删除UmengCenter–》libs下<code>wechat-sdk-android-without-mta-5.1.4.jar</code></li>
+<li>UmengCenter的build.gradle的dependencies下增加<code>compile &#39;com.tencent.mm.opensdk:wechat-sdk-android-without-mta:5.5.8&#39;</code></li>
+<li>WXPayHelper.java内注释掉<code>m_WXApi.isWXAppSupportAPI()</code>相关的部分</li>
+</ul>
+<h2 id="微信支付调换AppId可以正常调起支付（安卓ios都这样）"><a href="#微信支付调换AppId可以正常调起支付（安卓ios都这样）" class="headerlink" title="微信支付调换AppId可以正常调起支付（安卓ios都这样）"></a>微信支付调换AppId可以正常调起支付（安卓ios都这样）</h2><p>做法：微信开放平台上有两套参数（本来是两个不一样的包名、不一样的AppId），然后两个AppId底下的包名和应用签名都改成一样。（可以推广到多套AppId的情况）</p>
+<p>最终效果：“调换AppId”可以正常调起微信支付。（即微信开放平台上多个应用底下的包名和应用签名配置成一样的，appId的取值直接从接口获取，包名和应用签名影响的是支付完成返回和）</p>
+<p>结论：包名和应用签名与微信开放平台配置的有关。AppId是获取的接口返回的，与微信开放平台配置的AppId无关。</p>
+<p>但是：微信分享只会显示的原来那一套参数的</p>
+<h1 id="森马app-使用腾讯加固流程"><a href="#森马app-使用腾讯加固流程" class="headerlink" title="森马app 使用腾讯加固流程"></a>森马app 使用腾讯加固流程</h1><p>1、登录腾讯云平台</p>
+<p><a href="https://console.cloud.tencent.com/ms/index#">https://console.cloud.tencent.com/ms/index#</a></p>
+<p>2、在线方式上传要加固的app包</p>
+<p>3、等待加固成功后，下载加固包</p>
+<p>4、用签名文件重新把已加固的包二次打包</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">jarsigner -verbose -keystore /Users/zhuojianhai/Desktop/senma/smldy.jks -signedjar /Users/zhuojianhai/Desktop/senma/qb_customer.apk  /Users/zhuojianhai/Desktop/senma/qb_customer_legu.apk smldy</span><br></pre></td></tr></table></figure>
+
+<p>输入秘钥库密码：123456</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">jarsigner -verbose -keystore /Users/zhuojianhai/Desktop/senma/smldy.jks -signedjar /Users/zhuojianhai/Desktop/senma/verificationed.apk /Users/zhuojianhai/Desktop/senma/com.xiaomi.appstore.signature.verification.apk  smldy</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">jarsigner -verbose -keystore /Users/zhuojianhai/Desktop/senma/smldy.jks -signedjar /Users/zhuojianhai/Desktop/senma/Qihuunsigned.apk  /Users/zhuojianhai/Desktop/senma/Qihuunsign.apk smldy </span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">jarsigner -verbose -keystore /Users/zhuojianhai/Desktop/senma/smldy.jks -signedjar</span><br><span class="line">/Users/zhuojianhai/Desktop/signfile/meizuemptyapk-release-signed.apk /Users/zhuojianhai/Desktop/signfile/meizuemptyapk-release-unsigned.apk smldy </span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="apk-上架之前需要加固"><a href="#apk-上架之前需要加固" class="headerlink" title="apk 上架之前需要加固"></a>apk 上架之前需要加固</h1><ul>
+<li>乐固只有 exe，会把签名去掉，只有加固的功能</li>
+<li>360 加固宝，会把签名去掉，有加固和重新签名的功能</li>
+<li>jarsigner 命令可以（给加固后未签名的）重新签名<br><code>jarsigner -verbose -keystore [私钥存放路径] -signedjar [签名后文件存放路径][未签名文件路径][证书名称]</code><br>例：<code>jarsigner -verbose -keystore /Users/用户名/mykeystore -signedjar ./signed.apk ./unsigned.apk haha</code><br>注意：证书名称即 Alias（你设置的别名）；去掉 keystore 的扩展名称即可解决<code>“keystore No such file or directory”</code>问题；</li>
+</ul>
+<h1 id="热修复"><a href="#热修复" class="headerlink" title="热修复"></a>热修复</h1><h2 id="腾讯系（类加载方案）"><a href="#腾讯系（类加载方案）" class="headerlink" title="腾讯系（类加载方案）"></a>腾讯系（类加载方案）</h2><h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><blockquote>
+<p> 当有多个dex文件时，他们会组成一个有序数组，按顺序加载。对于已经加载的class是不会重新加载–》得出热修复方案：把需要修复的类打包成一个dex文件下发，并在APP启动时通过反射，将这个dex文件放在dexElements的最前面，这样修复类的Class就会比有Bug的Class优先加载了。</p>
+</blockquote>
+<h3 id="Qzone"><a href="#Qzone" class="headerlink" title="Qzone"></a>Qzone</h3><blockquote>
+<p><strong>最核心的东西</strong></p>
+<p>反射修改dexElements</p>
+<p><strong>弊端</strong></p>
+<p>在实现过程中，会遇到unexpected DEX problem异常，Qzone方案为了解决这个问题采用了插&gt; 桩的策略来规避这个异常</p>
+<ul>
+<li>牺牲类加载速度：</li>
+</ul>
+<p>在Dalvik虚拟机，APP在安装的时候会被执行dexopt操作，同一个dex文件内的Class会被打上CLASS_ISPREVERIFIED标志，而补丁包中的类并没有打上此标志，因此抛出异常。解决方法就是在第一次打包APK时让所有类都引用另一个dex文件中的类，这样所有的类始终不会打上CLASS_ISPREVERIFIED标志，因此补丁包可以顺利加载，但是Dalvik虚拟机在检测到一个类未打上CLASS_ISPREVERIFIED之后会再次在类加载的时候进行dexopt相关的操作，如果一次性加载很多类，速度将明显变慢。</p>
+<ul>
+<li>牺牲补丁包大小：</li>
+</ul>
+<p>在Art虚拟机，dex文件最终会编译成本地机器码，在dex2oat时fast *已经将各个类的地址写死，若补丁包中的类出现字段或者方法的修改，会出现内存地址错乱，解决办法是将这个类的父类和调用这个类的类都加入补丁包。但这样会导致补丁包急剧增大。(实际上要理解清楚这个问题需要熟悉Dalvik和Art的完整流程，并非三言两语能解释清楚)</p>
+</blockquote>
+<h3 id="Tinker"><a href="#Tinker" class="headerlink" title="Tinker"></a>Tinker</h3><blockquote>
+<ul>
+<li>因为Qzone的缺陷，在参考Instant Run的冷插拔与buck的exopackage后，Tinker采用了全量替换的策略<br>全量替换可以避免插桩和地址写死问题，但是补丁包会很大，因此可以在新旧两个Dex的差异放在补丁包中，下发到移动端后再在本地合成完整的dex文件。由于需要下发的全量补丁包体积过大，Tinker采用了后台求diff，下发diff文件，移动端合成全量包的策略。</li>
+<li>创新处一：Tinker采用了全量替换的策略<br>全量替换可以避免插桩和地址写死问题</li>
+<li>创新处二：（只要有diff&#x2F;patch算法，就可以开发Tinker）采用了自研的DexDiff算法，大大优化了下发差异包的大小。</li>
+</ul>
+</blockquote>
+<h2 id="阿里系（底层替换方案）"><a href="#阿里系（底层替换方案）" class="headerlink" title="阿里系（底层替换方案）"></a>阿里系（底层替换方案）</h2><h3 id="HotFix"><a href="#HotFix" class="headerlink" title="HotFix"></a>HotFix</h3><h2 id="美团"><a href="#美团" class="headerlink" title="美团"></a>美团</h2><h3 id="Robust"><a href="#Robust" class="headerlink" title="Robust"></a>Robust</h3><h1 id="项目接入Bugly"><a href="#项目接入Bugly" class="headerlink" title="项目接入Bugly"></a>项目接入Bugly</h1><p><a href="https://bugly.qq.com/docs/user-guide/instruction-manual-android/?v=20200312155538">官方文档地址</a></p>
+<p><code>SBC</code>添加<code>Bugly</code>步骤（供参考）：</p>
+<ol>
+<li><code>U1cityAndroidFrame/build.gradle</code>中添加依赖</li>
+</ol>
+<figure class="highlight groovy"><table><tr><td class="code"><pre><span class="line">dependencies&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">//bugly</span></span><br><span class="line">    compile <span class="string">&#x27;com.tencent.bugly:crashreport:3.1.0&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li><code>U1CityApplication.java</code>中添加俩公共方法</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">buglyInit</span><span class="params">(String buglyAppId, <span class="type">boolean</span> isRelease)</span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">Context</span> <span class="variable">context</span> <span class="operator">=</span> getApplicationContext();</span><br><span class="line">        <span class="comment">// 获取当前包名</span></span><br><span class="line">        <span class="type">String</span> <span class="variable">packageName</span> <span class="operator">=</span> context.getPackageName();</span><br><span class="line">        <span class="comment">// 获取当前进程名</span></span><br><span class="line">        <span class="type">String</span> <span class="variable">processName</span> <span class="operator">=</span> getProcessName(android.os.Process.myPid());</span><br><span class="line">        <span class="comment">// 设置是否为上报进程</span></span><br><span class="line">        CrashReport.<span class="type">UserStrategy</span> <span class="variable">strategy</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CrashReport</span>.UserStrategy(context);</span><br><span class="line">        strategy.setUploadProcess(processName == <span class="literal">null</span> || processName.equals(packageName));</span><br><span class="line">        <span class="comment">// 初始化Bugly</span></span><br><span class="line">        CrashReport.initCrashReport(context, buglyAppId, isRelease, strategy);</span><br><span class="line">        <span class="comment">// 如果通过“AndroidManifest.xml”来配置APP信息，初始化方法如下</span></span><br><span class="line">        <span class="comment">// CrashReport.initCrashReport(context, strategy);</span></span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 获取进程号对应的进程名</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> pid 进程号</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> 进程名</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> String <span class="title function_">getProcessName</span><span class="params">(<span class="type">int</span> pid)</span> &#123;</span><br><span class="line">    <span class="type">BufferedReader</span> <span class="variable">reader</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        reader = <span class="keyword">new</span> <span class="title class_">BufferedReader</span>(<span class="keyword">new</span> <span class="title class_">FileReader</span>(<span class="string">&quot;/proc/&quot;</span> + pid + <span class="string">&quot;/cmdline&quot;</span>));</span><br><span class="line">        <span class="type">String</span> <span class="variable">processName</span> <span class="operator">=</span> reader.readLine();</span><br><span class="line">        <span class="keyword">if</span> (!TextUtils.isEmpty(processName)) &#123;</span><br><span class="line">            processName = processName.trim();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> processName;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Throwable throwable) &#123;</span><br><span class="line">        throwable.printStackTrace();</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (reader != <span class="literal">null</span>) &#123;</span><br><span class="line">                reader.close();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException exception) &#123;</span><br><span class="line">            exception.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>在导购端、顾客端、商家端的<code>App.java</code>中添加调用</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//App.java中</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onCreate</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="comment">//在super.onCreate();下方添加</span></span><br><span class="line">    <span class="comment">//新项目在bugly后台创建产品后用新的appId替换底下的&quot;8b1782d99b&quot;参数</span></span><br><span class="line">    <span class="comment">//bugly初始化</span></span><br><span class="line">    buglyInit(<span class="string">&quot;8b1782d99b&quot;</span>, !isRelease());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="定位"><a href="#定位" class="headerlink" title="定位"></a>定位</h1><h2 id="GPS强弱"><a href="#GPS强弱" class="headerlink" title="GPS强弱"></a><a href="https://juejin.cn/post/7144313606329335815">GPS强弱</a></h2><figure class="highlight typescript"><table><tr><td class="code"><pre><span class="line"><span class="meta">@SuppressWarnings</span>(<span class="string">&quot;MissingPermission&quot;</span>)</span><br><span class="line"><span class="keyword">private</span> <span class="built_in">void</span> <span class="title function_">requestLocationUpdates</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        locationManager.<span class="title function_">requestLocationUpdates</span>(<span class="title class_">LocationManager</span>.<span class="property">GPS_PROVIDER</span>, <span class="number">2000</span>, <span class="number">5</span>, locationListener);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (<span class="title class_">Exception</span> e) &#123;</span><br><span class="line">        <span class="title class_">DebugLog</span>.<span class="title function_">e</span>(<span class="variable constant_">TAG</span>,e.<span class="title function_">getMessage</span>());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">private</span> <span class="built_in">void</span> <span class="title function_">removeUpdates</span>(<span class="params"></span>) &#123;</span><br><span class="line">    locationManager.<span class="title function_">removeUpdates</span>(locationListener);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//gps强弱</span></span><br><span class="line"><span class="keyword">private</span> <span class="title class_">Boolean</span> gnssStatusListenerAdded = <span class="literal">false</span>;</span><br><span class="line"><span class="keyword">private</span> <span class="title class_">LocationListener</span> locationListener = <span class="keyword">new</span> <span class="title class_">LocationListener</span>() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="built_in">void</span> <span class="title function_">onLocationChanged</span>(<span class="params"><span class="meta">@NonNull</span> Location location</span>) &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="title class_">LocationManager</span> locationManager;</span><br><span class="line"><span class="keyword">private</span> <span class="title class_">GnssStatusCompat</span>.<span class="property">Callback</span> gnssStatusListener;</span><br><span class="line"><span class="keyword">private</span> <span class="built_in">void</span> <span class="title function_">gnssCallback</span>(<span class="params"></span>) &#123;</span><br><span class="line">    locationManager = (<span class="title class_">LocationManager</span>) <span class="title function_">getSystemService</span>(<span class="title class_">Context</span>.<span class="property">LOCATION_SERVICE</span>);</span><br><span class="line">    gnssStatusListener = <span class="keyword">new</span> <span class="title class_">GnssStatusCompat</span>.<span class="title class_">Callback</span>() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> <span class="built_in">void</span> <span class="title function_">onSatelliteStatusChanged</span>(<span class="params"><span class="meta">@NonNull</span> GnssStatusCompat status</span>) &#123;</span><br><span class="line">            <span class="variable language_">super</span>.<span class="title function_">onSatelliteStatusChanged</span>(status);</span><br><span class="line">            <span class="comment">//载波噪声密度大于30，并且卫星数量大于等于3就可以获取到定位信息。</span></span><br><span class="line">            <span class="comment">// 那么可以简单的定义载波噪声密度大于30的卫星数量小于等于3时为信号弱，大于3小于7为信号中等，大于等于7为信号强。</span></span><br><span class="line">            int satelliteCount = status.<span class="title function_">getSatelliteCount</span>();</span><br><span class="line">            int cn0DbHz30SatelliteCount = <span class="number">0</span>;<span class="comment">// 可以搜索到的卫星总数</span></span><br><span class="line">            int cn0DbHz37SatelliteCount = <span class="number">0</span>;</span><br><span class="line">            <span class="title class_">String</span> satelliteInfo = <span class="string">&quot;&quot;</span>;</span><br><span class="line">            <span class="keyword">for</span> (int index = <span class="number">0</span>, size = satelliteCount; index &lt; size; index++) &#123;</span><br><span class="line">                float cn0DbHz = status.<span class="title function_">getCn0DbHz</span>(index);<span class="comment">// 每个卫星的载波噪声密度</span></span><br><span class="line">                satelliteInfo += (<span class="string">&quot;svid:&quot;</span> + status.<span class="title function_">getSvid</span>(index) + <span class="string">&quot;,cnoDbHz:&quot;</span> + cn0DbHz);</span><br><span class="line">                <span class="keyword">if</span> (cn0DbHz &gt;= <span class="number">30</span>) &#123;</span><br><span class="line">                    cn0DbHz30SatelliteCount++;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (cn0DbHz &gt;= <span class="number">37</span>) &#123;</span><br><span class="line">                    cn0DbHz37SatelliteCount++;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="title class_">System</span>.<span class="property">out</span>.<span class="title function_">println</span>(<span class="title class_">String</span>.<span class="title function_">format</span>(<span class="string">&quot;total satellite count ：%s&quot;</span>, satelliteCount));</span><br><span class="line">            <span class="title class_">System</span>.<span class="property">out</span>.<span class="title function_">println</span>(<span class="title class_">String</span>.<span class="title function_">format</span>(<span class="string">&quot;cno &gt;37 count ：%s ---cno &gt;30 count %s&quot;</span>, cn0DbHz37SatelliteCount, cn0DbHz30SatelliteCount));</span><br><span class="line">            <span class="title class_">System</span>.<span class="property">out</span>.<span class="title function_">println</span>(<span class="title class_">String</span>.<span class="title function_">format</span>(<span class="string">&quot;satellite info ：%s&quot;</span>,satelliteInfo));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">@SuppressWarnings</span>(<span class="string">&quot;MissingPermission&quot;</span>)</span><br><span class="line"><span class="keyword">private</span> <span class="built_in">void</span> <span class="title function_">registerGnssStatusListener</span>(<span class="params"></span>)&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (!gnssStatusListenerAdded)&#123;</span><br><span class="line">            gnssStatusListenerAdded =</span><br><span class="line">                     <span class="title class_">LocationManagerCompat</span>.<span class="title function_">registerGnssStatusCallback</span>(locationManager,</span><br><span class="line">                    gnssStatusListener,</span><br><span class="line">                    <span class="keyword">new</span> <span class="title class_">Handler</span>(<span class="title class_">Looper</span>.<span class="title function_">myLooper</span>()==<span class="literal">null</span>?<span class="title class_">Looper</span>.<span class="title function_">getMainLooper</span>():<span class="title class_">Looper</span>.<span class="title function_">myLooper</span>()) );</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (<span class="title class_">Exception</span> e) &#123;</span><br><span class="line">        <span class="title class_">DebugLog</span>.<span class="title function_">e</span>(<span class="variable constant_">TAG</span>,e.<span class="title function_">getMessage</span>());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">private</span> <span class="built_in">void</span> <span class="title function_">unRegisterGnssStatusListener</span>(<span class="params"></span>)&#123;</span><br><span class="line">    <span class="keyword">if</span> (gnssStatusListenerAdded)&#123;</span><br><span class="line">        <span class="title class_">LocationManagerCompat</span>.<span class="title function_">unregisterGnssStatusCallback</span>(locationManager, gnssStatusListener);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Activity#onCreate()中调用 gnssCallback();</span><br><span class="line"></span><br><span class="line">授权方法成功后调  registerGnssStatusListener(); 开始requestLocationUpdates();</span><br><span class="line"></span><br><span class="line">停止 removeUpdates();</span><br><span class="line"></span><br><span class="line">Activity#onDestroy()中调 unRegisterGnssStatusListener();</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<h1 id="地图"><a href="#地图" class="headerlink" title="地图"></a>地图</h1><h2 id="高德地图"><a href="#高德地图" class="headerlink" title="高德地图"></a>高德地图</h2><h3 id="高德静态地图"><a href="#高德静态地图" class="headerlink" title="高德静态地图"></a>高德静态地图</h3><p><a href="https://restapi.amap.com/v3/staticmap?location=118.162963,24.528373&amp;zoom=17&amp;size=540*275&amp;markers=mid,,A:118.162963,24.528373&amp;key=bff4a194db711cd52b1d98531b79d842">https://restapi.amap.com/v3/staticmap?location=118.162963,24.528373&amp;zoom=17&amp;size=540*275&amp;markers=mid,,A:118.162963,24.528373&amp;key=bff4a194db711cd52b1d98531b79d842</a></p>
+<p>size是宽高，zoom是缩放比例，17最大。key换成自己应用申请的</p>
+<h2 id="百度地图"><a href="#百度地图" class="headerlink" title="百度地图"></a>百度地图</h2><h3 id="百度静态地图"><a href="#百度静态地图" class="headerlink" title="百度静态地图"></a>百度静态地图</h3><p><a href="http://api.map.baidu.com/staticimage?width=300&amp;height=200&amp;center=118.162963,24.528373&amp;zoom=18&amp;markers=118.162963,24.528373&amp;markerStyles=m,A">http://api.map.baidu.com/staticimage?width=300&amp;height=200&amp;center=118.162963,24.528373&amp;zoom=18&amp;markers=118.162963,24.528373&amp;markerStyles=m,A</a></p>
+<p>width、height：宽高；center是经纬度；markers是marker的经纬度位置；zoom是缩放比例，19最大</p>
+<h1 id="框架"><a href="#框架" class="headerlink" title="框架"></a>框架</h1><h2 id="MVPArms"><a href="#MVPArms" class="headerlink" title="MVPArms"></a>MVPArms</h2><p><a href="https://github.com/JessYanCoding/MVPArms-Module-Template.git">module级模板</a></p>
+<p><a href="https://github.com/JessYanCoding/MVPArmsTemplate">页面级模板</a></p>
 ]]></content>
       <categories>
         <category>Android</category>
