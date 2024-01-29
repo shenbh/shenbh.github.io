@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="private,安卓知识点," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="摘要：  Fragment生命周期 Fragment与Activity通信 Fragment的使用陷阱  Fragment特点 Fragment 解决Activity间的切换不流畅，轻量切换 可以从startActivityForResult中接收到返回结果,但是View不能 只能在 Activity 保存其状态（用户离开 Activity）之前使用 commit() 提交事务。如果您试图在该时间">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Fragment">
+<meta property="og:url" content="http://shenbh.github.io/posts/853243834/index.html">
+<meta property="og:site_name" content="AB">
+<meta property="og:description" content="摘要：  Fragment生命周期 Fragment与Activity通信 Fragment的使用陷阱  Fragment特点 Fragment 解决Activity间的切换不流畅，轻量切换 可以从startActivityForResult中接收到返回结果,但是View不能 只能在 Activity 保存其状态（用户离开 Activity）之前使用 commit() 提交事务。如果您试图在该时间">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://shenbh.github.io/posts/853243834/Fragment%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F.png">
+<meta property="article:published_time" content="2020-03-16T02:58:34.000Z">
+<meta property="article:modified_time" content="2024-01-15T00:42:04.225Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="private">
+<meta property="article:tag" content="安卓知识点">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/853243834/Fragment%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/853243834/"/>
+
+
+
+
+
+  <title>Fragment | AB</title><meta name="robots" content="noindex">
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">AB</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Just do IT Now.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/853243834/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="AB">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Fragment</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-03-16T10:58:34+08:00">
+                2020-03-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>摘要：</p>
+<ul>
+<li>Fragment生命周期</li>
+<li>Fragment与Activity通信</li>
+<li>Fragment的使用陷阱</li>
+</ul>
+<h1 id="Fragment"><a href="#Fragment" class="headerlink" title="Fragment"></a>Fragment</h1><h2 id="特点"><a href="#特点" class="headerlink" title="特点"></a>特点</h2><ul>
+<li>Fragment 解决Activity间的切换不流畅，轻量切换</li>
+<li>可以从startActivityForResult中接收到返回结果,但是View不能</li>
+<li>只能在 Activity 保存其状态（用户离开 Activity）之前使用 commit() 提交事务。如果您试图在该时间点后提交，则会引发异常。 这是因为如需恢复 Activity，则提交后的状态可能会丢失。 对于丢失提交无关紧要的情况，请使用commitAllowingStateLoss()。</li>
+</ul>
+<h2 id="生命周期"><a href="#生命周期" class="headerlink" title="生命周期"></a>生命周期</h2><p><img src="/posts/853243834/Fragment%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F.png" alt="Fragment生命周期"></p>
+<blockquote>
+<p>其中<code>onActivityCreated()</code>已过时，现在用<code>onViewCreate()</code></p>
+<p>onAttach</p>
+<p>onCreate</p>
+<p>onCreateView</p>
+<p>onViewCreated（API13的时候引入的）</p>
+<p>onActivityCreated</p>
+<p>onStart</p>
+<p>onResume</p>
+</blockquote>
+<h2 id="与Activity通信"><a href="#与Activity通信" class="headerlink" title="与Activity通信"></a>与Activity通信</h2><p>执行此操作的一个好方法是，在片段内定义一个回调接口，并要求宿主 Activity 实现它。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">FragmentA</span> <span class="keyword">extends</span> <span class="title class_">ListFragment</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// Container Activity must implement this interface</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">OnArticleSelectedListener</span> &#123;</span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onArticleSelected</span><span class="params">(Uri articleUri)</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">FragmentA</span> <span class="keyword">extends</span> <span class="title class_">ListFragment</span> &#123;</span><br><span class="line">    OnArticleSelectedListener mListener;</span><br><span class="line">    ...</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onAttach</span><span class="params">(Activity activity)</span> &#123;</span><br><span class="line">        <span class="built_in">super</span>.onAttach(activity);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            mListener = (OnArticleSelectedListener) activity;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (ClassCastException e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ClassCastException</span>(activity.toString());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="Fragment使用陷阱"><a href="#Fragment使用陷阱" class="headerlink" title="Fragment使用陷阱"></a><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzU4OTcyOTg5OQ==&mid=2247486000&idx=1&sn=bd76ee5a16f53d87b84c3736e8c015e4&chksm=fdc85334cabfda2256a66a5fe6d5e9b37b481f5c6e0cf3a2fad7c95de35b287f2e4a7a69d044&mpshare=1&scene=1&srcid=05268cQzo8gdHpFG9bfMM2QH&sharer_sharetime=1590454306430&sharer_shareid=8929b7cd3a63e580df89121985356349&key=b6688ee520fd1b6cee52656fda8c4087c4c4680d0642c6e8f2f482911cd96a0c83724e76f5557bfb4df20d54a49cefae1b3a71c26f4cd467f0ff2d1fc31ad8b4a3d3bc6ed56b2ad6ab591fc5b3b81077&ascene=1&uin=NTE2NjgyMzM1&devicetype=Windows+10+x64&version=62090070&lang=zh_CN&exportkey=AZZQR8xf8szoBe68SGWD7kI=&pass_ticket=FqKlvn9SclVhpBL6GyzoCJjlIIyG9zoRwW35xVR+b/7cSJmLzzR3xomd2fR/mDg3">Fragment使用陷阱</a></h1><h2 id="重复创建Fragment"><a href="#重复创建Fragment" class="headerlink" title="重复创建Fragment"></a>重复创建Fragment</h2><p>错误例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">YourActivity</span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onCreated</span><span class="params">(Bundle savedInstanceState)</span>&#123;</span><br><span class="line">        <span class="built_in">super</span>.onCreate(saveInstanceState);</span><br><span class="line">        <span class="comment">//...</span></span><br><span class="line">        <span class="type">FragmentManager</span> <span class="variable">manager</span> <span class="operator">=</span> getSupportFragmentManager();</span><br><span class="line">        <span class="type">FragmentTransaction</span> <span class="variable">transaction</span> <span class="operator">=</span> manager.beginTransaction();</span><br><span class="line">        transaction.replace(R.id.container, <span class="keyword">new</span> <span class="title class_">YourFragment</span>());</span><br><span class="line">        transaction.commit();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个例子中，<code>Activity</code>重建时，系统会自动帮我们恢复 <code>Fragment</code> (super.onCreate)，接下来我们自己又创建了一个新的实例，然后把系统创建的那个 <code>repalce</code>掉。表面上程序运行正常，实际上我们自己创建的那个<code>Fragment</code>是不必要的。</p>
+<p>正确做法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">FragmentManager</span> <span class="variable">manager</span> <span class="operator">=</span> getSupportFragmentManager();</span><br><span class="line"><span class="keyword">if</span>(manager.findFragmentById(R.id.container) == <span class="literal">null</span>)&#123;</span><br><span class="line">    <span class="type">FragmentManager</span> <span class="variable">manager</span> <span class="operator">=</span> getSupportFragmentManager();</span><br><span class="line">    <span class="type">FragmentTransaction</span> <span class="variable">transaction</span> <span class="operator">=</span> manager.beginTransaction();</span><br><span class="line">    transaction.replace(R.id.container, <span class="keyword">new</span> <span class="title class_">YourFragment</span>());</span><br><span class="line">    transaction.commit();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>此外，直接把<code>Fragment</code>写在<code>xml</code>中不会有这个问题，即便<code>onCreate</code>的时候总是<code>setContentView</code>。我们有理由推断，这种情况下用了类似的方法防止重复创建<code>fragment</code>，因为它要求我们给<code>&lt;fragment&gt;</code>加一个<code>id</code>或<code>tag</code>，否则会有一个warning。</p>
+<h2 id="参数传递"><a href="#参数传递" class="headerlink" title="参数传递"></a>参数传递</h2><p>错误例子：</p>
+<p>对于普通类是正确的，对于fragment是错误的。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">SomeFragment</span>&#123;</span><br><span class="line">    Foo mFoo;</span><br><span class="line">    Bar mBar;</span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">setFoo</span><span class="params">(Foo foo)</span>&#123; mFoo = foo; &#125;</span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">setBar</span><span class="params">(Bar bar)</span>&#123; mBar = bar; &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//或者</span></span><br><span class="line"><span class="comment">//对于fragment还会有警告“fragment应该有无参的构造函数”</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SomeFragment</span>&#123;</span><br><span class="line">    Foo mFoo;</span><br><span class="line">    Bar mBar;</span><br><span class="line">    SomeFragment(Foo foo, Bar bar)&#123;</span><br><span class="line">        mFoo = foo;</span><br><span class="line">        mBar = bar;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面的传参用法对于<code>Fragment</code>是错误的，因为系统在恢复<code>Fragment</code>的时候使用的是无参构造函数。所以当<code>Fragment</code>由系统创建的时候，<code>mFoo</code>和<code>mBar</code>都会是<code>null</code>。</p>
+<p>正确做法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">YourFragment</span> <span class="keyword">extends</span> <span class="title class_">Fragment</span>&#123;</span><br><span class="line">    <span class="keyword">static</span> YourFragment <span class="title function_">makeInstance</span><span class="params">(<span class="comment">/* param0, param1, ... */</span>)</span>&#123;</span><br><span class="line">        <span class="type">YourFragment</span> <span class="variable">fragment</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">YourFragment</span>();</span><br><span class="line">        <span class="type">Bundle</span> <span class="variable">args</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Bundle</span>();</span><br><span class="line">        <span class="comment">//args.putXXX</span></span><br><span class="line">        fragment.setArguments(args);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onCreate</span><span class="params">(<span class="meta">@Nullable</span> Bundle savedInstanceState)</span>&#123;</span><br><span class="line">        <span class="built_in">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        <span class="type">Bundle</span> <span class="variable">args</span> <span class="operator">=</span> getArguments();</span><br><span class="line">        <span class="keyword">if</span>(args != <span class="literal">null</span>)&#123;</span><br><span class="line">            <span class="comment">//unpack arguments</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过这种方式，即便是系统恢复 Activity 时自动创建的 Fragment，也可以 get 到原来设置的参数（不需要在 onSaveInstanceState 的时候保存）。当然，有些数据可能不适合放在 Bundle 里，这个时候可以另外用一个 <code>setRetainInstance(true) </code>的 fragment 来保存（或者用 ViewModel）。</p>
+<h2 id="与ViewPager交互，getActivity-为空问题"><a href="#与ViewPager交互，getActivity-为空问题" class="headerlink" title="与ViewPager交互，getActivity()为空问题"></a>与ViewPager交互，getActivity()为空问题</h2><p>正常例子：（有坑）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">SomePagerAdapter</span> <span class="keyword">extends</span> <span class="title class_">FragmentPagerAdapter</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Fragment[] mFragments = <span class="keyword">new</span> <span class="title class_">Fragment</span>[<span class="number">3</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">SomePagerAdapter</span><span class="params">(FragmentManager fm)</span> &#123;</span><br><span class="line">        <span class="built_in">super</span>(fm);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> Fragment <span class="title function_">getItem</span><span class="params">(<span class="type">int</span> i)</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (mFragments[i] == <span class="literal">null</span>) &#123;</span><br><span class="line">            mFragments[i] = createFragment(i);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> mFragments[i];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Fragment <span class="title function_">createFragment</span><span class="params">(<span class="type">int</span> index)</span> &#123;</span><br><span class="line">        <span class="keyword">switch</span> (index) &#123;</span><br><span class="line">            <span class="keyword">case</span> <span class="number">0</span>:</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">Fragment1</span>();</span><br><span class="line">            <span class="keyword">case</span> <span class="number">1</span>:</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">Fragment2</span>();</span><br><span class="line">            <span class="keyword">case</span> <span class="number">2</span>:</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">Fragment3</span>();</span><br><span class="line">            <span class="keyword">default</span>:</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">getCount</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> mFragments.length;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这一段代码的问题跟前面两个比起来隐晦得多，也不是所有这样写的代码都会出问题。某些情况下，比方说，用户触发了某个动作后，我们想获取当前的 fragment 并做一些操作：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">foo</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">Fragment</span> <span class="variable">fragment</span> <span class="operator">=</span> mPagerAdapter.getItem(mViewPager.getCurrentItem());</span><br><span class="line">    fragment.bar();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们再假设 bar() 方法里调用了 getActivity()，这样，线上就会出现当前 fragment 的 getActivity 竟然返回 null 的崩溃……</p>
+<p>正确例子：</p>
+<p>adapter 的最佳实践应该是， getItem 总返回一个新创建的 fragment（如果它叫 makeItem、createItem，就不会有这么多麻烦事了）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">SomePagerAdapter</span> <span class="keyword">extends</span> <span class="title class_">FragmentPagerAdapter</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Fragment[] mFragments = <span class="keyword">new</span> <span class="title class_">Fragment</span>[<span class="number">3</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">SomePagerAdapter</span><span class="params">(FragmentManager fm)</span> &#123;</span><br><span class="line">        <span class="built_in">super</span>(fm);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@NonNull</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> Object <span class="title function_">instantiateItem</span><span class="params">(<span class="meta">@NonNull</span> ViewGroup container, <span class="type">int</span> position)</span> &#123;</span><br><span class="line">        <span class="type">Object</span> <span class="variable">object</span> <span class="operator">=</span> <span class="built_in">super</span>.instantiateItem(container, position);</span><br><span class="line">        mFragments[position] = (Fragment) object;</span><br><span class="line">        <span class="keyword">return</span> object;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Nullable</span></span><br><span class="line">    <span class="keyword">public</span> Fragment <span class="title function_">getFragment</span><span class="params">(<span class="type">int</span> position)</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> mFragments[position];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> Fragment <span class="title function_">getItem</span><span class="params">(<span class="type">int</span> i)</span> &#123;</span><br><span class="line">        <span class="keyword">switch</span> (i) &#123;</span><br><span class="line">            <span class="keyword">case</span> <span class="number">0</span>:</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">Fragment1</span>();</span><br><span class="line">            <span class="keyword">case</span> <span class="number">1</span>:</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">Fragment2</span>();</span><br><span class="line">            <span class="keyword">case</span> <span class="number">2</span>:</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">Fragment3</span>();</span><br><span class="line">            <span class="keyword">default</span>:</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">getCount</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> mFragments.length;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>作为一个妥协，我们把父类 instantiateItem 返回的 fragment 缓存了起来。</p>
+<h1 id="防止ViewPager-Fragment结合使用时的数据预加载"><a href="#防止ViewPager-Fragment结合使用时的数据预加载" class="headerlink" title="防止ViewPager+Fragment结合使用时的数据预加载"></a><a target="_blank" rel="noopener" href="https://www.cnblogs.com/wangfeng520/p/5807465.html">防止ViewPager+Fragment结合使用时的数据预加载</a></h1><p>背景：</p>
+<p><code>ViewPager</code>+<code>Fragment</code>结合使用，有俩适配器可用<code>FragmentStatePagerAdapter</code>和<code>FragmentPagerAdapter</code></p>
+<p><code>FragmentStatePagerAdapter</code>：在内存中最多保留三个<code>Fragment</code>实例，即当有<code>Fragment</code>切换时，会走<code>Fragment</code>的生命周期<code>onDestroyView()</code>–&gt;<code>onDestroy()</code>，创建会走<code>onCreate()</code>–&gt;<code>onCreateView()</code>。</p>
+<p><code>FragmentPagerAdapter</code>：内存中会保留所有<code>Fragment</code>实例，即当<code>Fragment</code>切换时，会走<code>onDestroyView()</code>–&gt;<code>onCreateView()</code>，不走<code>onDestroy()</code>和<code>onCreate()</code>。</p>
+<p>这两种都存在预加载<code>Fragment</code>的效果（若每个<code>Fragment</code>都要网络请求数据，等待网络请求结束的进度条会在所有<code>fragment</code>预加载结束再消失）</p>
+<p>防止<code>Fragment</code>预加载做法：</p>
+<ol>
+<li><p>更改<code>Fragment</code>中的<code>setUserVisibleHint</code>方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setUserVisibleHint</span><span class="params">(<span class="type">boolean</span> isVisibleToUser)</span>&#123;</span><br><span class="line">    <span class="built_in">super</span>.setUserVisibleHint(isVisibleToUser);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//更改成</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">serUserVisibleHint</span><span class="params">(<span class="type">boolean</span> isVisibleToUser)</span>&#123;</span><br><span class="line">    <span class="comment">//isVisibleToUser--》true：Fragment用户可见</span></span><br><span class="line">    <span class="comment">//isVisible()--》判断Fragment的视图是否创建好</span></span><br><span class="line">    <span class="keyword">if</span>(isVisibleToUser &amp;&amp; isVisible())&#123;</span><br><span class="line">        initData();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>上面的写法，第一个显示的<code>Fragment</code>会因为<code>isVisibleToUser=true</code>，<code>isVisible()=false</code>而显示空白：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> View <span class="title function_">onCreateView</span><span class="params">(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)</span>&#123;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">    <span class="keyword">if</span>(getUserVisibleHint())&#123;</span><br><span class="line">        initData();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> inflater.inflate(R.layout.fragment_blank, container, <span class="literal">false</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>上面的写法有缺陷（每次切换都要重新请求数据消耗流量）升级版做法：</p>
+<p>加个规定时间内切换Fragment则不重新请求数据的</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="type">long</span> <span class="variable">refreshTime</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setUserVisibleHint</span><span class="params">(<span class="type">boolean</span> isVisibleToUser)</span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(isVisibleToUser &amp;&amp; isVisible())&#123;</span><br><span class="line">        <span class="comment">//只有当超过一定的时效后，Fragment可见时，才进行数据的重新请求</span></span><br><span class="line">        <span class="keyword">if</span>(refreshTime == <span class="number">0</span> ||(refreshTime != <span class="number">0</span> &amp;&amp; (System.currentTimeMillis() - refreshTime) &gt; <span class="number">30</span>*<span class="number">60</span>*<span class="number">1000</span>))&#123;</span><br><span class="line">            initData();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">super</span>.setUserVisibleHint(isVisibleToUser);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">initData</span><span class="params">()</span>&#123;</span><br><span class="line">    refreshTime = System.currentTimeMillis();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> View <span class="title function_">onCreateView</span><span class="params">(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)</span>&#123;</span><br><span class="line">    refreshTime = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面的写法，可用进一步，比如把网络请求回来的json数据进行缓存。再次网络请求直接加载这个缓存来节省流量。</p>
+<h2 id="新版fragment判断可见"><a href="#新版fragment判断可见" class="headerlink" title="新版fragment判断可见"></a>新版fragment判断可见</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onResume</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="built_in">super</span>.onResume();</span><br><span class="line">    <span class="keyword">if</span> (!isHidden() &amp;&amp; isResumed())&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<h1 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h1><h2 id="Activity-与-Fragment-交互"><a href="#Activity-与-Fragment-交互" class="headerlink" title="Activity 与 Fragment 交互"></a>Activity 与 Fragment 交互</h2><h3 id="Fragment-给-Activity-传值"><a href="#Fragment-给-Activity-传值" class="headerlink" title="Fragment 给 Activity 传值"></a>Fragment 给 Activity 传值</h3><ul>
+<li>Fragment 可以直接调用 Activity 中非 private 的方法</li>
+</ul>
+<h3 id="Activity-给-Fragment-传值"><a href="#Activity-给-Fragment-传值" class="headerlink" title="Activity 给 Fragment 传值"></a>Activity 给 Fragment 传值</h3><p>* </p>
+<h2 id="动态替换fragment"><a href="#动态替换fragment" class="headerlink" title="动态替换fragment"></a>动态替换fragment</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 添加一个Fragment</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> containerId</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> fragment</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> tag</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">addFragment</span><span class="params">(<span class="type">int</span> containerId, Fragment fragment, String tag)</span> &#123;</span><br><span class="line">    <span class="type">FragmentTransaction</span> <span class="variable">fragmentTransaction</span> <span class="operator">=</span> getSupportFragmentManager().beginTransaction();</span><br><span class="line">    fragmentTransaction.add(containerId,fragment,tag);</span><br><span class="line">    fragmentTransaction.addToBackStack(tag);</span><br><span class="line">    fragmentTransaction.commit();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 替换Fragment</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> containerId</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> fragment</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> tag</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">replaceFragment</span><span class="params">(<span class="type">int</span> containerId,Fragment fragment,String tag)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span>(getSupportFragmentManager().findFragmentByTag(tag) == <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="type">FragmentTransaction</span> <span class="variable">fragmentTransaction</span> <span class="operator">=</span> getSupportFragmentManager().beginTransaction();</span><br><span class="line">        fragmentTransaction.replace(containerId,fragment,tag);</span><br><span class="line">        fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);</span><br><span class="line">        fragmentTransaction.addToBackStack(tag);</span><br><span class="line">        fragmentTransaction.commit();</span><br><span class="line">    &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">//弹出tag标记的那层以上的所有fragment</span></span><br><span class="line">        getSupportFragmentManager().popBackStack(tag,<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Subscribe(sticky = true, threadMode = ThreadMode.MAIN)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onEvent</span><span class="params">(ChangeTextBookEvent event)</span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (event != <span class="literal">null</span>)&#123;</span><br><span class="line">        Fragment secondFragment;</span><br><span class="line">        <span class="keyword">if</span> (DataManager.getInstance().getChosedTextBook() == <span class="literal">null</span> || event.isShowChoosePage())&#123;</span><br><span class="line">            secondFragment = ChooseGradeFragment.createInstance(UserRecyclerFragment.RANGE_RECOMMEND);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            secondFragment = CourseFragment.createInstance(UserRecyclerFragment.RANGE_RECOMMEND);</span><br><span class="line">        &#125;</span><br><span class="line">        fragments[<span class="number">1</span>] = secondFragment;</span><br><span class="line">        <span class="type">FragmentTransaction</span> <span class="variable">ft</span> <span class="operator">=</span> fragmentManager.beginTransaction();</span><br><span class="line">        ft.replace(getFragmentContainerResId(), secondFragment).commit();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="快速切换fragment出现内存泄漏"><a href="#快速切换fragment出现内存泄漏" class="headerlink" title="快速切换fragment出现内存泄漏"></a>快速切换fragment出现内存泄漏</h2><p>Fragment中嵌套可切换的fragment【可参考361度<code>SportFragment.java</code>】</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//“根”Fragment中</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> FragmentManager fragmentManager;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> ArrayList&lt;Fragment&gt; mFragments = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line"><span class="keyword">protected</span> <span class="type">int</span> <span class="variable">currentPosition</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> View <span class="title function_">onCreateView</span><span class="params">(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)</span> &#123;</span><br><span class="line">    <span class="comment">//实例化fragments</span></span><br><span class="line">    mFragments.add(childFragment1);</span><br><span class="line">    mFragments.add(childFragment2);</span><br><span class="line">    <span class="comment">//实例化fragmentManager</span></span><br><span class="line">    fragmentManager = context.getSupportFragmentManager();</span><br><span class="line">    <span class="comment">//初始显示fragment</span></span><br><span class="line">    showFragment(currentPosition);</span><br><span class="line">    <span class="comment">//点击切换fragment逻辑</span></span><br><span class="line">    tv1.setOnClickListener(v-&gt;showFragment(<span class="number">0</span>));</span><br><span class="line">    tv2.setOnClickListener(v-&gt;showFragment(<span class="number">1</span>));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">showFragment</span><span class="params">(<span class="type">int</span> index)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (fragmentManager != <span class="literal">null</span> &amp;&amp; mFragments.size() &gt; index) &#123;</span><br><span class="line">        <span class="type">FragmentTransaction</span> <span class="variable">ft</span> <span class="operator">=</span> fragmentManager.beginTransaction();</span><br><span class="line">        ft.hide(mFragments.get(currentPosition));</span><br><span class="line">        <span class="keyword">if</span> (!mFragments.get(index).isAdded())&#123;</span><br><span class="line">            ft.add(R.id.container_fragment, mFragments.get(index));</span><br><span class="line">        &#125;</span><br><span class="line">        ft.show(mFragments.get(index)).commit();</span><br><span class="line">        <span class="built_in">this</span>.currentPosition = index;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h1 id="Fragment问题"><a href="#Fragment问题" class="headerlink" title="Fragment问题"></a>Fragment问题</h1><h2 id="关于fragment的onHidden的问题"><a href="#关于fragment的onHidden的问题" class="headerlink" title="关于fragment的onHidden的问题"></a>关于fragment的onHidden的问题</h2><ol>
+<li><p>这个只有在hide，show的时候会触发  在add 的时候是不会触发的 首次加载的时候是不触发的onHiddenChanged</p>
+</li>
+<li><p>activity 上有4个fragment 当前的fragment 为A activity finish掉的时候， B fragment不走生命周期的 除非是已经被调用.add的时候才会走生命周期</p>
+</li>
+</ol>
+<h2 id="关于fragment的onHiddenChanged-onResume-问题"><a href="#关于fragment的onHiddenChanged-onResume-问题" class="headerlink" title="关于fragment的onHiddenChanged+onResume+问题"></a>关于fragment的onHiddenChanged+onResume+问题</h2><ol>
+<li>viewpager+fragment 情况：</li>
+</ol>
+<p>onHiddenOnChange()+onResume()的区别：</p>
+<p> 第一次可见的时候生命周期都是onHiddenOnChange–&gt;onResume</p>
+<p> 其它都只走onHiddenOnChange。除非是activity切换了走了生命周期，这个时候会走onPause跟onResume但是不走onHiddenOnChange</p>
+<ol start="2">
+<li>不带有viewpager情况：</li>
+</ol>
+<h2 id="Activity-has-been-destroyed"><a href="#Activity-has-been-destroyed" class="headerlink" title="Activity has been destroyed"></a>Activity has been destroyed</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//在 activity 的 onCreate 中</span></span><br><span class="line">mFragmentManager.beginTransaction()</span><br><span class="line">	.add(resId, <span class="keyword">new</span> <span class="title class_">OneFragment</span>())</span><br><span class="line">	<span class="comment">//这里会报异常，activity has been destroyed</span></span><br><span class="line">	.commit();</span><br></pre></td></tr></table></figure>
+
+<p>原因：Fragmenttransaction也是在 onCreate 中初始化，也许是异步初始化。这就涉及到执行顺序问题。<br>解决：add(redId,Fragment)放到onCreate()后的生命周期onResume()</p>
+<h2 id="DilogFragment生命周期和和设置布局大小无效问题"><a href="#DilogFragment生命周期和和设置布局大小无效问题" class="headerlink" title="DilogFragment生命周期和和设置布局大小无效问题"></a><a target="_blank" rel="noopener" href="https://blog.csdn.net/u013309870/article/details/85162630">DilogFragment生命周期和和设置布局大小无效问题</a></h2><h2 id="FragmentManag-beginTransaction-add-Res-fragment-commit-报错-Activity-has-been-destroyed"><a href="#FragmentManag-beginTransaction-add-Res-fragment-commit-报错-Activity-has-been-destroyed" class="headerlink" title="FragmentManag.beginTransaction().add(Res,fragment).commit 报错 Activity has been destroyed"></a>FragmentManag.beginTransaction().add(Res,fragment).commit 报错 Activity has been destroyed</h2><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">java<span class="selector-class">.lang</span><span class="selector-class">.RuntimeException</span>: Unable to start activity ComponentInfo&#123;&#125;java<span class="selector-class">.lang</span><span class="selector-class">.IllegalStateException</span>: Activity has been destroyed</span><br><span class="line"></span><br><span class="line">Caused by: java<span class="selector-class">.lang</span><span class="selector-class">.IllegalStateException</span>: Activity has been destroyed</span><br><span class="line">                           at android<span class="selector-class">.support</span><span class="selector-class">.v4</span><span class="selector-class">.app</span><span class="selector-class">.FragmentManagerImpl</span><span class="selector-class">.enqueueAction</span>(FragmentManager<span class="selector-class">.java</span>:<span class="number">1560</span>)</span><br><span class="line">                           at android<span class="selector-class">.support</span><span class="selector-class">.v4</span><span class="selector-class">.app</span><span class="selector-class">.BackStackRecord</span><span class="selector-class">.commitInternal</span>(BackStackRecord<span class="selector-class">.java</span>:<span class="number">696</span>)</span><br><span class="line">                           at android<span class="selector-class">.support</span><span class="selector-class">.v4</span><span class="selector-class">.app</span><span class="selector-class">.BackStackRecord</span><span class="selector-class">.commit</span>(BackStackRecord<span class="selector-class">.java</span>:<span class="number">662</span>)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">fragment = <span class="keyword">new</span> <span class="constructor">OneFragment()</span>;</span><br><span class="line">mFragmentManager.<span class="keyword">begin</span><span class="constructor">Transaction()</span></span><br><span class="line">    .add(com.handsomeyang.mango.<span class="module-access"><span class="module"><span class="identifier">R</span>.</span></span>id.root_relative_layout, fragment)</span><br><span class="line">    <span class="comment">//这里会报异常，activity has been destroyed</span></span><br><span class="line">    .commit<span class="literal">()</span>;</span><br></pre></td></tr></table></figure>
+
+<p>当我在Activity 的onCreate 中初始化fragment 并且用事务添加到Activity 的时候报错，说是Activity 已被销毁，然而怎么也不能理解，commit 源码点进去没找到，百度了好一会，在stackoverflow 上一个出现类似问题的评论中发现一句话： 说是Fragmentranscation 也是在onCrate中初始化的，也许是异步初始化，这样就涉及到代码执行顺序问题，最好把addFragment 往后提一提，我把这段同样的代码写在OnResume中就能顺利添加上fragment 并且不报错了。</p>
+<h2 id="getActivity-有时候为null"><a href="#getActivity-有时候为null" class="headerlink" title="getActivity() 有时候为null"></a>getActivity() 有时候为null</h2><h2 id="fragment-not-attached-to-a-context"><a href="#fragment-not-attached-to-a-context" class="headerlink" title="fragment not attached to a context"></a>fragment not attached to a context</h2><p>解决：<code>getString()</code>替换成<code>getActivity().getString()</code></p>
+<blockquote>
+<p>而我用<code>getActivity().getString()</code>和<code>getActivity().getResource().getString()</code>都不行，直接在这个页面写死文案。</p>
+</blockquote>
+<!-- flag of hidden posts -->
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div></div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>Donate</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.jpg" alt=" WeChat Pay"/>
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/private/" rel="tag"># private</a>
+          
+            <a href="/tags/%E5%AE%89%E5%8D%93%E7%9F%A5%E8%AF%86%E7%82%B9/" rel="tag"># 安卓知识点</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">71</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">31</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@189.cn" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/shenbh" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://gitee.com/shen_bh" target="_blank" title="Gitee">
+                      
+                        <i class="fa fa-fw fa-git"></i>Gitee</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Fragment"><span class="nav-text">Fragment</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%B9%E7%82%B9"><span class="nav-text">特点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-text">生命周期</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8EActivity%E9%80%9A%E4%BF%A1"><span class="nav-text">与Activity通信</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Fragment%E4%BD%BF%E7%94%A8%E9%99%B7%E9%98%B1"><span class="nav-text">Fragment使用陷阱</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%87%8D%E5%A4%8D%E5%88%9B%E5%BB%BAFragment"><span class="nav-text">重复创建Fragment</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E6%95%B0%E4%BC%A0%E9%80%92"><span class="nav-text">参数传递</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8EViewPager%E4%BA%A4%E4%BA%92%EF%BC%8CgetActivity-%E4%B8%BA%E7%A9%BA%E9%97%AE%E9%A2%98"><span class="nav-text">与ViewPager交互，getActivity()为空问题</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%98%B2%E6%AD%A2ViewPager-Fragment%E7%BB%93%E5%90%88%E4%BD%BF%E7%94%A8%E6%97%B6%E7%9A%84%E6%95%B0%E6%8D%AE%E9%A2%84%E5%8A%A0%E8%BD%BD"><span class="nav-text">防止ViewPager+Fragment结合使用时的数据预加载</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%B0%E7%89%88fragment%E5%88%A4%E6%96%AD%E5%8F%AF%E8%A7%81"><span class="nav-text">新版fragment判断可见</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81"><span class="nav-text">代码</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Activity-%E4%B8%8E-Fragment-%E4%BA%A4%E4%BA%92"><span class="nav-text">Activity 与 Fragment 交互</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Fragment-%E7%BB%99-Activity-%E4%BC%A0%E5%80%BC"><span class="nav-text">Fragment 给 Activity 传值</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Activity-%E7%BB%99-Fragment-%E4%BC%A0%E5%80%BC"><span class="nav-text">Activity 给 Fragment 传值</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A8%E6%80%81%E6%9B%BF%E6%8D%A2fragment"><span class="nav-text">动态替换fragment</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BF%AB%E9%80%9F%E5%88%87%E6%8D%A2fragment%E5%87%BA%E7%8E%B0%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F"><span class="nav-text">快速切换fragment出现内存泄漏</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Fragment%E9%97%AE%E9%A2%98"><span class="nav-text">Fragment问题</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E4%BA%8Efragment%E7%9A%84onHidden%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-text">关于fragment的onHidden的问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E4%BA%8Efragment%E7%9A%84onHiddenChanged-onResume-%E9%97%AE%E9%A2%98"><span class="nav-text">关于fragment的onHiddenChanged+onResume+问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Activity-has-been-destroyed"><span class="nav-text">Activity has been destroyed</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DilogFragment%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E5%92%8C%E5%92%8C%E8%AE%BE%E7%BD%AE%E5%B8%83%E5%B1%80%E5%A4%A7%E5%B0%8F%E6%97%A0%E6%95%88%E9%97%AE%E9%A2%98"><span class="nav-text">DilogFragment生命周期和和设置布局大小无效问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#FragmentManag-beginTransaction-add-Res-fragment-commit-%E6%8A%A5%E9%94%99-Activity-has-been-destroyed"><span class="nav-text">FragmentManag.beginTransaction().add(Res,fragment).commit 报错 Activity has been destroyed</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#getActivity-%E6%9C%89%E6%97%B6%E5%80%99%E4%B8%BAnull"><span class="nav-text">getActivity() 有时候为null</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#fragment-not-attached-to-a-context"><span class="nav-text">fragment not attached to a context</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

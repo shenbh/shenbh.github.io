@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="gradle" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Auc之模块间通信业界比较常见的做法是路由或接口下沉。这边用 ApiUtils在AucFrame架构中，通过APiUtils来自由调用各模块的apis，各业务通过对外提供的export模块来供其他业务方使用，自身只需要实现自身的export中的apis即可。 图中BusUtils这是个比 EventBus 更高效的模块内通讯工具。ApiUtils 也可以在正常项目中做业务隔离。 Config.gr">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Auc-4 模块间通信">
+<meta property="og:url" content="http://shenbh.github.io/posts/3491060676/index.html">
+<meta property="og:site_name" content="AB">
+<meta property="og:description" content="Auc之模块间通信业界比较常见的做法是路由或接口下沉。这边用 ApiUtils在AucFrame架构中，通过APiUtils来自由调用各模块的apis，各业务通过对外提供的export模块来供其他业务方使用，自身只需要实现自身的export中的apis即可。 图中BusUtils这是个比 EventBus 更高效的模块内通讯工具。ApiUtils 也可以在正常项目中做业务隔离。 Config.gr">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://shenbh.github.io/posts/3491060676/communication.png">
+<meta property="article:published_time" content="2020-01-07T07:00:17.000Z">
+<meta property="article:modified_time" content="2023-11-14T03:01:18.567Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="private">
+<meta property="article:tag" content="Gradle">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/3491060676/communication.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/3491060676/"/>
+
+
+
+
+
+  <title>Auc-4 模块间通信 | AB</title><meta name="robots" content="noindex">
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">AB</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Just do IT Now.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/3491060676/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="AB">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Auc-4 模块间通信</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-01-07T15:00:17+08:00">
+                2020-01-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Gradle/" itemprop="url" rel="index">
+                    <span itemprop="name">Gradle</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Auc之模块间通信"><a href="#Auc之模块间通信" class="headerlink" title="Auc之模块间通信"></a>Auc之模块间通信</h1><p>业界比较常见的做法是路由或接口下沉。这边用 <a target="_blank" rel="noopener" href="https://github.com/Blankj/AndroidUtilCode/tree/master/plugin/api-gradle-plugin">ApiUtils</a><br>在<code>AucFrame</code>架构中，通过<code>APiUtils</code>来自由调用各模块的<code>apis</code>，各业务通过对外提供的<code>export</code>模块来供其他业务方使用，自身只需要实现自身的<code>export</code>中的<code>apis</code>即可。<br><img src="/posts/3491060676/communication.png" alt="BusUtilsRole"></p>
+<p>图中<a target="_blank" rel="noopener" href="https://github.com/Blankj/AndroidUtilCode/blob/master/plugin/bus-gradle-plugin">BusUtils</a>这是个比 EventBus 更高效的模块内通讯工具。<br>ApiUtils 也可以在正常项目中做业务隔离。</p>
+<p><code>Config.groovy</code>中<code>appConfig</code>是决定有几个<code>application</code>（项目）可以运行；<code>pkgConfig</code>不为空那么就会调用<code>mock</code>内的方法</p>
+<p>模块间通信用的<code>ApiUtils.getApi</code></p>
+<hr>
+<h1 id="原文：AucFrame-之模块间通信"><a href="#原文：AucFrame-之模块间通信" class="headerlink" title="原文：AucFrame 之模块间通信"></a>原文：AucFrame 之模块间通信</h1><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>上一节中我们搭建了牛逼的工程配置，这一节我们来了解下模块间通信的问题吧，业界比较常见的做法就是路由，或者接口下沉，我觉得他们都没达到我的预期，要么太冗余复杂，要么不够智能，如今基于我的工程结构，设计出了一套更适合的通讯方式，就是 <code>ApiUtils</code>，表现形式和 SPI 方式差不多，但比它更优秀，更方便，相关地址在这里 **<a target="_blank" rel="noopener" href="https://github.com/Blankj/AndroidUtilCode/tree/master/plugin/api-gradle-plugin">ApiUtils 传送门</a>**。</p>
+<h2 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h2><p>看完了 <code>ApiUtils</code> 的说明文档，接下来就让我们使用到我们工程中来吧。首先引入 <code>api</code> 的插件，我们往 <code>Config.depConfig</code> 中加入如下代码：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">plugin       :</span> [</span><br><span class="line">        <span class="symbol">gradle:</span> <span class="keyword">new</span> DepConfig(<span class="string">&quot;com.android.tools.build:gradle:3.3.0&quot;</span>),</span><br><span class="line">        <span class="symbol">kotlin:</span> <span class="keyword">new</span> DepConfig(<span class="string">&quot;org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version&quot;</span>),</span><br><span class="line">        <span class="attr">api   :</span> <span class="keyword">new</span> DepConfig(<span class="string">&quot;com.blankj:api-gradle-plugin:1.0&quot;</span>),</span><br><span class="line">],</span><br></pre></td></tr></table></figure>
+
+<p>那么我们根目录的 <code>build.gradle</code> 可以做下优化，如下所示：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ConfigUtils</span></span><br><span class="line"><span class="keyword">static</span> getApplyPlugins() &#123;</span><br><span class="line">    <span class="keyword">def</span> plugins = getDepConfigByFilter(<span class="keyword">new</span> DepConfigFilter() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="type">boolean</span> accept(String name, DepConfig config) &#123;</span><br><span class="line">            <span class="keyword">if</span> (!name.startsWith(<span class="string">&quot;plugin.&quot;</span>)) <span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">            <span class="keyword">if</span> (!config.isApply) <span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">            <span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;)</span><br><span class="line">    GLog.d(<span class="string">&quot;getApplyPlugins = $&#123;GLog.object2String(plugins)&#125;&quot;</span>)</span><br><span class="line">    <span class="keyword">return</span> plugins</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// build.gradle in dependencies DSL</span></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">def</span> <span class="attr">entrySet :</span> ConfigUtils.getApplyPlugins().entrySet()) &#123;</span><br><span class="line">    classpath entrySet.value.dep</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后我们往 <code>buildAPP.gradle</code> 加入 api 的 plugin，具体如下所示：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">apply &#123;</span><br><span class="line">    ...</span><br><span class="line">    plugin <span class="string">&quot;com.blankj.api&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>现在我们要做一个在 <code>feature0</code> 中的 <code>Feature0Activity</code> 来启动 <code>feature1</code> 中的 <code>Feature1Activity</code>，向其传递一个自定义的数据结构，然后获取它传回的返回值。</p>
+<p>根据它的说明文档，因为是 <code>feature0</code> 调用 <code>feature1</code>，所以我们要暴露 <code>feature1</code> 中的 <code>api</code> 给 <code>feature0</code> 用。</p>
+<p>我们在 <code>feature1</code> 的 <code>export</code> 中建立继承自 <code>ApiUtils.BaseApi</code> 的 <code>Feature1Api</code>，并带上参数和返回值，具体如下所示：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">class</span> <span class="title class_">Feature1Api</span> <span class="keyword">extends</span> <span class="title class_">ApiUtils</span>.BaseApi &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">abstract</span> Feature1Result startFeature1Activity(Context context, Feature1Param param);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Feature1Param</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> Feature1Param(String name) &#123;</span><br><span class="line">        <span class="variable language_">this</span>.name = name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> String getName() &#123;</span><br><span class="line">        <span class="keyword">return</span> name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="type">void</span> setName(String name) &#123;</span><br><span class="line">        <span class="variable language_">this</span>.name = name;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Feature1Result</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> Feature1Result(String name) &#123;</span><br><span class="line">        <span class="variable language_">this</span>.name = name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> String getName() &#123;</span><br><span class="line">        <span class="keyword">return</span> name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="type">void</span> setName(String name) &#123;</span><br><span class="line">        <span class="variable language_">this</span>.name = name;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>接下来，我们在 <code>feature1</code> 的 <code>pkg</code> 中来实现其 <code>api</code>，如下所示：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ApiUtils</span>.Api</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Feature1ApiImpl</span> <span class="keyword">extends</span> <span class="title class_">Feature1Api</span> &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> Feature1Result startFeature1Activity(Context context, Feature1Param param) &#123;</span><br><span class="line">        Feature1Activity.start(context);</span><br><span class="line">        LogUtils.d(param.getName());</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> Feature1Result(<span class="string">&quot;Feature1Result&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们把 <code>Feature1ApiImpl</code> 放在包最外层，把 <code>Feature1Activity</code> 放在最外层包新建的一个 <code>main</code> 目录里，内部你想用 <code>mvp</code>、<code>mvc</code>、<code>mvvm</code> 随意你选择，结构如下所示：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">└── feature1</span><br><span class="line">    └── pkg</span><br><span class="line">        └── src</span><br><span class="line">            └── main</span><br><span class="line">                └── java</span><br><span class="line">                    └── com</span><br><span class="line">                        └── blankj</span><br><span class="line">                            └── feature1</span><br><span class="line">                                └── pkg</span><br><span class="line">                                    ├── Feature1ApiImpl.java</span><br><span class="line">                                    └── main</span><br><span class="line">                                        └── Feature1Activity.java</span><br></pre></td></tr></table></figure>
+
+<p>其他 <code>pkg</code> 也同理如此操作，这样一来方便查询到各模块暴露的接口的实现方式及模块的入口。</p>
+<p>接下来就是在 <code>feature0</code> 的 <code>pkg</code> 中的 <code>Feature0Activity</code> 调用了，具体如下所示：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="type">void</span> initView(<span class="meta">@Nullable</span> Bundle savedInstanceState, <span class="meta">@Nullable</span> View contentView) &#123;</span><br><span class="line">    findViewById(R.id.startFeature1Btn).setOnClickListener(<span class="keyword">new</span> View.OnClickListener() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> <span class="type">void</span> onClick(View v) &#123;</span><br><span class="line">            Feature1Result result = ApiUtils.getApi(Feature1Api.<span class="keyword">class</span>)</span><br><span class="line">                    .startFeature1Activity(Feature0Activity.<span class="variable language_">this</span>, <span class="keyword">new</span> Feature1Param(<span class="string">&quot;Feature1Param&quot;</span>));</span><br><span class="line">            ToastUtils.showLong(result.getName());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>接下来我们配置 <code>Config</code> 为运行 <code>launcher</code> 及全量 <code>pkg</code> 的模式：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> appConfig = [<span class="string">&#x27;launcher&#x27;</span>]</span><br><span class="line"><span class="keyword">static</span> pkgConfig = []</span><br></pre></td></tr></table></figure>
+
+<p>运行 <code>launcher-app</code>，点击 <code>Start Feature1</code> 后，可以发现我们可以成功跳转到 <code>Feature0Activity</code> 了，并打印了日志和显示了 Toast，说明 <code>feature1</code> 接收到了 <code>feature0</code> 传递的参数，<code>feature0</code> 接收到了 <code>feature1</code> 的返回值，跨模块通信成功。</p>
+<h3 id="更友好的-mock-层"><a href="#更友好的-mock-层" class="headerlink" title="更友好的 mock 层"></a>更友好的 mock 层</h3><p>接下来我们修改 <code>Config</code> 配置为运行 <code>launcher</code> 及只包含 <code>feature0</code> 的模式：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> appConfig = [<span class="string">&#x27;launcher&#x27;</span>]</span><br><span class="line"><span class="keyword">static</span> pkgConfig = [<span class="string">&#x27;feature0&#x27;</span>]</span><br></pre></td></tr></table></figure>
+
+<p>会发现 <code>api</code> 插件提醒我们没有实现 <code>Feature1Api</code>，其 <code>launcher:app</code> 下 <code>__api__.json</code> 如下所示：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="string">&quot;ApiUtilsClass&quot;</span>: <span class="string">&quot;com.blankj.utilcode.util.ApiUtils&quot;</span>,</span><br><span class="line">  <span class="string">&quot;implApis&quot;</span>: &#123;&#125;,</span><br><span class="line">  <span class="string">&quot;noImplApis&quot;</span>: [</span><br><span class="line">    <span class="string">&quot;com/blankj/feature1/export/api/Feature1Api&quot;</span></span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里我们就需要用到 <code>mock</code> 层了，它应该只在非全量 <code>pkg</code> 的时候起作用，我们先创建 <code>mock</code> 模块，然后做如下配置：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Config.depConfig 中加入 mock</span></span><br><span class="line"><span class="attr">feature      :</span> [</span><br><span class="line">                    <span class="attr">mock    :</span> <span class="keyword">new</span> DepConfig(<span class="string">&quot;:feature:mock&quot;</span>),</span><br><span class="line">                    ...</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line"><span class="comment">// ConfigUtils.includeModule() 首行加入是否应用 mock 的判断</span></span><br><span class="line"><span class="keyword">if</span> (Config.pkgConfig.isEmpty()) &#123;</span><br><span class="line">    Config.depConfig.feature.mock.isApply = <span class="literal">false</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// buildLib.gradle 修改 dependencies 如下：</span></span><br><span class="line">dependencies &#123;</span><br><span class="line">    <span class="keyword">if</span> (project.name == <span class="string">&#x27;pkg&#x27;</span> || project.name == <span class="string">&#x27;mock&#x27;</span>) &#123;</span><br><span class="line">        <span class="comment">// if module&#x27;s name equals &#x27;pkg&#x27;, api all of export</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">def</span> <span class="attr">entrySet :</span> ConfigUtils.getApplyExports().entrySet()) &#123;</span><br><span class="line">            api entrySet.value.dep</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (project.name == <span class="string">&#x27;export&#x27;</span>) &#123;</span><br><span class="line">        api Config.depConfig.lib.common.dep</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// buildApp.gradle 中的 dependencies 加入</span></span><br><span class="line"><span class="keyword">if</span> (Config.depConfig.feature.mock.isApply) &#123;</span><br><span class="line">    api Config.depConfig.feature.mock.dep</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Gradle 同步一下，<code>mock</code> 模块便会加入到编译中来了，我们在其中加入 <code>Feature1ApiMock</code>，并加上 <code>@ApiUtils.Api(isMock = true)</code> 注解，并完成 <code>mock</code> 的内容，具体如下所示：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ApiUtils</span>.Api(isMock = <span class="literal">true</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Feature1ApiMock</span> <span class="keyword">extends</span> <span class="title class_">Feature1Api</span> &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> Feature1Result startFeature1Activity(Context context, Feature1Param param) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> Feature1Result(<span class="string">&quot;Mock Result&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>现在我们就可以运行 <code>launcher-app</code> 了，结果就是点用 <code>startFeature1Activity</code> 后会返回其 <code>mock</code> 的结果，且当 <code>isMock = true</code> 和 <code>isMock = false</code> 同时存在的时候，最终以 <code>isMock = false</code> 为最终实现方，所以，不用担心 <code>mock</code> 层会影响到业务原有的实现，好了，AucFrame 的模块间通信到此已结束，下面再赠送点东西，我们给 Gradle 添加下耗时任务的统计。</p>
+<h2 id="Gradle-耗时任务的统计"><a href="#Gradle-耗时任务的统计" class="headerlink" title="Gradle 耗时任务的统计"></a>Gradle 耗时任务的统计</h2><p>我们在 <code>ConfigUtils</code> 加入超过 100ms 的任务的统计，并使其排序输出：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> List&lt;TaskInfo&gt; taskInfoList = []</span><br><span class="line"><span class="keyword">private</span> <span class="type">long</span> startBuildMillis</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="type">void</span> settingsEvaluated(Settings settings) &#123;</span><br><span class="line">    startBuildMillis = System.currentTimeMillis()</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="type">void</span> projectsEvaluated(Gradle gradle) &#123;</span><br><span class="line">    GLog.d(<span class="string">&quot;projectsEvaluated&quot;</span>)</span><br><span class="line">    gradle.addListener(<span class="keyword">new</span> TaskExecutionListener() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="type">void</span> beforeExecute(Task task) &#123;</span><br><span class="line">            task.ext.startTime = System.currentTimeMillis()</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="type">void</span> afterExecute(Task task, TaskState state) &#123;</span><br><span class="line">            <span class="keyword">def</span> exeDuration = System.currentTimeMillis() - task.ext.startTime</span><br><span class="line">            <span class="keyword">if</span> (exeDuration &gt;= <span class="number">100</span>) &#123;</span><br><span class="line">                taskInfoList.add(<span class="keyword">new</span> TaskInfo(task, exeDuration))</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="type">void</span> buildFinished(BuildResult result) &#123;</span><br><span class="line">    GLog.d(<span class="string">&quot;buildFinished&quot;</span>)</span><br><span class="line">    <span class="keyword">if</span> (!taskInfoList.isEmpty()) &#123;</span><br><span class="line">        Collections.sort(taskInfoList, <span class="keyword">new</span> Comparator&lt;TaskInfo&gt;() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="type">int</span> compare(TaskInfo t, TaskInfo t1) &#123;</span><br><span class="line">                <span class="keyword">return</span> t1.exeDuration - t.exeDuration</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;)</span><br><span class="line">        StringBuilder sb = <span class="keyword">new</span> StringBuilder()</span><br><span class="line">        <span class="type">int</span> buildSec = (System.currentTimeMillis() - startBuildMillis) / <span class="number">1000</span>;</span><br><span class="line">        <span class="type">int</span> m = buildSec / <span class="number">60</span>;</span><br><span class="line">        <span class="type">int</span> s = buildSec % <span class="number">60</span>;</span><br><span class="line">        <span class="keyword">def</span> timeInfo = (m == <span class="number">0</span> ? <span class="string">&quot;$&#123;s&#125;s&quot;</span> : <span class="string">&quot;$&#123;m&#125;m $&#123;s&#125;s ($&#123;buildSec&#125;s)&quot;</span>)</span><br><span class="line">        sb.append(<span class="string">&quot;BUILD FINISHED in $timeInfo&quot;</span>)</span><br><span class="line">        taskInfoList.each &#123;</span><br><span class="line">            sb.append(String.format(<span class="string">&quot;%7sms %s\n&quot;</span>, it.exeDuration, it.task.path))</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">def</span> content = sb.toString()</span><br><span class="line">        GLog.l(content)</span><br><span class="line">        File file = <span class="keyword">new</span> File(result.gradle.rootProject.buildDir.getAbsolutePath(),</span><br><span class="line">                <span class="string">&quot;build_time_records_&quot;</span> + <span class="keyword">new</span> SimpleDateFormat(<span class="string">&quot;yyyy-MM-dd-HH-mm-ss&quot;</span>).format(<span class="keyword">new</span> Date()) + <span class="string">&quot;.txt&quot;</span>)</span><br><span class="line">        FileUtils.write(file, content)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">TaskInfo</span> &#123;</span><br><span class="line">    Task task</span><br><span class="line">    <span class="type">long</span> exeDuration</span><br><span class="line">    TaskInfo(Task task, <span class="type">long</span> exeDuration) &#123;</span><br><span class="line">        <span class="variable language_">this</span>.task = task</span><br><span class="line">        <span class="variable language_">this</span>.exeDuration = exeDuration</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>接着，我们运行一下 <code>./gradlew build</code> 后便会在根目录的 <code>build</code> 中生成超过 100ms 任务的统计列表如下所示：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">BUILD FINISHED <span class="keyword">in</span> <span class="number">40</span>s</span><br><span class="line">   <span class="number">5917</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">launcher:</span><span class="attr">app:</span>transformClassesAndResourcesWithProguardForRelease</span><br><span class="line">   <span class="number">4207</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">mock:</span>lint</span><br><span class="line">   <span class="number">2143</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">launcher:</span><span class="attr">app:</span>transformClassesWithDexBuilderForDebug</span><br><span class="line">   <span class="number">2136</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">launcher:</span><span class="attr">app:</span>transformClassesWithDexBuilderForRelease</span><br><span class="line">   <span class="number">1593</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">launcher:</span><span class="attr">app:</span>transformDexArchiveWithDexMergerForDebug</span><br><span class="line">   <span class="number">1526</span><span class="attr">ms :</span><span class="attr">lib:</span><span class="attr">base:</span>lint</span><br><span class="line">   <span class="number">1336</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">launcher:</span><span class="attr">app:</span>transformClassesWithApiTransformForDebug</span><br><span class="line">    <span class="number">959</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">launcher:</span><span class="attr">app:</span>packageRelease</span><br><span class="line">    <span class="number">730</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">launcher:</span><span class="attr">app:</span>transformClassesWithApiTransformForRelease</span><br><span class="line">    <span class="number">720</span><span class="attr">ms :</span><span class="attr">lib:</span><span class="attr">common:</span>lint</span><br><span class="line">    <span class="number">623</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">mock:</span>compileDebugRenderscript</span><br><span class="line">    <span class="number">600</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">launcher:</span><span class="attr">app:</span>clean</span><br><span class="line">    <span class="number">577</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">launcher:</span><span class="attr">app:</span>lint</span><br><span class="line">    <span class="number">557</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">mock:</span>mergeReleaseResources</span><br><span class="line">    <span class="number">550</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">feature0:</span><span class="attr">pkg:</span>lint</span><br><span class="line">    <span class="number">487</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">feature1:</span><span class="attr">export:</span>mergeReleaseResources</span><br><span class="line">    <span class="number">460</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">launcher:</span><span class="attr">app:</span>transformDexArchiveWithDexMergerForRelease</span><br><span class="line">    <span class="number">446</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">launcher:</span><span class="attr">app:</span>packageDebug</span><br><span class="line">    <span class="number">442</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">feature0:</span><span class="attr">export:</span>mergeReleaseResources</span><br><span class="line">    <span class="number">435</span><span class="attr">ms :</span><span class="attr">lib:</span><span class="attr">base:</span>mergeReleaseResources</span><br><span class="line">    <span class="number">422</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">launcher:</span><span class="attr">app:</span>transformResourcesWithMergeJavaResForDebug</span><br><span class="line">    <span class="number">414</span><span class="attr">ms :</span><span class="attr">lib:</span><span class="attr">common:</span>mergeReleaseResources</span><br><span class="line">    <span class="number">412</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">launcher:</span><span class="attr">app:</span>transformResourcesWithMergeJavaResForRelease</span><br><span class="line">    <span class="number">401</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">mock:</span>verifyReleaseResources</span><br><span class="line">    <span class="number">388</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">launcher:</span><span class="attr">app:</span>mergeDebugResources</span><br><span class="line">    <span class="number">386</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">feature0:</span><span class="attr">pkg:</span>mergeReleaseResources</span><br><span class="line">    <span class="number">378</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">launcher:</span><span class="attr">app:</span>processDebugResources</span><br><span class="line">    <span class="number">359</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">launcher:</span><span class="attr">app:</span>transformNativeLibsWithMergeJniLibsForDebug</span><br><span class="line">    <span class="number">335</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">feature0:</span><span class="attr">pkg:</span>verifyReleaseResources</span><br><span class="line">    <span class="number">332</span><span class="attr">ms :</span><span class="attr">lib:</span><span class="attr">common:</span>verifyReleaseResources</span><br><span class="line">    <span class="number">328</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">launcher:</span><span class="attr">app:</span>processReleaseResources</span><br><span class="line">    <span class="number">319</span><span class="attr">ms :</span><span class="attr">lib:</span><span class="attr">base:</span>verifyReleaseResources</span><br><span class="line">    <span class="number">314</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">feature0:</span><span class="attr">export:</span>verifyReleaseResources</span><br><span class="line">    <span class="number">313</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">feature1:</span><span class="attr">export:</span>verifyReleaseResources</span><br><span class="line">    <span class="number">309</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">feature0:</span><span class="attr">export:</span>lint</span><br><span class="line">    <span class="number">292</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">feature1:</span><span class="attr">export:</span>lint</span><br><span class="line">    <span class="number">286</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">launcher:</span><span class="attr">app:</span>compileDebugJavaWithJavac</span><br><span class="line">    <span class="number">270</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">launcher:</span><span class="attr">app:</span>mergeReleaseResources</span><br><span class="line">    <span class="number">216</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">launcher:</span><span class="attr">app:</span>compileReleaseJavaWithJavac</span><br><span class="line">    <span class="number">210</span><span class="attr">ms :</span><span class="attr">lib:</span><span class="attr">base:</span>generateDebugRFile</span><br><span class="line">    <span class="number">202</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">feature1:</span><span class="attr">export:</span>clean</span><br><span class="line">    <span class="number">194</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">launcher:</span><span class="attr">app:</span>transformNativeLibsWithMergeJniLibsForRelease</span><br><span class="line">    <span class="number">191</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">mock:</span>clean</span><br><span class="line">    <span class="number">183</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">feature0:</span><span class="attr">pkg:</span>clean</span><br><span class="line">    <span class="number">182</span><span class="attr">ms :</span><span class="attr">lib:</span><span class="attr">common:</span>clean</span><br><span class="line">    <span class="number">173</span><span class="attr">ms :</span><span class="attr">lib:</span><span class="attr">base:</span>clean</span><br><span class="line">    <span class="number">164</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">feature0:</span><span class="attr">export:</span>clean</span><br><span class="line">    <span class="number">141</span><span class="attr">ms :</span><span class="attr">lib:</span><span class="attr">base:</span>compileDebugKotlin</span><br><span class="line">    <span class="number">130</span><span class="attr">ms :</span><span class="attr">lib:</span><span class="attr">common:</span>compileDebugJavaWithJavac</span><br><span class="line">    <span class="number">102</span><span class="attr">ms :</span><span class="attr">feature:</span><span class="attr">feature0:</span><span class="attr">pkg:</span>generateDebugRFile</span><br></pre></td></tr></table></figure>
+
+<!-- flag of hidden posts -->
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div></div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>Donate</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.jpg" alt=" WeChat Pay"/>
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/private/" rel="tag"># private</a>
+          
+            <a href="/tags/Gradle/" rel="tag"># Gradle</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">71</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">31</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@189.cn" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/shenbh" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://gitee.com/shen_bh" target="_blank" title="Gitee">
+                      
+                        <i class="fa fa-fw fa-git"></i>Gitee</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Auc%E4%B9%8B%E6%A8%A1%E5%9D%97%E9%97%B4%E9%80%9A%E4%BF%A1"><span class="nav-text">Auc之模块间通信</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8E%9F%E6%96%87%EF%BC%9AAucFrame-%E4%B9%8B%E6%A8%A1%E5%9D%97%E9%97%B4%E9%80%9A%E4%BF%A1"><span class="nav-text">原文：AucFrame 之模块间通信</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%83%8C%E6%99%AF"><span class="nav-text">背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E8%B7%B5"><span class="nav-text">实践</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9B%B4%E5%8F%8B%E5%A5%BD%E7%9A%84-mock-%E5%B1%82"><span class="nav-text">更友好的 mock 层</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Gradle-%E8%80%97%E6%97%B6%E4%BB%BB%E5%8A%A1%E7%9A%84%E7%BB%9F%E8%AE%A1"><span class="nav-text">Gradle 耗时任务的统计</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

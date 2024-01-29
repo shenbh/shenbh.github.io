@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="安卓知识点," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Gradle下载后的本地路径：打开AS，打开项目，更改为Project模式，找到External Libraries找某一个第三方库，然后点开，找个具体文件（比如AndroidManifest.xml）右键它选择Open In Explorer。 比如我现在的路径是：D:\dev\.gradle\caches\transforms-2\files-2.1\ 依赖相关">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安卓-Dependencies依赖相关">
+<meta property="og:url" content="http://shenbh.github.io/posts/269438b3/index.html">
+<meta property="og:site_name" content="AB">
+<meta property="og:description" content="Gradle下载后的本地路径：打开AS，打开项目，更改为Project模式，找到External Libraries找某一个第三方库，然后点开，找个具体文件（比如AndroidManifest.xml）右键它选择Open In Explorer。 比如我现在的路径是：D:\dev\.gradle\caches\transforms-2\files-2.1\ 依赖相关">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://shenbh.github.io/posts/269438b3/aar-are-not-supported.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/269438b3/AS%E8%A7%A3%E5%86%B3not-support-aar.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/269438b3/981009fdgy1ge4m23rhc2j20u209ewff.jpg">
+<meta property="article:published_time" content="2021-07-07T02:25:00.000Z">
+<meta property="article:modified_time" content="2024-01-02T02:52:16.749Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="安卓知识点">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/269438b3/aar-are-not-supported.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/269438b3/"/>
+
+
+
+
+
+  <title>安卓-Dependencies依赖相关 | AB</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">AB</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Just do IT Now.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/269438b3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="AB">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">安卓-Dependencies依赖相关</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-07-07T10:25:00+08:00">
+                2021-07-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>Gradle下载后的本地路径：打开AS，打开项目，更改为<code>Project</code>模式，找到<code>External Libraries</code>找某一个第三方库，然后点开，找个具体文件（比如<code>AndroidManifest.xml</code>）右键它选择<code>Open In Explorer</code>。</p>
+<p>比如我现在的路径是：<code>D:\dev\.gradle\caches\transforms-2\files-2.1\</code></p>
+<h1 id="依赖相关"><a href="#依赖相关" class="headerlink" title="依赖相关"></a>依赖相关</h1><h2 id="查看项目依赖"><a href="#查看项目依赖" class="headerlink" title="查看项目依赖"></a>查看项目依赖</h2><p>Terminal中输入：</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gradlew <span class="symbol">:app</span><span class="symbol">:dependencies</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="依赖多次（如果是同一个版本）没有问题"><a href="#依赖多次（如果是同一个版本）没有问题" class="headerlink" title="依赖多次（如果是同一个版本）没有问题"></a>依赖多次（如果是同一个版本）没有问题</h2><p>场景：moduleA依赖moduleB（B的libs中有个B.jar），moduleC依赖moduleA也依赖moduleB。moduleC调用这个B.jar，没有版本冲突等问题（因为是同一个版本的jar）</p>
+<h2 id="exclude排除依赖中的某个group"><a href="#exclude排除依赖中的某个group" class="headerlink" title="exclude排除依赖中的某个group"></a>exclude排除依赖中的某个group</h2><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 单独排除某个模块中的依赖  </span></span><br><span class="line">compile(<span class="string">&#x27;com.h6ah4i.android.widget.advrecyclerview:advrecyclerview:0.11.0@aar&#x27;</span>) &#123;</span><br><span class="line">    exclude <span class="attr">group:</span> <span class="string">&#x27;com.android.support&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 排除所有子依赖中的support依赖，统一使用主项目中的版本</span></span><br><span class="line">configurations &#123;</span><br><span class="line">    all*.exclude <span class="attr">group:</span> <span class="string">&#x27;com.android.support&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>用法：exclude group:’ ‘, module: ‘ ‘ 【group和module两个参数可分别单独使用】</p>
+<p>说明：排除某个依赖，可解决部分传递依赖。</p>
+<p>使用场景：</p>
+<ul>
+<li>解决依赖冲突。若两个模块使用相同jar包的不同版本，gradle默认会使用最新版本的jar包，此时可通过exclude排除冲突。（版本冲突带来的问题最主要是API类或方法移除）</li>
+<li>运行期无需此模块。</li>
+<li>依赖传递无法找到时，可通过exclude排除。</li>
+<li>版权原因需排除。</li>
+</ul>
+<h2 id="transitive是否传递本身的依赖给宿主程序"><a href="#transitive是否传递本身的依赖给宿主程序" class="headerlink" title="transitive是否传递本身的依赖给宿主程序"></a>transitive是否传递本身的依赖给宿主程序</h2><p>用法：transitive &#x3D; true | false</p>
+<p>说明：是否传递本身的依赖给宿主程序（使用传递依赖时，Gradle会将传递依赖一起下载下来。compile默认时开启传递依赖）</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">compile</span>(<span class="params"><span class="string">&#x27;com.alibaba.android:ultraviewpager:1.0.4@aar&#x27;</span></span>) &#123;</span><br><span class="line">    transitive = <span class="literal">false</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>@aar表示只下载该aar包，而不下该aar包所依赖的其他库。如果还不想使用@aar前提下的其依赖库，需要加transitive&#x3D;false（默认是true开启传递依赖）。其中transitive表示传递依赖（间接依赖）。</p>
+<p>transitive&#x3D;true，等同于没有使用exclude排除依赖，每个包的依赖项都会被递归分析并添加进来。</p>
+<p>transitive&#x3D;false，等同于用exclude排除依赖。</p>
+<h2 id="force强制使用某版本"><a href="#force强制使用某版本" class="headerlink" title="force强制使用某版本"></a>force强制使用某版本</h2><p>用法：force &#x3D; true<br>作用：强制使用某个版本。出现冲突时，优先使用该版本解决。</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 强制使用 support-v4 26.1.0版本</span></span><br><span class="line">compile(<span class="string">&#x27;com.android.support:support-v4:26.1.0&#x27;</span>) &#123;</span><br><span class="line">   force = <span class="literal">true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="综合例子"><a href="#综合例子" class="headerlink" title="综合例子"></a>综合例子</h2><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">compile(<span class="string">&#x27;org.hibernate:hibernate:3.1&#x27;</span>) &#123;</span><br><span class="line">    <span class="comment">// 冲突时优先使用该版本</span></span><br><span class="line">    force = <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 依据构建名称排除</span></span><br><span class="line">    exclude <span class="attr">module:</span> <span class="string">&#x27;cglib&#x27;</span> </span><br><span class="line">    <span class="comment">// 依据组织名称排除</span></span><br><span class="line">    exclude <span class="attr">group:</span> <span class="string">&#x27;org.jmock&#x27;</span> </span><br><span class="line">    <span class="comment">// 依据组织名称+构件名称排除</span></span><br><span class="line">    exclude <span class="attr">group:</span> <span class="string">&#x27;org.unwanted&#x27;</span>, <span class="attr">module:</span> <span class="string">&#x27;iAmBuggy&#x27;</span> </span><br><span class="line"></span><br><span class="line">    <span class="comment">// 为本依赖关闭依赖传递特性</span></span><br><span class="line">    transitive = <span class="literal">false</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="api、implementation、compile、compileOnly、provided"><a href="#api、implementation、compile、compileOnly、provided" class="headerlink" title="api、implementation、compile、compileOnly、provided"></a><a target="_blank" rel="noopener" href="https://blog.csdn.net/yuzhiqiang_1993/article/details/78366985">api、implementation、compile、compileOnly、provided</a></h2><ul>
+<li><strong>implementation</strong>所依赖的库不会传递，只会在当前module中生效</li>
+</ul>
+<blockquote>
+<p> 比如：moduleA 用implementation依赖了 base库，moduleB依赖moduleA后想调用base库内方法是不行的。</p>
+</blockquote>
+<ul>
+<li><strong>api</strong>跟2.x版本的<strong>compile</strong>一样，具有“穿透性”，对其他module是<strong>可见的</strong></li>
+<li><strong>compileOnly</strong>跟2.x版本的<strong>provided</strong>一样。只在编译时有效，不会参与打包</li>
+</ul>
+<blockquote>
+<p>如果是自己创建的library给别人使用时，需要依赖 com.android.support的话，建议使用compileOnly，避免给使用者带来不便。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>2.x的gradle</th>
+<th></th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>compile</td>
+<td>api</td>
+<td>传递。对其他module可见</td>
+</tr>
+<tr>
+<td>porovided</td>
+<td>compileOnly</td>
+<td>不传递。不参与打包，只在编译时有效</td>
+</tr>
+<tr>
+<td></td>
+<td>implementation</td>
+<td>不传递。在当前module中生效</td>
+</tr>
+<tr>
+<td></td>
+<td>runtimeOnly</td>
+<td>会打到包中，运行时才有效。</td>
+</tr>
+<tr>
+<td></td>
+<td>testImplementation</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>androidTestImplementation</td>
+<td></td>
+</tr>
+<tr>
+<td>apt（在gradle2.2已过时）</td>
+<td>annotationProcessor</td>
+<td>自动化构建</td>
+</tr>
+</tbody></table>
+<h3 id="APK"><a href="#APK" class="headerlink" title="APK"></a>APK</h3><p>只会打包到apk文件中，而不参与编译，所以不能在代码中直接调用jar中的类或方法，否则在编译时会报错</p>
+<h3 id="Test-compile"><a href="#Test-compile" class="headerlink" title="Test compile"></a>Test compile</h3><p>Test compile 仅仅是针对单元<a target="_blank" rel="noopener" href="http://lib.csdn.net/base/softwaretest">测试</a>代码的编译编译以及最终打包测试apk时有效，而对正常的debug或者release apk包不起作用。</p>
+<h3 id="Debug-compile"><a href="#Debug-compile" class="headerlink" title="Debug compile"></a>Debug compile</h3><p>Debug compile 仅仅针对debug模式的编译和最终的debug apk打包。</p>
+<h3 id="Release-compile"><a href="#Release-compile" class="headerlink" title="Release compile"></a>Release compile</h3><p>Release compile 仅仅针对Release 模式的编译和最终的Release apk打包。</p>
+<h2 id="AS-library生成jar包和aar的方法总结"><a href="#AS-library生成jar包和aar的方法总结" class="headerlink" title="AS library生成jar包和aar的方法总结"></a>AS library生成jar包和aar的方法总结</h2><h3 id="生成jar包（针对的是类库library）"><a href="#生成jar包（针对的是类库library）" class="headerlink" title="生成jar包（针对的是类库library）"></a>生成jar包（针对的是类库<code>library</code>）</h3><ol>
+<li>在 <code>library/build.gradle</code> 中的最后添加</li>
+</ol>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//task to delete the old jar</span></span><br><span class="line">task deleteOldJar(<span class="attr">type:</span> Delete) &#123;</span><br><span class="line">    delete <span class="string">&#x27;release/AndroidPlugin.jar&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//task to export contents as jar</span></span><br><span class="line">task exportJar(<span class="attr">type:</span> Copy) &#123;</span><br><span class="line">    from(<span class="string">&#x27;build/intermediates/bundles/release/&#x27;</span>)</span><br><span class="line">    into(<span class="string">&#x27;release/&#x27;</span>)</span><br><span class="line">    include(<span class="string">&#x27;classes.jar&#x27;</span>)</span><br><span class="line">    <span class="comment">///Rename the jar</span></span><br><span class="line">    rename(<span class="string">&#x27;classes.jar&#x27;</span>, <span class="string">&#x27;AndroidPlugin.jar&#x27;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">exportJar.dependsOn(deleteOldJar, build)</span><br></pre></td></tr></table></figure>
+
+<p>其中AndroidPlugin.jar就是生成的jar包名</p>
+<ol start="2">
+<li>实现上面操作之后 点击右边的Gradle侧边栏，选择library目录下<code>Tasks-&gt;other-&gt;exportJar</code>方法</li>
+</ol>
+<p>运行完毕后 你就可以在library项目文件下面的release文件夹里面找到生成的jar</p>
+<h3 id="jar包的使用"><a href="#jar包的使用" class="headerlink" title="jar包的使用"></a>jar包的使用</h3><p>在<code>app/build.gradle</code>中<code>dependencies</code>中添加</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">dependencies&#123;</span><br><span class="line">    <span class="comment">//添加jar</span></span><br><span class="line">    compile files(<span class="string">&#x27;libs/mytool_1.0.jar&#x27;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="生成aar包"><a href="#生成aar包" class="headerlink" title="生成aar包"></a>生成aar包</h3><ol>
+<li>选择<code>library</code>目录下的 <code>Tasks-&gt;build-&gt;assembleRelease</code>方法</li>
+<li>等待运行完毕后去 <code>buile-&gt;outputs-&gt;aar</code> 的文件夹下拷贝出来即可</li>
+</ol>
+<h3 id="aar包使用"><a href="#aar包使用" class="headerlink" title="aar包使用"></a>aar包使用</h3><ol>
+<li><code>app/build.gradle</code>中，添加</li>
+</ol>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">repositories &#123;</span><br><span class="line">    flatDir &#123;</span><br><span class="line">        dirs <span class="string">&#x27;libs&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">dependencies&#123;</span><br><span class="line">    <span class="comment">//添加aar</span></span><br><span class="line">    compile(<span class="attr">name:</span> <span class="string">&#x27;toollibrary-1.0&#x27;</span>, <span class="attr">ext:</span> <span class="string">&#x27;aar&#x27;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<p>指定ModuleB的aar、jar也在当前library中一起打包到aar中</p>
+<p>在<code>library</code>的<code>build.gradle</code>中，最底部添加（dependencies外），然后执行 <code>gradlew genAar</code>任务</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//把所有依赖的 jar 包拷贝至 build/outputs/aar/libs</span></span><br><span class="line">task syncAllJars() &#123;</span><br><span class="line">    <span class="comment">// 使用了绝对路径，需要根据实际情况调整</span></span><br><span class="line">    <span class="comment">// 将指定路径下的所有 jar 包，打包至被打包的路径下</span></span><br><span class="line">    <span class="keyword">def</span> dir = <span class="keyword">new</span> File(<span class="string">&#x27;D:\\code\\MyTests\\Android-SDK@3.7.9.81745_20230327\\ZHSDK\\app\\libs&#x27;</span>)</span><br><span class="line">    files(dir.listFiles()).each &#123; file -&gt;</span><br><span class="line">        <span class="keyword">if</span> (file.name.endsWith(<span class="string">&#x27;.jar&#x27;</span>)) &#123;</span><br><span class="line">            copy &#123;</span><br><span class="line">                into buildDir.getPath() + <span class="string">&quot;/outputs/aar/libs&quot;</span></span><br><span class="line">                from file.absolutePath</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 把所有依赖的 aar 包中包含的 classes.jar</span></span><br><span class="line"><span class="comment">// 都拷贝到 build/outputs/aar/libs下，并重命名以不被覆盖</span></span><br><span class="line">task syncAllAars(<span class="attr">dependsOn:</span><span class="string">&#x27;:app:assemble&#x27;</span>) &#123;</span><br><span class="line">    <span class="keyword">def</span> jarName</span><br><span class="line">    <span class="keyword">def</span> aarPath</span><br><span class="line">    <span class="keyword">def</span> destDir = buildDir.getPath()+<span class="string">&quot;/outputs/aar&quot;</span></span><br><span class="line">    <span class="comment">// 使用了绝对路径，需要根据实际情况调整</span></span><br><span class="line">    <span class="keyword">def</span> dir = <span class="keyword">new</span> File(<span class="string">&#x27;D:\\code\\MyTests\\Android-SDK@3.7.9.81745_20230327\\ZHSDK\\app\\libs&#x27;</span>)</span><br><span class="line">    files(dir.listFiles()).each &#123; file -&gt;</span><br><span class="line">        aarPath = file.absolutePath</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (file.name.endsWith(<span class="string">&#x27;.aar&#x27;</span>)) &#123;</span><br><span class="line">            jarName = <span class="string">&quot;libs/&quot;</span> + file.name.replace(<span class="string">&quot;.aar&quot;</span>,<span class="string">&quot;.jar&quot;</span>)</span><br><span class="line">            copy &#123;</span><br><span class="line">                from zipTree(aarPath)</span><br><span class="line">                into destDir</span><br><span class="line">                include <span class="string">&quot;**/*&quot;</span></span><br><span class="line">                rename <span class="string">&#x27;classes.jar&#x27;</span>, jarName</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 将多个 jar 包打包成一个 classes.jar</span></span><br><span class="line">task makeJar(<span class="attr">type:</span> Jar) &#123;</span><br><span class="line">    archiveName = <span class="string">&#x27;classes.jar&#x27;</span></span><br><span class="line">    <span class="keyword">def</span> dir = <span class="keyword">new</span> File(buildDir.getPath()+<span class="string">&quot;/outputs/aar/libs&quot;</span>)</span><br><span class="line">    files(dir.listFiles()).each &#123; file -&gt;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (file.name.endsWith(<span class="string">&#x27;.jar&#x27;</span>)) &#123;</span><br><span class="line">            from (project.zipTree(file.absolutePath))</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    destinationDirectory = file(buildDir.getPath()+<span class="string">&quot;/outputs/aar&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">task fataar(<span class="attr">dependsOn:</span>[syncAllAars, syncAllJars, makeJar]) &#123;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//生成最终 aar 包，libs 目录需要被排除</span></span><br><span class="line">task genAar(<span class="attr">dependsOn:</span>[fataar], <span class="attr">type:</span> Zip) &#123;</span><br><span class="line">    <span class="keyword">def</span> destDir = buildDir.getPath()+<span class="string">&quot;/outputs/aar&quot;</span></span><br><span class="line">    baseName <span class="string">&quot;wholeSDK&quot;</span></span><br><span class="line">    extension <span class="string">&quot;aar&quot;</span></span><br><span class="line">    version <span class="string">&#x27;1.1&#x27;</span></span><br><span class="line">    destinationDirectory = file(<span class="string">&#x27;libs/&#x27;</span>)</span><br><span class="line">    from destDir</span><br><span class="line">    exclude <span class="string">&quot;libs&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<h2 id="AS-生成assert文件"><a href="#AS-生成assert文件" class="headerlink" title="AS 生成assert文件"></a>AS 生成assert文件</h2><ol>
+<li><p>右键项目的某个module，选择Folder-&gt;Assets Folder即可</p>
+</li>
+<li><p>引用assert文件</p>
+</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mWebView.loadUrl(<span class="string">&quot;file:///android_asset/test.html&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="aar包设置成本地"><a href="#aar包设置成本地" class="headerlink" title="aar包设置成本地"></a>aar包设置成本地</h2><p>拿oaid的aar包举例：</p>
+<ol>
+<li><p>项目根目录下创建文件夹localRepo；</p>
+</li>
+<li><p>在localRepo下创建文件夹oaid_sdk</p>
+</li>
+<li><p>localRepo&#x2F;oaid_sdk下</p>
+<ol>
+<li><p>新建<code>.gitignore</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/build</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>新建<code>build.gradle</code></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">configurations.maybeCreate(<span class="string">&quot;default&quot;</span>)</span><br><span class="line">artifacts.add(<span class="string">&quot;default&quot;</span>, file(<span class="string">&#x27;oaid_sdk_1.0.25.aar&#x27;</span>))</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>黏贴<code>oaid_sdk_1.0.25.aar</code></p>
+</li>
+</ol>
+</li>
+<li><p>在<code>settings.gradle</code>中添加</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">include <span class="string">&#x27;:localRepo:oaid_sdk&#x27;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用：<code>app/build.gradle</code>中添加</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">    <span class="comment">//移动安全联盟OAID</span></span><br><span class="line">    api project(<span class="attr">path:</span> <span class="string">&#x27;:localRepo:oaid_sdk&#x27;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h1 id="依赖的优雅写法"><a href="#依赖的优雅写法" class="headerlink" title="依赖的优雅写法"></a>依赖的优雅写法</h1><h2 id="使用buildSrc"><a href="#使用buildSrc" class="headerlink" title="使用buildSrc"></a>使用buildSrc</h2><blockquote>
+<p>缺点：无法使用AGP</p>
+</blockquote>
+<ol>
+<li><p>根目录下新建buildSrc</p>
+<ul>
+<li><p><code>\buildSrc\src\main\groovy\Config.groovy</code></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Config</span> &#123;</span><br><span class="line">    <span class="keyword">static</span> applicationId = <span class="string">&quot;com.teach.aixuepinyin&quot;</span></span><br><span class="line">    <span class="keyword">static</span> appName = <span class="string">&#x27;AucFrame&#x27;</span></span><br><span class="line">    <span class="keyword">static</span> compileSdkVersion = <span class="number">28</span></span><br><span class="line">    <span class="keyword">static</span> minSdkVersion = <span class="number">19</span></span><br><span class="line">    <span class="keyword">static</span> targetSdkVersion = <span class="number">27</span></span><br><span class="line">    <span class="keyword">static</span> versionCode = <span class="number">202006</span><span class="comment">//100100 改打包版本改这个</span></span><br><span class="line">    <span class="keyword">static</span> versionName = <span class="string">&#x27;2.2.6&#x27;</span><span class="comment">// E.g. 1.9.72 =&gt; 1,009,072  改打包版本改这个</span></span><br><span class="line">    <span class="keyword">static</span> buildToolsVersion = <span class="string">&quot;28.0.2&quot;</span></span><br><span class="line">    <span class="keyword">static</span> support_version = <span class="string">&quot;27.1.1&quot;</span></span><br><span class="line">    <span class="keyword">static</span> retrofit2 = <span class="string">&quot;2.3.0&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> depConfig = [</span><br><span class="line"></span><br><span class="line">            <span class="attr">support :</span> [</span><br><span class="line">                    <span class="symbol">appcompat_v7:</span> <span class="string">&quot;com.android.support:appcompat-v7:$support_version&quot;</span>,</span><br><span class="line">                    <span class="attr">design      :</span> <span class="string">&quot;com.android.support:design:$support_version&quot;</span>,</span><br><span class="line">                    <span class="attr">multidex    :</span> <span class="string">&quot;com.android.support:multidex:1.0.3&quot;</span>,</span><br><span class="line">                    <span class="attr">constraint  :</span> <span class="string">&quot;com.android.support.constraint:constraint-layout:1.1.3&quot;</span>,</span><br><span class="line">            ],</span><br><span class="line">            <span class="attr">bugly :</span> <span class="string">&#x27;com.tencent.bugly:crashreport:3.3.3&#x27;</span>,</span><br><span class="line">            <span class="symbol">gsyvideoplayer:</span> <span class="string">&#x27;com.shuyu:GSYVideoPlayer:8.1.2&#x27;</span>,</span><br><span class="line">            <span class="symbol">eventbus:</span> <span class="string">&#x27;org.greenrobot:eventbus:3.0.0&#x27;</span>,</span><br><span class="line">            <span class="symbol">gson:</span> <span class="string">&#x27;com.google.code.gson:gson:2.8.5&#x27;</span>,</span><br><span class="line">            <span class="symbol">wechatsdk:</span> <span class="string">&#x27;com.tencent.mm.opensdk:wechat-sdk-android-without-mta:5.1.4&#x27;</span>,</span><br><span class="line">            <span class="symbol">immersionbar:</span> <span class="string">&#x27;com.gyf.immersionbar:immersionbar:3.0.0&#x27;</span>,</span><br><span class="line">            <span class="symbol">junit:</span> <span class="string">&#x27;junit:junit:4.12&#x27;</span>,</span><br><span class="line">            <span class="symbol">okhttp3:</span> <span class="string">&#x27;com.squareup.okhttp3:okhttp:3.11.0&#x27;</span>,</span><br><span class="line">            <span class="symbol">fastjson:</span> <span class="string">&#x27;com.alibaba:fastjson:1.2.54&#x27;</span>,</span><br><span class="line">            <span class="symbol">glide:</span> <span class="string">&#x27;com.github.bumptech.glide:glide:4.8.0&#x27;</span>,</span><br><span class="line">            <span class="symbol">smartRefreshLayout:</span> <span class="string">&#x27;com.scwang.smartrefresh:SmartRefreshLayout:1.0.4-4&#x27;</span>, <span class="comment">//版本随意（非必须，引用可以解决无法预览问题）</span></span><br><span class="line">            <span class="symbol">immersionbar:</span> <span class="string">&#x27;com.gyf.immersionbar:immersionbar:3.0.0&#x27;</span>,</span><br><span class="line">            <span class="symbol">utilcode:</span> <span class="string">&#x27;com.blankj:utilcode:1.30.5&#x27;</span>,</span><br><span class="line">            <span class="symbol">BaseRecyclerViewAdapterHelper:</span> <span class="string">&#x27;com.github.CymChad:BaseRecyclerViewAdapterHelper:2.9.40&#x27;</span></span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><code>\buildSrc\.gitignore</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/build</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><code>\buildSrc\build.gradle</code></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">repositories &#123;</span><br><span class="line">    google()</span><br><span class="line">    jcenter()</span><br><span class="line">&#125;</span><br><span class="line">apply &#123;</span><br><span class="line">    plugin <span class="string">&#x27;groovy&#x27;</span></span><br><span class="line">    plugin <span class="string">&#x27;java-gradle-plugin&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line">dependencies &#123;</span><br><span class="line">    implementation gradleApi()</span><br><span class="line">    implementation localGroovy()</span><br><span class="line">    implementation <span class="string">&quot;commons-io:commons-io:2.6&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p>使用</p>
+<ul>
+<li><p>如<code>app\build.gradle</code></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">android &#123;</span><br><span class="line">    compileSdkVersion Config.compileSdkVersion</span><br><span class="line">    buildToolsVersion Config.buildToolsVersion</span><br><span class="line">    defaultConfig &#123;</span><br><span class="line">        applicationId Config.applicationId</span><br><span class="line">        minSdkVersion Config.minSdkVersion</span><br><span class="line">        targetSdkVersion Config.targetSdkVersion</span><br><span class="line">        versionCode Config.versionCode</span><br><span class="line">        versionName Config.versionName</span><br><span class="line">        <span class="comment">//...</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">dependencies &#123;</span><br><span class="line">    api fileTree(<span class="attr">include:</span> [<span class="string">&#x27;*.jar&#x27;</span>], <span class="attr">dir:</span> <span class="string">&#x27;libs&#x27;</span>)</span><br><span class="line">    testImplementation Config.depConfig.junit</span><br><span class="line">    implementation Config.depConfig.support.appcompat_v7</span><br><span class="line">    implementation Config.depConfig.support.design</span><br><span class="line">    implementation Config.depConfig.support.multidex</span><br><span class="line">    implementation Config.depConfig.support.constraint</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+</ol>
+<h2 id="抽取到congifg-gradle"><a href="#抽取到congifg-gradle" class="headerlink" title="抽取到congifg.gradle"></a>抽取到congifg.gradle</h2><ol>
+<li><p>根目录新建 <code>config.gradle</code></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">ext &#123;</span><br><span class="line"></span><br><span class="line">    android = [</span><br><span class="line">            <span class="attr">geren_applicationId        :</span> <span class="string">&quot;com.xm597.app&quot;</span>,</span><br><span class="line">            <span class="attr">qiye_applicationId         :</span> <span class="string">&quot;com.rcw597.app&quot;</span>,</span><br><span class="line">            <span class="attr">compileSdkVersion          :</span> <span class="number">29</span>,</span><br><span class="line">            <span class="attr">buildToolsVersion          :</span> <span class="string">&quot;30.0.2&quot;</span>,</span><br><span class="line">            <span class="attr">minSdkVersion              :</span> <span class="number">21</span>,</span><br><span class="line">            <span class="attr">targetSdkVersion           :</span> <span class="number">29</span>,</span><br><span class="line">            <span class="attr">versionCode                :</span> <span class="number">94</span>,</span><br><span class="line">            <span class="attr">versionName                :</span> <span class="string">&quot;5.0.7&quot;</span>,</span><br><span class="line">            <span class="attr">appSourceCompatibility     :</span> JavaVersion.VERSION_1_8,</span><br><span class="line">            <span class="attr">appTargetCompatibility     :</span> JavaVersion.VERSION_1_8,</span><br><span class="line">    ]</span><br><span class="line"></span><br><span class="line">    version = [</span><br><span class="line">            <span class="attr">androidSupportSdkVersion   :</span> <span class="string">&quot;28.0.0&quot;</span>,</span><br><span class="line">            <span class="attr">androidXSdkVersion         :</span> <span class="string">&quot;1.1.0&quot;</span>,</span><br><span class="line">    ]</span><br><span class="line"></span><br><span class="line">    dependencies = [</span><br><span class="line">            <span class="comment">//support</span></span><br><span class="line">            <span class="string">&quot;support-annotations&quot;</span>      : <span class="string">&quot;com.android.support:support-annotations:$&#123;version[&quot;</span>androidSupportSdkVersion<span class="string">&quot;]&#125;&quot;</span>,</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">            <span class="comment">//androidx</span></span><br><span class="line">            <span class="string">&quot;appcompat&quot;</span>                : <span class="string">&quot;androidx.appcompat:appcompat:$&#123;version[&quot;</span>androidXSdkVersion<span class="string">&quot;]&#125;&quot;</span>,</span><br><span class="line">            <span class="string">&quot;legacy-support-v4&quot;</span>        : <span class="string">&quot;androidx.legacy:legacy-support-v4:1.0.0&quot;</span>,</span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在根目录的<code>build.gradle</code>中引入<code>config.gradle</code></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.text.SimpleDateFormat</span><br><span class="line"><span class="comment">//位置在首行</span></span><br><span class="line">apply <span class="attr">from:</span> <span class="string">&quot;config.gradle&quot;</span></span><br><span class="line"><span class="comment">//...</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用：如 <code>app\build.gradle</code></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">android &#123;</span><br><span class="line">    compileSdkVersion rootProject.ext.android[<span class="string">&quot;compileSdkVersion&quot;</span>]</span><br><span class="line">    defaultConfig &#123;</span><br><span class="line">        <span class="keyword">if</span> (!isSingleModule.toBoolean()) &#123;</span><br><span class="line">            applicationId rootProject.ext.android[<span class="string">&quot;geren_applicationId&quot;</span>]</span><br><span class="line">        &#125;</span><br><span class="line">        minSdkVersion rootProject.ext.android[<span class="string">&quot;minSdkVersion&quot;</span>]</span><br><span class="line">        targetSdkVersion rootProject.ext.android[<span class="string">&quot;targetSdkVersion&quot;</span>]</span><br><span class="line">        versionCode rootProject.ext.android[<span class="string">&quot;versionCode&quot;</span>]</span><br><span class="line">        versionName rootProject.ext.android[<span class="string">&quot;versionName&quot;</span>]</span><br><span class="line">        <span class="comment">//...</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">dependencies &#123;</span><br><span class="line">    implementation fileTree(<span class="attr">dir:</span> <span class="string">&#x27;libs&#x27;</span>, <span class="attr">include:</span> [<span class="string">&#x27;*.jar&#x27;</span>])</span><br><span class="line">    <span class="comment">//ARouter</span></span><br><span class="line">    <span class="comment">// 要与compiler匹配使用，均使用最新版可以保证兼容</span></span><br><span class="line">    implementation(rootProject.ext.dependencies[<span class="string">&quot;arouter&quot;</span>]) &#123;</span><br><span class="line">        exclude <span class="attr">module:</span> <span class="string">&#x27;support-v4&#x27;</span></span><br><span class="line">        exclude <span class="attr">module:</span> <span class="string">&#x27;support-annotations&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line">    annotationProcessor rootProject.ext.dependencies[<span class="string">&quot;arouter-compiler&quot;</span>]</span><br><span class="line"></span><br><span class="line">    implementation rootProject.ext.dependencies[<span class="string">&quot;multidex&quot;</span>]</span><br><span class="line">    testImplementation rootProject.ext.dependencies[<span class="string">&quot;junit&quot;</span>]</span><br><span class="line">    androidTestImplementation rootProject.ext.dependencies[<span class="string">&quot;espresso-core&quot;</span>]</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">//另外，还有种引用整个集合的方法，比如</span></span><br><span class="line">    <span class="comment">//if(!rootProject.ext.dependencies.isEmpty())&#123;</span></span><br><span class="line">    <span class="comment">//    implementation rootProject.ext.dependencies.values()</span></span><br><span class="line">    /&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h1 id="依赖相关问题"><a href="#依赖相关问题" class="headerlink" title="依赖相关问题"></a>依赖相关问题</h1><h2 id="Direct-local-aar-file-dependencies-are-not-supported"><a href="#Direct-local-aar-file-dependencies-are-not-supported" class="headerlink" title="Direct local .aar file dependencies are not supported"></a><a target="_blank" rel="noopener" href="https://www.cnblogs.com/baiyuas/p/14383723.html">Direct local .aar file dependencies are not supported</a></h2><p><img src="/posts/269438b3/aar-are-not-supported.png" alt="安卓/aar-are-not-supported"></p>
+<h3 id="法一：把aar放到单独的模块中，再去关联它"><a href="#法一：把aar放到单独的模块中，再去关联它" class="headerlink" title="法一：把aar放到单独的模块中，再去关联它"></a>法一：把aar放到单独的模块中，再去关联它</h3><ol>
+<li><p>I recently encountered the same issue, the fix was to remove the library from <code>libs/</code> and import it using <code>File -&gt; New -&gt; New Module -&gt; Import .JAR/.AAR Package</code>, then referencing it in the library module <code>build.gradle</code> file:</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">  implementation project(<span class="string">&quot;:imported_aar_module&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>上述的操作在AS4.2上界面变了，那么直接手动创建这些文件</p>
+<ol>
+<li><p>在项目根目录下手动创建个文件夹<code>localRepo</code>；</p>
+</li>
+<li><p>在<code>localRepo</code>文件夹下新建文件夹<code>com_heytap_msp-push</code>；</p>
+</li>
+<li><p>在<code>com_heytap_msp-push</code>文件夹下放入<code>com.heytap.msp-push-2.1.0.aar</code>，新建<code>build.gradle</code></p>
+<p><img src="/posts/269438b3/AS%E8%A7%A3%E5%86%B3not-support-aar.png" alt="工具/AS解决not-support-aar"></p>
+</li>
+<li><p><code>build.gradle</code>内容：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">configurations.maybeCreate(<span class="string">&quot;default&quot;</span>)</span><br><span class="line">artifacts.add(<span class="string">&quot;default&quot;</span>, file(<span class="string">&#x27;com.heytap.msp-push-2.1.0.aar&#x27;</span>))</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在<code>settings.gradle</code>中添加</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">include <span class="string">&#x27;:localRepo:com_heytap_msp_push&#x27;</span></span><br><span class="line">include <span class="string">&#x27;:localRepo:oaid_sdk&#x27;</span></span><br><span class="line">include <span class="string">&#x27;:localRepo:vivo_pushsdk&#x27;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在调用的<code>module</code>的<code>build.gradle</code>中添加</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">dependencies&#123;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">    implementation project(<span class="attr">path:</span> <span class="string">&#x27;:localRepo:com_heytap_msp_push&#x27;</span>)</span><br><span class="line">    implementation project(<span class="attr">path:</span> <span class="string">&#x27;:localRepo:vivo_pushsdk&#x27;</span>)</span><br><span class="line">    implementation project(<span class="attr">path:</span> <span class="string">&#x27;:localRepo:oaid_sdk&#x27;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+</li>
+</ol>
+<p>（我没有按上述的解决，重新整理<code>AndroidManifest</code>文件，一些<code>*provider</code>、<code>*receiver</code>的要加 <code>android:exported=&quot;false&quot;</code>解决了上述的问题）</p>
+<h3 id="法二-：用插件导出远程依赖库"><a href="#法二-：用插件导出远程依赖库" class="headerlink" title="法二 ：用插件导出远程依赖库"></a>法二 ：用插件导出远程依赖库</h3><p>另外一篇：<a target="_blank" rel="noopener" href="https://blog.csdn.net/gaoshu28/article/details/113555589">Android 打包aar包含第三方aar</a></p>
+<p>因项目需要，打包aar包含第三方aar，如果直接对module进行打包会产生一些问题。</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">What went wrong:</span><br><span class="line">Direct local .aar <span class="keyword">file</span> <span class="keyword">dependencies</span> are not supported when building an AAR. The resulting AAR would be broken because the classes and Android resources <span class="keyword">from</span> <span class="keyword">any</span> local .aar <span class="keyword">file</span> <span class="keyword">dependencies</span> would not be packaged in the resulting AAR. <span class="keyword">Previous</span> versions of the Android Gradle Plugin produce broken AARs in <span class="keyword">this</span> <span class="keyword">case</span> too (despite not throwing <span class="keyword">this</span> error). The following direct local .aar <span class="keyword">file</span> <span class="keyword">dependencies</span> of the :httpLibrary <span class="keyword">project</span> caused <span class="keyword">this</span> error: D:\AndroidWorkSpace\mackSdk\mackSDK\httpLibrary\libs\xxxxx.aar</span><br></pre></td></tr></table></figure>
+
+<p>错误信息说的很清楚构建aar不支持本地aar文件依赖</p>
+<p><strong>解决方案：</strong><br><code>fat-aar</code> 能将依赖项合并并嵌入到生成的<code>aar</code>文件中。<br><code>fat-aar</code>项目地址：<a target="_blank" rel="noopener" href="https://github.com/adwiv/android-fat-aar">https://github.com/adwiv/android-fat-aar</a></p>
+<p>由于<code>fat-aar</code>不再维护，使用起来有诸多需要修改的地方，而不支持高版本的<code>gradle</code>，极其坑爹，踩坑后找到替代方案，支持高版本的<code>gradle</code>无需修改脚本文件<br><code>fat-aar-android</code>:<a target="_blank" rel="noopener" href="https://github.com/kezong/fat-aar-android">https://github.com/kezong/fat-aar-android</a></p>
+<ol>
+<li><p>在需要打包成<code>aar</code>的<code>module</code>的<code>build.gradle</code>中加入如下代码</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">apply <span class="attr">plugin:</span> <span class="string">&#x27;com.android.library&#x27;</span></span><br><span class="line">apply <span class="attr">plugin:</span> <span class="string">&#x27;com.kezong.fat-aar&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>在<code>dependencies</code>中以如下方式依赖第三方aar</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">dependencies&#123;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">    embed(<span class="attr">name:</span><span class="string">&#x27;xxxxxrelease&#x27;</span>, <span class="attr">ext:</span><span class="string">&#x27;aar&#x27;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在项目根目录的<code>build.gradle</code>中添加如下代码</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">buildscript&#123;</span><br><span class="line">    repositories&#123;</span><br><span class="line">        google()</span><br><span class="line">        jcenter()</span><br><span class="line">        maven&#123;url <span class="string">&#x27;https://plugins.gradle.org/m2/&#x27;</span>&#125;</span><br><span class="line">    &#125;</span><br><span class="line">    dependencies&#123;</span><br><span class="line">        classpath <span class="string">&quot;com.android.tools.build:gradle:4.0.1&quot;</span></span><br><span class="line">        classpath <span class="string">&#x27;com.kezong:fat-aar:1.3.1&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">allprojects&#123;</span><br><span class="line">    repositories&#123;</span><br><span class="line">        fatDir&#123;</span><br><span class="line">            dirs <span class="string">&#x27;libs&#x27;</span></span><br><span class="line">        &#125;</span><br><span class="line">        google()</span><br><span class="line">        jcenter()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>运行<code>module</code> 下<code>task</code> <code>assembleRelease</code> 打包<br>在 AS 右侧的 <code>module</code> 下找到 <code>assembleRelease</code>（在对应类包<code>httpLibrary</code>》<code>Tasks</code>》<code>other</code>》<code>assembleRelease</code></p>
+<p>最终生成的<code>aar</code>在<code>module</code>下的<code>build</code>中<br>在 <code>httpLibrary/build/outputs/aar</code> 下会有个 <code>httpLibrary-release.aar</code></p>
+</li>
+</ol>
+<h2 id="关于如果A是B的依赖，B是C的依赖，C中引用A中的类时候的问题"><a href="#关于如果A是B的依赖，B是C的依赖，C中引用A中的类时候的问题" class="headerlink" title="关于如果A是B的依赖，B是C的依赖，C中引用A中的类时候的问题"></a>关于如果A是B的依赖，B是C的依赖，C中引用A中的类时候的问题</h2><p>【依赖传递问题】</p>
+<ol>
+<li>其实是由于<code>compile</code>以及<code>implementation</code>这个问题引起的<br><code>implementation</code>引入的包只给当前项目用<br>而<code>compile</code>引入的包不止给当前项目用</li>
+<li>在Google IO 相关话题的中提到了一个建议，<br>就是依赖首先应该设置为<code>implement</code>的，如果没有错，那就用<code>implement</code>，<br>如果有错，那么使用<code>api</code>指令，这样会使编译速度有所增快。</li>
+</ol>
+<h2 id="在主工程依赖-shop-模块的远程依赖时，无法找到依赖的本地-aar-相关"><a href="#在主工程依赖-shop-模块的远程依赖时，无法找到依赖的本地-aar-相关" class="headerlink" title="在主工程依赖 shop 模块的远程依赖时，无法找到依赖的本地 aar 相关"></a>在主工程依赖 shop 模块的远程依赖时，无法找到依赖的本地 aar 相关</h2><p><strong>场景</strong>：主工程app -&gt;  shop模块 -&gt; 依赖本地aar</p>
+<p><strong>解决</strong>：将 本地 aar 放到远端，也是用远程依赖。</p>
+<p><strong>原因</strong>：主要在于<code>Android 3.0</code> 后本地 <code>aar</code> 依赖无法越级传递依赖。可以看远端 <code>shop</code>模块 <code>maven</code>打包时生成的 <code>.pom</code> 文件，查看具体依赖，发现<code>gradle</code> 会把本地 <code>aar</code> 依赖也当做一份远端依赖进行配置，但是没有<code>group</code>等信息，如此在主工程中依赖 <code>shop</code> 模块是，直接编译不通过，因为会视为远端仓库的依赖，但实际并不存在。（根本原因未知）</p>
+<h2 id="本地-jar-依赖和本地-aar-依赖的区别"><a href="#本地-jar-依赖和本地-aar-依赖的区别" class="headerlink" title="本地 jar 依赖和本地 aar 依赖的区别"></a>本地 <code>jar</code> 依赖和本地 <code>aar</code> 依赖的区别</h2><ul>
+<li><strong>jar 文件</strong>只包含编译好的 <code>.class</code> 文件和清单文件，不包含资源文件。所以如果没有 <code>res</code> 资源文件，可以在打包时，将 <code>packaging</code> 配置为 <code>jar</code> 格式；</li>
+<li><strong>aar 文件</strong>包含 <code>class</code> 以及 <code>/res</code> 目录下的所有资源文件。<br>查看 <code>gradle</code> 下载的远程依赖区别就很明显：</li>
+</ul>
+<p><img src="/posts/269438b3/981009fdgy1ge4m23rhc2j20u209ewff.jpg" alt="aar和jar包结构"></p>
+<h2 id="zxing依赖冲突"><a href="#zxing依赖冲突" class="headerlink" title="zxing依赖冲突"></a>zxing依赖冲突</h2><blockquote>
+<p>可以看工程的External Libraries（或者运行的时候AS的报错信息）（用来确认名称），知道某个<code>Duplicate class ...</code>是在哪个库底下</p>
+</blockquote>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">debugImplementation(Config.depConfig.doraemonKit.debug)&#123;</span><br><span class="line">    exclude <span class="attr">group:</span> <span class="string">&#x27;com.google.zxing&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line">releaseImplementation(Config.depConfig.doraemonKit.release)&#123;</span><br><span class="line">    exclude <span class="attr">group:</span> <span class="string">&#x27;com.google.zxing&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="Could-not-determine-the-dependencies-of-task-‘-app-mergeReleaseAssets’"><a href="#Could-not-determine-the-dependencies-of-task-‘-app-mergeReleaseAssets’" class="headerlink" title="Could not determine the dependencies of task ‘:app:mergeReleaseAssets’"></a>Could not determine the dependencies of task ‘:app:mergeReleaseAssets’</h2><h2 id="Required-by-project-app-gt-id-zelory-compressor-2-1-0"><a href="#Required-by-project-app-gt-id-zelory-compressor-2-1-0" class="headerlink" title="Required by: project :app &gt; id.zelory:compressor:2.1.0"></a>Required by: project :app &gt; id.zelory:compressor:2.1.0</h2><p>问题：在AS的Terminal中输入<code>gradlew assembleRelease</code>会报<code>Required by: project :app &gt; id.zelory:compressor:2.1.0</code>错误（而在AS右侧，使用点击<code>assembleRelease</code>不会报错）</p>
+<p>解决：</p>
+<h2 id="so库相关"><a href="#so库相关" class="headerlink" title="so库相关"></a>so库相关</h2><h3 id="关于so库无法加载的问题"><a href="#关于so库无法加载的问题" class="headerlink" title="关于so库无法加载的问题"></a>关于so库无法加载的问题</h3><p>1、关于so库无法加载的问题，出现这样的报错：<br><code>java.lang.UnsatisfiedLinkError: dalvik.system.PathClassLoader[DexPathList[...</code><br>需要在module中的build.gradle 中的  android{}标签内填这些</p>
+<figure class="highlight fsharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ndk</span> &#123;</span><br><span class="line">		abiFilters <span class="string">&quot;armeabi&quot;</span>, <span class="string">&quot;armeabi-v7a&quot;</span>, <span class="string">&quot;x86&quot;</span>, <span class="string">&quot;mips&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">sourceSets</span>.main &#123;</span><br><span class="line">		jniLibs.srcDir <span class="string">&#x27;libs&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">repositories</span> &#123;</span><br><span class="line">		<span class="keyword">flatDir</span> &#123;</span><br><span class="line">    	dirs <span class="string">&#x27;libs&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="so库重复问题"><a href="#so库重复问题" class="headerlink" title="so库重复问题"></a>so库重复问题</h3><p>现象：报<code>More than one file was found with OS independent path &#39;lib/arm64-v8a/libpl_droidsonroids_gif.so&#39;</code></p>
+<p>原因：so库重复了</p>
+<p>解决：</p>
+<p>方法一：在app的build.gradle中加入</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">android &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="regexp">//</span> 解决资源重复问题</span><br><span class="line">    packagingOptions &#123;</span><br><span class="line">        exclude <span class="string">&#x27;lib/mips/libpl_droidsonroids_gif.so&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>方法二：如果方法一不起效，查看build.gradle中添加的依赖库和libs中的库是否重复了，如果重复了那么把libs中的库删除即可。</p>
+<h3 id="So文件加固检测安全问题"><a href="#So文件加固检测安全问题" class="headerlink" title="So文件加固检测安全问题"></a>So文件加固检测安全问题</h3><p>So文件为APK中包含的动态链接库文件，Android利用NDK技术将C&#x2F;C++语言实现的核心代码编译为So库文件供Java层调用。So文件被破解可能导致应用的核心功能代码和算法泄露。攻击者利用核心功能与算法可轻易抓取到客户端的敏感数据，并对其解密，导致用户的隐私泄露或直接财产损失。</p>
+<p><strong>解决方案</strong></p>
+<p>对so文件进行安全加固、可以使用第三方的安全平台so加固方案。</p>
+<h3 id="So文件找不到问题：java-lang-UnsatisfiedLinkError"><a href="#So文件找不到问题：java-lang-UnsatisfiedLinkError" class="headerlink" title="So文件找不到问题：java.lang.UnsatisfiedLinkError"></a>So文件找不到问题：java.lang.UnsatisfiedLinkError</h3><p><code>couldn&#39;t find &quot;libijkffmpeg.so&quot;</code></p>
+<p>报这个错误通常是so库加载失败，或者找不到执行的JNI方法。</p>
+<p><strong>解决</strong>：</p>
+<ol>
+<li>建议检查so在安装的过程中是否丢失，没有放入指定的目录下。</li>
+<li>调用loadLibrary时检查是否调用了正确的so文件名，并对其进行捕获，进行相应的处理，防止程序发生崩溃。</li>
+<li>检查下so的架构是否跟设备架构一致（如在64-bit架构下调用32-bit的so）</li>
+</ol>
+<p>代码展示</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ndk &#123;</span><br><span class="line">    <span class="comment">//根据需要 自行选择添加的对应cpu类型的.so库。</span></span><br><span class="line">    <span class="comment">//abiFilters &#x27;armeabi&#x27;, &#x27;armeabi-v7a&#x27;, &#x27;arm64-v8a&#x27;, &#x27;x86&#x27;, &#x27;mips&#x27;</span></span><br><span class="line">    abiFilters <span class="string">&#x27;armeabi-v7a&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<h2 id="lib相关"><a href="#lib相关" class="headerlink" title="lib相关"></a>lib相关</h2><h3 id="关于lib库无法使用资源文件问题"><a href="#关于lib库无法使用资源文件问题" class="headerlink" title="关于lib库无法使用资源文件问题"></a>关于lib库无法使用资源文件问题</h3><p>有时候我们的lib包无法使用资源文件或者依赖之后编译不过，常见有以下几个情况<br>1、使用了switch case，由于依赖工程中监听事件判断的时候使用了<br>比如：</p>
+<figure class="highlight actionscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">switch</span> (v.getId())&#123;</span><br><span class="line">		<span class="keyword">case</span> R.id.activtiy_scale_usb_permission:</span><br><span class="line">    <span class="keyword">break</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用<code>if else</code>代替了</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">int i <span class="operator">=</span> v.getId()<span class="comment">;</span></span><br><span class="line">if (i <span class="operator">=</span><span class="operator">=</span> R.id.activtiy_scale_usb_permission) &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注意：根本原因是lib库中id不是常量的所以不能使用switch，如果其它地方调用到了这个方法，也要记住是不是这个引起的</p>
+<h2 id="aar相关"><a href="#aar相关" class="headerlink" title="aar相关"></a>aar相关</h2><h3 id="关于aar的包的问题"><a href="#关于aar的包的问题" class="headerlink" title="关于aar的包的问题"></a>关于aar的包的问题</h3><ol>
+<li>moudle中的lib文件夹下的jar，aar和远程依赖必须用api引用否则APP依赖module后无法使用</li>
+<li>如果moudle打包为aar给demo使用，则moudle中包含的aar和远程库无法引用，<br>必须再次导入demo中（应该是机制本身的原因，aar中无法引用aar和远程库）</li>
+<li><a target="_blank" rel="noopener" href="https://www.cnblogs.com/bellkosmos/p/6146349.html">多层级Module对aar引用问题</a>: <code>Failed to resolve::mylibrary-release</code></li>
+</ol>
+<p>现象：有个aar文件放到ModuleA，ModuleB依赖ModuleA则会在编译过程中发生找不到aar文件的异常（同样如果ModuleC依赖ModuleB，也会有找不到这个aar文件的异常（ModuleC等下也是跟ModuleB一样处理））</p>
+<p>解决：</p>
+<p>i. 在ModuleB的<code>build.gradle</code>的<code>dependencies</code>中加入<code>compile(name:&#39;svprogresshud-release&#39;, ext: &#39;aar&#39;)</code>；</p>
+<p>ii. 在ModuleB的<code>build.gradle</code>的<code>android</code>中加入</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">repositories</span>&#123;</span><br><span class="line">	<span class="keyword">flatDir</span>&#123;</span><br><span class="line">		<span class="comment">//前面的是ModuleA的文件夹；后面的是本身ModuleB的</span></span><br><span class="line">		dirs <span class="string">&#x27;../common/libs&#x27;</span>, <span class="string">&#x27;libs&#x27;</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="aar缓存问题"><a href="#aar缓存问题" class="headerlink" title="aar缓存问题"></a>aar缓存问题</h3><p>如果存在aar包缓存的问题，会发现一个问题：就是一直使用旧的aar包，而不是新的aar包</p>
+<p>解决：所以有一点需要记住：直接关闭重新打开去解决</p>
+<h3 id="library依赖别的Module，library导出aar，缺少Module中的aar"><a href="#library依赖别的Module，library导出aar，缺少Module中的aar" class="headerlink" title="library依赖别的Module，library导出aar，缺少Module中的aar"></a>library依赖别的Module，library导出aar，缺少Module中的aar</h3><p>解决：把每个module中的aar都复制到新项目上</p>
+<h3 id="library导出aar丢失远程依赖"><a href="#library导出aar丢失远程依赖" class="headerlink" title="library导出aar丢失远程依赖"></a><a target="_blank" rel="noopener" href="https://blog.csdn.net/qisan__/article/details/119642690">library导出aar丢失远程依赖</a></h3><ol>
+<li><p>根目录<code>build.gradle</code>中添加</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">    <span class="comment">//添加插件</span></span><br><span class="line">    classpath <span class="string">&#x27;com.github.kezong:fat-aar:1.3.6&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">allprojects &#123;</span><br><span class="line">    repositories &#123;</span><br><span class="line">        <span class="comment">//...</span></span><br><span class="line">        flatDir &#123;</span><br><span class="line">            dirs <span class="string">&#x27;libs&#x27;</span> <span class="comment">//this way we can find the .aar file in libs folder</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><code>app/build.gradle</code>中添加</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">	<span class="comment">//需要插入aar包的远程依赖</span></span><br><span class="line">    embed  <span class="string">&#x27;com.alibaba:fastjson:1.2.83&#x27;</span></span><br><span class="line">    embed  <span class="string">&#x27;com.blankj:utilcodex:1.31.0&#x27;</span></span><br><span class="line">    embed <span class="string">&#x27;com.facebook.fresco:fresco:1.13.0&#x27;</span></span><br><span class="line">    embed <span class="string">&quot;androidx.multidex:multidex:2.0.1&quot;</span></span><br><span class="line">    embed <span class="string">&#x27;com.google.protobuf:protobuf-java:3.20.1&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div></div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>Donate</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.jpg" alt=" WeChat Pay"/>
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/%E5%AE%89%E5%8D%93%E7%9F%A5%E8%AF%86%E7%82%B9/" rel="tag"># 安卓知识点</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/ac3a14d8/" rel="next" title="问题-集合">
+                <i class="fa fa-chevron-left"></i> 问题-集合
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/822f7f86/" rel="prev" title="Java-枚举">
+                Java-枚举 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">71</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">31</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@189.cn" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/shenbh" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://gitee.com/shen_bh" target="_blank" title="Gitee">
+                      
+                        <i class="fa fa-fw fa-git"></i>Gitee</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BE%9D%E8%B5%96%E7%9B%B8%E5%85%B3"><span class="nav-text">依赖相关</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E9%A1%B9%E7%9B%AE%E4%BE%9D%E8%B5%96"><span class="nav-text">查看项目依赖</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BE%9D%E8%B5%96%E5%A4%9A%E6%AC%A1%EF%BC%88%E5%A6%82%E6%9E%9C%E6%98%AF%E5%90%8C%E4%B8%80%E4%B8%AA%E7%89%88%E6%9C%AC%EF%BC%89%E6%B2%A1%E6%9C%89%E9%97%AE%E9%A2%98"><span class="nav-text">依赖多次（如果是同一个版本）没有问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#exclude%E6%8E%92%E9%99%A4%E4%BE%9D%E8%B5%96%E4%B8%AD%E7%9A%84%E6%9F%90%E4%B8%AAgroup"><span class="nav-text">exclude排除依赖中的某个group</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#transitive%E6%98%AF%E5%90%A6%E4%BC%A0%E9%80%92%E6%9C%AC%E8%BA%AB%E7%9A%84%E4%BE%9D%E8%B5%96%E7%BB%99%E5%AE%BF%E4%B8%BB%E7%A8%8B%E5%BA%8F"><span class="nav-text">transitive是否传递本身的依赖给宿主程序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#force%E5%BC%BA%E5%88%B6%E4%BD%BF%E7%94%A8%E6%9F%90%E7%89%88%E6%9C%AC"><span class="nav-text">force强制使用某版本</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%BC%E5%90%88%E4%BE%8B%E5%AD%90"><span class="nav-text">综合例子</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#api%E3%80%81implementation%E3%80%81compile%E3%80%81compileOnly%E3%80%81provided"><span class="nav-text">api、implementation、compile、compileOnly、provided</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#APK"><span class="nav-text">APK</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Test-compile"><span class="nav-text">Test compile</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Debug-compile"><span class="nav-text">Debug compile</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Release-compile"><span class="nav-text">Release compile</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AS-library%E7%94%9F%E6%88%90jar%E5%8C%85%E5%92%8Caar%E7%9A%84%E6%96%B9%E6%B3%95%E6%80%BB%E7%BB%93"><span class="nav-text">AS library生成jar包和aar的方法总结</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%9F%E6%88%90jar%E5%8C%85%EF%BC%88%E9%92%88%E5%AF%B9%E7%9A%84%E6%98%AF%E7%B1%BB%E5%BA%93library%EF%BC%89"><span class="nav-text">生成jar包（针对的是类库library）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#jar%E5%8C%85%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-text">jar包的使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%9F%E6%88%90aar%E5%8C%85"><span class="nav-text">生成aar包</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#aar%E5%8C%85%E4%BD%BF%E7%94%A8"><span class="nav-text">aar包使用</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AS-%E7%94%9F%E6%88%90assert%E6%96%87%E4%BB%B6"><span class="nav-text">AS 生成assert文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#aar%E5%8C%85%E8%AE%BE%E7%BD%AE%E6%88%90%E6%9C%AC%E5%9C%B0"><span class="nav-text">aar包设置成本地</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BE%9D%E8%B5%96%E7%9A%84%E4%BC%98%E9%9B%85%E5%86%99%E6%B3%95"><span class="nav-text">依赖的优雅写法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8buildSrc"><span class="nav-text">使用buildSrc</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8A%BD%E5%8F%96%E5%88%B0congifg-gradle"><span class="nav-text">抽取到congifg.gradle</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BE%9D%E8%B5%96%E7%9B%B8%E5%85%B3%E9%97%AE%E9%A2%98"><span class="nav-text">依赖相关问题</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Direct-local-aar-file-dependencies-are-not-supported"><span class="nav-text">Direct local .aar file dependencies are not supported</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B3%95%E4%B8%80%EF%BC%9A%E6%8A%8Aaar%E6%94%BE%E5%88%B0%E5%8D%95%E7%8B%AC%E7%9A%84%E6%A8%A1%E5%9D%97%E4%B8%AD%EF%BC%8C%E5%86%8D%E5%8E%BB%E5%85%B3%E8%81%94%E5%AE%83"><span class="nav-text">法一：把aar放到单独的模块中，再去关联它</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B3%95%E4%BA%8C-%EF%BC%9A%E7%94%A8%E6%8F%92%E4%BB%B6%E5%AF%BC%E5%87%BA%E8%BF%9C%E7%A8%8B%E4%BE%9D%E8%B5%96%E5%BA%93"><span class="nav-text">法二 ：用插件导出远程依赖库</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E%E5%A6%82%E6%9E%9CA%E6%98%AFB%E7%9A%84%E4%BE%9D%E8%B5%96%EF%BC%8CB%E6%98%AFC%E7%9A%84%E4%BE%9D%E8%B5%96%EF%BC%8CC%E4%B8%AD%E5%BC%95%E7%94%A8A%E4%B8%AD%E7%9A%84%E7%B1%BB%E6%97%B6%E5%80%99%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-text">关于如果A是B的依赖，B是C的依赖，C中引用A中的类时候的问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8%E4%B8%BB%E5%B7%A5%E7%A8%8B%E4%BE%9D%E8%B5%96-shop-%E6%A8%A1%E5%9D%97%E7%9A%84%E8%BF%9C%E7%A8%8B%E4%BE%9D%E8%B5%96%E6%97%B6%EF%BC%8C%E6%97%A0%E6%B3%95%E6%89%BE%E5%88%B0%E4%BE%9D%E8%B5%96%E7%9A%84%E6%9C%AC%E5%9C%B0-aar-%E7%9B%B8%E5%85%B3"><span class="nav-text">在主工程依赖 shop 模块的远程依赖时，无法找到依赖的本地 aar 相关</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%AC%E5%9C%B0-jar-%E4%BE%9D%E8%B5%96%E5%92%8C%E6%9C%AC%E5%9C%B0-aar-%E4%BE%9D%E8%B5%96%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-text">本地 jar 依赖和本地 aar 依赖的区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#zxing%E4%BE%9D%E8%B5%96%E5%86%B2%E7%AA%81"><span class="nav-text">zxing依赖冲突</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Could-not-determine-the-dependencies-of-task-%E2%80%98-app-mergeReleaseAssets%E2%80%99"><span class="nav-text">Could not determine the dependencies of task ‘:app:mergeReleaseAssets’</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Required-by-project-app-gt-id-zelory-compressor-2-1-0"><span class="nav-text">Required by: project :app &gt; id.zelory:compressor:2.1.0</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#so%E5%BA%93%E7%9B%B8%E5%85%B3"><span class="nav-text">so库相关</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E4%BA%8Eso%E5%BA%93%E6%97%A0%E6%B3%95%E5%8A%A0%E8%BD%BD%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-text">关于so库无法加载的问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#so%E5%BA%93%E9%87%8D%E5%A4%8D%E9%97%AE%E9%A2%98"><span class="nav-text">so库重复问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#So%E6%96%87%E4%BB%B6%E5%8A%A0%E5%9B%BA%E6%A3%80%E6%B5%8B%E5%AE%89%E5%85%A8%E9%97%AE%E9%A2%98"><span class="nav-text">So文件加固检测安全问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#So%E6%96%87%E4%BB%B6%E6%89%BE%E4%B8%8D%E5%88%B0%E9%97%AE%E9%A2%98%EF%BC%9Ajava-lang-UnsatisfiedLinkError"><span class="nav-text">So文件找不到问题：java.lang.UnsatisfiedLinkError</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#lib%E7%9B%B8%E5%85%B3"><span class="nav-text">lib相关</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E4%BA%8Elib%E5%BA%93%E6%97%A0%E6%B3%95%E4%BD%BF%E7%94%A8%E8%B5%84%E6%BA%90%E6%96%87%E4%BB%B6%E9%97%AE%E9%A2%98"><span class="nav-text">关于lib库无法使用资源文件问题</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#aar%E7%9B%B8%E5%85%B3"><span class="nav-text">aar相关</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E4%BA%8Eaar%E7%9A%84%E5%8C%85%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-text">关于aar的包的问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#aar%E7%BC%93%E5%AD%98%E9%97%AE%E9%A2%98"><span class="nav-text">aar缓存问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#library%E4%BE%9D%E8%B5%96%E5%88%AB%E7%9A%84Module%EF%BC%8Clibrary%E5%AF%BC%E5%87%BAaar%EF%BC%8C%E7%BC%BA%E5%B0%91Module%E4%B8%AD%E7%9A%84aar"><span class="nav-text">library依赖别的Module，library导出aar，缺少Module中的aar</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#library%E5%AF%BC%E5%87%BAaar%E4%B8%A2%E5%A4%B1%E8%BF%9C%E7%A8%8B%E4%BE%9D%E8%B5%96"><span class="nav-text">library导出aar丢失远程依赖</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

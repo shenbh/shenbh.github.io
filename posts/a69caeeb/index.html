@@ -1,0 +1,1669 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="private,Gradle,groovy," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="原文：https:&#x2F;&#x2F;juejin.cn&#x2F;post&#x2F;7248207744087277605 前言本文是Gradle系列的第7篇，给大家带来Gradle构建核心Task相关的知识点。  Gradle中的Task是什么Task是一个任务，是Gradle中最小的构建单元。 Gradle构建的核心就是由Task组成的有向无环图：  Task是Gradle构建的核心对象，Task可以接收输入、执行某些操作，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Y7Gradle构建核心之Task指南">
+<meta property="og:url" content="http://shenbh.github.io/posts/a69caeeb/index.html">
+<meta property="og:site_name" content="AB">
+<meta property="og:description" content="原文：https:&#x2F;&#x2F;juejin.cn&#x2F;post&#x2F;7248207744087277605 前言本文是Gradle系列的第7篇，给大家带来Gradle构建核心Task相关的知识点。  Gradle中的Task是什么Task是一个任务，是Gradle中最小的构建单元。 Gradle构建的核心就是由Task组成的有向无环图：  Task是Gradle构建的核心对象，Task可以接收输入、执行某些操作，">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://shenbh.github.io/posts/a69caeeb/image-20231201133858813.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/a69caeeb/image-20231201135252819.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/a69caeeb/image-20231201135345769.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/a69caeeb/image-20231201135426058.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/a69caeeb/image-20231201135509115.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/a69caeeb/image-20231201135539639.png">
+<meta property="article:published_time" content="2023-12-01T05:33:00.000Z">
+<meta property="article:modified_time" content="2023-12-04T01:54:05.682Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="private">
+<meta property="article:tag" content="Gradle">
+<meta property="article:tag" content="groovy">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/a69caeeb/image-20231201133858813.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/a69caeeb/"/>
+
+
+
+
+
+  <title>Y7Gradle构建核心之Task指南 | AB</title><meta name="robots" content="noindex">
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">AB</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Just do IT Now.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/a69caeeb/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="AB">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Y7Gradle构建核心之Task指南</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2023-12-01T13:33:00+08:00">
+                2023-12-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Gradle/" itemprop="url" rel="index">
+                    <span itemprop="name">Gradle</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>原文：<a target="_blank" rel="noopener" href="https://juejin.cn/post/7248207744087277605">https://juejin.cn/post/7248207744087277605</a></p>
+<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>本文是<a target="_blank" rel="noopener" href="https://juejin.cn/column/7123935861976072199">Gradle系列</a>的第7篇，给大家带来Gradle构建核心<code>Task</code>相关的知识点。</p>
+<p><img src="/posts/a69caeeb/image-20231201133858813.png" alt="image-20231201133858813"></p>
+<h1 id="Gradle中的Task是什么"><a href="#Gradle中的Task是什么" class="headerlink" title="Gradle中的Task是什么"></a>Gradle中的Task是什么</h1><p><code>Task</code>是一个任务，是<code>Gradle</code>中最小的<code>构建单元</code>。</p>
+<p>Gradle构建的核心就是由Task组成的有向无环图：</p>
+<p><img src="/posts/a69caeeb/image-20231201135252819.png" alt="image-20231201135252819"></p>
+<p><strong>Task是Gradle构建的核心对象，Task可以接收输入、执行某些操作，并根据执行的操作产生输出。</strong></p>
+<p>Task管理了一个<code>Action</code>的List，你可以在List前面插入一个Action（doFirst），也可以从list后面插入（doLast），Action是最小的<code>执行单元</code>。</p>
+<h1 id="怎么创建一个task"><a href="#怎么创建一个task" class="headerlink" title="怎么创建一个task"></a>怎么创建一个task</h1><h2 id="Task写在哪"><a href="#Task写在哪" class="headerlink" title="Task写在哪"></a>Task写在哪</h2><p>首先想一下Task写在哪？</p>
+<p>我们在Gradle系列的第4篇<a target="_blank" rel="noopener" href="https://juejin.cn/post/7170684769083555877">生命周期</a>中介绍到，有三个阶段，第一个阶段初始化会决定哪些项目参与编译，第二个阶段就是解析配置，会生成Task注册表（DAG），第三个阶段就是依次执行Task。</p>
+<p>反向来推，执行Task需要一个Task注册表，Task的来源需要先决定哪些项目参与编译，也就是说Task注册表是由参与编译的项目决定的，即可以理解为Task是由<code>Project</code>对象决定的，所以Task的创建是在Project中，<strong>一个build.gradle文件对应一个Project对象</strong>，所以我们可以直接在build.gradle文件中创建Task。</p>
+<p><strong>只要运行的上下文在Project中就可以</strong>。</p>
+<h2 id="创建Task"><a href="#创建Task" class="headerlink" title="创建Task"></a>创建Task</h2><p>创建Task需要使用TaskContainer的register方法。</p>
+<p>register的几种方式：</p>
+<ol>
+<li><code>register(String name, Action&lt;? super Task&gt; configurationAction)</code></li>
+<li><code>register(String name, Class type, Action&lt;? super T&gt; configurationAction)</code></li>
+<li><code>register(String name, Class type)</code></li>
+<li><code>register(String name, Class type, Object... constructorArgs)</code></li>
+<li><code>register(String name)</code></li>
+</ol>
+<p>比较常用的是1和2。</p>
+<ul>
+<li>configurationAction指的是Action，也就是该Task的操作，会在编译时执行；</li>
+<li>type类型指的是Task类型，可以是自定义类型，也可以指定自带的Copy、Delete、Zip、Jar等类型；</li>
+</ul>
+<p>我们可以直接在build.gradle文件中创建一个task：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">tasks.register(<span class="string">&quot;yechaoa&quot;</span>) &#123;</span><br><span class="line">    println(<span class="string">&quot;Task Name = &quot;</span> + it.name)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>上面调用的就是register的方式1，最后一个参数如果是闭包，可以写在参数外面。</p>
+</blockquote>
+<p>上面task我们是通过TaskContainer(tasks)创建的，在Project对象中也提供了创建Task的方法，写法上有一点差异：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">task(<span class="string">&quot;yechaoa&quot;</span>) &#123;</span><br><span class="line">    println <span class="string">&quot;aaa&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>通过Plugin的方式也可以创建Task，重写的apply方法会有Project对象。</p>
+</blockquote>
+<h1 id="如何执行Task"><a href="#如何执行Task" class="headerlink" title="如何执行Task"></a>如何执行Task</h1><h2 id="执行单个Task"><a href="#执行单个Task" class="headerlink" title="执行单个Task"></a>执行单个Task</h2><p>命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew taskname</span><br></pre></td></tr></table></figure>
+
+<p>示例：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">tasks.register(<span class="string">&quot;yechaoa&quot;</span>) &#123;</span><br><span class="line">    println(<span class="string">&quot;Task Name = &quot;</span> + it.name)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew yechaoa</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Task <span class="attr">Name</span> = yechaoa</span><br></pre></td></tr></table></figure>
+
+<h2 id="执行多个Task"><a href="#执行多个Task" class="headerlink" title="执行多个Task"></a>执行多个Task</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew taskname taskname taskname</span><br></pre></td></tr></table></figure>
+
+<p>task之间用空格分隔。</p>
+<h2 id="Task同名"><a href="#Task同名" class="headerlink" title="Task同名"></a>Task同名</h2><p>如果有两个同名的Task，则会编译失败，即InvalidUserDataException</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">* What went wrong:</span><br><span class="line">A problem occurred evaluating project <span class="string">&#x27;:app&#x27;</span>.</span><br><span class="line">&gt; Cannot <span class="keyword">add</span> task <span class="string">&#x27;yechaoa&#x27;</span> <span class="keyword">as</span> a task <span class="keyword">with</span> that name already exists.</span><br></pre></td></tr></table></figure>
+
+<h2 id="Task执行结果"><a href="#Task执行结果" class="headerlink" title="Task执行结果"></a>Task执行结果</h2><p>我们经常会在编译时看到Task后面有一个标签，它表示Task的执行结果。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&gt; Task <span class="symbol">:app</span><span class="symbol">:createDebugVariantModel</span> <span class="variable constant_">UP</span>-<span class="variable constant_">TO</span>-<span class="variable constant_">DATE</span></span><br><span class="line">&gt; Task <span class="symbol">:app</span><span class="symbol">:preBuild</span> <span class="variable constant_">UP</span>-<span class="variable constant_">TO</span>-<span class="variable constant_">DATE</span></span><br><span class="line">&gt; Task <span class="symbol">:app</span><span class="symbol">:preDebugBuild</span> <span class="variable constant_">UP</span>-<span class="variable constant_">TO</span>-<span class="variable constant_">DATE</span></span><br><span class="line">&gt; Task <span class="symbol">:app</span><span class="symbol">:mergeDebugNativeDebugMetadata</span> <span class="variable constant_">NO</span>-<span class="variable constant_">SOURCE</span></span><br><span class="line">&gt; Task <span class="symbol">:app</span><span class="symbol">:compileDebugAidl</span> <span class="variable constant_">NO</span>-<span class="variable constant_">SOURCE</span></span><br><span class="line">&gt; Task <span class="symbol">:app</span><span class="symbol">:compileDebugRenderscript</span> <span class="variable constant_">NO</span>-<span class="variable constant_">SOURCE</span></span><br><span class="line">&gt; Task <span class="symbol">:app</span><span class="symbol">:generateDebugBuildConfig</span> <span class="variable constant_">UP</span>-<span class="variable constant_">TO</span>-<span class="variable constant_">DATE</span></span><br><span class="line">.....</span><br></pre></td></tr></table></figure>
+
+<h3 id="EXCUTED"><a href="#EXCUTED" class="headerlink" title="EXCUTED"></a>EXCUTED</h3><p>表示Task执行，常见。</p>
+<h3 id="UP-TO-DATE"><a href="#UP-TO-DATE" class="headerlink" title="UP-TO-DATE"></a>UP-TO-DATE</h3><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt; Task <span class="symbol">:app</span><span class="symbol">:preBuild</span> <span class="variable constant_">UP</span>-<span class="variable constant_">TO</span>-<span class="variable constant_">DATE</span></span><br></pre></td></tr></table></figure>
+
+<p>它表示Task的输出没有改变。</p>
+<p>分几种情况：</p>
+<ol>
+<li>输入和输出都没有改变；</li>
+<li>输出没有改变；</li>
+<li>Task没有操作，有依赖，但依赖的内容是最新的，或者跳过了，或者复用了；</li>
+<li>Task没有操作，也没有依赖；</li>
+</ol>
+<h3 id="FOME-CACHE"><a href="#FOME-CACHE" class="headerlink" title="FOME-CACHE"></a>FOME-CACHE</h3><p>字面意思，表示可以从缓存中复用上一次的执行结果。</p>
+<h3 id="SKIPPED"><a href="#SKIPPED" class="headerlink" title="SKIPPED"></a>SKIPPED</h3><p>字面意思，表示跳过。</p>
+<p>比如被排除：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ gradle dist <span class="attr">--exclude-task</span> yechaoa</span><br></pre></td></tr></table></figure>
+
+<h3 id="NO-SOURCE"><a href="#NO-SOURCE" class="headerlink" title="NO-SOURCE"></a>NO-SOURCE</h3><p>Task不需要执行。有输入和输出，但没有来源。</p>
+<h1 id="Task的Action"><a href="#Task的Action" class="headerlink" title="Task的Action"></a>Task的Action</h1><h2 id="Action"><a href="#Action" class="headerlink" title="Action"></a>Action</h2><p>Task的Action就是编译时所需的操作，它不是一个，它是一组，即可以有多个。</p>
+<p>多个Task一般是我们在自定义的时候使用。</p>
+<h3 id="自定义Task"><a href="#自定义Task" class="headerlink" title="自定义Task"></a>自定义Task</h3><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">YechaoaTask</span> <span class="keyword">extends</span> <span class="title">DefaultTask</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Internal</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">taskName</span> </span>= <span class="string">&quot;default&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="meta">@TaskAction</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">MyAction1</span></span>() &#123;</span><br><span class="line">        println(<span class="string">&quot;$taskName -- MyAction1&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@TaskAction</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">MyAction2</span></span>() &#123;</span><br><span class="line">        println(<span class="string">&quot;$taskName -- MyAction2&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>自定义一个类，继承自<code>DefaultTask</code>；</li>
+<li>Action的方法需要添加<code>@TaskAction</code>注解；</li>
+<li>对外暴露的参数需要使用<code>@Internal</code>注解；</li>
+</ul>
+<p>使用自定义Task：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">tasks.register(<span class="string">&quot;yechaoa&quot;</span>, YechaoaTask) &#123;</span><br><span class="line">    taskName = <span class="string">&quot;我是传入的Task Name &quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>类型传入自定义Task类。</p>
+<p>执行结果：</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt; <span class="built_in">Task</span> :app:yechaoa</span><br><span class="line">我是传入的<span class="built_in">Task</span> Name  -- MyAction1</span><br><span class="line">我是传入的<span class="built_in">Task</span> Name  -- MyAction2</span><br></pre></td></tr></table></figure>
+
+<p>如果是Action方法的构造函数传参，参数写在type类型后面即可：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tasks.register(<span class="string">&#x27;yechaoa&#x27;</span>, YechaoaTask, <span class="string">&#x27;xxx&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<h2 id="doFirst"><a href="#doFirst" class="headerlink" title="doFirst"></a>doFirst</h2><p>属于Action的一种，在Task Action的头部执行。<strong>可以有多个</strong>。</p>
+<h2 id="doLast"><a href="#doLast" class="headerlink" title="doLast"></a>doLast</h2><p>属于Action的一种，在Task Action的尾部执行。<strong>可以有多个</strong>。</p>
+<p>示例代码：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">tasks.register(<span class="string">&quot;yechaoa&quot;</span>) &#123;</span><br><span class="line">    it.doFirst &#123;</span><br><span class="line">        println(<span class="string">&quot;$&#123;it.name&#125; = doFirst 111&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    it.doFirst &#123;</span><br><span class="line">        println(<span class="string">&quot;$&#123;it.name&#125; = doFirst 222&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    println(<span class="string">&quot;Task Name = &quot;</span> + it.name)</span><br><span class="line"></span><br><span class="line">    it.doLast &#123;</span><br><span class="line">        println(<span class="string">&quot;$&#123;it.name&#125; = doLast 111&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    it.doLast &#123;</span><br><span class="line">        println(<span class="string">&quot;$&#123;it.name&#125; = doLast 222&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>执行结果：</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Task <span class="attr">Name</span> = yechaoa</span><br><span class="line"></span><br><span class="line">&gt; Task :app:yechaoa</span><br><span class="line"><span class="attr">yechaoa</span> = doFirst <span class="number">222</span></span><br><span class="line"><span class="attr">yechaoa</span> = doFirst <span class="number">111</span></span><br><span class="line"><span class="attr">yechaoa</span> = doLast <span class="number">111</span></span><br><span class="line"><span class="attr">yechaoa</span> = doLast <span class="number">222</span></span><br></pre></td></tr></table></figure>
+
+<p>Task Name的输出是在Gradle生命周期的配置阶段，因为它就在闭包下面，不在任何Action里，没有执行时机，配置阶段解析到这个Task就会执行println。</p>
+<p>其他输出都是在Task :app:yechaoa下，因为有明确的Action执行时机。</p>
+<h2 id="Action执行顺序"><a href="#Action执行顺序" class="headerlink" title="Action执行顺序"></a>Action执行顺序</h2><p>Action的执行顺序也是多数人的一个误区，可以通过上面的日志，我们梳理一下：</p>
+<p><img src="/posts/a69caeeb/image-20231201135345769.png" alt="image-20231201135345769"></p>
+<ul>
+<li>doFirst：倒序</li>
+<li>Action：正序</li>
+<li>doLast：正序</li>
+</ul>
+<h1 id="Task属性"><a href="#Task属性" class="headerlink" title="Task属性"></a>Task属性</h1><p>Task的属性有以下几个：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">String TASK_NAME = <span class="string">&quot;name&quot;</span>;</span><br><span class="line">String TASK_DESCRIPTION = <span class="string">&quot;description&quot;</span>;</span><br><span class="line">String TASK_GROUP = <span class="string">&quot;group&quot;</span>;</span><br><span class="line">String TASK_TYPE = <span class="string">&quot;type&quot;</span>;</span><br><span class="line">String TASK_DEPENDS_ON = <span class="string">&quot;dependsOn&quot;</span>;</span><br><span class="line">String TASK_OVERWRITE = <span class="string">&quot;overwrite&quot;</span>;</span><br><span class="line">String TASK_ACTION = <span class="string">&quot;action&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>属性配置比较好理解，顾名思义。</p>
+<p>如果你的IDEA带了Gradle可视化管理的话，比如Android Studio，这样就可以在右侧Gradle面板菜单中找到我们自定义的Task，双击即可执行。</p>
+<p><img src="/posts/a69caeeb/image-20231201135426058.png" alt="image-20231201135426058"></p>
+<h1 id="Task依赖"><a href="#Task依赖" class="headerlink" title="Task依赖"></a>Task依赖</h1><p>Gradle默认已经有一套Task的构建流程了，你如果想在这个流程加入自定义Task或者在某个自带Task的前后做些切面编程的事，那就需要对Task的依赖关系有所了解。</p>
+<h2 id="dependsOn"><a href="#dependsOn" class="headerlink" title="dependsOn"></a>dependsOn</h2><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">tasks.register(<span class="string">&quot;yechaoa111&quot;</span>) &#123;</span><br><span class="line">    it.configure &#123;</span><br><span class="line">        dependsOn(provider &#123;</span><br><span class="line">            tasks.findAll &#123;</span><br><span class="line">                it.name.contains(<span class="string">&quot;yechaoa222&quot;</span>)</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    it.doLast &#123;</span><br><span class="line">        println(<span class="string">&quot;$&#123;it.name&#125;&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">tasks.register(<span class="string">&quot;yechaoa222&quot;</span>) &#123;</span><br><span class="line">    it.doLast &#123;</span><br><span class="line">        println(<span class="string">&quot;$&#123;it.name&#125;&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew yechaoa111</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&gt; Task <span class="symbol">:app</span><span class="symbol">:yechaoa222</span></span><br><span class="line">yechaoa222</span><br><span class="line"></span><br><span class="line">&gt; Task <span class="symbol">:app</span><span class="symbol">:yechaoa111</span></span><br><span class="line">yechaoa111</span><br></pre></td></tr></table></figure>
+
+<p>定义了dependsOn的Task yechaoa111在目标Task yechaoa222之后执行。</p>
+<p>其实相对于上面的写法，dependsOn更常见的写法是这种：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> yechaoa111 = tasks.register(<span class="string">&quot;yechaoa111&quot;</span>) &#123;</span><br><span class="line">    it.doLast &#123;</span><br><span class="line">        println(<span class="string">&quot;$&#123;it.name&#125;&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> yechaoa222 = tasks.register(<span class="string">&quot;yechaoa222&quot;</span>) &#123;</span><br><span class="line">    it.doLast &#123;</span><br><span class="line">        println(<span class="string">&quot;$&#123;it.name&#125;&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">yechaoa111.configure &#123;</span><br><span class="line">    dependsOn yechaoa222</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>dependsOn依赖的Task可以是名称也可以是path</p>
+<p>也可以是一个type类型：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dependsOn tasks.<span class="title function_ invoke__">withType</span>(<span class="built_in">Copy</span>)</span><br></pre></td></tr></table></figure>
+
+<p>如果是其他项目(Project)的task也可以：</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dependsOn <span class="string">&quot;project-lib:yechaoa&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="finalizedBy"><a href="#finalizedBy" class="headerlink" title="finalizedBy"></a>finalizedBy</h2><p>为Task添加指定的终结器任务。也就是指定下一个执行的Task，<strong>dependsOn指定的是上一个</strong>。</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">task taskY &#123;</span><br><span class="line">    finalizedBy <span class="string">&quot;taskX&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里表示taskY执行之后执行taskX。</p>
+<p>如果finalizedBy换成dependsOn，则表示taskY执行前要先执行taskX。</p>
+<h2 id="mustRunAfter"><a href="#mustRunAfter" class="headerlink" title="mustRunAfter"></a>mustRunAfter</h2><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> yechaoa111 = tasks.register(<span class="string">&quot;yechaoa111&quot;</span>) &#123;</span><br><span class="line">    it.doLast &#123;</span><br><span class="line">        println(<span class="string">&quot;$&#123;it.name&#125;&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> yechaoa222 = tasks.register(<span class="string">&quot;yechaoa222&quot;</span>) &#123;</span><br><span class="line">    it.doLast &#123;</span><br><span class="line">        println(<span class="string">&quot;$&#123;it.name&#125;&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">yechaoa111.configure &#123;</span><br><span class="line">    mustRunAfter yechaoa222</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew yechaoa111</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt; Task <span class="symbol">:app</span><span class="symbol">:yechaoa111</span></span><br><span class="line">yechaoa111</span><br></pre></td></tr></table></figure>
+
+<p>可以看到yechaoa222并没有执行，因为我们是单独执行的yechaoa111，要查看依赖关系得一起执行才能看出先后顺序。</p>
+<p>我们再来一起执行一次：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew yechaoa111 yechaoa222</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&gt; Task <span class="symbol">:app</span><span class="symbol">:yechaoa222</span></span><br><span class="line">yechaoa222</span><br><span class="line"></span><br><span class="line">&gt; Task <span class="symbol">:app</span><span class="symbol">:yechaoa111</span></span><br><span class="line">yechaoa111</span><br></pre></td></tr></table></figure>
+
+<p>可以看到mustRunAfter生效了，yechaoa111在yechaoa222之后执行。</p>
+<h2 id="shouldRunAfter"><a href="#shouldRunAfter" class="headerlink" title="shouldRunAfter"></a>shouldRunAfter</h2><figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">yechaoa111.configure &#123;</span><br><span class="line"><span class="code">    shouldRunAfter yechaoa222</span></span><br><span class="line"><span class="code">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>shouldRunAfter与mustRunAfter的写法一致。</p>
+<p>mustRunAfter是「必须运行」，shouldRunAfter是「应该运行」。</p>
+<p>如taskB.mustRunAfter(taskA)，当taskA和taskB同时运行时，则taskB必须始终在taskA之后运行。</p>
+<p>shouldRunAfter规则类似，但不太一样，因为它在两种情况下会被忽略。首先，如果使用该规则会引入一个排序周期；其次，当使用并行执行时，除了“应该运行”任务外，任务的所有依赖项都已满足，那么无论其“应该运行”依赖项是否已运行，都将运行此任务。</p>
+<h1 id="跳过Task"><a href="#跳过Task" class="headerlink" title="跳过Task"></a>跳过Task</h1><p>Gradle提供了多钟跳过Task的方法。</p>
+<ul>
+<li>条件跳过</li>
+<li>异常跳过</li>
+<li>禁用跳过</li>
+<li>超时跳过</li>
+</ul>
+<h2 id="条件跳过"><a href="#条件跳过" class="headerlink" title="条件跳过"></a>条件跳过</h2><p>Gradle提供了<code>onlyIf(Closure onlyIfClosure)</code>方法，只有闭包的结果返回True时，才执行Task。</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">tasks.register(<span class="string">&quot;skipTask&quot;</span>) &#123; taskObj -&gt;</span><br><span class="line">    taskObj.configure &#123;</span><br><span class="line">        onlyIf &#123;</span><br><span class="line">            <span class="keyword">def</span> provider = providers.gradleProperty(<span class="string">&quot;yechaoa&quot;</span>)</span><br><span class="line">            provider.present</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    taskObj.doLast &#123;</span><br><span class="line">        println(<span class="string">&quot;$&#123;it.name&#125; is Executed&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew skipTask -Pyechaoa</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt; Task <span class="symbol">:app</span><span class="symbol">:skipTask</span></span><br><span class="line">skipTask is Executed</span><br></pre></td></tr></table></figure>
+
+<p>只有在脚本命令里面加上了<code>-Pyechaoa</code>参数，才会执行skipTask。</p>
+<p>举一反三，只要onlyIf闭包结果为True即可，条件自定。</p>
+<h2 id="异常跳过"><a href="#异常跳过" class="headerlink" title="异常跳过"></a>异常跳过</h2><p>如果onlyIf不满足需求，也可以使用<code>StopExecutionException</code>来跳过。</p>
+<p>StopExecutionException属于异常，当抛出异常的时候，会跳过当前Action及后续Action，即<strong>跳过当前Task</strong>执行下一个Task。</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">tasks.register(<span class="string">&quot;skipTask&quot;</span>) &#123; taskObj -&gt;</span><br><span class="line"></span><br><span class="line">    taskObj.doFirst &#123;</span><br><span class="line">        println(<span class="string">&quot;$&#123;it.name&#125; is Executed doFirst&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    taskObj.doLast &#123;</span><br><span class="line">        <span class="keyword">def</span> provider = providers.gradleProperty(<span class="string">&quot;yechaoa&quot;</span>)</span><br><span class="line">        <span class="keyword">if</span> (provider.present) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> StopExecutionException()</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        println(<span class="string">&quot;$&#123;it.name&#125; is Executed doLast&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt; Task <span class="symbol">:app</span><span class="symbol">:skipTask</span></span><br><span class="line">skipTask is Executed doFirst</span><br></pre></td></tr></table></figure>
+
+<p>如果脚本命令里面加上了<code>-Pyechaoa</code>参数，则会抛异常跳过。</p>
+<p>但是该Task中之前的Action会被执行到，比如示例中的doFirst。</p>
+<h2 id="禁用跳过"><a href="#禁用跳过" class="headerlink" title="禁用跳过"></a>禁用跳过</h2><p>每个Task 都有一个<code>enabled</code>开关，true开启，false禁用，禁用之后任何操作都不会被执行。</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">tasks.register(<span class="string">&quot;skipTask&quot;</span>) &#123; taskObj -&gt;</span><br><span class="line">    taskObj.configure &#123;</span><br><span class="line">        enabled = <span class="literal">true</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    taskObj.doLast &#123;</span><br><span class="line">        println(<span class="string">&quot;$&#123;it.name&#125; is Executed&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="超时跳过"><a href="#超时跳过" class="headerlink" title="超时跳过"></a>超时跳过</h2><p>Task提供了<code>timeout</code>属性用于限制执行时间。</p>
+<p>如果Task的运行时间超过指定的时间，则执行该任务的线程将被中断。</p>
+<p>默认情况下，任务从不超时。</p>
+<p>示例：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">tasks.register(<span class="string">&quot;skipTask&quot;</span>) &#123; taskObj -&gt;</span><br><span class="line">    taskObj.configure &#123;</span><br><span class="line">        timeout = Duration.ofSeconds(<span class="number">10</span>)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    taskObj.doLast &#123;</span><br><span class="line">        Thread.sleep(<span class="number">11</span> * <span class="number">1000</span>)</span><br><span class="line">        println(<span class="string">&quot;$&#123;it.name&#125; is Executed&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight vbnet"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&gt; Task :app:skipTask FAILED</span><br><span class="line">Requesting <span class="keyword">stop</span> <span class="keyword">of</span> task <span class="comment">&#x27;:app:skipTask&#x27; as it has exceeded its configured timeout of 10s.</span></span><br><span class="line">---Gradle：buildFinished 构建结束了</span><br><span class="line"></span><br><span class="line"><span class="symbol">FAILURE:</span> Build failed <span class="keyword">with</span> an exception.</span><br><span class="line"></span><br><span class="line">* What went wrong:</span><br><span class="line">Execution failed <span class="keyword">for</span> task <span class="comment">&#x27;:app:skipTask&#x27;.</span></span><br><span class="line">&gt; Timeout has been exceeded</span><br></pre></td></tr></table></figure>
+
+<p>执行异常了，并提示timeout of 10s，因为我在doLast中sleep了11s。</p>
+<h1 id="Task增量构建"><a href="#Task增量构建" class="headerlink" title="Task增量构建"></a>Task增量构建</h1><p><code>增量构建</code>是当Task的输入和输出没有变化时，跳过action的执行，当Task输入或输出发生变化时，在action中只对发生变化的输入或输出进行处理，这样就可以避免一个没有变化的Task被反复构建，当Task发生变化时也只处理变化部分，这样可以提高Gradle的构建效率，缩短构建时间。</p>
+<p>任何构建工具的一个重要部分是能够避免做已经完成的工作。编译源文件后，除非发生影响输出的某些变化，例如修改源文件或删除输出文件，否则无需重新编译它们。编译可能需要大量时间，因此在不需要时跳过步骤可以节省大量时间。</p>
+<p>Gradle提供这种开箱即用的增量构建的功能，当你在编译时，Task在控制台输出中标记为<code>UP-TO-DATE</code>，这意味着增量构建正在工作。</p>
+<p>下面来看看增量构建是如何工作的以及如何确保Task支持增量运行。</p>
+<h2 id="输入和输出"><a href="#输入和输出" class="headerlink" title="输入和输出"></a>输入和输出</h2><p>一般情况下，任务需要一些输入并生成一些输出。我们可以将Java编译过程视为Task的一个示例，Java源文件作为Task的输入，而生成的类文件，即编译的结果，是Task的输出。</p>
+<p><img src="/posts/a69caeeb/image-20231201135509115.png" alt="image-20231201135509115"></p>
+<p>输入的一个重要特征是，它会影响一个或多个输出，如上图，根据源文件的内容和您要运行代码的Java运行时的最低版本，会生成不同的字节码。</p>
+<p><strong>编写Task时，需要告诉Gradle哪些Task属性是输入，哪些是输出。</strong> 如果Task属性影响输出，请务必将其注册为输入，否则当它不是时，Task将被视为最新状态。相反，如果属性不影响输出，请不要将属性注册为输入，否则Task可能会在不需要时执行。还要注意可能为完全相同的输入生成不同输出的非确定性Task，这些Task不应配置为增量构建，因为UP-TO-DATE检查将不起作用。</p>
+<blockquote>
+<p>上面的两段理论摘自官方，对于新手来说，可能有点晦涩难懂，下面会带大家实操一下。</p>
+</blockquote>
+<h2 id="增量构建的两种形式"><a href="#增量构建的两种形式" class="headerlink" title="增量构建的两种形式"></a>增量构建的两种形式</h2><ul>
+<li><strong>第一种，Task完全可以复用，输入和输出都没有任何变化，即UP-TO-DATE；</strong></li>
+<li><strong>第二种，有部分变化，只需要针对变化的部分进行操作；</strong></li>
+</ul>
+<h2 id="案例实操"><a href="#案例实操" class="headerlink" title="案例实操"></a>案例实操</h2><p><em><strong>场景：编写一个复制文件的Task，并支持增量构建。</strong></em></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">CopyTask</span> <span class="keyword">extends</span> <span class="title class_">DefaultTask</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 指定输入</span></span><br><span class="line">    <span class="meta">@InputFiles</span></span><br><span class="line">    FileCollection from</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 指定输出</span></span><br><span class="line">    <span class="meta">@OutputDirectory</span></span><br><span class="line">    Directory to</span><br><span class="line"></span><br><span class="line">    <span class="comment">// task action 执行</span></span><br><span class="line">    <span class="meta">@TaskAction</span></span><br><span class="line">    <span class="keyword">def</span> execute() &#123;</span><br><span class="line">        File file = from.getSingleFile()</span><br><span class="line">        <span class="keyword">if</span> (file.isDirectory()) &#123;</span><br><span class="line">            from.getAsFileTree().each &#123;</span><br><span class="line">                copyFileToDir(it, to)</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            copyFileToDir(from, to)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 复制文件到文件夹</span></span><br><span class="line"><span class="comment">     * @param src 要复制的文件</span></span><br><span class="line"><span class="comment">     * @param dir 接收的文件夹</span></span><br><span class="line"><span class="comment">     * @return</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">def</span> copyFileToDir(File src, Directory dir) &#123;</span><br><span class="line">        File dest = <span class="keyword">new</span> File(<span class="string">&quot;$&#123;dir.getAsFile().path&#125;/$&#123;src.name&#125;&quot;</span>)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (!dest.exists()) &#123;</span><br><span class="line">            dest.createNewFile()</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        dest.withOutputStream &#123;</span><br><span class="line">            it.write(<span class="keyword">new</span> FileInputStream(src).getBytes())</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在编写Task的时候，我们需要使用注解来声明输入和输出。<code>@InputXXX</code>表示输入，<code>@OutputXXX</code>表示输出。</p>
+<ul>
+<li>上面代码中<code>from</code>就是我们的输入，即要复制的文件；</li>
+<li><code>to</code>是我们的输出，即要接收的文件夹；</li>
+<li>然后<code>execute()</code>方法就是Task执行的Action。</li>
+</ul>
+<p>下面再来看看如何使用</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">tasks.register(&quot;CopyTask&quot;, CopyTask) &#123;</span><br><span class="line">    <span class="attr">from</span> = files(<span class="string">&quot;from&quot;</span>)</span><br><span class="line">    <span class="attr">to</span> = layout.projectDirectory.dir(<span class="string">&quot;to&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在执行前，造一下数据，在app目录新增一个from的文件夹，并在其下新增一个txt1.txt的文件</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">├── app</span><br><span class="line">│   ├── <span class="keyword">from</span></span><br><span class="line">│   │   └── txt1.txt</span><br></pre></td></tr></table></figure>
+
+<p>执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew CopyTask</span><br></pre></td></tr></table></figure>
+
+<p>txt1.txt文件已经复制到to文件夹一份了。</p>
+<p><img src="/posts/a69caeeb/image-20231201135539639.png" alt="image-20231201135539639"></p>
+<p>此时的目录结构：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">├── app</span><br><span class="line">│   ├── <span class="selector-tag">from</span></span><br><span class="line">│   │   └── txt1<span class="selector-class">.txt</span></span><br><span class="line">│   └── <span class="selector-tag">to</span></span><br><span class="line">│       └── txt1<span class="selector-class">.txt</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="UP-TO-DATE-1"><a href="#UP-TO-DATE-1" class="headerlink" title="UP-TO-DATE"></a>UP-TO-DATE</h3><p>刚才执行的日志：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">➜  GradleX git:(master) ✗ ./gradlew CopyTask</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line">BUILD SUCCESSFUL <span class="keyword">in</span> 1s</span><br><span class="line">1 actionable task: 1 executed</span><br></pre></td></tr></table></figure>
+
+<p>为了验证增量构建，再执行一次：</p>
+<figure class="highlight vbnet"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">➜  GradleX git:(master) ✗ ./gradlew CopyTask</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line">BUILD SUCCESSFUL <span class="keyword">in</span> <span class="number">1s</span></span><br><span class="line"><span class="number">1</span> actionable task: <span class="number">1</span> up-<span class="keyword">to</span>-<span class="type">date</span></span><br></pre></td></tr></table></figure>
+
+<p>这次我们可以发现，Task的执行结果已经由<code>executed</code>变为<code>up-to-date</code>了，说明我们的增量构建已经生效了。</p>
+<p>虽然说此时增量构建已经生效了，但完成度还不够，还需要有颗粒度更细的处理，接着看。</p>
+<h3 id="增量构建"><a href="#增量构建" class="headerlink" title="增量构建"></a>增量构建</h3><p>上面我们讲了增量构建的两种形式，也已经实现了up-to-date，现在要模拟输入&#x2F;输出<code>部分变化</code>的场景了。</p>
+<p><em><strong>场景：基于上面的场景，在from文件夹下增加一个txt2.txt文件，并支持增量构建。</strong></em></p>
+<p>增加一个txt2.txt文件再次执行上面的命令时，会发现txt1.txt文件被再次复制了一遍。</p>
+<p>这是因为我们的输入有了变化，CopyTask的Action就会全量构建，而我们想要的效果是只复制txt2.txt文件就好了。只对新增或修改的文件做复制操作，没有变化的文件不进行复制。</p>
+<p>而要实现这种效果，就得让Action方法支持<code>增量构建</code>。</p>
+<p>我们需要给Action方法增加一个<code>InputChanges</code>参数，带InputChanges类型参数的Action方法表示这是一个增量任务操作方法，该参数告诉Gradle，该Action方法仅需要处理更改的输入，此外，Task还需要通过使用 <code>@Incremental</code>或<code>@SkipWhenEmpty</code>来指定至少一个增量文件输入属性。</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">CopyTask</span> <span class="keyword">extends</span> <span class="title class_">DefaultTask</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 指定增量输入属性</span></span><br><span class="line">    <span class="meta">@Incremental</span></span><br><span class="line">    <span class="comment">// 指定输入</span></span><br><span class="line">    <span class="meta">@InputFiles</span></span><br><span class="line">    FileCollection from</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 指定输出</span></span><br><span class="line">    <span class="meta">@OutputDirectory</span></span><br><span class="line">    Directory to</span><br><span class="line"></span><br><span class="line">    <span class="comment">// task action 执行</span></span><br><span class="line">    <span class="meta">@TaskAction</span></span><br><span class="line">    <span class="type">void</span> execute(InputChanges inputChanges) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="type">boolean</span> incremental = inputChanges.incremental</span><br><span class="line">        println(<span class="string">&quot;isIncremental = $incremental&quot;</span>)</span><br><span class="line"></span><br><span class="line">        inputChanges.getFileChanges(from).each &#123;</span><br><span class="line">            <span class="keyword">if</span> (it.fileType != FileType.DIRECTORY) &#123;</span><br><span class="line">                ChangeType changeType = it.changeType</span><br><span class="line">                String fileName = it.file.name</span><br><span class="line">                println(<span class="string">&quot;ChangeType = $changeType , ChangeFile = $fileName&quot;</span>)</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (changeType != ChangeType.REMOVED) &#123;</span><br><span class="line">                    copyFileToDir(it.file, to)</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 复制文件到文件夹</span></span><br><span class="line"><span class="comment">     * @param src 要复制的文件</span></span><br><span class="line"><span class="comment">     * @param dir 接收的文件夹</span></span><br><span class="line"><span class="comment">     * @return</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">def</span> copyFileToDir(File file, Directory dir) &#123;</span><br><span class="line">        File dest = <span class="keyword">new</span> File(<span class="string">&quot;$&#123;dir.getAsFile().path&#125;/$&#123;file.name&#125;&quot;</span>)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (!dest.exists()) &#123;</span><br><span class="line">            dest.createNewFile()</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        dest.withOutputStream &#123;</span><br><span class="line">            it.write(<span class="keyword">new</span> FileInputStream(file).getBytes())</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的改动分为两步：</p>
+<ol>
+<li>给from属性增加<code>@Incremental</code>注解，表示增量输入属性；</li>
+<li>重写了action方法execute()，增加了<code>InputChanges</code>参数，支持增量复制文件，然后根据文件的<code>ChangeType</code>做校验，只复制新增或修改的文件。</li>
+</ol>
+<p>ChangeType的几种类型：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">enum</span> <span class="title class_">ChangeType</span> &#123;</span><br><span class="line">    ADDED,</span><br><span class="line">    MODIFIED,</span><br><span class="line">    REMOVED</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>ADDED：表示文件是新增的；</li>
+<li>MODIFIED：表示文件是修改的；</li>
+<li>REMOVED：表示文件被删除；</li>
+</ul>
+<p>我们先来执行看看：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew CopyTask</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt; Task :app:CopyTask</span><br><span class="line"><span class="attr">isIncremental</span> = <span class="literal">false</span></span><br><span class="line"><span class="attr">ChangeType</span> = ADDED , ChangeFile = txt1.txt</span><br></pre></td></tr></table></figure>
+
+<p>第一次执行，并没有增量构建，再执行一次看看。</p>
+<figure class="highlight vbnet"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">BUILD SUCCESSFUL <span class="keyword">in</span> <span class="number">2s</span></span><br><span class="line"><span class="number">1</span> actionable task: <span class="number">1</span> up-<span class="keyword">to</span>-<span class="type">date</span></span><br></pre></td></tr></table></figure>
+
+<p>第二次直接up-to-date了。</p>
+<h3 id="ADDED"><a href="#ADDED" class="headerlink" title="ADDED"></a>ADDED</h3><p>这时我们还没有验证到增量构建，我们往from文件夹下增加一个txt2.txt文件，再执行看看</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt; Task :app:CopyTask</span><br><span class="line"><span class="attr">isIncremental</span> = <span class="literal">true</span></span><br><span class="line"><span class="attr">ChangeType</span> = ADDED , ChangeFile = txt2.txt</span><br></pre></td></tr></table></figure>
+
+<p>通过日志可以看出，action的增量构建生效了，并表示txt2.txt是新增的，而txt1.txt文件没有再复制一遍。</p>
+<p>此时的目录结构：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">├── app</span><br><span class="line">│   ├── build<span class="selector-class">.gradle</span></span><br><span class="line">│   ├── <span class="selector-tag">from</span></span><br><span class="line">│   │   └── txt1<span class="selector-class">.txt</span></span><br><span class="line">│       └── txt2<span class="selector-class">.txt</span></span><br><span class="line">│   └── <span class="selector-tag">to</span></span><br><span class="line">│       ├── txt1<span class="selector-class">.txt</span></span><br><span class="line">│       └── txt2<span class="selector-class">.txt</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="MODIFIED"><a href="#MODIFIED" class="headerlink" title="MODIFIED"></a>MODIFIED</h3><p>我们还可以进一步验证，在txt1.txt文件里增加一行“yechaoa”模拟修改，再次执行</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt; Task :app:CopyTask</span><br><span class="line"><span class="attr">isIncremental</span> = <span class="literal">true</span></span><br><span class="line"><span class="attr">ChangeType</span> = MODIFIED , ChangeFile = txt1.txt</span><br></pre></td></tr></table></figure>
+
+<p>依然是增量构建，并表示txt1.txt文件是修改的，而txt2.txt文件没有再复制一遍。</p>
+<h3 id="REMOVED"><a href="#REMOVED" class="headerlink" title="REMOVED"></a>REMOVED</h3><p>在验证一下删除，我们把from文件夹下的txt2.txt文件删除后执行看看</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt; Task :app:CopyTask</span><br><span class="line"><span class="attr">isIncremental</span> = <span class="literal">true</span></span><br><span class="line"><span class="attr">ChangeType</span> = REMOVED , ChangeFile = txt2.txt</span><br></pre></td></tr></table></figure>
+
+<p>依然是增量构建，并表示txt2.txt文件被删除了。</p>
+<p>此时的目录结构：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">├── app</span><br><span class="line">│   ├── <span class="selector-tag">from</span></span><br><span class="line">│   │   └── txt1<span class="selector-class">.txt</span></span><br><span class="line">│   └── <span class="selector-tag">to</span></span><br><span class="line">│       ├── txt1<span class="selector-class">.txt</span></span><br><span class="line">│       └── txt2<span class="selector-class">.txt</span></span><br></pre></td></tr></table></figure>
+
+<p>可以发现，我们虽然把from文件夹下的txt2.txt文件删除了，Task的Action也确实支持增量构建了，但是to文件夹下的txt2.txt文件还是在的，如果to文件夹的内容会影响到你的构建结果，还是要处理一下保持同步的。</p>
+<h2 id="增量vs全量"><a href="#增量vs全量" class="headerlink" title="增量vs全量"></a>增量vs全量</h2><p>Task并不是每次执行都是增量构建，我们可以通过InputChanges的isIncremental方法判断本次构建是否是增量构建，不过有以下几种情况会全量构建：</p>
+<ul>
+<li>该Task是第一次执行；</li>
+<li><strong>该Task只有输入没有输出；</strong></li>
+<li>该Task的upToDateWhen条件返回了false；</li>
+<li>自上次构建以来，该Task的某个输出文件已更改；</li>
+<li>自上次构建以来，该Task的某个属性输入发生了变化，例如一些基本类型的属性；</li>
+<li>自上次构建以来，该Task的某个非增量文件输入发生了变化，非增量文件输入是指没有使用@Incremental或@SkipWhenEmpty注解的文件输入.</li>
+</ul>
+<p>当Task处于全量构建时，即InputChanges的isIncremental方法返回false时，通过InputChanges的getFileChanges方法能获取到所有的输入文件，并且每个文件的ChangeType都为ADDED，当Task处于增量构建时，即InputChanges的isIncremental方法返回true时，通过InputChanges的getFileChanges方法能获取到只发生变化的输入文件。</p>
+<h2 id="常用的注解类型"><a href="#常用的注解类型" class="headerlink" title="常用的注解类型"></a>常用的注解类型</h2><table>
+<thead>
+<tr>
+<th><strong>注解</strong></th>
+<th><strong>类型</strong></th>
+<th><strong>含义</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>@<a href="https://link.juejin.cn/?target=https://docs.gradle.org/current/javadoc/org/gradle/api/tasks/Input.html">Input</a></td>
+<td>任何Serializable类型或依赖性解析结果类型</td>
+<td>一个简单的输入值或依赖关系解析结果</td>
+</tr>
+<tr>
+<td>@<a href="https://link.juejin.cn/?target=https://docs.gradle.org/current/javadoc/org/gradle/api/tasks/InputFile.html">InputFile</a></td>
+<td>File*</td>
+<td>单个输入文件（不是目录）</td>
+</tr>
+<tr>
+<td>@<a href="https://link.juejin.cn/?target=https://docs.gradle.org/current/javadoc/org/gradle/api/tasks/InputDirectory.html">InputDirectory</a></td>
+<td>File*</td>
+<td>单个输入目录（不是文件）</td>
+</tr>
+<tr>
+<td>@<a href="https://link.juejin.cn/?target=https://docs.gradle.org/current/javadoc/org/gradle/api/tasks/InputFiles.html">InputFiles</a></td>
+<td>Iterable*</td>
+<td>可迭代的输入文件和目录</td>
+</tr>
+<tr>
+<td>@<a href="https://link.juejin.cn/?target=https://docs.gradle.org/current/javadoc/org/gradle/api/tasks/OutputFile.html">OutputFile</a></td>
+<td>File*</td>
+<td>单个输出文件（不是目录）</td>
+</tr>
+<tr>
+<td>@<a href="https://link.juejin.cn/?target=https://docs.gradle.org/current/javadoc/org/gradle/api/tasks/OutputDirectory.html">OutputDirectory</a></td>
+<td>File*</td>
+<td>单个输出目录（不是文件）</td>
+</tr>
+<tr>
+<td>@<a href="https://link.juejin.cn/?target=https://docs.gradle.org/current/javadoc/org/gradle/api/tasks/OutputFiles.html">OutputFiles</a></td>
+<td>Map&lt;String, File&gt;*<em>或Iterable</em></td>
+<td>输出文件的可迭代或映射。使用文件树会关闭任务的<a href="https://link.juejin.cn/?target=https://docs.gradle.org/current/userguide/build_cache.html%23sec:task_output_caching">缓存</a>。</td>
+</tr>
+<tr>
+<td>@<a href="https://link.juejin.cn/?target=https://docs.gradle.org/current/javadoc/org/gradle/api/tasks/OutputDirectories.html">OutputDirectories</a></td>
+<td>Map&lt;String, File&gt;*<em>或Iterable</em></td>
+<td>输出目录的可迭代。使用文件树会关闭任务的<a href="https://link.juejin.cn/?target=https://docs.gradle.org/current/userguide/build_cache.html%23sec:task_output_caching">缓存</a>。</td>
+</tr>
+<tr>
+<td>@<a href="https://link.juejin.cn/?target=https://docs.gradle.org/current/javadoc/org/gradle/api/tasks/Nested.html">Nested</a></td>
+<td>任何自定义类型</td>
+<td>自定义类型，可能无法实现Serializable，但至少有一个字段或属性标记了此表中的注释之一。它甚至可能是另一个@Nested。</td>
+</tr>
+<tr>
+<td>@<a href="https://link.juejin.cn/?target=https://docs.gradle.org/current/javadoc/org/gradle/api/tasks/Internal.html">Internal</a></td>
+<td>任何类型</td>
+<td>表示该属性在内部使用，但既不是输入也不是输出。</td>
+</tr>
+<tr>
+<td>@<a href="https://link.juejin.cn/?target=https://docs.gradle.org/current/javadoc/org/gradle/api/tasks/SkipWhenEmpty.html">SkipWhenEmpty</a></td>
+<td>File或Iterable*</td>
+<td>与@InputFiles或@InputDirectory一起使用，告诉Gradle在相应的文件或目录为空时跳过任务，以及使用此注释声明的所有其他输入文件。由于声明此注释为空的所有输入文件而跳过的任务将导致明显的“无源”结果。例如，NO-SOURCE将在控制台输出中发出。暗示<a href="https://link.juejin.cn/?target=https://docs.gradle.org/current/userguide/incremental_build.html%23incremental">@Incremental</a>。</td>
+</tr>
+<tr>
+<td>@<a href="https://link.juejin.cn/?target=https://docs.gradle.org/current/javadoc/org/gradle/work/Incremental.html">Incremental</a></td>
+<td>任何类型</td>
+<td>与@InputFiles或@InputDirectory一起使用，指示Gradle跟踪对带注释的文件属性的更改，因此可以通过@<a href="https://link.juejin.cn/?target=https://docs.gradle.org/current/dsl/org.gradle.work.InputChanges.html">InputChanges.getFileChanges()</a>查询更改。<a href="https://link.juejin.cn/?target=https://docs.gradle.org/current/userguide/custom_tasks.html%23incremental_tasks">增量任务</a>需要。</td>
+</tr>
+<tr>
+<td>@<a href="https://link.juejin.cn/?target=https://docs.gradle.org/current/javadoc/org/gradle/api/tasks/Optional.html">Optional</a></td>
+<td>任何类型</td>
+<td>与<a href="https://link.juejin.cn/?target=https://docs.gradle.org/current/javadoc/org/gradle/api/tasks/Optional.html">可选</a>API文档中列出的任何属性类型注释一起使用。此注释禁用对相应属性的验证检查。有关更多详细信息<a href="https://link.juejin.cn/?target=https://docs.gradle.org/current/userguide/incremental_build.html%23sec:task_input_output_validation">，</a>请参阅<a href="https://link.juejin.cn/?target=https://docs.gradle.org/current/userguide/incremental_build.html%23sec:task_input_output_validation">验证部分</a>。</td>
+</tr>
+</tbody></table>
+<p>更多可查看<a target="_blank" rel="noopener" href="https://docs.gradle.org/current/userguide/incremental_build.html">文档</a>。</p>
+<h2 id="增量构建原理"><a href="#增量构建原理" class="headerlink" title="增量构建原理"></a>增量构建原理</h2><p>在首次执行Task之前，Gradle会获取<strong>输入的指纹</strong>，此指纹包含输入文件的<strong>路径</strong>和每个文件<strong>内容的散列</strong>。然后执行Task，如果Task成功完成，Gradle会获取<strong>输出的指纹</strong>，此指纹包含一组输出文件和每个文件内容的散列，Gradle会在下次执行Task时保留两个指纹。</p>
+<p>后续每次在执行Task之前，Gradle都会对输入和输出进行新的指纹识别，如果新指纹与之前的指纹相同，Gradle假设输出是最新的，并跳过Task，如果它们不一样，Gradle会执行Task。Gradle会在下次执行Task时保留两个指纹。</p>
+<p>如果文件的统计信息（即lastModified和size）没有改变，Gradle将重复使用上次运行的文件指纹，即当文件的统计信息没有变化时，Gradle不会检测到更改。</p>
+<p>Gradle还将Task的代码视为任务输入的一部分，当Task、Action或其依赖项在执行之间发生变化时，Gradle认为该Task是过时的。</p>
+<p>Gradle了解文件属性（例如持有Java类路径的属性）是否对顺序敏感，当比较此类属性的指纹时，即使文件顺序发生变化，也会导致Task过时。</p>
+<p>请注意，如果Task指定了输出目录，则自上次执行以来添加到该目录的任何文件都会被忽略，并且不会导致Task过时，如此不相关的Task可能会共享一个输出目录，而不会相互干扰，如果出于某种原因这不是你想要的行为，请考虑使用TaskOutputs.upToDateWhen（groovy.lang.Closure）。</p>
+<p>另请注意，更改不可用文件的可用性（例如，将损坏的符号链接的目标修改为有效文件，反之亦然），将通过最新检查进行检测和处理。</p>
+<p>Task的输入还用于计算启用时用于加载Task输出的构建缓存密钥。</p>
+<h1 id="查找Task"><a href="#查找Task" class="headerlink" title="查找Task"></a>查找Task</h1><p>有时候我们需要找到官方的Task来hook操作，比如加个Action；有时候我们也可以找到自定义的Task让它依赖某个官方Task。</p>
+<p>查找Task，主要涉及到TaskContainer对象，顾名思义，Task容器的管理类，它提供了两个方法：</p>
+<ul>
+<li>findByPath(String path)，参数可空</li>
+<li>getByPath(String path)，参数可空，找不到Task会抛异常UnknownTaskException</li>
+</ul>
+<p>同时，TaskContainer继承自<code>TaskCollection</code>和<code>NamedDomainObjectCollection</code>，又增加了两个方法可以使用：</p>
+<ul>
+<li>findByName</li>
+<li>getByName</li>
+</ul>
+<p>参数定义与xxxByPath方法一样。</p>
+<h2 id="findByName"><a href="#findByName" class="headerlink" title="findByName"></a>findByName</h2><p>示例：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> aaa = tasks.findByName(<span class="string">&quot;yechaoa&quot;</span>).doFirst &#123;</span><br><span class="line">    println(<span class="string">&quot;yechaoa excuted doFirst by findByName&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>找到一个名为「yechaoa」的Task，并增加一个doFirst Action，然后在doFirst中打印日志。</p>
+<p>我们这时候执行aaa是不会触发yechaoa Task Action的执行，因为并没有依赖关系，所以得执行yechaoa Task。</p>
+<p>执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew yechaoa</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt; Task <span class="symbol">:app</span><span class="symbol">:yechaoa</span></span><br><span class="line">yechaoa excuted doFirst by findByName</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>可以看到我们加的日志已经打印出来了。</p>
+<h2 id="findByPath"><a href="#findByPath" class="headerlink" title="findByPath"></a>findByPath</h2><p>示例：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> bbb = tasks.findByPath(<span class="string">&quot;yechaoa&quot;</span>).doFirst &#123;</span><br><span class="line">    println(<span class="string">&quot;yechaoa excuted doFirst by findByPath&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&gt; Task :app:yechaoa</span><br><span class="line">yechaoa excuted doFirst <span class="keyword">by</span> findByPath</span><br><span class="line">yechaoa excuted doFirst <span class="keyword">by</span> findByName</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<h2 id="named"><a href="#named" class="headerlink" title="named"></a>named</h2><p>通过名称查找Task，如果没有会抛异常UnknownTaskException</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">tasks.named(<span class="string">&quot;yechaoa&quot;</span>) &#123;</span><br><span class="line">    it.doFirst &#123;</span><br><span class="line">        println(<span class="string">&quot;yechaoa excuted doFirst by named&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&gt; Task :app:yechaoa</span><br><span class="line">yechaoa excuted doFirst <span class="keyword">by</span> named</span><br><span class="line">yechaoa excuted doFirst <span class="keyword">by</span> findByPath</span><br><span class="line">yechaoa excuted doFirst <span class="keyword">by</span> findByName</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><p>withType：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">tasks.withType(DefaultTask).configureEach(task -&gt; &#123;</span><br><span class="line">    <span class="keyword">if</span> (task.name.toLowerCase().contains(<span class="string">&quot;copytask&quot;</span>)) &#123;</span><br><span class="line">        println(task.<span class="keyword">class</span>.name)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>each&#x2F;forEach&#x2F;configureEach：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">tasks.each &#123;</span><br><span class="line">    <span class="comment">// do something</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">tasks.forEach(task-&gt;&#123;</span><br><span class="line">    <span class="comment">// do something</span></span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line">tasks.configureEach(task -&gt; &#123;</span><br><span class="line">    <span class="comment">// do something</span></span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<h1 id="番外"><a href="#番外" class="headerlink" title="番外"></a>番外</h1><h2 id="register和create的区别"><a href="#register和create的区别" class="headerlink" title="register和create的区别"></a>register和create的区别</h2><p>创建Task除了上面示例中的<code>register</code>方法，还有<code>create</code>方法，那它们有什么区别呢?</p>
+<ul>
+<li>通过register创建时，只有在这个task被需要时，才会创建和配置；</li>
+<li>通过create创建时，则会<strong>立即</strong>创建与配置该Task，并添加到TaskContainer中；</li>
+</ul>
+<p>直白话就是，register是按需创建task的方式，这样gradle执行的性能更好（并不是你项目的性能）。</p>
+<p>create创建task的方式官方已经不推荐了，虽然现在还没标@Deprecated，但未来也可能会被废弃掉。</p>
+<p>但是需要注意的是，<strong>register属于懒加载</strong>，嵌套创建的Task在配置阶段无法被初始化，所以并不会被执行到。</p>
+<blockquote>
+<p>除了register和create，还有一个replace方法，用于替换名称已存在的Task。</p>
+</blockquote>
+<h2 id="Task-Tree"><a href="#Task-Tree" class="headerlink" title="Task Tree"></a>Task Tree</h2><p>我们可以通过<code>./gradlew tasks</code>来查看所有的Task，但却看不到Task的依赖关系。</p>
+<p>要查看Task的依赖关系，我们可以使用<a href="https://link.juejin.cn/?target=https://github.com/dorongold/gradle-task-tree">task-tree</a>插件</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">plugins &#123;</span><br><span class="line">    id <span class="string">&quot;com.dorongold.task-tree&quot;</span> version <span class="string">&quot;2.1.1&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用时我们只需要在命令后面加上<code>taskTree</code>就行了</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gradle <span class="tag">&lt;<span class="name">task</span> <span class="attr">1</span>&gt;</span>...<span class="tag">&lt;<span class="name">task</span> <span class="attr">N</span>&gt;</span> taskTree</span><br></pre></td></tr></table></figure>
+
+<p>示例：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew build taskTree</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">:app:build</span><br><span class="line">+<span class="comment">--- :app:assemble</span></span><br><span class="line">|    +<span class="comment">--- :app:assembleDebug</span></span><br><span class="line">|    |    +<span class="comment">--- :app:mergeDebugNativeDebugMetadata</span></span><br><span class="line">|    |    |    <span class="comment">--- :app:preDebugBuild</span></span><br><span class="line">|    |    |         <span class="comment">--- :app:preBuild</span></span><br><span class="line">|    |    <span class="comment">--- :app:packageDebug</span></span><br><span class="line">|    |         +<span class="comment">--- :app:compileDebugJavaWithJavac</span></span><br><span class="line">|    |         |    +<span class="comment">--- :app:compileDebugAidl</span></span><br><span class="line">|    |         |    |    <span class="comment">--- :app:preDebugBuild *</span></span><br><span class="line">|    |         |    +<span class="comment">--- :app:compileDebugKotlin</span></span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+<h1 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h1><p>至此关于Gradle Task的部分就介绍完了。</p>
+<p>从Task是什么、写在哪、怎么写、怎么运行、怎么写好等方面为切入点，由浅入深、依次递进的介绍了Task Action执行顺序、自定义Task、Task依赖、Task增量构建等相关知识，总的来说，涉及的知识点还是不少的，更需要在实践中去理解并应用。</p>
+<!-- flag of hidden posts -->
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div></div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>Donate</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.jpg" alt=" WeChat Pay"/>
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/private/" rel="tag"># private</a>
+          
+            <a href="/tags/Gradle/" rel="tag"># Gradle</a>
+          
+            <a href="/tags/groovy/" rel="tag"># groovy</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">71</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">31</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@189.cn" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/shenbh" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://gitee.com/shen_bh" target="_blank" title="Gitee">
+                      
+                        <i class="fa fa-fw fa-git"></i>Gitee</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Gradle%E4%B8%AD%E7%9A%84Task%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-text">Gradle中的Task是什么</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%8E%E4%B9%88%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AAtask"><span class="nav-text">怎么创建一个task</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Task%E5%86%99%E5%9C%A8%E5%93%AA"><span class="nav-text">Task写在哪</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BATask"><span class="nav-text">创建Task</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E6%89%A7%E8%A1%8CTask"><span class="nav-text">如何执行Task</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%A7%E8%A1%8C%E5%8D%95%E4%B8%AATask"><span class="nav-text">执行单个Task</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%A7%E8%A1%8C%E5%A4%9A%E4%B8%AATask"><span class="nav-text">执行多个Task</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Task%E5%90%8C%E5%90%8D"><span class="nav-text">Task同名</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Task%E6%89%A7%E8%A1%8C%E7%BB%93%E6%9E%9C"><span class="nav-text">Task执行结果</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#EXCUTED"><span class="nav-text">EXCUTED</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#UP-TO-DATE"><span class="nav-text">UP-TO-DATE</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#FOME-CACHE"><span class="nav-text">FOME-CACHE</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SKIPPED"><span class="nav-text">SKIPPED</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#NO-SOURCE"><span class="nav-text">NO-SOURCE</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Task%E7%9A%84Action"><span class="nav-text">Task的Action</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Action"><span class="nav-text">Action</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89Task"><span class="nav-text">自定义Task</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#doFirst"><span class="nav-text">doFirst</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#doLast"><span class="nav-text">doLast</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Action%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F"><span class="nav-text">Action执行顺序</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Task%E5%B1%9E%E6%80%A7"><span class="nav-text">Task属性</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Task%E4%BE%9D%E8%B5%96"><span class="nav-text">Task依赖</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#dependsOn"><span class="nav-text">dependsOn</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#finalizedBy"><span class="nav-text">finalizedBy</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#mustRunAfter"><span class="nav-text">mustRunAfter</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#shouldRunAfter"><span class="nav-text">shouldRunAfter</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%B7%B3%E8%BF%87Task"><span class="nav-text">跳过Task</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9D%A1%E4%BB%B6%E8%B7%B3%E8%BF%87"><span class="nav-text">条件跳过</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%82%E5%B8%B8%E8%B7%B3%E8%BF%87"><span class="nav-text">异常跳过</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A6%81%E7%94%A8%E8%B7%B3%E8%BF%87"><span class="nav-text">禁用跳过</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B6%85%E6%97%B6%E8%B7%B3%E8%BF%87"><span class="nav-text">超时跳过</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Task%E5%A2%9E%E9%87%8F%E6%9E%84%E5%BB%BA"><span class="nav-text">Task增量构建</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BE%93%E5%85%A5%E5%92%8C%E8%BE%93%E5%87%BA"><span class="nav-text">输入和输出</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A2%9E%E9%87%8F%E6%9E%84%E5%BB%BA%E7%9A%84%E4%B8%A4%E7%A7%8D%E5%BD%A2%E5%BC%8F"><span class="nav-text">增量构建的两种形式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A1%88%E4%BE%8B%E5%AE%9E%E6%93%8D"><span class="nav-text">案例实操</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#UP-TO-DATE-1"><span class="nav-text">UP-TO-DATE</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A2%9E%E9%87%8F%E6%9E%84%E5%BB%BA"><span class="nav-text">增量构建</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ADDED"><span class="nav-text">ADDED</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MODIFIED"><span class="nav-text">MODIFIED</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#REMOVED"><span class="nav-text">REMOVED</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A2%9E%E9%87%8Fvs%E5%85%A8%E9%87%8F"><span class="nav-text">增量vs全量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%B8%E7%94%A8%E7%9A%84%E6%B3%A8%E8%A7%A3%E7%B1%BB%E5%9E%8B"><span class="nav-text">常用的注解类型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A2%9E%E9%87%8F%E6%9E%84%E5%BB%BA%E5%8E%9F%E7%90%86"><span class="nav-text">增量构建原理</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9F%A5%E6%89%BETask"><span class="nav-text">查找Task</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#findByName"><span class="nav-text">findByName</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#findByPath"><span class="nav-text">findByPath</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#named"><span class="nav-text">named</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B6%E4%BB%96"><span class="nav-text">其他</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%95%AA%E5%A4%96"><span class="nav-text">番外</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#register%E5%92%8Ccreate%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-text">register和create的区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Task-Tree"><span class="nav-text">Task Tree</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%80%E5%90%8E"><span class="nav-text">最后</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

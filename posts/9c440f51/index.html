@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="private,Kotlin知识点," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="调度器DispathersKotlin协程中的 Dispatchers 与 RxJava 中的 Schedulers 是一个类似的概念。通过调度器可以决定协程应该运行在哪个线程（或线程池）上。 如果不设置任何调度器，则默认选择 Dispatchers.Default （被设计用于运行CPU密集型操作）e.g.  Dispatchers.Default有个线程池，其大小等于运行代码的机器上的CPU核">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kotlin协程-调度器">
+<meta property="og:url" content="http://shenbh.github.io/posts/9c440f51/index.html">
+<meta property="og:site_name" content="AB">
+<meta property="og:description" content="调度器DispathersKotlin协程中的 Dispatchers 与 RxJava 中的 Schedulers 是一个类似的概念。通过调度器可以决定协程应该运行在哪个线程（或线程池）上。 如果不设置任何调度器，则默认选择 Dispatchers.Default （被设计用于运行CPU密集型操作）e.g.  Dispatchers.Default有个线程池，其大小等于运行代码的机器上的CPU核">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-12-06T08:16:01.000Z">
+<meta property="article:modified_time" content="2023-12-06T09:58:28.413Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="private">
+<meta property="article:tag" content="Kotlin知识点">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/9c440f51/"/>
+
+
+
+
+
+  <title>Kotlin协程-调度器 | AB</title><meta name="robots" content="noindex">
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">AB</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Just do IT Now.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/9c440f51/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="AB">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Kotlin协程-调度器</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2023-12-06T16:16:01+08:00">
+                2023-12-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Kotlin/" itemprop="url" rel="index">
+                    <span itemprop="name">Kotlin</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="调度器Dispathers"><a href="#调度器Dispathers" class="headerlink" title="调度器Dispathers"></a>调度器<a target="_blank" rel="noopener" href="https://blog.csdn.net/rikkatheworld/article/details/125322678">Dispathers</a></h1><p>Kotlin协程中的 Dispatchers 与 RxJava 中的 Schedulers 是一个类似的概念。通过调度器可以决定协程应该运行在哪个线程（或线程池）上。</p>
+<p>如果不设置任何调度器，则默认选择 <code>Dispatchers.Default</code> （被设计用于运行CPU密集型操作）<br>e.g.  <code>Dispatchers.Default</code>有个线程池，其大小<strong>等于</strong>运行代码的机器上的CPU核数量（但不少于2个）。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span> = coroutineScope &#123;</span><br><span class="line"> repeat(<span class="number">1000</span>)&#123;</span><br><span class="line">     launch&#123; <span class="comment">//或者 launch(Dispatchers.Default) &#123;&#125;</span></span><br><span class="line">         <span class="comment">//不断计算</span></span><br><span class="line">         List(<span class="number">1000</span>) &#123; Random.nextLong() &#125;.maxOrNull()</span><br><span class="line">         <span class="keyword">val</span> threadName = Thread.currentThread().name</span><br><span class="line">         println(<span class="string">&quot;Running on thread: <span class="variable">$threadName</span>&quot;</span>)</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以限制使用时不超过一定数量的线程：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> int dispathcer = Dispathers.Default.limitedParallelism(<span class="number">5</span>)</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>limitedParallelism是 kotlinx.coroutines 1.6 版本引入的</p>
+</blockquote>
+<h2 id="主调度器Dispathers-Main"><a href="#主调度器Dispathers-Main" class="headerlink" title="主调度器Dispathers.Main"></a>主调度器Dispathers.Main</h2><p>Android有主线程、UI线程的概念，是唯一可用来与UI交互的线程。</p>
+<p>若使用 kotlinx-coroutines-android 构件，且在主线程上运行协程，则可在 Android 用 <code>Dispathers.Main</code> 来调度。</p>
+<p>若使用 kotlinx-coroutines-javaFx 构件，且在主线程上运行协程，则可在 JavaFx 上用 <code>Dispathers.Main</code> 来调度。</p>
+<p>若使用 kotlinx-coroutines-swing 构件，且在主线程上运行协程，则可在 Swing 上用 <code>Dispathers.Main</code> 来调度。</p>
+<p>如果没有指定调度器的依赖项，则无法使用这些东西。</p>
+<p>注意：单元测试中通常不使用前端库，所以这里没有定义 <code>Dispathers.Main</code>，为了能用它，需要使用 kotlinx-coroutines-test 中的 <code>Dispathers.setMain(dispather)</code> 来设置一个调度器：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">SomeTest</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">val</span>  dispather = Executors.newSingleThreadExecutor().asCoroutineDispather()</span><br><span class="line">    <span class="meta">@Before</span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">setup</span><span class="params">()</span></span>&#123;</span><br><span class="line">        Dispathers.setMain(dispather)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@After</span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">tearDown</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="comment">//重置主调度器</span></span><br><span class="line">        Dispathers.resetMain()</span><br><span class="line">        dispather.close()</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">testSomeUI</span><span class="params">()</span></span> = runBlocking &#123;</span><br><span class="line">        launch(Dispathers.Main)&#123;</span><br><span class="line">            <span class="comment">//...</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="IO调度器Dispathers-IO"><a href="#IO调度器Dispathers-IO" class="headerlink" title="IO调度器Dispathers.IO"></a>IO调度器Dispathers.IO</h2><p>用于执行会阻塞线程的<code>I/O</code>操作（如，读写文件、使用 sharedPreferences、调用阻塞函数等）</p>
+<p><code>Dispathers.IO</code>的线程池默认是<strong>限制64个</strong>。<strong>与<code>Dispathers.Default</code>共享相同的线程池</strong>。两者一起使用的话活跃线程的数量将是它们限制的总和，如：你允许<code>Dispathers.IO</code>最多有64个线程，有8个内核，那么共享池将会有72个活跃线程。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//同时使用Dispathers.IO和Dispathers.Default</span></span><br><span class="line"><span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>: Uint = coroutineScope &#123;</span><br><span class="line">    lanch(Dispathers.Default) &#123;</span><br><span class="line">        println(Thread.currentThread().name)</span><br><span class="line">        withContext(Dispathers.IO) &#123;</span><br><span class="line">            println(Thread.currentThread().name)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>典型使用场景：从库中调用阻塞函数，最佳做法用 <code>withContext(Dispatchers.IO)</code> 来包装它们，使它们成为挂起函数（需要用suspend 标记），它们可以像其他挂起函数一样被正确地处理。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DiscUserRepository</span></span>(<span class="keyword">private</span> <span class="keyword">val</span> discReader: DiscReader)</span><br><span class="line">	: UserRepository &#123;</span><br><span class="line">    <span class="keyword">override</span> <span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">getUser</span><span class="params">()</span></span>: UserData = </span><br><span class="line">        withContext(Dispatchers.IO) &#123;</span><br><span class="line">            UserData(discReader.read(<span class="string">&quot;userName&quot;</span>))</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>唯一的问题是这些可能会阻塞太多线程。调度器限制为64个，一个大规模的阻塞线程的服务可能会让所有其他服务暂停等待。所以，我们需要再次使用 <code>limitedParallelism</code>。</p>
+<h2 id="带有自定义线程池的IO调度器"><a href="#带有自定义线程池的IO调度器" class="headerlink" title="带有自定义线程池的IO调度器"></a>带有自定义线程池的IO调度器</h2><p><code>Dispatcher.IO</code> 为 <code>limitedParallelism</code> 函数定义了一个特殊的行为，它创建一个具有独立线程池的新调度器。更重要的是，这个池不受限于64个，因为我们可以决定将其限制为我们想要的线程数量。</p>
+<p>例如，假设你启动了100个协程，每个协程阻塞一个线程1秒钟，如果在 <code>Dispatcher.IO</code> 上运行这些协程，将会花费2秒的时间。但是如果你在 <code>Dispatcher.IO</code> 上运行，并且调用了 <code>limitedParalleism(100)</code> ，这个程序则只需要1秒。可以同时对这两个调度器的执行时间测时，因为这两个调度器的<strong>限制是互相独立的</strong>：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>: <span class="built_in">Unit</span> = coroutineScope &#123;</span><br><span class="line">    launch &#123;</span><br><span class="line">        printCoroutinesTime(Dispatchers.IO)</span><br><span class="line">        <span class="comment">// Dispatchers.IO took: 2074</span></span><br><span class="line">    &#125;</span><br><span class="line">    launch &#123;</span><br><span class="line">        <span class="keyword">val</span> dispatcher = Dispatchers.IO</span><br><span class="line">            .limitedParallelism(<span class="number">100</span>)</span><br><span class="line">        printCoroutinesTime(dispatcher)</span><br><span class="line">        <span class="comment">// LimitedDispatcher@XXX took: 1082</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">printCoroutinesTime</span><span class="params">(dispatcher: <span class="type">CoroutineDispatcher</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">val</span> test = measureTimeMillis &#123;</span><br><span class="line">        coroutineScope &#123;</span><br><span class="line">            repeat(<span class="number">100</span>) &#123;</span><br><span class="line">                launch(dispatcher) &#123;</span><br><span class="line">                    Thread.sleep(<span class="number">1000</span>)</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    println(<span class="string">&quot;<span class="variable">$dispatcher</span> took: <span class="variable">$test</span>&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从概念上来看，你可以这样想象：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 没有限制线程的池子</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">val</span> pool = ...</span><br><span class="line"></span><br><span class="line">Dispatchers.IO = pool.limitedParallelism(<span class="number">64</span>)</span><br><span class="line">Dispatchers.IO.limitedParallelism(x) = pool.limitedParallelism(x)</span><br></pre></td></tr></table></figure>
+
+<p>对于可能密集阻塞线程的类，最佳的实践是定义它们自己的调度器。这些调度器有它们自己的独立限制。这个限制应该有多大？你需要自己做决定。太多的线程是对资源的低效利用，而等待可用的线程又不利于性能。最重要的是，这个限制将独立于 Dispatcher 和其它 Dispatcher 的限制，正因如此，一个服务不会阻塞另一个服务。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DiscUserRepository</span></span>(</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">val</span> discReader: DiscReader</span><br><span class="line">) : UserRepository &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">val</span> dispatcher = Dispatchers.IO</span><br><span class="line">    .limitParallelism(<span class="number">5</span>)</span><br><span class="line">    <span class="keyword">override</span> <span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">getUser</span><span class="params">()</span></span>: UserData =</span><br><span class="line">        withContext(dispatcher) &#123;</span><br><span class="line">            UserData(discReader.read(<span class="string">&quot;userName&quot;</span>))</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="带有固定线程池的调度器"><a href="#带有固定线程池的调度器" class="headerlink" title="带有固定线程池的调度器"></a>带有固定线程池的调度器</h2><p>一些开发人员喜欢对他们使用的线程池有更多的控制，Java 为此提供了一个强大的Api。例如，我们可以使用 <code>Executors</code> 类创建一个固定的或带缓存的线程池。这些池实现了 <code>ExecutorService</code> 或 <code>Executor</code> 接口，我们可以使用 <code>asCoroutineDispatcher</code> 函数将其转换为调度器。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> NUMBER_OF_THREADS = <span class="number">20</span></span><br><span class="line"><span class="keyword">val</span> dispatcher = Executors</span><br><span class="line">    .newFixedThreadPool(NUMBER_OF_THREADS)</span><br><span class="line">    .asCoroutineDispatcher()</span><br></pre></td></tr></table></figure>
+
+<p>在 kotlinx-coroutines 1.6 版本以前（没有 <code>limitedParallelism</code> 函数），我们经常使用 <code>Executors</code> 类来创建具有独立线程池的调度器。</p>
+<p>这种方法最大的问题是，使用 <code>ExecutorService.asCoroutineDispatcher()</code> 创建的调度器需要使用 <code>close</code> 函数来关闭，而开发人员经常忘记这一点，这将会导致线程泄漏。另一个问题是，当你创建一个固定线程数的线程池时，你很有可能会低效的使用它们。你可能将未使用的线程保持活跃状态，而又不与其它服务共享这些线程。</p>
+<h2 id="带有单个线程的调度器"><a href="#带有单个线程的调度器" class="headerlink" title="带有单个线程的调度器"></a>带有单个线程的调度器</h2><p>对于使用多个线程的调度器，我们需要考虑状态共享的问题。请注意，在下面示例中，有10000个协程给 i 增加1。因此，i 的值应该是10000，但实际上它是一个更小的数字。这是在多个线程上同时修改共享状态（i属性）的结果。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> i = <span class="number">0</span></span><br><span class="line"><span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>: <span class="built_in">Unit</span> = coroutineScope &#123;</span><br><span class="line">    repeat(<span class="number">10_000</span>) &#123;</span><br><span class="line">        launch(Dispatchers.IO) &#123; <span class="comment">// or Default</span></span><br><span class="line">            i++</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    delay(<span class="number">1000</span>)</span><br><span class="line">    println(i) <span class="comment">// ~9930</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>有许多方法可以解决这个问题（大多数方法将在<em>状态的问题</em>一章中描述），其中一个选择是只使用单个线程的调度器。如果我们一次只使用一个线程，则不需要任何其它同步。完成此操作的典型做法是使用 <code>Executor</code> 来创建这样的调度器：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> dispatcher = Executors.newSingleThreadExecutor()</span><br><span class="line">    .asCoroutineDispatcher()</span><br><span class="line"><span class="comment">// 以前的做法:</span></span><br><span class="line"><span class="comment">// val dispatcher = newSingleThreadContext(&quot;My name&quot;)</span></span><br></pre></td></tr></table></figure>
+
+<p>问题是这个调度器持有一个活跃线程，当它不再使用时需要及时关闭它。一种现代的解决方案是使用 <code>Dispatcher.Default</code> 或 <code>Dispatchers.IO</code> （如果我们阻塞线程），并限制最大并行数为 1。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> i = <span class="number">0</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>: <span class="built_in">Unit</span> = coroutineScope &#123;</span><br><span class="line">    <span class="keyword">val</span> dispatcher = Dispatchers.Default</span><br><span class="line">        .limitedParallelism(<span class="number">1</span>)</span><br><span class="line">        </span><br><span class="line">    repeat(<span class="number">10000</span>) &#123;</span><br><span class="line">        launch(dispatcher) &#123;</span><br><span class="line">            i++</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    delay(<span class="number">1000</span>)</span><br><span class="line">    println(i) <span class="comment">// 10000</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样做的最大缺点是，因为我们只有一个线程，假如我们阻塞了它，我们的其他操作将要等待。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>: <span class="built_in">Unit</span> = coroutineScope &#123;</span><br><span class="line">    <span class="keyword">val</span> dispatcher = Dispatchers.Default</span><br><span class="line">        .limitedParallelism(<span class="number">1</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">val</span> job = Job()</span><br><span class="line">    repeat(<span class="number">5</span>) &#123;</span><br><span class="line">        launch(dispatcher + job) &#123;</span><br><span class="line">            Thread.sleep(<span class="number">1000</span>)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    job.complete()</span><br><span class="line">    <span class="keyword">val</span> time = measureTimeMillis &#123; job.join() &#125;</span><br><span class="line">    println(<span class="string">&quot;Took <span class="variable">$time</span>&quot;</span>) <span class="comment">// Took 5006</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="Unconfined-dispatcher"><a href="#Unconfined-dispatcher" class="headerlink" title="Unconfined dispatcher"></a>Unconfined dispatcher</h2><p>我们要讨论的最后一个调度器就是 <code>Dispatchers.Unconfined</code>，这个调度器不同于之前别的调度器，因为<strong>它不会改变任何的线程</strong>。当它启动时，它在启动它的线程上运行，如果它被恢复，它将在恢复它的线程上运行。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>: <span class="built_in">Unit</span> =</span><br><span class="line">    withContext(newSingleThreadContext(<span class="string">&quot;Thread1&quot;</span>)) &#123;</span><br><span class="line">        <span class="keyword">var</span> continuation: Continuation&lt;<span class="built_in">Unit</span>&gt;? = <span class="literal">null</span></span><br><span class="line">        </span><br><span class="line">        launch(newSingleThreadContext(<span class="string">&quot;Thread2&quot;</span>)) &#123;</span><br><span class="line">            delay(<span class="number">1000</span>)</span><br><span class="line">            continuation?.resume(<span class="built_in">Unit</span>)</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        launch(Dispatchers.Unconfined) &#123;</span><br><span class="line">            println(Thread.currentThread().name) <span class="comment">// Thread1</span></span><br><span class="line">            suspendCancellableCoroutine&lt;<span class="built_in">Unit</span>&gt; &#123;</span><br><span class="line">                continuation = it</span><br><span class="line">            &#125;</span><br><span class="line">            println(Thread.currentThread().name) <span class="comment">// Thread2</span></span><br><span class="line">            delay(<span class="number">1000</span>)</span><br><span class="line">            println(Thread.currentThread().name)</span><br><span class="line">            <span class="comment">// kotlinx.coroutines.DefaultExecutor</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>这对于单元测试时有时非常有用。假设你需要测试一个调用 <code>launch</code> 的函数。将它们在时间上同步可能并不容易。一种解决方案是使用 <code>Dispatchers.Unconfined</code> 而不是其他的调度器。如果它在所有作用域中使用，那么所有操作都运行在相同的线程上，我们可以更容易的控制操作的顺序。如果我们使用 kotinx-coroutines-test 中的 <code>runTest</code>，则不需要这个技巧。我们将在本书的后面讨论这个问题。</p>
+<p>从性能的角度来看，这个调度器的成本是最低廉的，因为它甚至不需要切换线程。因此，我们选择它可能不需要关心代码运行在哪个线程上。然而，在实践中，轻率地使用它是不好的。如果我们不小心调用了阻塞操作，而我们又在主线程上，这可能会阻塞整个应用程序。</p>
+<h2 id="Dispatchers-Main-immediate"><a href="#Dispatchers-Main-immediate" class="headerlink" title="Dispatchers.Main.immediate"></a>Dispatchers.Main.immediate</h2><p>调度协程是有成本的，当调用 <code>withContext</code> 时，协程需要挂起，可能要在队列中等待，然后恢复。如果我们已经在这个线程上，调度协程是一个很小但不必要的成本。请看下面函数：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">showUser</span><span class="params">(user: <span class="type">User</span>)</span></span> =</span><br><span class="line">    withContext(Dispatchers.Main) &#123;</span><br><span class="line">        userNameElement.text = user.name</span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果这个函数已经处于主线程上了，我们将会有一个不必要的重新调度的成本。最重要的是， 主线程如果有一个很长的队列，由于 <code>withContext</code>，用户数据可能会有一些延迟才显示（这个协程需要等待其他协程完成它们的工作）。为了防止这种情况，有 <code>Dispatchers.Main.immediate</code>，它只在需要时才进行调度。因此，如果下面函数在主线程上被调用，它不会被重新调度，而是会被立刻执行：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">showUser</span><span class="params">(user: <span class="type">User</span>)</span></span> =</span><br><span class="line">    withContext(Dispatchers.Main.immediate) &#123;</span><br><span class="line">        userNameElement.text = user.name</span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>当这个函数可能已经从主调度器调用时，我们更喜欢将 <code>Dispatchers.Main.immediate</code> 作为 <code>withContext</code> 参数，目前，其他调度器不支持这种立即调度。</p>
+<h2 id="Continuation-拦截器"><a href="#Continuation-拦截器" class="headerlink" title="Continuation 拦截器"></a>Continuation 拦截器</h2><p>调度器的运作原理是基于 <code>continuation</code> 的拦截机制，它内置在 Kotlin 语言中，有一个名为 <code>ContinuationInterceptor</code> 的协程上下文，它的 <code>interceptContinuation</code> 函数用于在协程被挂起时修改一个 <code>continuation</code>。他还有一个 <code>releaseInterceptedContinuation</code> 函数，在 <code>continuation</code> 结束后调用该函数。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ContinuationInterceptor</span> :</span></span><br><span class="line"><span class="class">    <span class="type">CoroutineContext.Element &#123;</span></span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">companion</span> <span class="keyword">object</span> Key :</span><br><span class="line">        CoroutineContext.Key&lt;ContinuationInterceptor&gt;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> <span class="title">interceptContinuation</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">        continuation: <span class="type">Continuation</span>&lt;<span class="type">T</span>&gt;</span></span></span><br><span class="line"><span class="params"><span class="function">    )</span></span>: Continuation&lt;T&gt;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">releaseInterceptedContinuation</span><span class="params">(  </span></span></span><br><span class="line"><span class="params"><span class="function">        continuation: <span class="type">Continuation</span>&lt;*&gt;</span></span></span><br><span class="line"><span class="params"><span class="function">    )</span></span> &#123;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这种封装了 continuation 的能力提供了很多控制。 <code>Dispatchers</code> 使用 <code>interceptContinuation</code> 用 <code>DispatchedContinuation</code> 来包装一个 <code>continuation</code>， <code>DispatchedContinuation</code> 运行在一个特定的线程池上。这就是调度器的工作方式。</p>
+<p>这里的问题是许多测试库也使用相同的上下文，例如 kotlinx-coroutines-test 中的 <code>runTest</code>。上下文中的每个元素都必须要有唯一的键。这就是为什么我们有时会注入调度器，用测试调度器在单元测试中去替换它们。我们将在专门讨论协程测试的章节中深入这个主题。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DiscUserRepository</span></span>(</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">val</span> discReader: DiscReader,</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">val</span> dispatcher: CoroutineContext = Dispatchers.IO,</span><br><span class="line">) : UserRepository &#123;</span><br><span class="line">    <span class="keyword">override</span> <span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">getUser</span><span class="params">()</span></span>: UserData =</span><br><span class="line">        withContext(dispatcher) &#123;</span><br><span class="line">            UserData(discReader.read(<span class="string">&quot;userName&quot;</span>))</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">UserReaderTests</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> `some test`<span class="params">()</span></span> = runTest &#123;</span><br><span class="line">        <span class="keyword">val</span> discReader = FakeDiscReader()</span><br><span class="line">        <span class="keyword">val</span> repo = DiscUserRepository(</span><br><span class="line">            discReader,</span><br><span class="line">            <span class="comment">// 一种协程测试实践</span></span><br><span class="line">            <span class="keyword">this</span>.coroutineContext[ContinuationInterceptor]!!</span><br><span class="line">        )</span><br><span class="line">        <span class="comment">//...</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="调度器对不同任务的性能"><a href="#调度器对不同任务的性能" class="headerlink" title="调度器对不同任务的性能"></a>调度器对不同任务的性能</h2><p>为了展示不同的调度器对不同任务的执行情况，我做了一些基准测试。测试工作是对同一个任务运行100个独立的协程。不同的列代表不同任务：挂起一秒、阻塞一秒、cpu密集型操作和内存密集型操作（其中大部分时间花在访问、分配和释放内存上）。不同的行表示用于这些协程的不同调度器。下表显示了平均执行时间（以毫秒为单位）：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>挂起</th>
+<th>阻塞</th>
+<th>CPU密集型</th>
+<th>内存密集型</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>单线程</td>
+<td>1002</td>
+<td>100003</td>
+<td>39103</td>
+<td>94358</td>
+</tr>
+<tr>
+<td>Default(8线程)</td>
+<td>1002</td>
+<td>13003</td>
+<td>8473</td>
+<td>21461</td>
+</tr>
+<tr>
+<td>IO(64线程)</td>
+<td>1002</td>
+<td>2003</td>
+<td>9893</td>
+<td>20776</td>
+</tr>
+<tr>
+<td>100个线程</td>
+<td>1002</td>
+<td>1003</td>
+<td>16379</td>
+<td>21004</td>
+</tr>
+</tbody></table>
+<p>你可以观察到一些重要的事情：</p>
+<ol>
+<li>当我们只是挂起时，使用多少线程并不重要</li>
+<li>当我们阻塞时，我们使用的线程越多，完成所有这些协程的速度就越快</li>
+<li>对于 CPU密集型操作， <code>Dispatcher.Default</code> 是最佳的选择</li>
+<li>如果我们处理 IO 密集型操作，更多的线程会提供一些改进（但不显著）</li>
+</ol>
+<p>下面是被测试的函数样子：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">cpu</span><span class="params">(order: <span class="type">Order</span>)</span></span>: Coffee &#123;</span><br><span class="line">    <span class="keyword">var</span> i = <span class="built_in">Int</span>.MAX_VALUE</span><br><span class="line">    <span class="keyword">while</span> (i &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        i -= <span class="keyword">if</span> (i % <span class="number">2</span> == <span class="number">0</span>) <span class="number">1</span> <span class="keyword">else</span> <span class="number">2</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> Coffee(order.copy(customer = order.customer + i))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">memory</span><span class="params">(order: <span class="type">Order</span>)</span></span>: Coffee &#123;</span><br><span class="line">    <span class="keyword">val</span> list = List(<span class="number">1_000</span>) &#123; it &#125;</span><br><span class="line">    <span class="keyword">val</span> list2 = List(<span class="number">1_000</span>) &#123; list &#125;</span><br><span class="line">    <span class="keyword">val</span> list3 = List(<span class="number">1_000</span>) &#123; list2 &#125;</span><br><span class="line">    <span class="keyword">return</span> Coffee(</span><br><span class="line">        order.copy(</span><br><span class="line">            customer = order.customer + list3.hashCode()</span><br><span class="line">        )</span><br><span class="line">    )</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">blocking</span><span class="params">(order: <span class="type">Order</span>)</span></span>: Coffee &#123;</span><br><span class="line">    Thread.sleep(<span class="number">1000</span>)</span><br><span class="line">    <span class="keyword">return</span> Coffee(order)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">suspending</span><span class="params">(order: <span class="type">Order</span>)</span></span>: Coffee &#123;</span><br><span class="line">    delay(<span class="number">1000</span>)</span><br><span class="line">    <span class="keyword">return</span> Coffee(order)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>Dispatchers 决定协程在哪个线程或线程池上运行（启动和恢复）。最重要的选项有：</p>
+<ul>
+<li><code>Dispatchers.Defualt</code>：被用来执行 CPU 密集型操作</li>
+<li><code>Dispatchers.Main</code>：被我们用来访问主线程，例如在 Android、Swing 或者 JavaFX 上</li>
+<li><code>Dispatchers.Main.immediate</code>：它和 <code>Dispatchers.Main</code> 运行在同一个线程上，但如果没有必要，它不会重新调度</li>
+<li><code>Dispatchers.IO</code>：被用来执行一些阻塞线程的操作<br>调用了 <code>limitParallelism</code>的 <code>Dispatchers.IO</code> 或者带有自定义线程池的 </li>
+<li><code>Dispatcher.IO</code>：我们用来处理大量的阻塞调用<br>调用了 <code>limitParallelism</code> 并设置为1的 <code>Dispatchers.Default</code> 或 <code>Dispatchers.IO</code>，或具有单个线程的自定义调度器：<strong>被用来修改共享状态</strong></li>
+<li><code>Dispatchers.Unconfined</code>：当我们不关心协程在哪个线程上被挂起时使用</li>
+</ul>
+<!-- flag of hidden posts -->
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div></div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>Donate</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.jpg" alt=" WeChat Pay"/>
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/private/" rel="tag"># private</a>
+          
+            <a href="/tags/Kotlin%E7%9F%A5%E8%AF%86%E7%82%B9/" rel="tag"># Kotlin知识点</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">71</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">31</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@189.cn" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/shenbh" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://gitee.com/shen_bh" target="_blank" title="Gitee">
+                      
+                        <i class="fa fa-fw fa-git"></i>Gitee</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%B0%83%E5%BA%A6%E5%99%A8Dispathers"><span class="nav-text">调度器Dispathers</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BB%E8%B0%83%E5%BA%A6%E5%99%A8Dispathers-Main"><span class="nav-text">主调度器Dispathers.Main</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IO%E8%B0%83%E5%BA%A6%E5%99%A8Dispathers-IO"><span class="nav-text">IO调度器Dispathers.IO</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%A6%E6%9C%89%E8%87%AA%E5%AE%9A%E4%B9%89%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9A%84IO%E8%B0%83%E5%BA%A6%E5%99%A8"><span class="nav-text">带有自定义线程池的IO调度器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%A6%E6%9C%89%E5%9B%BA%E5%AE%9A%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9A%84%E8%B0%83%E5%BA%A6%E5%99%A8"><span class="nav-text">带有固定线程池的调度器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%A6%E6%9C%89%E5%8D%95%E4%B8%AA%E7%BA%BF%E7%A8%8B%E7%9A%84%E8%B0%83%E5%BA%A6%E5%99%A8"><span class="nav-text">带有单个线程的调度器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Unconfined-dispatcher"><span class="nav-text">Unconfined dispatcher</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Dispatchers-Main-immediate"><span class="nav-text">Dispatchers.Main.immediate</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Continuation-%E6%8B%A6%E6%88%AA%E5%99%A8"><span class="nav-text">Continuation 拦截器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B0%83%E5%BA%A6%E5%99%A8%E5%AF%B9%E4%B8%8D%E5%90%8C%E4%BB%BB%E5%8A%A1%E7%9A%84%E6%80%A7%E8%83%BD"><span class="nav-text">调度器对不同任务的性能</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

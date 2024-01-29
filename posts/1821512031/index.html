@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="后端知识点," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Spring基本原理： 通过反射解析类及其类的各种信息，包括构造器、方法及其参数、属性。然后将其封装成bean定义信息类、constructor信息类、method信息类、property信息类，最终放到一个map里，也就是所谓的container，池等等，其实就是个map。 当写好配置文件，启动项目后，框架会先按照配置文件找到那个要scan的包，然后解析包里面的所有类，找到所有含有@bean、@">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring">
+<meta property="og:url" content="http://shenbh.github.io/posts/1821512031/index.html">
+<meta property="og:site_name" content="AB">
+<meta property="og:description" content="Spring基本原理： 通过反射解析类及其类的各种信息，包括构造器、方法及其参数、属性。然后将其封装成bean定义信息类、constructor信息类、method信息类、property信息类，最终放到一个map里，也就是所谓的container，池等等，其实就是个map。 当写好配置文件，启动项目后，框架会先按照配置文件找到那个要scan的包，然后解析包里面的所有类，找到所有含有@bean、@">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://shenbh.github.io/posts/1821512031/Spring%E6%A1%86%E6%9E%B6%E7%BB%93%E6%9E%84.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/1821512031/IoC%E7%9A%84%E8%A7%92%E8%89%B2.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/1821512031/%E4%BD%BF%E7%94%A8IoC%E5%89%8D%E5%90%8E%E7%9A%84%E5%B7%AE%E5%88%AB.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/1821512031/Spring%E7%99%BB%E5%BD%95%E5%AE%9E%E4%BE%8B%E4%BA%A4%E4%BA%92%E6%B5%81%E7%A8%8B%E5%9B%BE.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/1821512031/SpringIoc%E5%AE%B9%E5%99%A8%E7%9A%84ApplicationContext%E7%B1%BB%E5%9B%BE.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/1821512031/SpringIoc%E5%AE%B9%E5%99%A8%E7%9A%84BeanFactory%E7%BB%93%E6%9E%84.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/1821512031/OSI%E5%92%8CTCP-IP%E5%8F%82%E8%80%83%E6%A8%A1%E5%9E%8B.jpg">
+<meta property="article:published_time" content="2020-07-21T03:33:43.000Z">
+<meta property="article:modified_time" content="2022-11-02T07:22:55.925Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="后端知识点">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/1821512031/Spring%E6%A1%86%E6%9E%B6%E7%BB%93%E6%9E%84.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/1821512031/"/>
+
+
+
+
+
+  <title>Spring | AB</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">AB</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Just do IT Now.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/1821512031/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="AB">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Spring</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-07-21T11:33:43+08:00">
+                2020-07-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%90%8E%E7%AB%AF/" itemprop="url" rel="index">
+                    <span itemprop="name">后端</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>Spring基本原理：</p>
+<p>通过反射解析类及其类的各种信息，包括构造器、方法及其参数、属性。然后将其封装成bean定义信息类、constructor信息类、method信息类、property信息类，最终放到一个map里，也就是所谓的container，池等等，其实就是个map。</p>
+<p>当写好配置文件，启动项目后，框架会先按照配置文件找到那个要scan的包，然后解析包里面的所有类，找到所有含有@bean、@service等注解的类，利用反射解析它们，包括解析构造器、方法、属性等等，然后放到一个map里。</p>
+<p>当你需要一个bean的时候，框架就会从container找是不是有这个类的定义，若找到就通过构造器new出来（这就是<strong>控制反转</strong>，框架会帮你new出来）。再在这个类找是不是又要注入的属性或者方法，比如标@autowired的属性，若有则还到container里找到对应的解析类，new出对象，并通过之前解析出来的信息类找到setter方法，然后用该方法注入对象（这就是<strong>依赖注入</strong>）。如果其中有一个类在container里没找到，则抛出异常，比如常见的spring无法找到该类定义、无法wire的异常。</p>
+<p>嵌套bean则用到了<strong>递归</strong>，container会放到servletcontext里面，每次request从servletcontext找到这个container即可，不用多次解析类定义。如果bean的scope是singleton，则会重用这个bean不再重新创建，将这个bean放到一个map里，每次用都先从这个map里面找。如果scope是session，则该bean会放到session里面。</p>
+<p>Spring容器是个Map映射</p>
+<p>IOC底层是反射机制</p>
+<p>AOP底层是动态代理</p>
+<p>SpringMVC是对Servlet进行的封装</p>
+<h1 id="Spring源码地址"><a href="#Spring源码地址" class="headerlink" title="Spring源码地址"></a>Spring源码地址</h1><p><a target="_blank" rel="noopener" href="https://github.com/spring-projects/spring-framework.git">Spring-framework源码地址</a></p>
+<p>参考：</p>
+<p>pdf：《Spring3.x企业应用开发实战》-陈雄华 林开雄</p>
+<p>微信读书：《Spring3.0就是这么简单》-陈雄华 林开雄</p>
+<p>pdf：《Spring揭秘》-王福强</p>
+<h1 id="认识Spring"><a href="#认识Spring" class="headerlink" title="认识Spring"></a>认识Spring</h1><p>Spring是分层的Java SE&#x2F;EE应用一站式的轻量级开源框架，以反转控制（Inverse of Control，IoC）和面向切面编程（Aspect Oriented Programming，AOP）为内核，提供了展现层Spring MVC、持久层Spring JDBC以及业务层事务管理等众多的企业级应用技术。</p>
+<ul>
+<li>方便解耦，简化开发</li>
+</ul>
+<p>通过Spring提供的Ioc容器，将对象之间的依赖关系交由Spring进行控制。</p>
+<ul>
+<li>AOP编程的支持</li>
+</ul>
+<p>通过Spring提供的AOP功能，用户可以进行面向切面编程</p>
+<ul>
+<li>声明式事务的支持</li>
+<li>方便程序的测试</li>
+<li>方便继承各种优秀的框架</li>
+<li>降低Jave EE API的适用难度</li>
+</ul>
+<p>为如JDBC、JavaMail、远程调用等提供了一个薄薄的封装层，简化调用</p>
+<h2 id="Spring体系结构"><a href="#Spring体系结构" class="headerlink" title="Spring体系结构"></a>Spring体系结构</h2><p>Spring框架由1400多个类组成，整个框架按其所属功能可以划分5个主要模块</p>
+<p><img src="/posts/1821512031/Spring%E6%A1%86%E6%9E%B6%E7%BB%93%E6%9E%84.jpg" alt="Spring框架结构.png"></p>
+<ul>
+<li><p>IoC</p>
+<p>Spring核心模块实现了IoC的功能，用配置的方式进行类与类之间依赖关系的描述。<strong>BeanFactory</strong>接口是Spring框架的核心接口，其实现了许多核心功能。</p>
+<p>Context模块构建于核心模块之上，扩展了BeanFactory的功能，添加了i18n国际化、Bean生命周期控制、框架事件体系、资源加载透明化等多项功能。还提供如邮件服务、任务调度、JNDI定位、EJB集成、远程访问等。<strong>ApplicationContext</strong>是Context模块的核心接口。</p>
+<p>表达式语言模块时统一表达式语言（unified EL）的一个扩展，用于查询和管理运行期的对象，支持设置和获取对象属性，调用对象方法，操作数组、集合等。还提供了逻辑表达式运算、变量定义等功能。使用它就可以方便地通过表达式和Spring IoC容器进行交互。</p>
+</li>
+</ul>
+<p>IoC包括DI（Dependence Injection依赖注入）和DL（Dependence Lookup依赖查找）</p>
+<p>IoC有两阶段：收集和注册（即写配置文件等）；分析和组装</p>
+<blockquote>
+<p>三种依赖注入方式：</p>
+<ol>
+<li>构造方法注入（constructor injection）</li>
+<li>setter方法注入（setter injection）</li>
+<li>接口注入（interface injection）</li>
+</ol>
+</blockquote>
+<blockquote>
+<p>其中分析组装的依据：</p>
+<ul>
+<li>用xml配置来描述bean与bean之间的关系；</li>
+<li>用注解方式（如@Autowired和@Inject）；</li>
+</ul>
+</blockquote>
+<p><img src="/posts/1821512031/IoC%E7%9A%84%E8%A7%92%E8%89%B2.jpg" alt="IoC的角色.png"></p>
+<p>被注入对象和依赖对象由Ioc Service Provider统一管理。Ioc容器充当Ioc Service Provider角色。被注入对象需要什么直接跟Ioc Service Provider招呼一声就行。</p>
+<p><img src="/posts/1821512031/%E4%BD%BF%E7%94%A8IoC%E5%89%8D%E5%90%8E%E7%9A%84%E5%B7%AE%E5%88%AB.jpg" alt="使用IoC前后的差别.png"></p>
+<ul>
+<li>AOP</li>
+</ul>
+<p>Java 5.0引入<code>java.lang.instrument</code>，允许在JVM启动时启用一个代理类，通过该代理类在运行期修改类地字节码，改变一个类的功能，实现AOP的功能。</p>
+<ul>
+<li>数据访问和集成</li>
+</ul>
+<p>任何应用程序的核心问题都是对数据的访问和操作。数据又多种表现形式，如数据表、XML、消息等。其中数据表的访问可以通过JDBC、Hibernate或iBatis等。</p>
+<p>Spring站在DAO的抽象层面，建立了一套面向DAO层统一的异常体系，同时将各种访问数据的检查型异常转换为非检查型异常，为整合各种持久层框架提供基础。</p>
+<ul>
+<li>Web及远程访问</li>
+</ul>
+<p>Spring提供了一个完整的类似于Struts的MVC框架，称为Spring MVC。</p>
+<h1 id="实例功能概述"><a href="#实例功能概述" class="headerlink" title="实例功能概述"></a>实例功能概述</h1><p>以登录模块为例</p>
+<h2 id="功能简介"><a href="#功能简介" class="headerlink" title="功能简介"></a>功能简介</h2><p><img src="/posts/1821512031/Spring%E7%99%BB%E5%BD%95%E5%AE%9E%E4%BE%8B%E4%BA%A4%E4%BA%92%E6%B5%81%E7%A8%8B%E5%9B%BE.jpg" alt="Spring登录实例交互流程图.png"></p>
+<ol>
+<li>首先用户访问<code>login.jsp</code>，返回带用户名&#x2F;密码表单的登录页面。</li>
+<li>用户在登陆页面输入用户名&#x2F;密码，提交表单到服务器，Spring根据配置（如又一城的<code>tile.xml</code>）调用<code>LoginController</code>控制器来响应登录请求。</li>
+<li><code>LoginController</code>调用<code>UserService#hashMatchUser()</code>方法，根据用户名和密码查询是否存在匹配的用户，<code>UserService</code>内部通过调用持久层<code>UserDao</code>完成具体的数据库访问操作。</li>
+<li>如果不存在匹配的用户，重定向<code>login.jsp</code>页面，并报告错误，否则到下一步。</li>
+<li><code>LoginController</code>调用<code>UserService#findUserByUserName()</code>方法，加载匹配的<code>User</code>对象并更新用户最近一次的登录时间和登录IP地址。</li>
+<li><code>LoginController</code>调用<code>UserService#loginSuccess()</code>方法，进行登陆成功的业务处理，创建一个<code>LoginLog</code>对象，并利用<code>LoginLogDao</code>将其插入数据库中。</li>
+<li>重定向到欢饮页面<code>main.jsp</code>，欢迎页面产生响应返回给用户。</li>
+</ol>
+<h2 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h2><p><strong>数据库MySQL5.x、IntelliJ IDEA、Maven、</strong></p>
+<blockquote>
+<p>MySQL 4.1.0以前不支持事务，MySQL 4.1.0对事务提供有限的支持</p>
+</blockquote>
+<ol>
+<li>创建库表</li>
+<li>初始化一条数据</li>
+<li>创建项目：设置pom文件、分包dao、domain、service、web（若项目大则把dao、service分到功能内）、项目大的情况下对配置文件也要按模块划分</li>
+</ol>
+<ul>
+<li><p>领域对象（domain）（也叫实体类）：一般要 <code>implements Serializable</code>，以便可以序列号</p>
+</li>
+<li><p>传统JDBC API太底层，执行一条最简单的查询操作都要：获取连接–创建Statement–执行数据操作–获取结果–关闭Statement–关闭结果集–关闭连接</p>
+<p>Spring JDBC对传统JDBC API进行了薄层的封装，用户可不必写那些样板式的代码，只写必不可少的代码通过模板类即可完成大部分数据访问的操作。</p>
+</li>
+</ul>
+<p><code>applicationContext.xml</code></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line"><span class="tag">&lt;<span class="name">beans</span> <span class="attr">...</span>&gt;</span></span><br><span class="line">	<span class="comment">&lt;!--❶扫描类包，将标注Spring注解的类自动转化Bean，同时完成Bean的注入--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">context:component-scan</span> <span class="attr">base-package</span>=<span class="string">&quot;com.smart.dao&quot;</span>/&gt;</span></span><br><span class="line">    <span class="comment">&lt;!--❷定义一个使用DBCP实现的数据源--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">&quot;dataSource&quot;</span> <span class="attr">class</span>=<span class="string">&quot;org.apache.commons.dbcp.BasicDataSource&quot;</span></span></span><br><span class="line"><span class="tag">          <span class="attr">destroy-method</span>=<span class="string">&quot;close&quot;</span></span></span><br><span class="line"><span class="tag">          <span class="attr">p:driverClassName</span>=<span class="string">&quot;com.mysql.jdbc.Driver&quot;</span></span></span><br><span class="line"><span class="tag">          <span class="attr">p:url</span>=<span class="string">&quot;jdbc:mysql://localhost:3309/sampledb&quot;</span></span></span><br><span class="line"><span class="tag">          <span class="attr">p:username</span>=<span class="string">&quot;root&quot;</span></span></span><br><span class="line"><span class="tag">          <span class="attr">p:password</span>=<span class="string">&quot;1234&quot;</span>/&gt;</span></span><br><span class="line">    <span class="comment">&lt;!--❸定义JDBC模板Bean--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">&quot;jdbcTemplate&quot;</span> <span class="attr">class</span>=<span class="string">&quot;org.springframework.jdbc.core.JdbcTemplate&quot;</span></span></span><br><span class="line"><span class="tag">          <span class="attr">p:dataSource-ref</span>=<span class="string">&quot;dataSource&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">beans</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>在❶处，我们使用Spring的<code>&lt;context:component-scan&gt;</code>扫描指定类包下的所有类，这样在类中定义的Spring注解（如@Repository、@Autowired等）才能产生作用。</p>
+<p>在❷处，我们使用Jakarta的DBCP开源数据源实现方案定义了一个数据源，数据库驱动器类为com.mysql.jdbc.Driver，由于我们设置的MySQL数据库的服务端口为3309，而非默认的3306，所以数据库URL中显式指定了3309端口的信息。</p>
+<p>在❸处配置了JdbcTemplate Bean，将❷处声明的dataSource注入JdbcTemplate中，而这个JdbcTemplate Bean将通过@Autowired自动注入LoginLog和UserDao的Bean中，可见Spring可以很好地将注解配置和XML配置统一起来。</p>
+</blockquote>
+<h1 id="Spring-IoC"><a href="#Spring-IoC" class="headerlink" title="Spring IoC"></a><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/20cea9170110">Spring IoC</a></h1><p>IoC：Inverse of Control（控制反转）</p>
+<ul>
+<li><p>读作“反转控制”，更好理解，不是什么技术，是一种<strong>设计思想</strong>。将原本在程序中手动<strong>创建对象</strong>的控制权，交由Spring框架来管理。</p>
+</li>
+<li><p>正控：若要使用某个对象，需要自己去负责对象的创建</p>
+</li>
+<li><p>反控：若要使用某个对象，只需要从Spring容器中获取需要使用的对象，不关心对象的创建过程，也就是把创建对象的控制权反转给了Spring框架</p>
+</li>
+<li><p>好莱坞法则：Don’t call me, I’ll call you</p>
+</li>
+</ul>
+<h2 id="Spring-IoC阐述"><a href="#Spring-IoC阐述" class="headerlink" title="Spring IoC阐述"></a>Spring IoC阐述</h2><p>控制反转是一种通过描述（在Java中可以是XML或者注解）并购第三方（Spring）去产生或获取特定对象的方式。</p>
+<ul>
+<li><p>好处:</p>
+<p>降低对象之间的耦合</p>
+<p>我们不需要理解一个类的具体实现，只需要知道它有什么用就好了（直接向IoC容器拿）</p>
+</li>
+</ul>
+<p>主动创建的模式种，责任归于开发者，而在被动的模式下，责任归于IoC容器，基于这样的被动形式，我们就说对象被控制反转了。（也可以说是反转了控制）</p>
+<h2 id="Spring-IoC容器的设计"><a href="#Spring-IoC容器的设计" class="headerlink" title="Spring IoC容器的设计"></a>Spring IoC容器的设计</h2><p>Spring IoC容器的设计主要是基于以下两个接口：</p>
+<ul>
+<li>BeanFactory</li>
+<li>ApplicationContext</li>
+</ul>
+<p><img src="/posts/1821512031/SpringIoc%E5%AE%B9%E5%99%A8%E7%9A%84ApplicationContext%E7%B1%BB%E5%9B%BE.jpg" alt="SpringIoc容器的ApplicationContext类图.png"></p>
+<h3 id="BanFactory"><a href="#BanFactory" class="headerlink" title="BanFactory"></a>BanFactory</h3><p><img src="/posts/1821512031/SpringIoc%E5%AE%B9%E5%99%A8%E7%9A%84BeanFactory%E7%BB%93%E6%9E%84.jpg" alt="SpringIoc容器的BeanFactory结构.png"></p>
+<ul>
+<li>getBean</li>
+</ul>
+<p>对应了多个方法来获取配置给Spring IoC容器的Bean</p>
+<ol>
+<li>按类型拿bean</li>
+</ol>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">bean</span> <span class="operator">=</span> (Bean) factory.getBean()<span class="comment">;</span></span><br></pre></td></tr></table></figure>
+
+<p>要求在Spring种只配置了一个这种类型的实例，否则会有不知道获取哪一个而报错。</p>
+<ol start="2">
+<li>按照bean的名字拿bean</li>
+</ol>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">bean</span> <span class="operator">=</span> (Bean) factory.getBean(<span class="string">&quot;beanName&quot;</span>)<span class="comment">;</span></span><br></pre></td></tr></table></figure>
+
+<p>这种不安全，IDE不会检查其安全性（关联性）</p>
+<ol start="3">
+<li>按照名字和类型拿bean：（推荐）</li>
+</ol>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">bean</span> = (Bean) factory.getBean(<span class="string">&quot;beanName&quot;</span>, Bean.class)<span class="comment">;</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>isSingleton 判断是否单例（默认为true）</p>
+</li>
+<li><p>isPrototype若为真，则你从容器中获取Bean，容器会为你生成一个新的实例（默认为false）</p>
+</li>
+<li><p>关于type的匹配，这是个按Java类型匹配的方式</p>
+</li>
+<li><p>getAliases获取别名</p>
+</li>
+</ul>
+<h1 id="《看透Spring-MVC源代码分析与实践》"><a href="#《看透Spring-MVC源代码分析与实践》" class="headerlink" title="《看透Spring MVC源代码分析与实践》"></a>《看透Spring MVC源代码分析与实践》</h1><h2 id="基础结构"><a href="#基础结构" class="headerlink" title="基础结构"></a>基础结构</h2><ul>
+<li><p>BS结构网络传输的分解方式有两种：OSI参考模型、TCP&#x2F;IP参考模型</p>
+<p><img src="/posts/1821512031/OSI%E5%92%8CTCP-IP%E5%8F%82%E8%80%83%E6%A8%A1%E5%9E%8B.jpg" alt="OSI和TCP-IP参考模型.jpg"></p>
+</li>
+<li><p>网络传输的规矩<strong>不是强制的</strong>，所以不叫制度也不叫标准而叫<strong>协议</strong></p>
+<p>TCP&#x2F;IP参考模型可看作是种协议</p>
+<p>BS结构中TCP&#x2F;IP模型中的网络接入层没有相应协议，网际互联层是IP协议，传输层是TCP协议，应用层是HTTP协议</p>
+<p>BS中还用到DNS协议。在HTTP上层还有相关的规范，如Java Web开发中使用的Servlet标准</p>
+</li>
+<li><p>数据传输的本质就是按照<strong>晶振震动周期</strong>或者其整数倍来传输代表0&#x2F;1的高低电平，传输过程中最核心的就是各种传输协议，对直接连接的硬件来说就是各种<strong>总线协议</strong>，对网络传输来说就是<strong>网络协议</strong>。</p>
+</li>
+<li><p>BS模型中解决问题的核心主要就是解决<strong>海量数据操作</strong>问题和<strong>高并发</strong>问题，网站复杂的架构就是从这俩问题演变出来的。</p>
+</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div></div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>Donate</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.jpg" alt=" WeChat Pay"/>
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/%E5%90%8E%E7%AB%AF%E7%9F%A5%E8%AF%86%E7%82%B9/" rel="tag"># 后端知识点</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/55855980/" rel="next" title="UI-Canvas">
+                <i class="fa fa-chevron-left"></i> UI-Canvas
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/339737483/" rel="prev" title="Python思维导图">
+                Python思维导图 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">71</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">31</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@189.cn" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/shenbh" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://gitee.com/shen_bh" target="_blank" title="Gitee">
+                      
+                        <i class="fa fa-fw fa-git"></i>Gitee</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Spring%E6%BA%90%E7%A0%81%E5%9C%B0%E5%9D%80"><span class="nav-text">Spring源码地址</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AE%A4%E8%AF%86Spring"><span class="nav-text">认识Spring</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Spring%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84"><span class="nav-text">Spring体系结构</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%9E%E4%BE%8B%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0"><span class="nav-text">实例功能概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%9F%E8%83%BD%E7%AE%80%E4%BB%8B"><span class="nav-text">功能简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%8E%AF%E5%A2%83%E5%87%86%E5%A4%87"><span class="nav-text">环境准备</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Spring-IoC"><span class="nav-text">Spring IoC</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Spring-IoC%E9%98%90%E8%BF%B0"><span class="nav-text">Spring IoC阐述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Spring-IoC%E5%AE%B9%E5%99%A8%E7%9A%84%E8%AE%BE%E8%AE%A1"><span class="nav-text">Spring IoC容器的设计</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#BanFactory"><span class="nav-text">BanFactory</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E3%80%8A%E7%9C%8B%E9%80%8FSpring-MVC%E6%BA%90%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90%E4%B8%8E%E5%AE%9E%E8%B7%B5%E3%80%8B"><span class="nav-text">《看透Spring MVC源代码分析与实践》</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E7%BB%93%E6%9E%84"><span class="nav-text">基础结构</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

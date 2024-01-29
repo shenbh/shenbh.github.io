@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="private,hencoder," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="自定义布局布局过程 确定每个 View的位置和尺⼨ 作用：为绘制和触摸范围做⽀持 绘制：知道往哪⾥绘制 触摸反馈：知道用户点的是哪⾥    流程 从整体看： 测量流程：从根 View递归调用每⼀级子 View的 measure() ⽅法，对它们进⾏测量 布局流程：从根 View递归调用每⼀级子 View的 layout() ⽅法，把测量过程得出的子 View 的位置和尺⼨传给子 View，子 Vi">
+<meta property="og:type" content="article">
+<meta property="og:title" content="UI-自定义布局">
+<meta property="og:url" content="http://shenbh.github.io/posts/ebd2a6a1/index.html">
+<meta property="og:site_name" content="AB">
+<meta property="og:description" content="自定义布局布局过程 确定每个 View的位置和尺⼨ 作用：为绘制和触摸范围做⽀持 绘制：知道往哪⾥绘制 触摸反馈：知道用户点的是哪⾥    流程 从整体看： 测量流程：从根 View递归调用每⼀级子 View的 measure() ⽅法，对它们进⾏测量 布局流程：从根 View递归调用每⼀级子 View的 layout() ⽅法，把测量过程得出的子 View 的位置和尺⼨传给子 View，子 Vi">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-07-09T11:02:12.000Z">
+<meta property="article:modified_time" content="2023-11-14T03:03:56.103Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="private">
+<meta property="article:tag" content="hencoder">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/ebd2a6a1/"/>
+
+
+
+
+
+  <title>UI-自定义布局 | AB</title><meta name="robots" content="noindex">
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">AB</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Just do IT Now.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/ebd2a6a1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="AB">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">UI-自定义布局</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-07-09T19:02:12+08:00">
+                2021-07-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="自定义布局"><a href="#自定义布局" class="headerlink" title="自定义布局"></a>自定义布局</h1><h2 id="布局过程"><a href="#布局过程" class="headerlink" title="布局过程"></a>布局过程</h2><ul>
+<li>确定每个 <code>View</code>的位置和尺⼨</li>
+<li>作用：为绘制和触摸范围做⽀持<ul>
+<li>绘制：知道往哪⾥绘制</li>
+<li>触摸反馈：知道用户点的是哪⾥</li>
+</ul>
+</li>
+</ul>
+<h2 id="流程"><a href="#流程" class="headerlink" title="流程"></a>流程</h2><ul>
+<li>从整体看：<ul>
+<li>测量流程：从根 <code>View</code>递归调用每⼀级子 <code>View</code>的 <code>measure()</code> ⽅法，对它们进⾏测量</li>
+<li>布局流程：从根 <code>View</code>递归调用每⼀级子 <code>View</code>的 <code>layout()</code> ⽅法，把测量过程得出的子 <code>View</code> 的位置和尺⼨传给子 <code>View</code>，子 <code>View</code>保存</li>
+<li>为什么要分两个流程？</li>
+</ul>
+</li>
+<li>从个体看，对于每个 <code>View</code>：<ol>
+<li>运⾏前，开发者在 <code>xml</code> ⽂件⾥写⼊对 <code>View</code>的布局要求 <code>layout_xxx</code></li>
+<li>⽗ <code>View</code>在自己的 <code>onMeasure()</code> 中，根据开发者在 <code>xml</code> 中写的对子 <code>View</code>的要求，和自己的可用空间，得出对子 <code>View</code>的具体尺⼨要求</li>
+<li>子 <code>View</code>在自己的 <code>onMeasure()</code> 中，根据自己的特性算出自己的期望尺⼨如果是 <code>ViewGroup</code>，还会在这⾥调用每个子 <code>View</code>的 <code>measure()</code> 进⾏测量</li>
+<li>⽗ <code>View</code>在子 <code>View</code>计算出期望尺⼨后，得出子 <code>View</code>的实际尺⼨和位置</li>
+<li>子 <code>View</code>在自己的 <code>layout()</code> ⽅法中，将⽗ <code>View</code>传进来的自己的实际尺⼨和位置保存如果是 ViewGroup，还会在 onLayout() ⾥调用每个字 <code>View</code>的 layout() 把它们的尺⼨位置传给它们</li>
+</ol>
+</li>
+</ul>
+<h2 id="具体开发"><a href="#具体开发" class="headerlink" title="具体开发"></a>具体开发</h2><ul>
+<li><p>继承已有的 <code>View</code>，简单改写它们的尺⼨：重写 <code>onMeasure()</code>：<code>SquareImageView</code></p>
+<ol>
+<li><p>重写 <code>onMeasure()</code></p>
+</li>
+<li><p>用 <code>getMeasuredWidth()</code> 和 <code>getMeasured</code>size<code>()</code> 获取到测量出的尺⼨</p>
+</li>
+<li><p>计算出最终要的尺⼨</p>
+</li>
+<li><p>用 <code>setMeasuredDimension(width, height)</code> 把结果保存</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onMeasure</span><span class="params">(<span class="type">int</span> widthMeasureSpec, <span class="type">int</span> heightMeasureSpec)</span> &#123;</span><br><span class="line">    <span class="built_in">super</span>.onMeasure(widthMeasureSpec, heightMeasureSpec);</span><br><span class="line">    <span class="type">int</span> <span class="variable">width</span> <span class="operator">=</span> getMeasuredWidth();</span><br><span class="line">    <span class="type">int</span> <span class="variable">height</span> <span class="operator">=</span> getMeasuredHeight();</span><br><span class="line">    <span class="type">int</span> `size` = Math.min(width, height);</span><br><span class="line">    setMeasuredDimension(`size`, `size`);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+</li>
+<li><p>对自定义 <code>View</code>完全进⾏自定义尺⼨计算：重写 <code>onMeasure()</code>：<code>CircleView</code></p>
+<ol>
+<li><p>重写 <code>onMeasure()</code></p>
+</li>
+<li><p>计算出自己的尺⼨</p>
+</li>
+<li><p>用 <code>resolve</code>size<code>()</code> 或者 <code>resolve</code>size<code>AndState()</code> 修正结果</p>
+<ul>
+<li><code>resolve</code>size<code>()</code> &#x2F; <code>resolve</code>size<code>AndState()</code> 内部实现（⼀定读⼀下代码，这个极少需要自己写，但⾯试时很多时候会考）：<ul>
+<li>⾸先用 <code>MeasureSpec.getMode(measureSpec)</code> 和<code>MeasureSpec.get</code>size<code>(measureSpec)</code> 取出⽗ 对自己的尺⼨限制类型和具体限制尺⼨；</li>
+<li>如果 <code>measure spec</code> 的 <code>mode</code> 是 <code>EXACTLY</code>，表示⽗ <code>View</code>对子 <code>View</code>的尺⼨做出了精确限制，所以就放弃计算出的 <code>size</code>，直接选用 <code>measure spec</code> 的 <code>size</code>；</li>
+<li>如果 <code>measure spec</code> 的 <code>mode</code> 是 <code>AT_MOST</code>，表示⽗ <code>View</code>对子 <code>View</code>的尺⼨只限制了上限，需要看情况：<ul>
+<li>如果计算出的 <code>size</code> 不⼤于 <code>spec</code> 中限制的 <code>size</code>，表示尺⼨没有超出限制，所以选用计算出的 <code>size</code>；</li>
+<li>⽽如果计算出的 <code>size</code> ⼤于 <code>spec</code> 中限制的 <code>size</code>，表示尺⼨超限了，所以选用spec 的 <code>size</code>，并且在 resolve<code>size</code>AndState() 中会添加标志 <code>MEASURED_STATE_TOO_SMALL</code>（这个标志可以辅助⽗ <code>View</code>做测量和布局的计算；</li>
+</ul>
+</li>
+<li>如果 <code>measure spec</code> 的 <code>mode</code> 是 <code>UNSPECIFIED</code>，表示⽗ <code>View</code>对子 <code>View</code>没有任何尺⼨限制，所以直接选用计算出的 <code>size</code>，忽略 <code>spec</code> 中的 <code>size</code>。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>使用 <code>setMeasuredDimension(width, height)</code> 保存结果</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onMeasure</span><span class="params">(<span class="type">int</span> widthMeasureSpec, <span class="type">int</span> heightMeasureSpec)</span> &#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">width</span> <span class="operator">=</span> (<span class="type">int</span>) ((PADDING + RADIUS) * <span class="number">2</span>);</span><br><span class="line">    <span class="type">int</span> <span class="variable">height</span> <span class="operator">=</span> (<span class="type">int</span>) ((PADDING + RADIUS) * <span class="number">2</span>);</span><br><span class="line">    setMeasuredDimension(resolve`size`AndState(width, widthMeasureSpec, </span><br><span class="line">                                             <span class="number">0</span>),</span><br><span class="line">                         resolve`size`AndState(height, heightMeasureSpec, <span class="number">0</span>));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+</li>
+<li><p>自定义 <code>Layout</code>：重写 <code>onMeasure()</code> 和 <code>onLayout()</code>：<code>TagLayout</code></p>
+<ol>
+<li><p>重写 <code>onMeasure()</code></p>
+<ol>
+<li><p>遍历每个子 <code>View</code>，用 <code>measureChildWidthMargins()</code> 测量子 <code>View</code></p>
+<ul>
+<li><p>需要重写 <code>generateLayoutParams()</code> 并返回 <code>MarginLayoutParams</code> 才能使用<code>measureChildWithMargins()</code> ⽅法</p>
+</li>
+<li><p>有些子 <code>View</code>可能需要重新测量（⽐如换⾏处）</p>
+</li>
+<li><p>测量完成后，得出子 <code>View</code>的实际位置和尺⼨，并暂时保存</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onMeasure</span><span class="params">(<span class="type">int</span> widthMeasureSpec, <span class="type">int</span></span></span><br><span class="line"><span class="params">                         heightMeasureSpec)</span> &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; getChildCount(); i++) &#123;</span><br><span class="line">        `View`child = getChildAt(i);</span><br><span class="line">        <span class="type">Rect</span> <span class="variable">childBounds</span> <span class="operator">=</span> childrenBounds[i];</span><br><span class="line">        <span class="comment">// 测量子 View</span></span><br><span class="line">        measureChildWithMargins(child, widthMeasureSpec, </span><br><span class="line">                                widthUsed,</span><br><span class="line">                                heightMeasureSpec, heightUsed);</span><br><span class="line">        <span class="comment">// 保存子 `View`的位置和尺⼨</span></span><br><span class="line">        childBounds.set(childlLeft, childTop, childLeft</span><br><span class="line">                        + child.getMeasuredWidth(), chiltTop</span><br><span class="line">                        + child.getMeasuredHeight());</span><br><span class="line">        ......</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 计算自己的尺⼨，并保存</span></span><br><span class="line">    <span class="type">int</span> <span class="variable">width</span> <span class="operator">=</span> ...;</span><br><span class="line">    <span class="type">int</span> <span class="variable">height</span> <span class="operator">=</span> ...;</span><br><span class="line">    setMeasuredDimension(resolve`size`AndState(width, </span><br><span class="line">                                             widthMeasureSpec, <span class="number">0</span>),</span><br><span class="line">                         resolve`size`AndState(height, heightMeasureSpec, </span><br><span class="line">                                             <span class="number">0</span>));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><code>measureChildWidthMargins()</code> 的内部实现（最好读⼀下代码，这个极少需要自己写，但⾯试时很多时候会考）：</p>
+<ul>
+<li><p>通过 <code>getChildMeasureSpec(int spec, int padding, int childDimension)</code> ⽅法计算出子 <code>View</code>的 <code>widthMeasureSpec</code> 和 <code>heightMeasureSpec</code>，然后调用 <code>child.measure()</code> ⽅法来让子 <code>View</code>自我测量；</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ViewGroup.measureChildWithMargins() 源码</span></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">measureChildWithMargins</span><span class="params">(`View`child,</span></span><br><span class="line"><span class="params">                                       <span class="type">int</span> parentWidthMeasureSpec, <span class="type">int</span> widthUsed,</span></span><br><span class="line"><span class="params">                                       <span class="type">int</span> parentHeightMeasureSpec, <span class="type">int</span> heightUsed)</span> &#123;</span><br><span class="line">    <span class="keyword">final</span> <span class="type">MarginLayoutParams</span> <span class="variable">lp</span> <span class="operator">=</span></span><br><span class="line">        (MarginLayoutParams) child.getLayoutParams();</span><br><span class="line">    <span class="keyword">final</span> <span class="type">int</span> <span class="variable">childWidthMeasureSpec</span> <span class="operator">=</span></span><br><span class="line">        getChildMeasureSpec(parentWidthMeasureSpec,</span><br><span class="line">                            mPaddingLeft + mPaddingRight + lp.leftMargin</span><br><span class="line">                            + lp.rightMargin + widthUsed, lp.width);</span><br><span class="line">    <span class="keyword">final</span> <span class="type">int</span> <span class="variable">childHeightMeasureSpec</span> <span class="operator">=</span></span><br><span class="line">        getChildMeasureSpec(parentHeightMeasureSpec,</span><br><span class="line">                            mPaddingTop + mPaddingBottom + lp.topMargin</span><br><span class="line">                            + lp.bottomMargin + heightUsed, lp.height);</span><br><span class="line">    child.measure(childWidthMeasureSpec, </span><br><span class="line">                  childHeightMeasureSpec);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>getChildMeasureSpec(int spec, int padding, int childDimension)</code> ⽅法的内部实现是，结合开发者设置的 <code>LayoutParams</code> 中的 <code>width</code> 和 <code>height</code> 与⽗ <code>View</code>自己的剩余可用空间，综合得出子 <code>View</code>的尺⼨限制，并使用 <code>MeasureSpec.makeMeasureSpec(size, mode)</code> 来求得结果：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ViewGroup.getChildMeasureSpec() 源码</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="type">int</span> <span class="title function_">getChildMeasureSpec</span><span class="params">(<span class="type">int</span> spec, <span class="type">int</span></span></span><br><span class="line"><span class="params">                                      padding,</span></span><br><span class="line"><span class="params">                                      <span class="type">int</span> childDimension)</span> &#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">specMode</span> <span class="operator">=</span> MeasureSpec.getMode(spec);</span><br><span class="line">    <span class="type">int</span> spec`size` = MeasureSpec.get`size`(spec);</span><br><span class="line">    <span class="type">int</span> `size` = Math.max(<span class="number">0</span>, spec`size` - padding);</span><br><span class="line">    <span class="type">int</span> result`size` = <span class="number">0</span>;</span><br><span class="line">    <span class="type">int</span> <span class="variable">resultMode</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">switch</span> (specMode) &#123;</span><br><span class="line">            <span class="comment">// Parent has imposed an exact `size` on us</span></span><br><span class="line">        <span class="keyword">case</span> MeasureSpec.EXACTLY:</span><br><span class="line">            <span class="keyword">if</span> (childDimension &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">                result`size` = childDimension;</span><br><span class="line">                resultMode = MeasureSpec.EXACTLY;</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (childDimension ==</span><br><span class="line">                       LayoutParams.MATCH_PARENT) &#123;</span><br><span class="line">                <span class="comment">// Child wants to be our `size`. So be it.</span></span><br><span class="line">                result`size` = `size`;</span><br><span class="line">                resultMode = MeasureSpec.EXACTLY;</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (childDimension ==</span><br><span class="line">                       LayoutParams.WRAP_CONTENT) &#123;</span><br><span class="line">                <span class="comment">// Child wants to determine its own `size`. It</span></span><br><span class="line">                can<span class="string">&#x27;t be</span></span><br><span class="line"><span class="string">                    // bigger than us.</span></span><br><span class="line"><span class="string">                    result`size` = `size`;</span></span><br><span class="line"><span class="string">                resultMode = MeasureSpec.AT_MOST; &#125;</span></span><br><span class="line"><span class="string">            break;</span></span><br><span class="line"><span class="string">            // Parent has imposed a maximum `size` on us</span></span><br><span class="line"><span class="string">        case MeasureSpec.AT_MOST:</span></span><br><span class="line"><span class="string">            if (childDimension &gt;= 0) &#123;</span></span><br><span class="line"><span class="string">                // Child wants a specific `size`... so be it</span></span><br><span class="line"><span class="string">                result`size` = childDimension;</span></span><br><span class="line"><span class="string">                resultMode = MeasureSpec.EXACTLY;</span></span><br><span class="line"><span class="string">            &#125; else if (childDimension ==</span></span><br><span class="line"><span class="string">                       LayoutParams.MATCH_PARENT) &#123;</span></span><br><span class="line"><span class="string">                // Child wants to be our `size`, but our `size` is</span></span><br><span class="line"><span class="string">                not fixed.</span></span><br><span class="line"><span class="string">                    // Constrain child to not be bigger than us.</span></span><br><span class="line"><span class="string">                    result`size` = `size`;</span></span><br><span class="line"><span class="string">                resultMode = MeasureSpec.AT_MOST;</span></span><br><span class="line"><span class="string">            &#125; else if (childDimension ==</span></span><br><span class="line"><span class="string">                       LayoutParams.WRAP_CONTENT) &#123;</span></span><br><span class="line"><span class="string">                // Child wants to determine its own `size`. It</span></span><br><span class="line"><span class="string">                can&#x27;</span>t be</span><br><span class="line">                    <span class="comment">// bigger than us.</span></span><br><span class="line">                    result`size` = `size`;</span><br><span class="line">                resultMode = MeasureSpec.AT_MOST; &#125;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">            <span class="comment">// Parent asked to see how big we want to be</span></span><br><span class="line">        <span class="keyword">case</span> MeasureSpec.UNSPECIFIED:</span><br><span class="line">            <span class="keyword">if</span> (childDimension &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">                <span class="comment">// Child wants a specific `size`... let him have</span></span><br><span class="line">                it</span><br><span class="line">                    result`size` = childDimension;</span><br><span class="line">                resultMode = MeasureSpec.EXACTLY;</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (childDimension ==</span><br><span class="line">                       LayoutParams.MATCH_PARENT) &#123;</span><br><span class="line">                <span class="comment">// Child wants to be our `size`... find out how</span></span><br><span class="line">                big it should</span><br><span class="line">                    <span class="comment">// be</span></span><br><span class="line">                    result`size` =</span><br><span class="line">                    View.sUseZeroUnspecifiedMeasureSpec ? <span class="number">0</span> : `size`;</span><br><span class="line">                resultMode = MeasureSpec.UNSPECIFIED;</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (childDimension ==</span><br><span class="line">                       LayoutParams.WRAP_CONTENT) &#123;</span><br><span class="line">                <span class="comment">// Child wants to determine its own `size`....</span></span><br><span class="line">                find out how</span><br><span class="line">                    <span class="comment">// big it should be</span></span><br><span class="line">                    result`size` =</span><br><span class="line">                    View.sUseZeroUnspecifiedMeasureSpec ? <span class="number">0</span> : `size`;</span><br><span class="line">                resultMode = MeasureSpec.UNSPECIFIED; &#125;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//noinspection ResourceType</span></span><br><span class="line">    <span class="keyword">return</span> MeasureSpec.makeMeasureSpec(result`size`, </span><br><span class="line">                                       resultMode);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意：源码中的分类⽅式是先⽐较自己的 <code>MeasureSpec</code> 中的 <code>mode</code>，再</p>
+<p>⽐较开发者设置的 <code>layout_width</code> 和 <code>layout_height</code>，⽽我给出的判断⽅式</p>
+<p>（下⾯的这⼏段内容）是先⽐较 <code>layout_width</code> 和 <code>layout_height</code>，再⽐较</p>
+<p>自己 <code>MeasureSpec</code> 中的 <code>mode</code>。两种分类⽅法都能得出正确的结果，但</p>
+<p>源码中的分类⽅法在逻辑上可能不够直观，如果你读源码理解困难，可以</p>
+<p>尝试用我上⾯的这种⽅法来理解。</p>
+</blockquote>
+<ol>
+<li>如果开发者写了具体值（例如 <code>layout_width=&quot;24dp&quot;</code>），就不用再考虑⽗<code>View</code>的剩余空间了，直接用<code> LayoutParams.width / height</code> 来作为子 <code>View</code>的限制 <code>size</code>，⽽限制 <code>mode</code> 为 <code>EXACTLY</code>（为什么？课堂上说过，因为软件的直接开发者——即 <code>xml</code> 布局⽂件的编写者——的意⻅最重要，发⽣冲突的时候应该以开发者的意⻅为准。换个⻆度说，如果真的由于冲突导致界⾯不正确，开发者可以通过修改 <code>xml</code> ⽂件来解决啊，所以开发者的意⻅是第⼀位，但你如果设计成冲突时开发者的意⻅不在第⼀位，就会导致软件的可配置性严重降低）；</li>
+<li>如果开发者写的是 <code>MATCH_PARENT</code>，即要求填满⽗控件的可用空间，那么由于自己的可用空间和自己的两个 <code>MeasureSpec</code> 有关，所以需要根据自己的 <code>widthMeasureSpec</code> 或 <code>heightMeasureSpec</code> 中的 <code>mode</code> 来分情况判断：</li>
+<li>如果自己的 <code>spec</code> 中的 <code>mode</code> 是 <code>EXACTLY</code> 或者 <code>AT_MOST</code>，说明自己的尺⼨有上限，那么把 <code>spec</code> 中的 <code>size</code> 减去自己的已用宽度或⾼度，就是自己可以给子 <code>View</code>的 <code>size</code>；⾄于 <code>mode</code>，就用 <code>EXACTLY</code>（注意：就算自己的 <code>mode</code> 是<code>AT_MOST</code>，传给子 <code>View</code>的也是<code>EXACTLY</code>，想不通的话好好琢磨⼀下）；</li>
+<li>如果自己的 <code>spec</code> 中的 <code>mode</code> 是 <code>UNSPECIFIED</code>，说明自己的尺⼨没有上限，那么让子 <code>View</code>填满自己的可用空间就⽆从说起，因此选用退让⽅案：给子 <code>View</code>限制的 <code>mode</code> 就设置为 <code>UNSPECIFIED</code>，<code>size</code> 写 0 就好；</li>
+<li>如果开发者写的是 <code>WRAP_CONTENT</code>，即要求子 <code>View</code>在不超限制的前提下自我测量，那么同样由于自己的可用空间和自己的两个 <code>MeasureSpec</code> 有关，所以也需要根据自己的 <code>widthMeasureSpec</code> 和 <code>heightMeasureSpec</code> 中的 <code>mode</code> 来分情况判断：</li>
+<li>如果自己的 <code>spec</code> 中的 <code>mode</code> 是 <code>EXACTLY</code> 或者 <code>AT_MOST</code>，说明自己的尺⼨有上限，那么把 <code>spec</code> 中的 <code>size</code> 减去自己的已用宽度或⾼度，就是自己可以给子 <code>View</code>的尺⼨上限；⾄于 <code>mode</code>，就用 <code>AT_MOST</code>（注意，就算自己的 <code>mode</code> 是 <code>EXACTLY</code>，传给子 <code>View</code>的也是 <code>AT_MOST</code>，想不通的话好好琢磨⼀下；</li>
+<li>如果自己的 <code>spec</code> 中的 <code>mode</code> 是 <code>UNSPECIFIED</code>，说明自己的尺⼨没有上限，那么也就不必限制子 <code>View</code>的上限，因此给子 <code>View</code>限制的<code>mode</code> 就设置为 <code>UNSPECIFIED</code>，<code>size</code> 写 0 就好。</li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>测量出所有子 <code>View</code>的位置和尺⼨后，计算出自己的尺⼨，并用 <code>setMeasuredDimension(width, height)</code> 保存</p>
+</li>
+</ol>
+</li>
+<li><p>重写 <code>onLayout()</code></p>
+<ul>
+<li><p>遍历每个子 <code>View</code>，调用它们的 <code>layout()</code> ⽅法来将位置和尺⼨传给它们</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onLayout</span><span class="params">(<span class="type">boolean</span> changed, <span class="type">int</span> l, <span class="type">int</span> t, <span class="type">int</span> r, </span></span><br><span class="line"><span class="params">                        <span class="type">int</span> b)</span> &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; getChildCount(); i++) &#123;</span><br><span class="line">        `View`child = getChildAt(i);</span><br><span class="line">        <span class="type">Rect</span> <span class="variable">childBounds</span> <span class="operator">=</span> childrenBounds[i];</span><br><span class="line">        <span class="comment">// 将每个子 `View`的位置和尺⼨传递给它</span></span><br><span class="line">        child.layout(childBounds.left, childBounds.top,</span><br><span class="line">                     childBounds.right, childBounds.bottom);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+<!-- flag of hidden posts -->
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div></div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>Donate</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.jpg" alt=" WeChat Pay"/>
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/private/" rel="tag"># private</a>
+          
+            <a href="/tags/hencoder/" rel="tag"># hencoder</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">71</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">31</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@189.cn" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/shenbh" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://gitee.com/shen_bh" target="_blank" title="Gitee">
+                      
+                        <i class="fa fa-fw fa-git"></i>Gitee</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E5%B8%83%E5%B1%80"><span class="nav-text">自定义布局</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%83%E5%B1%80%E8%BF%87%E7%A8%8B"><span class="nav-text">布局过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%81%E7%A8%8B"><span class="nav-text">流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B7%E4%BD%93%E5%BC%80%E5%8F%91"><span class="nav-text">具体开发</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

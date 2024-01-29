@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="private,安卓第三方," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="RxJava关于RxJava最友好的文章（初级篇） subscribe：订阅（事件的终点）（为了保持链式调用，写在在Observable&#x2F;Flowable后，实际调用者是Observer&#x2F;Subscriber）（Subscriber是对Observer的封装，较常用） subscribeOn：指定了被观察者执行的线程（多次指定以第一次为准） observeOn：指定接下来代码执行的线程环境。（可能">
+<meta property="og:type" content="article">
+<meta property="og:title" content="第三方-RxJava">
+<meta property="og:url" content="http://shenbh.github.io/posts/300762122/index.html">
+<meta property="og:site_name" content="AB">
+<meta property="og:description" content="RxJava关于RxJava最友好的文章（初级篇） subscribe：订阅（事件的终点）（为了保持链式调用，写在在Observable&#x2F;Flowable后，实际调用者是Observer&#x2F;Subscriber）（Subscriber是对Observer的封装，较常用） subscribeOn：指定了被观察者执行的线程（多次指定以第一次为准） observeOn：指定接下来代码执行的线程环境。（可能">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://ww1.sinaimg.cn/large/981009fdgy1ggdm7kua5cj23kj14qk67.jpg">
+<meta property="article:published_time" content="2019-12-25T01:45:54.000Z">
+<meta property="article:modified_time" content="2022-11-02T07:22:54.652Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="private">
+<meta property="article:tag" content="安卓第三方">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://ww1.sinaimg.cn/large/981009fdgy1ggdm7kua5cj23kj14qk67.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/300762122/"/>
+
+
+
+
+
+  <title>第三方-RxJava | AB</title><meta name="robots" content="noindex">
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">AB</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Just do IT Now.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/300762122/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="AB">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">第三方-RxJava</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-12-25T09:45:54+08:00">
+                2019-12-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="RxJava"><a href="#RxJava" class="headerlink" title="RxJava"></a>RxJava</h1><h2 id="关于RxJava最友好的文章（初级篇）"><a href="#关于RxJava最友好的文章（初级篇）" class="headerlink" title="关于RxJava最友好的文章（初级篇）"></a><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/23584382">关于RxJava最友好的文章（初级篇）</a></h2><p><img src="http://ww1.sinaimg.cn/large/981009fdgy1ggdm7kua5cj23kj14qk67.jpg" alt="rxjava2思维导图"></p>
+<p><code>subscribe</code>：订阅（事件的终点）（为了保持链式调用，写在在<code>Observable/Flowable</code>后，实际调用者是<code>Observer/Subscriber</code>）（<code>Subscriber</code>是对<code>Observer</code>的封装，较常用）</p>
+<p><code>subscribeOn</code>：指定了被观察者执行的线程（多次指定以第一次为准）</p>
+<p><code>observeOn</code>：指定接下来代码执行的线程环境。（可能会有多个<code>observeO</code>，切换多次，只对<code>observeOn</code>后的代码起作用）</p>
+<p><code>map</code> : 改发出事件的类型（完成类型转换）</p>
+<p><code>filter</code>：传递过程中对事件进行过滤操作</p>
+<p><code>flatMap</code>：（无序）</p>
+<p><code>concatMap</code>：（有序）</p>
+<h2 id="RxJava是什么"><a href="#RxJava是什么" class="headerlink" title="RxJava是什么"></a>RxJava是什么</h2><ul>
+<li>Rx：全程Reactive Extensions 响应式扩展<ul>
+<li>基于观察者模式</li>
+<li>一种变成模型</li>
+<li>目标是提供一致的编程接口，帮助开发者更方便地处理异步数据流</li>
+<li>ReactiveX结合了观察者模式、迭代器模式和函数式编程的精华</li>
+</ul>
+</li>
+<li>四个基本概念<ul>
+<li><code>Observable</code>可观察者、被观察者</li>
+<li><code>Observer</code> 观察者<br>内置了一个实现了 <code>Observer</code> 的抽象类：<code>Subscriber</code></li>
+<li><code>subscribe</code> 订阅</li>
+<li>事件</li>
+</ul>
+</li>
+</ul>
+<h2 id="如何使用RxJava"><a href="#如何使用RxJava" class="headerlink" title="如何使用RxJava"></a>如何使用RxJava</h2><p>在<code>gradle</code>文件的<code>dependencies</code>中添加 </p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">compile <span class="string">&#x27;io.reactivex:rxandroid:1.2.0&#x27;</span></span><br><span class="line">compile <span class="string">&#x27;io.reactivex:rxjava:1.1.5&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<h2 id="RxJava在生产环境中的使用"><a href="#RxJava在生产环境中的使用" class="headerlink" title="RxJava在生产环境中的使用"></a>RxJava在生产环境中的使用</h2><h3 id="RxJava与Retrofit"><a href="#RxJava与Retrofit" class="headerlink" title="RxJava与Retrofit"></a>RxJava与Retrofit</h3><p>gradle文件的引用：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">compile <span class="string">&#x27;com.squareup.retrofit2:retrofit:2.0.2&#x27;</span></span><br><span class="line">compile <span class="string">&#x27;com.squareup.retrofit2:converter-gson:2.0.2&#x27;</span></span><br><span class="line">compile <span class="string">&#x27;com.squareup.retrofit2:adapter-rxjava:2.0.2&#x27;</span><span class="comment">//RxJava与Retrofit的适配器</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Retrofit</span> <span class="variable">retrofit</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Retrofit</span>.Builder()</span><br><span class="line">                .baseUrl(<span class="string">&quot;http://gank.io/api/data/&quot;</span>)</span><br><span class="line">                .addConverterFactory(GsonConverterFactory.create())</span><br><span class="line">                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())<span class="comment">//这个就是用来适配RxJava的</span></span><br><span class="line">                .build();</span><br><span class="line"></span><br><span class="line"><span class="type">RxGankService</span> <span class="variable">rxGankService</span> <span class="operator">=</span> retrofit.create(RxGankService.class);</span><br><span class="line">        <span class="keyword">final</span> Observable&lt;GankResultBean&gt; observable = rxGankService.getAndroidData(<span class="number">1</span>);</span><br><span class="line">        observable</span><br><span class="line">                .subscribeOn(Schedulers.io()) <span class="comment">//订阅者的回调在主线程</span></span><br><span class="line">                .observeOn(AndroidSchedulers.mainThread()) <span class="comment">//订阅发生在io线程</span></span><br><span class="line">                .map(<span class="keyword">new</span> <span class="title class_">Func1</span>&lt;GankResultBean, List&lt;GankResultBean.ResultsBean&gt;&gt;() &#123;</span><br><span class="line">                    <span class="meta">@Override</span></span><br><span class="line">                    <span class="keyword">public</span> List&lt;GankResultBean.ResultsBean&gt; call(GankResultBean gankResultBean) &#123;</span><br><span class="line">                        <span class="keyword">return</span> gankResultBean.getResults();</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;) <span class="comment">//一般我们不会关心error字段，我们关心的只是results，所以在这里做了一个映射让用户接收的是List&lt;GankResultBean.ResultsBean&gt;而不是包含有error的GankResultBean</span></span><br><span class="line">                .flatMap(<span class="keyword">new</span> <span class="title class_">Func1</span>&lt;List&lt;GankResultBean.ResultsBean&gt;, Observable&lt;GankResultBean.ResultsBean&gt;&gt;() &#123;</span><br><span class="line">                    <span class="meta">@Override</span></span><br><span class="line">                    <span class="keyword">public</span> Observable&lt;GankResultBean.ResultsBean&gt; call(List&lt;GankResultBean.ResultsBean&gt; resultsBeen) &#123;</span><br><span class="line">                        <span class="keyword">return</span> Observable.from(resultsBeen);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;) <span class="comment">//让结果一条一条的发射出去，而不是一个集合</span></span><br><span class="line">                .filter(<span class="keyword">new</span> <span class="title class_">Func1</span>&lt;GankResultBean.ResultsBean, Boolean&gt;() &#123;</span><br><span class="line">                    <span class="meta">@Override</span></span><br><span class="line">                    <span class="keyword">public</span> Boolean <span class="title function_">call</span><span class="params">(GankResultBean.ResultsBean resultsBean)</span> &#123;</span><br><span class="line">                        <span class="keyword">return</span> <span class="string">&quot;Android&quot;</span>.equals(resultsBean.getType());</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;) <span class="comment">//只接收Type为Android的数据</span></span><br><span class="line">                .subscribe(<span class="keyword">new</span> <span class="title class_">Subscriber</span>&lt;GankResultBean.ResultsBean&gt;() &#123;</span><br><span class="line">                    <span class="meta">@Override</span></span><br><span class="line">                    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onCompleted</span><span class="params">()</span> &#123;</span><br><span class="line">                        Log.i(<span class="string">&quot;test&quot;</span>, <span class="string">&quot;onCompleted&quot;</span>);</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="meta">@Override</span></span><br><span class="line">                    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onError</span><span class="params">(Throwable e)</span> &#123;</span><br><span class="line">                        e.printStackTrace();</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="meta">@Override</span></span><br><span class="line">                    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onNext</span><span class="params">(GankResultBean.ResultsBean resultsBean)</span> &#123;</span><br><span class="line">                        textView.append(resultsBean + <span class="string">&quot;\n&quot;</span>);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;);</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="RxBus（替代EventBus、Otto）"><a href="#RxBus（替代EventBus、Otto）" class="headerlink" title="RxBus（替代EventBus、Otto）"></a>RxBus（替代EventBus、Otto）</h3><p>封装：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RxBus</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Subject&lt;Object, Object&gt; _bus;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">RxBusHolder</span> &#123;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">RxBus</span> <span class="variable">instance</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RxBus</span>();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="title function_">RxBus</span><span class="params">()</span> &#123;</span><br><span class="line">        _bus = <span class="keyword">new</span> <span class="title class_">SerializedSubject</span>&lt;&gt;(PublishSubject.create());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">synchronized</span> RxBus <span class="title function_">getInstance</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> RxBusHolder.instance;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">post</span><span class="params">(Object o)</span> &#123;</span><br><span class="line">        _bus.onNext(o);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> &lt;T&gt; Observable&lt;T&gt; <span class="title function_">toObserverable</span><span class="params">(Class&lt;T&gt; eventType)</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> _bus.ofType(eventType);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用-发送消息：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">RxBus.getInstance().post(<span class="string">&quot;SomeChange&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>使用-接收消息：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Subscription</span> <span class="variable">mSubscription</span> <span class="operator">=</span> RxBus.getInstance().toObserverable(String.class).subscribe(<span class="keyword">new</span> <span class="title class_">Action1</span>&lt;String&gt;() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">call</span><span class="params">(String s)</span> &#123;</span><br><span class="line">                handleRxMsg(s);</span><br><span class="line">            &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>在适当的地方取消这个订阅（以免发生内存泄露）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mSubscription.unsubscribe();</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="RxPermissions"><a href="#RxPermissions" class="headerlink" title="RxPermissions"></a>RxPermissions</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//取得相机权限和读取手机状态</span></span><br><span class="line">RxPermissions.getInstance(<span class="built_in">this</span>)</span><br><span class="line">    .request(Manifest.permission.CAMERA,</span><br><span class="line">             Manifest.permission.READ_PHONE_STATE)</span><br><span class="line">    .subscribe(granted -&gt; &#123;</span><br><span class="line">        <span class="keyword">if</span> (granted) &#123;</span><br><span class="line">          </span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">           </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="轮询，定时操作"><a href="#轮询，定时操作" class="headerlink" title="轮询，定时操作"></a>轮询，定时操作</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//每隔两秒执行一次</span></span><br><span class="line">Observable.interval(<span class="number">2</span>, <span class="number">2</span>, TimeUnit.SECONDS).subscribe(<span class="keyword">new</span> <span class="title class_">Action1</span>&lt;Long&gt;() &#123;</span><br><span class="line">         <span class="meta">@Override</span></span><br><span class="line">         <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">call</span><span class="params">(Long aLong)</span> &#123;</span><br><span class="line">            <span class="comment">//TODO WHAT YOU WANT</span></span><br><span class="line">         &#125;</span><br><span class="line">    &#125;);</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//在两秒后去执行一些操作（比如启动页跳转到主页面）</span></span><br><span class="line">Observable.timer(<span class="number">2</span>, TimeUnit.SECONDS).subscribe(<span class="keyword">new</span> <span class="title class_">Action1</span>&lt;Long&gt;() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">call</span><span class="params">(Long aLong)</span> &#123;</span><br><span class="line">                <span class="comment">//TODO WHAT YOU WANT</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="节流（防止按钮的重复点击）"><a href="#节流（防止按钮的重复点击）" class="headerlink" title="节流（防止按钮的重复点击）"></a>节流（防止按钮的重复点击）</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">RxView.clicks(button).debounce(<span class="number">300</span>, TimeUnit.MILLISECONDS).subscribe(<span class="keyword">new</span> <span class="title class_">Action1</span>&lt;Void&gt;() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">call</span><span class="params">(Void aVoid)</span> &#123;</span><br><span class="line">            Log.i(<span class="string">&quot;test&quot;</span>, <span class="string">&quot;clicked&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="RxBinding（控件绑定库）"><a href="#RxBinding（控件绑定库）" class="headerlink" title="RxBinding（控件绑定库）"></a><code>RxBinding</code>（控件绑定库）</h3><p><code>Platform bindings:</code></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">compile <span class="string">&#x27;com.jakewharton.rxbinding:rxbinding:0.4.0&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p><code>&#39;support-v4&#39; library bindings:</code></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">compile <span class="string">&#x27;com.jakewharton.rxbinding:rxbinding-support-v4:0.4.0&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p><code>&#39;appcompat-v7&#39; library bindings:</code></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">compile <span class="string">&#x27;com.jakewharton.rxbinding:rxbinding-appcompat-v7:0.4.0&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p><code>&#39;design&#39; library bindings:</code></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">compile <span class="string">&#x27;com.jakewharton.rxbinding:rxbinding-design:0.4.0&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p><code>&#39;recyclerview-v7&#39; library bindings:</code></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">compile <span class="string">&#x27;com.jakewharton.rxbinding:rxbinding-recyclerview-v7:0.4.0&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p><code>&#39;leanback-v17&#39; library bindings:</code></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">compile <span class="string">&#x27;com.jakewharton.rxbinding:rxbinding-leanback-v17:0.4.0&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="接口"><a href="#接口" class="headerlink" title="接口"></a>接口</h2><h3 id="OnSubscribe"><a href="#OnSubscribe" class="headerlink" title="OnSubscribe"></a><code>OnSubscribe</code></h3><p>实现了<code>Action</code>接口，只有一个<code>call</code>方法，在<code>subscribe</code>时候才会去调用</p>
+<h3 id="Subscriber观察者（实现Observer的抽象类）"><a href="#Subscriber观察者（实现Observer的抽象类）" class="headerlink" title="Subscriber观察者（实现Observer的抽象类）"></a><code>Subscriber</code>观察者（实现<code>Observer</code>的抽象类）</h3><p>调用<code>subscribe</code>所传的参数,里面是<code>onNext</code>,<code>onComplete</code>,<code>onError</code>等方法</p>
+<h3 id="Observable可观察者、被观察者"><a href="#Observable可观察者、被观察者" class="headerlink" title="Observable可观察者、被观察者"></a><code>Observable</code>可观察者、被观察者</h3><p>所有的操作符都在这个类里面，我认为最重要的其实是<code>OnSubscribe</code>和<code>Subscriber</code>,而<code>Observable</code>其实是作为一个桥梁来链接这2者</p>
+<h3 id="Subscription"><a href="#Subscription" class="headerlink" title="Subscription"></a><code>Subscription</code></h3><p>这个是调用<code>subscribe</code>方法的返回值，用来取消这次订阅</p>
+<h1 id="另一篇RxJava"><a href="#另一篇RxJava" class="headerlink" title="另一篇RxJava"></a>另一篇RxJava</h1><h2 id="一、简单上下游事件接发"><a href="#一、简单上下游事件接发" class="headerlink" title="一、简单上下游事件接发"></a><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/464fa025229e">一、简单上下游事件接发</a></h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//创建一个上游 Observable：</span></span><br><span class="line">Observable&lt;Integer&gt; observable = Observable.create(<span class="keyword">new</span> <span class="title class_">ObservableOnSubscribe</span>&lt;Integer&gt;() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">subscribe</span><span class="params">(ObservableEmitter&lt;Integer&gt; emitter)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        emitter.onNext(<span class="number">1</span>);</span><br><span class="line">        emitter.onNext(<span class="number">2</span>);</span><br><span class="line">        emitter.onNext(<span class="number">3</span>);</span><br><span class="line">        emitter.onComplete();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br><span class="line"><span class="comment">//创建一个下游 Observer</span></span><br><span class="line">Observer&lt;Integer&gt; observer = <span class="keyword">new</span> <span class="title class_">Observer</span>&lt;Integer&gt;() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onSubscribe</span><span class="params">(Disposable d)</span> &#123;</span><br><span class="line">        Log.d(TAG, <span class="string">&quot;subscribe&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onNext</span><span class="params">(Integer value)</span> &#123;</span><br><span class="line">        Log.d(TAG, <span class="string">&quot;&quot;</span> + value);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onError</span><span class="params">(Throwable e)</span> &#123;</span><br><span class="line">        Log.d(TAG, <span class="string">&quot;error&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onComplete</span><span class="params">()</span> &#123;</span><br><span class="line">        Log.d(TAG, <span class="string">&quot;complete&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="comment">//建立连接</span></span><br><span class="line">observable.subscribe(observer);  </span><br></pre></td></tr></table></figure>
+<p>通过 observable.subscribe 的 subscribe 方法来连接<br>输出结果：<strong>（下游的subscribe先调用）</strong></p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">12</span>-<span class="number">02</span> <span class="number">03</span>:<span class="number">37</span>:<span class="number">17</span>.<span class="number">818</span> <span class="number">4166</span>-<span class="number">4166</span>/zlc.season.rxjava2demo D/TAG: subscribe</span><br><span class="line"><span class="attribute">12</span>-<span class="number">02</span> <span class="number">03</span>:<span class="number">37</span>:<span class="number">17</span>.<span class="number">819</span> <span class="number">4166</span>-<span class="number">4166</span>/zlc.season.rxjava2demo D/TAG: <span class="number">1</span></span><br><span class="line"><span class="attribute">12</span>-<span class="number">02</span> <span class="number">03</span>:<span class="number">37</span>:<span class="number">17</span>.<span class="number">819</span> <span class="number">4166</span>-<span class="number">4166</span>/zlc.season.rxjava2demo D/TAG: <span class="number">2</span></span><br><span class="line"><span class="attribute">12</span>-<span class="number">02</span> <span class="number">03</span>:<span class="number">37</span>:<span class="number">17</span>.<span class="number">819</span> <span class="number">4166</span>-<span class="number">4166</span>/zlc.season.rxjava2demo D/TAG: <span class="number">3</span></span><br><span class="line"><span class="attribute">12</span>-<span class="number">02</span> <span class="number">03</span>:<span class="number">37</span>:<span class="number">17</span>.<span class="number">819</span> <span class="number">4166</span>-<span class="number">4166</span>/zlc.season.rxjava2demo D/TAG: complete</span><br></pre></td></tr></table></figure>
+<p>链式调用写法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">Observable.create(<span class="keyword">new</span> <span class="title class_">ObservableOnSubscribe</span>&lt;Integer&gt;() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">subscribe</span><span class="params">(ObservableEmitter&lt;Integer&gt; emitter)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        emitter.onNext(<span class="number">1</span>);</span><br><span class="line">        emitter.onNext(<span class="number">2</span>);</span><br><span class="line">        emitter.onNext(<span class="number">3</span>);</span><br><span class="line">        emitter.onComplete();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;).subscribe(<span class="keyword">new</span> <span class="title class_">Observer</span>&lt;Integer&gt;() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onSubscribe</span><span class="params">(Disposable d)</span> &#123;</span><br><span class="line">        Log.d(TAG, <span class="string">&quot;subscribe&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onNext</span><span class="params">(Integer value)</span> &#123;</span><br><span class="line">        Log.d(TAG, <span class="string">&quot;&quot;</span> + value);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onError</span><span class="params">(Throwable e)</span> &#123;</span><br><span class="line">        Log.d(TAG, <span class="string">&quot;error&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onComplete</span><span class="params">()</span> &#123;</span><br><span class="line">        Log.d(TAG, <span class="string">&quot;complete&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>ObservableEmitter： Emitter是发射器的意思，那就很好猜了，这个就是用来发出事件的，它可以发出三种类型的事件，通过调用<code>emitter</code>的<code>onNext(T value)</code>、<code>onComplete()</code>和<code>onError(Throwable error)</code>就可以分别发出next事件、complete事件和error事件。</p>
+<p><strong>注意点</strong>：</p>
+<ul>
+<li>可发送多个 onNext，可接收多个 onNext</li>
+<li>发送 onComplete 或 onError 后，其后的事件也会继续发送。但接收到 onComplete 或 onError 后就不再接收了。</li>
+<li>onComplete 和 onError 是唯一互斥的（<em>自行在代码中控制唯一互斥，否则也只接收第一个 onComplete就不接收了，但接收第二个 onError 就会导致程序崩溃</em>）**</li>
+</ul>
+<p>Disposable 字面意思是一次性用品，用完可丢弃的<br><strong>注意：调用 dispose()并不会导致上游不再继续发送事件，上游会继续发送剩余的事件。（但下游接收不到事件了）</strong></p>
+<p><code>subscribe()</code>有多个重载方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//下游不关心上游发什么</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> Disposable <span class="title function_">subscribe</span><span class="params">()</span> &#123;&#125;</span><br><span class="line"><span class="comment">//下游只关心 onNext 事件，其他事件不管</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> Disposable <span class="title function_">subscribe</span><span class="params">(Consumer&lt;? <span class="built_in">super</span> T&gt; onNext)</span> &#123;&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> Disposable <span class="title function_">subscribe</span><span class="params">(Consumer&lt;? <span class="built_in">super</span> T&gt; onNext, Consumer&lt;? <span class="built_in">super</span> Throwable&gt; onError)</span> &#123;&#125; </span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> Disposable <span class="title function_">subscribe</span><span class="params">(Consumer&lt;? <span class="built_in">super</span> T&gt; onNext, Consumer&lt;? <span class="built_in">super</span> Throwable&gt; onError, Action onComplete)</span> &#123;&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> Disposable <span class="title function_">subscribe</span><span class="params">(Consumer&lt;? <span class="built_in">super</span> T&gt; onNext, Consumer&lt;? <span class="built_in">super</span> Throwable&gt; onError, Action onComplete, Consumer&lt;? <span class="built_in">super</span> Disposable&gt; onSubscribe)</span> &#123;&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">subscribe</span><span class="params">(Observer&lt;? <span class="built_in">super</span> T&gt; observer)</span> &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="二、线程切换-amp-和Retrofit结合使用"><a href="#二、线程切换-amp-和Retrofit结合使用" class="headerlink" title="二、线程切换 &amp; 和Retrofit结合使用"></a><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/8818b98c44e2">二、线程切换 &amp; 和<code>Retrofit</code>结合使用</a></h2><p>正常(默认)情况下上游和下游是工作在同一个线程中的<br>上游发送在子线程中，下游接收在主线程中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onCreate</span><span class="params">(Bundle savedInstanceState)</span> &#123;</span><br><span class="line">    <span class="built_in">super</span>.onCreate(savedInstanceState);</span><br><span class="line">    setContentView(R.layout.activity_main);</span><br><span class="line"></span><br><span class="line">    Observable&lt;Integer&gt; observable = Observable.create(<span class="keyword">new</span> <span class="title class_">ObservableOnSubscribe</span>&lt;Integer&gt;() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">subscribe</span><span class="params">(ObservableEmitter&lt;Integer&gt; emitter)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">            Log.d(TAG, <span class="string">&quot;Observable thread is : &quot;</span> + Thread.currentThread().getName());</span><br><span class="line">            Log.d(TAG, <span class="string">&quot;emit 1&quot;</span>);</span><br><span class="line">            emitter.onNext(<span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    Consumer&lt;Integer&gt; consumer = <span class="keyword">new</span> <span class="title class_">Consumer</span>&lt;Integer&gt;() &#123;</span><br><span class="line">        <span class="meta">@Override</span>             </span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">accept</span><span class="params">(Integer integer)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">            Log.d(TAG, <span class="string">&quot;Observer thread is :&quot;</span> + Thread.currentThread().getName());              </span><br><span class="line">            Log.d(TAG, <span class="string">&quot;onNext: &quot;</span> + integer);                  </span><br><span class="line">        &#125;                   </span><br><span class="line">    &#125;;                       </span><br><span class="line">    observable.subscribeOn(Schedulers.newThread())</span><br><span class="line">        .observeOn(AndroidSchedulers.mainThread())</span><br><span class="line">        .subscribe(consumer);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>输出：</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">D/<span class="built_in">TAG</span>: Observable <span class="keyword">thread</span> is : RxNewThreadScheduler<span class="number">-2</span>  </span><br><span class="line">D/<span class="built_in">TAG</span>: emit <span class="number">1</span>                                         </span><br><span class="line">D/<span class="built_in">TAG</span>: Observer <span class="keyword">thread</span> is :main                       </span><br><span class="line">D/<span class="built_in">TAG</span>: onNext: <span class="number">1</span>                                      </span><br></pre></td></tr></table></figure>
+<p><strong>多次指定上游的线程只有第一次指定的有效，<code>subscirbeOn()</code>只有第一次有效，其余会被忽略<br>下游的 <code>observeOn()</code>调用一次就会切换一次线程</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">observable.subscribeOn(Schedulers.newThread())</span><br><span class="line">    .subscribeOn(Schedulers.io())</span><br><span class="line">    .observeOn(AndroidSchedulers.mainThread())</span><br><span class="line">    .doOnNext(<span class="keyword">new</span> <span class="title class_">Consumer</span>&lt;Integer&gt;() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">accept</span><span class="params">(Integer integer)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">            Log.d(TAG, <span class="string">&quot;After observeOn(mainThread), current thread is: &quot;</span> + Thread.currentThread().getName());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;)</span><br><span class="line">    .observeOn(Schedulers.io())</span><br><span class="line">    .doOnNext(<span class="keyword">new</span> <span class="title class_">Consumer</span>&lt;Integer&gt;() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">accept</span><span class="params">(Integer integer)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">            Log.d(TAG, <span class="string">&quot;After observeOn(io), current thread is : &quot;</span> + Thread.currentThread().getName());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;)</span><br><span class="line">    .subscribe(consumer);  </span><br></pre></td></tr></table></figure>
+<p>结果：</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">D/<span class="built_in">TAG</span>: Observable <span class="keyword">thread</span> is : RxNewThreadScheduler<span class="number">-1</span></span><br><span class="line">D/<span class="built_in">TAG</span>: emit <span class="number">1</span></span><br><span class="line">D/<span class="built_in">TAG</span>: After observeOn(mainThread), current <span class="keyword">thread</span> is: main</span><br><span class="line">D/<span class="built_in">TAG</span>: After observeOn(io), current <span class="keyword">thread</span> is : RxCachedThreadScheduler<span class="number">-2</span></span><br><span class="line">D/<span class="built_in">TAG</span>: Observer <span class="keyword">thread</span> is :RxCachedThreadScheduler<span class="number">-2</span>                   D/<span class="built_in">TAG</span>: onNext: <span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<p>RxJava 内置了很多线程供选择，如：</p>
+<ul>
+<li>Schedulers.io() 代表 io 操作的线程，通常用于网络，读写文件等 io 密集型的操作</li>
+<li>Schedulers.computation() 代表 CPU 计算密集型的操作，例如需要大量计算的操作</li>
+<li>Schedulers.newThread() 代表一个常规的新线程</li>
+<li>AndroidSchedulers.mainThread() 代表 Android 的主线程</li>
+</ul>
+<h3 id="Retrofit-使用"><a href="#Retrofit-使用" class="headerlink" title="Retrofit 使用"></a>Retrofit 使用</h3><p>Gradle中配置Retrofit</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//retrofit</span></span><br><span class="line">compile <span class="string">&#x27;com.squareup.retrofit2:retrofit:2.1.0&#x27;</span></span><br><span class="line"><span class="comment">//Gson converter</span></span><br><span class="line">compile <span class="string">&#x27;com.squareup.retrofit2:converter-gson:2.1.0&#x27;</span></span><br><span class="line"><span class="comment">//RxJava2 Adapter</span></span><br><span class="line">compile <span class="string">&#x27;com.jakewharton.retrofit:retrofit2-rxjava2-adapter:1.0.0&#x27;</span></span><br><span class="line"><span class="comment">//okhttp</span></span><br><span class="line">compile <span class="string">&#x27;com.squareup.okhttp3:okhttp:3.4.1&#x27;</span></span><br><span class="line">compile <span class="string">&#x27;com.squareup.okhttp3:logging-interceptor:3.4.1&#x27;</span></span><br></pre></td></tr></table></figure>
+<p>定义 APi 接口</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">Api</span> &#123;</span><br><span class="line">    <span class="meta">@GET</span></span><br><span class="line">    Observable&lt;LoginResponse&gt; <span class="title function_">login</span><span class="params">(<span class="meta">@Body</span> LoginRequest request)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@GET</span></span><br><span class="line">    Observable&lt;RegisterResponse&gt; <span class="title function_">register</span><span class="params">(<span class="meta">@Body</span> RegisterRequest request)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>创建 一个 Retrofit 客户端</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> Retrofit <span class="title function_">create</span><span class="params">()</span> &#123;</span><br><span class="line">    OkHttpClient.<span class="type">Builder</span> <span class="variable">builder</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">OkHttpClient</span>().newBuilder();</span><br><span class="line">    builder.readTimeout(<span class="number">10</span>, TimeUnit.SECONDS);</span><br><span class="line">    builder.connectTimeout(<span class="number">9</span>, TimeUnit.SECONDS);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (BuildConfig.DEBUG) &#123;</span><br><span class="line">        <span class="type">HttpLoggingInterceptor</span> <span class="variable">interceptor</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">HttpLoggingInterceptor</span>();</span><br><span class="line">        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);</span><br><span class="line">        builder.addInterceptor(interceptor);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">Retrofit</span>.Builder().baseUrl(ENDPOINT)</span><br><span class="line">        .client(builder.build())</span><br><span class="line">        .addConverterFactory(GsonConverterFactory.create())</span><br><span class="line">        .addCallAdapterFactory(RxJava2CallAdapterFactory.create())</span><br><span class="line">        .build();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<!-- flag of hidden posts -->
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div></div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>Donate</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.jpg" alt=" WeChat Pay"/>
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/private/" rel="tag"># private</a>
+          
+            <a href="/tags/%E5%AE%89%E5%8D%93%E7%AC%AC%E4%B8%89%E6%96%B9/" rel="tag"># 安卓第三方</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">71</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">31</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@189.cn" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/shenbh" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://gitee.com/shen_bh" target="_blank" title="Gitee">
+                      
+                        <i class="fa fa-fw fa-git"></i>Gitee</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#RxJava"><span class="nav-text">RxJava</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E4%BA%8ERxJava%E6%9C%80%E5%8F%8B%E5%A5%BD%E7%9A%84%E6%96%87%E7%AB%A0%EF%BC%88%E5%88%9D%E7%BA%A7%E7%AF%87%EF%BC%89"><span class="nav-text">关于RxJava最友好的文章（初级篇）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RxJava%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-text">RxJava是什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8RxJava"><span class="nav-text">如何使用RxJava</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RxJava%E5%9C%A8%E7%94%9F%E4%BA%A7%E7%8E%AF%E5%A2%83%E4%B8%AD%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-text">RxJava在生产环境中的使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#RxJava%E4%B8%8ERetrofit"><span class="nav-text">RxJava与Retrofit</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RxBus%EF%BC%88%E6%9B%BF%E4%BB%A3EventBus%E3%80%81Otto%EF%BC%89"><span class="nav-text">RxBus（替代EventBus、Otto）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RxPermissions"><span class="nav-text">RxPermissions</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BD%AE%E8%AF%A2%EF%BC%8C%E5%AE%9A%E6%97%B6%E6%93%8D%E4%BD%9C"><span class="nav-text">轮询，定时操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%8A%82%E6%B5%81%EF%BC%88%E9%98%B2%E6%AD%A2%E6%8C%89%E9%92%AE%E7%9A%84%E9%87%8D%E5%A4%8D%E7%82%B9%E5%87%BB%EF%BC%89"><span class="nav-text">节流（防止按钮的重复点击）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RxBinding%EF%BC%88%E6%8E%A7%E4%BB%B6%E7%BB%91%E5%AE%9A%E5%BA%93%EF%BC%89"><span class="nav-text">RxBinding（控件绑定库）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8E%A5%E5%8F%A3"><span class="nav-text">接口</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#OnSubscribe"><span class="nav-text">OnSubscribe</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Subscriber%E8%A7%82%E5%AF%9F%E8%80%85%EF%BC%88%E5%AE%9E%E7%8E%B0Observer%E7%9A%84%E6%8A%BD%E8%B1%A1%E7%B1%BB%EF%BC%89"><span class="nav-text">Subscriber观察者（实现Observer的抽象类）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Observable%E5%8F%AF%E8%A7%82%E5%AF%9F%E8%80%85%E3%80%81%E8%A2%AB%E8%A7%82%E5%AF%9F%E8%80%85"><span class="nav-text">Observable可观察者、被观察者</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Subscription"><span class="nav-text">Subscription</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%A6%E4%B8%80%E7%AF%87RxJava"><span class="nav-text">另一篇RxJava</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E7%AE%80%E5%8D%95%E4%B8%8A%E4%B8%8B%E6%B8%B8%E4%BA%8B%E4%BB%B6%E6%8E%A5%E5%8F%91"><span class="nav-text">一、简单上下游事件接发</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E7%BA%BF%E7%A8%8B%E5%88%87%E6%8D%A2-amp-%E5%92%8CRetrofit%E7%BB%93%E5%90%88%E4%BD%BF%E7%94%A8"><span class="nav-text">二、线程切换 &amp; 和Retrofit结合使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Retrofit-%E4%BD%BF%E7%94%A8"><span class="nav-text">Retrofit 使用</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

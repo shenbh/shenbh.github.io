@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="private,安卓知识点," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="进程当某个应用组件启动且该应用没有运行其他任何组件时，Android 系统会使用单个执行线程为应用启动新的 Linux 进程。默认情况下，同一应用的所有组件在相同的进程和线程（称为“主”线程）中运行。 各类组件元素的清单文件条目&lt;activity&gt;、&lt;service&gt;、&lt;receiver&gt; 和 &lt;provider&gt;—均支持 android:proce">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安卓-进程">
+<meta property="og:url" content="http://shenbh.github.io/posts/52063040/index.html">
+<meta property="og:site_name" content="AB">
+<meta property="og:description" content="进程当某个应用组件启动且该应用没有运行其他任何组件时，Android 系统会使用单个执行线程为应用启动新的 Linux 进程。默认情况下，同一应用的所有组件在相同的进程和线程（称为“主”线程）中运行。 各类组件元素的清单文件条目&lt;activity&gt;、&lt;service&gt;、&lt;receiver&gt; 和 &lt;provider&gt;—均支持 android:proce">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-03-16T03:24:03.000Z">
+<meta property="article:modified_time" content="2023-11-14T02:13:33.011Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="private">
+<meta property="article:tag" content="安卓知识点">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/52063040/"/>
+
+
+
+
+
+  <title>安卓-进程 | AB</title><meta name="robots" content="noindex">
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">AB</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Just do IT Now.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/52063040/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="AB">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">安卓-进程</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-03-16T11:24:03+08:00">
+                2020-03-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="进程"><a href="#进程" class="headerlink" title="进程"></a>进程</h1><p>当某个应用组件启动且该应用没有运行其他任何组件时，Android 系统会使用单个执行线程为应用启动新的 Linux 进程。默认情况下，同一应用的所有组件在相同的进程和线程（称为“主”线程）中运行。</p>
+<p>各类组件元素的清单文件条目<code>&lt;activity&gt;</code>、<code>&lt;service&gt;</code>、<code>&lt;receiver&gt;</code> 和 <code>&lt;provider&gt;</code>—均支持 android:process 属性，此属性可以指定该组件应在哪个进程运行。</p>
+<h2 id="5个常用进程"><a href="#5个常用进程" class="headerlink" title="5个常用进程"></a>5个常用进程</h2><p>优先级：前台进程&gt;可见进程&gt;服务进程&gt;后台进程&gt;空进程（Empty Process）</p>
+<h3 id="前台进程"><a href="#前台进程" class="headerlink" title="前台进程"></a>前台进程</h3><p><strong>杀死前台进程需要用户交互</strong>。</p>
+<ol>
+<li><strong>进程持有一个正与用户交互的Activity</strong></li>
+<li>进程持有一个Service，这个Service处于这几种状态：<ol>
+<li>Service与用户正在交互的Activity绑定</li>
+<li>Service调用了<code>startForeground()</code>，在前台运行</li>
+<li>Service执行在用户正在交互的Activity的生命周期回调函数中（<code>onCreate()、onStart()、onDestory()</code>）</li>
+</ol>
+</li>
+<li><strong>进程持有一个BroadcastReceiver，这个BroadcastReceiver正在执行它的<code>onReceive()</code>方法</strong></li>
+</ol>
+<h3 id="可见进程"><a href="#可见进程" class="headerlink" title="可见进程"></a>可见进程</h3><p>进程不含任何前台的组件，仍可被用户在屏幕上所见。</p>
+<ol>
+<li><strong>进程持有一个Activity，此Activity不在前台，但仍可被用户可见（处于<code>onPause()</code>但没调用<code>onStop()</code>状态，如：前台Activity打开了一个对话框）</strong></li>
+<li><strong>进程持有一个Service，此Service和一个可见（或者前台的）Activity绑定</strong></li>
+</ol>
+<h3 id="服务进程"><a href="#服务进程" class="headerlink" title="服务进程"></a>服务进程</h3><p><strong>一个进程中运行着一个Service，此Service是通过<code>startService()</code>开启的</strong>，如后台播放音乐、后台下载等。</p>
+<h3 id="后台进程"><a href="#后台进程" class="headerlink" title="后台进程"></a>后台进程</h3><p>通常有很后台进程存在，它们被保存在LRU（least recently used）列表中，即保证了最近使用得activity最后被销毁。</p>
+<ol>
+<li>进程持有一个用户不可见的Activity（activity的<code>onStop()</code>被调用），即可认为此进程是后台进程。后台进程不直接影响用户体验，系统会为了优先级高的进程而任意杀死后台进程。</li>
+</ol>
+<h3 id="空进程Empty-process"><a href="#空进程Empty-process" class="headerlink" title="空进程Empty process"></a>空进程Empty process</h3><p><strong>一个进程中没有数据在运行了，但内存为此应用驻留了一个进程空间。保存这种进程的唯一理由是为了缓存的需要，为了加快下次启动这个进程中组件的启动时间。</strong>系统为了平衡进程缓存和底层内核缓存的资源，经常会杀死空进程。</p>
+<ol>
+<li>一个进程不包含任何活跃的应用组件，则认为是空进程（android设计的，为了下次启动更快而采取的一个权衡）</li>
+</ol>
+<h2 id="进程生命周期"><a href="#进程生命周期" class="headerlink" title="进程生命周期"></a>进程生命周期</h2><p><strong>1、前台进程</strong></p>
+<ul>
+<li>托管用户正在交互的 Activity（已调用 Activity 的 <code>onResume()</code> 方法）</li>
+<li>托管某个 Service，后者绑定到用户正在交互的 Activity</li>
+<li>托管正在“前台”运行的 Service（服务已调用 <code>startForeground()</code>）</li>
+<li>托管正执行一个生命周期回调的 Service（<code>onCreate()</code>、<code>onStart()</code> 或 <code>onDestroy()</code>）</li>
+<li>托管正执行其 <code>onReceive()</code> 方法的 BroadcastReceiver</li>
+</ul>
+<p><strong>2、可见进程</strong>  </p>
+<ul>
+<li>托管不在前台、但仍对用户可见的 Activity（已调用其 <code>onPause()</code> 方法）。例如，如果 re前台 Activity 启动了一个对话框，允许在其后显示上一 Activity，则有可能会发生这种情况。</li>
+<li>托管绑定到可见（或前台）Activity 的 Service</li>
+</ul>
+<p><strong>3、服务进程</strong>  </p>
+<ul>
+<li>正在运行已使用 startService() 方法启动的服务且不属于上述两个更高类别进程的进程。</li>
+</ul>
+<p><strong>4、后台进程</strong></p>
+<ul>
+<li>包含目前对用户不可见的 Activity 的进程（已调用 Activity 的 <code>onStop()</code> 方法）。通常会有很多后台进程在运行，因此它们会保存在 LRU （最近最少使用）列表中，以确保包含用户最近查看的 Activity 的进程最后一个被终止。</li>
+</ul>
+<p><strong>5、空进程</strong></p>
+<ul>
+<li>不含任何活动应用组件的进程。保留这种进程的的唯一目的是用作缓存，以缩短下次在其中运行组件所需的启动时间。 为使总体系统资源在进程缓存和底层内核缓存之间保持平衡，系统往往会终止这些进程。</li>
+</ul>
+<h2 id="在Service中新开线程比在Activity中新开线程的区别"><a href="#在Service中新开线程比在Activity中新开线程的区别" class="headerlink" title="在Service中新开线程比在Activity中新开线程的区别"></a>在Service中新开线程比在Activity中新开线程的区别</h2><p>在Service中新开线程至少有服务进程的优先级；</p>
+<p>在Activity中新开线程，当Activity退出到桌面或其他情况时，会成为后台进程；</p>
+<p>综上：若要处理长时间操作的话，新建Service再开启线程比在Activity中直接开线程好，可以保证这个长时间操作的稳定。</p>
+<h2 id="多进程"><a href="#多进程" class="headerlink" title="多进程"></a>多进程</h2><p>如果注册的四大组件中的任意一个组件时用到了多进程，运行该组件时，都会创建一个新的 Application 对象。对于多进程重复创建 Application 这种情况，只需要在该类中对当前进程加以判断即可。</p>
+<p>单应用多进程：给四大组件(Activity、Service、Receiver、ContentProvider)在AndroidManifest中指定<code>android:process</code>属性。MainActivity运行在默认进程（默认进程名是包名）中。</p>
+<p><code>andorid:process</code>内容以“:”开头属于当前应用的私有进程，其他应用组件不可以和它跑在同一个进程中；内容是完整包名的是全局进程，其他应用可通过ShareUID（需要ShareUID、签名相同）和它跑在同一个进程中。每个应用都有个唯一的UID，有相同UID的应用才能共享数据。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MyApplication</span> <span class="keyword">extends</span> <span class="title class_">Application</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onCreate</span><span class="params">()</span> &#123;</span><br><span class="line">        Log.d(<span class="string">&quot;MyApplication&quot;</span>, getProcessName(android.os.Process.myPid()));</span><br><span class="line">        <span class="built_in">super</span>.onCreate();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 根据进程 ID 获取进程名</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> pid 进程id</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> 进程名</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span>  String <span class="title function_">getProcessName</span><span class="params">(<span class="type">int</span> pid)</span>&#123;</span><br><span class="line">        <span class="type">ActivityManager</span> <span class="variable">am</span> <span class="operator">=</span> (ActivityManager)getSystemService(Context.ACTIVITY_SERVICE);</span><br><span class="line">        List&lt;ActivityManager.RunningAppProcessInfo&gt; processInfoList = am.getRunningAppProcesses();</span><br><span class="line">        <span class="keyword">if</span> (processInfoList == <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> (ActivityManager.RunningAppProcessInfo processInfo : processInfoList) &#123;</span><br><span class="line">            <span class="keyword">if</span> (processInfo.pid == pid) &#123;</span><br><span class="line">                <span class="keyword">return</span> processInfo.processName;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="多进程导致的问题"><a href="#多进程导致的问题" class="headerlink" title="多进程导致的问题"></a>多进程导致的问题</h3><ol>
+<li>静态成员和单例模式完全失效</li>
+<li>线程同步机制完全失效</li>
+<li>SharedPreferences的可靠性下降</li>
+<li>Application会多次创建</li>
+</ol>
+<p>上面问题1、2：每个进程都会分配一个独立的虚拟机，在内存分配上有不同的地址空间。导致不同虚拟机访问同一个类的对象会产生多份副本。（（对对象、全局类）加锁是没有用的（不同进程锁的不是同一个对象了））</p>
+<p>上面问题3：因为SharedPreferences（底层通过读&#x2F;写XML文件来实现的）不支持两个进程同时去执行写操作，否则会导致一定几率的数据丢失。甚至并发读&#x2F;写都有可能出问题。</p>
+<p>上面问题4：新进程分配新的虚拟机，此过程其实就是启动一个应用的过程。相当于系统又把这个应用重新启动了一遍，会创建新的Application。</p>
+<h2 id="进程存活"><a href="#进程存活" class="headerlink" title="进程存活"></a>进程存活</h2><h3 id="OOM-ADJ"><a href="#OOM-ADJ" class="headerlink" title="OOM_ADJ"></a>OOM_ADJ</h3><table>
+<thead>
+<tr>
+<th>ADJ级别</th>
+<th>取值</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>UNKNOWN_ADJ</td>
+<td>16</td>
+<td>一般指将要会缓存进程，无法获取确定值</td>
+</tr>
+<tr>
+<td>CACHED_APP_MAX_ADJ</td>
+<td>15</td>
+<td>不可见进程的adj最大值</td>
+</tr>
+<tr>
+<td>CACHED_APP_MIN_ADJ</td>
+<td>9</td>
+<td>不可见进程的adj最小值</td>
+</tr>
+<tr>
+<td>SERVICE_B_AD</td>
+<td>8</td>
+<td>B List中的Service（较老的、使用可能性更小）</td>
+</tr>
+<tr>
+<td>PREVIOUS_APP_ADJ</td>
+<td>7</td>
+<td>上一个App的进程(往往通过按返回键)</td>
+</tr>
+<tr>
+<td>HOME_APP_ADJ</td>
+<td>6</td>
+<td>Home进程</td>
+</tr>
+<tr>
+<td>SERVICE_ADJ</td>
+<td>5</td>
+<td>服务进程(Service process)</td>
+</tr>
+<tr>
+<td>HEAVY_WEIGHT_APP_ADJ</td>
+<td>4</td>
+<td>后台的重量级进程，system&#x2F;rootdir&#x2F;init.rc文件中设置</td>
+</tr>
+<tr>
+<td>BACKUP_APP_ADJ</td>
+<td>3</td>
+<td>备份进程</td>
+</tr>
+<tr>
+<td>PERCEPTIBLE_APP_ADJ</td>
+<td>2</td>
+<td>可感知进程，比如后台音乐播放</td>
+</tr>
+<tr>
+<td>VISIBLE_APP_ADJ</td>
+<td>1</td>
+<td>可见进程(Visible process)</td>
+</tr>
+<tr>
+<td>FOREGROUND_APP_ADJ</td>
+<td>0</td>
+<td>前台进程（Foreground process)</td>
+</tr>
+<tr>
+<td>PERSISTENT_SERVICE_ADJ</td>
+<td>-11</td>
+<td>关联着系统或persistent进程</td>
+</tr>
+<tr>
+<td>PERSISTENT_PROC_ADJ</td>
+<td>-12</td>
+<td>系统persistent进程，比如telephony</td>
+</tr>
+<tr>
+<td>SYSTEM_ADJ</td>
+<td>-16</td>
+<td>系统进程</td>
+</tr>
+<tr>
+<td>NATIVE_ADJ</td>
+<td>-17</td>
+<td>native进程（不被系统管理）</td>
+</tr>
+</tbody></table>
+<h3 id="进程被杀情况"><a href="#进程被杀情况" class="headerlink" title="进程被杀情况"></a>进程被杀情况</h3><table>
+<thead>
+<tr>
+<th>进程杀死场景</th>
+<th>调用接口</th>
+<th>可能影响范围</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>触发系统进程管理机制</td>
+<td>Lowmemorykiller</td>
+<td>从进程importace值由大到小依次杀死，释放内存</td>
+</tr>
+<tr>
+<td>被第三方应用杀死（无Root）</td>
+<td>killBackgroundProcess</td>
+<td>只能杀死OOM_ADJ为4以上的进程</td>
+</tr>
+<tr>
+<td>被第三方应用杀死（有Root）</td>
+<td>force-stop或者kill</td>
+<td>理论上可以杀所有进程，一般只杀非系统关键进程和非前台和可见进程</td>
+</tr>
+<tr>
+<td>厂商杀进程功能</td>
+<td>force-stop或者kill</td>
+<td>理论上可以杀所有进程，包括Native进程</td>
+</tr>
+<tr>
+<td>用户主动“强行停止”进程</td>
+<td>force-stop</td>
+<td>只能停用第三方和非system&#x2F;phone进程应用（停用system进程应用会造成Android重启）</td>
+</tr>
+</tbody></table>
+<h3 id="进程保活方案"><a href="#进程保活方案" class="headerlink" title="进程保活方案"></a>进程保活方案</h3><ul>
+<li>开启一个像素的Activity</li>
+<li>使用前台服务</li>
+<li>多进程相互唤醒</li>
+<li>JobSheduler唤醒</li>
+<li>粘性服务&amp;与系统服务捆绑</li>
+</ul>
+<h3 id="保证Service不死的方案"><a href="#保证Service不死的方案" class="headerlink" title="保证Service不死的方案"></a>保证Service不死的方案</h3><ul>
+<li><p>设置优先级</p>
+<p><code>AndroidManifest.xml</code>中<code>intent-filter</code>标签可加<code>android:priority=&quot;1000&quot;</code>属性，设置优先级，1000时最高值</p>
+</li>
+<li><p><code>startForeground()</code></p>
+<p>在<code>onStartCommand()</code>里调用<code>startForeground()</code>将Service提升为前台进程。在<code>onDestory</code>里记得调用<code>stopForeground()</code></p>
+</li>
+<li><p><code>onStartCommand()</code>，返回<code>START_STICKY</code></p>
+<p>在进程不被干掉的情况下：在<code>onStartCommand()</code>中手动返回<code>START_STICKY</code>，当Service因内存不足被kill，当内存又存在时，Service又被重新创建</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="type">int</span> <span class="title function_">onStartCommand</span><span class="params">(Intent intent, <span class="type">int</span> flags, <span class="type">int</span> startId)</span>&#123;</span><br><span class="line">    flags = START_STICKY;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">super</span>.onStartCommand(intent, flags, startId);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>onStartCommand返回int整型，有4个取值：</p>
+<ol>
+<li>START_STICKY：“粘性的”。若service进程被kill，保留service状态为开始状态，但不保留递送的intent对象。随后系统尝试重建service，因服务为开始状态，故创建服务后一定会调用<code>onStartCommand(Intent, int, int)</code>，若在此期间没有任何启动命令传递到service，则参数Intent将为null</li>
+<li>START_NOT_STICKY：“非粘性的”。在执行玩<code>onStartCommand(Intent, int, int)</code>后，服务被异常kill掉，系统不会自动重启该服务。</li>
+<li>START_REDELIVER_INTENT：重传Intent。执行完<code>onStartCommand</code>后，服务被异常kill掉，系统不会自动重启该服务。</li>
+<li>START_STICKY_COMPATIBILITY：START_STICKY的兼容版本。但不保证服务被kill后一定能重启。</li>
+</ol>
+</blockquote>
+</li>
+<li><p>在onDestroy中发广播重启Service</p>
+<p>service走onDestory时，发个自定义广播，当收到广播时重启service。（第三方应用或是在setting里–应用–强制停止时，APP进程直接被干掉了，onDestory方法进不来，故无法保证会执行）</p>
+</li>
+<li><p>监听（系统）广播判断Service状态</p>
+<p>大厂的做法。监听系统、QQ、微信、系统应用、友盟推送等发送游戏额广播，来唤醒自己的App</p>
+</li>
+<li><p>Application加上Persistent属性</p>
+<p>某个进程不想被杀死（数据缓存进程、状态监控进程、远程服务进程）</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//加上以上属性相当于将该进程设置为常驻内存进程</span></span><br><span class="line"><span class="keyword">add</span> android:persistent=<span class="string">&quot;true&quot;</span>  <span class="keyword">into</span> the section <span class="keyword">in</span> your AndroidManifest.xml</span><br></pre></td></tr></table></figure>
+
+<p><strong>这个不可滥用</strong>，一般只适用于放在<code>/system/app</code>下的app。这里app一多容易造成系统崩溃。</p>
+</li>
+<li><p>类似监听锁屏的方法</p>
+<figure class="highlight ada"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">QQ采取在锁屏的时候启动一个<span class="number">1</span>个像素的Activity，当用户解锁以后将这个Activity结束掉（顺便同时把自己的核心服务再开启一次）。</span><br><span class="line">故事：小米撕逼。</span><br><span class="line">背景：当手机锁屏的时候什么都干死了，为了省电。</span><br><span class="line">锁屏界面在上面盖住了。</span><br><span class="line">监听锁屏广播，锁了<span class="comment">---启动这个Activity。</span></span><br><span class="line">监听锁屏的，开启<span class="comment">---结束掉这个Activity。</span></span><br><span class="line">要监听锁屏的广播<span class="comment">---动态注册。</span></span><br><span class="line">ScreenListener.<span class="keyword">begin</span>(<span class="keyword">new</span> xxxListener</span><br><span class="line">	onScreenOff()</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line">被系统无法杀死的进程。</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>双进程守护+锁屏</p>
+</li>
+<li><p>双进程守护+JobScheduler调度</p>
+</li>
+<li><p>其他：App运营商与手机厂商合作列入白名单；利用账号同步机制唤醒我们的进程；NDK来解决，Native进程来实现双进程守护。</p>
+</li>
+</ul>
+<h3 id="进程保活神器"><a href="#进程保活神器" class="headerlink" title="进程保活神器"></a><a target="_blank" rel="noopener" href="https://github.com/xinjianteng/Leoric">进程保活神器</a></h3><h2 id="进程间通信"><a href="#进程间通信" class="headerlink" title="进程间通信"></a>进程间通信</h2><ul>
+<li>bind机制（IPC –&gt; AIDL）</li>
+<li>Linux级共享内存</li>
+<li>Broadcast</li>
+<li>ContentProvider</li>
+</ul>
+<h1 id="IPC"><a href="#IPC" class="headerlink" title="IPC"></a>IPC</h1><p>IPC 即 Inter-Process Communication (进程间通信)。Android 基于 Linux，而 Linux 出于安全考虑，不同进程间不能之间操作对方的数据，这叫做“进程隔离”。</p>
+<blockquote>
+<p>在 Linux 系统中，虚拟内存机制为每个进程分配了线性连续的内存空间，操作系统将这种虚拟内存空间映射到物理内存空间，每个进程有自己的虚拟内存空间，进而不能操作其他进程的内存空间，只有操作系统才有权限操作物理内存空间。 进程隔离保证了每个进程的内存安全。</p>
+</blockquote>
+<h2 id="基础概念介绍"><a href="#基础概念介绍" class="headerlink" title="基础概念介绍"></a>基础概念介绍</h2><h3 id="Serializable"><a href="#Serializable" class="headerlink" title="Serializable"></a>Serializable</h3><p>Java提供的一个序列化的空接口。实体类实现Serializable即可【再声明一个serialVersionUID】（需要大量I&#x2F;O操作，开销大）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//序列化过程</span></span><br><span class="line"><span class="type">User</span> <span class="variable">user</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">User</span>(<span class="number">0</span>, <span class="string">&quot;jake&quot;</span>, <span class="literal">true</span>);</span><br><span class="line"><span class="type">ObjectOutputStream</span> <span class="variable">out</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(<span class="keyword">new</span> <span class="title class_">FileOutputStream</span>(<span class="string">&quot;cache.txt&quot;</span>));</span><br><span class="line">out.writeObject(user);</span><br><span class="line">out.close();</span><br><span class="line"></span><br><span class="line"><span class="comment">//反序列化过程</span></span><br><span class="line"><span class="type">ObjectInputStream</span> <span class="variable">in</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(<span class="keyword">new</span> <span class="title class_">FileInputStream</span>(<span class="string">&quot;cache.txt&quot;</span>));</span><br><span class="line"><span class="type">User</span> <span class="variable">newUser</span> <span class="operator">=</span> (User)in.readObject();</span><br><span class="line">in.close();</span><br></pre></td></tr></table></figure>
+
+<p>应该手动指定serialVersionUID（指定为1L也可以，AS会根据当前类结构去生成hash值），反序列化时会检测是否与当前类的serialVersionUID一致，如果发生过某些变化（比如成员变量的数量、类型改变）就无法正常反序列化会报<code>java.io.InvalidClassException:Main;local class incompatible:stream classdesc serialVersionUID=87113688010083044,local class serialVersionUID=8711368828010083043.</code></p>
+<h3 id="Parcelable"><a href="#Parcelable" class="headerlink" title="Parcelable"></a>Parcelable</h3><p>Android提供的新的序列化方式。一个类对象只要实现这个接口，就可以实现序列化并可以通过Intent和Binder传递。（效率更高，写法复杂）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">User</span> <span class="keyword">implements</span> <span class="title class_">Parcelable</span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="type">int</span> userId;</span><br><span class="line">    <span class="keyword">public</span> String userName;</span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> isMale;</span><br><span class="line">    <span class="keyword">public</span> Book book;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">User</span><span class="params">(<span class="type">int</span> userId, String userName, <span class="type">boolean</span> isMale)</span>&#123;</span><br><span class="line">        <span class="built_in">this</span>.userId = userId;</span><br><span class="line">        <span class="built_in">this</span>.userName = userName;</span><br><span class="line">        <span class="built_in">this</span>.isMale = isMale;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//内容描述功能。仅当当前对象中存在文件描述符时才返回1</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">describeContents</span><span class="params">()</span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//序列化过程</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">writeToParcel</span><span class="params">(Parcel out, <span class="type">int</span> flags)</span>&#123;</span><br><span class="line">        out.writeInt(userId);</span><br><span class="line">        out.writeString(userName);</span><br><span class="line">        out.writeInt(isMale ? <span class="number">1</span> : <span class="number">0</span>);</span><br><span class="line">        out.writeParcelable(book, <span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//反序列化过程</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> Parcelable.Creator&lt;User&gt; CREATOR = <span class="keyword">new</span> <span class="title class_">Parcelable</span>.Creator&lt;User&gt;()&#123;</span><br><span class="line">        <span class="keyword">public</span> User <span class="title function_">createFromParcel</span><span class="params">(Parcel in)</span>&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">User</span>(in);</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">public</span> User[] newArray(<span class="type">int</span> size)&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">User</span>(size);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> <span class="title function_">User</span><span class="params">(Parcel in)</span>&#123;</span><br><span class="line">        userId = in.readInt();</span><br><span class="line">        userName = in.readString();</span><br><span class="line">        isMale = in.readInt() == <span class="number">1</span>;</span><br><span class="line">        <span class="comment">//book是另一个可序列化对象，所以需传递当前线程的上下文类加载器，否则报无法找到类的错误</span></span><br><span class="line">        book = in.readParcelable(Thread.currentThread().getContextClassLoader());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="Parcelable的方法说明"><a href="#Parcelable的方法说明" class="headerlink" title="Parcelable的方法说明"></a>Parcelable的方法说明</h4><table>
+<thead>
+<tr>
+<th>方法</th>
+<th>功能</th>
+<th>标记位</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>createFromParcel(Parcel in)</td>
+<td>从序列化后的对象中创建原始对象</td>
+<td></td>
+</tr>
+<tr>
+<td>newArray(int size)</td>
+<td>创建指定长度的原始对象数组</td>
+<td></td>
+</tr>
+<tr>
+<td>User(Parcel in)</td>
+<td>从序列化后的对象中创建原始对象</td>
+<td></td>
+</tr>
+<tr>
+<td>writeToParcel(Parcel out, int flags)</td>
+<td>将当前对象写入序列化结构中，其中flags标识有两种值：0或1（参见右侧标记位）。<br>为1时标识当前对象需要作为返回值返回，不能立即释放资源，几乎所有情况都为0</td>
+<td>PARCEL_ABLE_WRITE_RETURN_VALUE</td>
+</tr>
+<tr>
+<td>describeContents</td>
+<td>返回当前对象地内容描述。如果含有文件描述符，返回1（参见右侧标记位），否则返回0，几乎所有情况都返回0</td>
+<td>CONTENTS_FILE_DESCRIPTOR</td>
+</tr>
+</tbody></table>
+<p>系统已提供许多实现了Parcelable接口的类，Intent、Bundle、Bitmap等，同时List和Map也可以序列化，前提是其内每个元素都是可序列化的。</p>
+<h3 id="Binder"><a href="#Binder" class="headerlink" title="Binder"></a>Binder</h3><p>Binder是Android中的一个类，实现了IBinder接口。是Android中的一种跨进程通信方式。可理解为一种虚拟的物理设备，其设备驱动是&#x2F;dev&#x2F;binder，该通信方式在Linux中没有；从Android Framework角度来说，Binder是ServiceManager连接各种Manager（ActivityManager、WindowManager等等）和相应ManagerService的桥梁；从Android应用层来说，Binder是客户端和服务端进行通信的媒介，当bindService的时候，服务端会返回一个包含了服务端业务调用的Binder对象，通过这个Binder对象，客户端就可以获取服务端提供的服务或者数据，这里的服务包括普通服务和基于AIDL的服务。</p>
+<p>Binder主要用于Service中，包括AIDL和Messenger，其中普通Service中的Binder不涉及进程间通信，较为简单。Messenger底层是AIDL。</p>
+<h2 id="IPC方式"><a href="#IPC方式" class="headerlink" title="IPC方式"></a>IPC方式</h2><table>
+<thead>
+<tr>
+<th>名称</th>
+<th>优点</th>
+<th>缺点</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Bundle</td>
+<td>简单易用</td>
+<td>只能传输Bundle支持的数据类型</td>
+<td>四大组件间的进程间通信</td>
+</tr>
+<tr>
+<td>文件共享</td>
+<td>简单易用</td>
+<td>不适合高并发场景，并且无法做到进程间即时通信</td>
+<td>无并发访问情形，交换简单的数据实时性不高的场景</td>
+</tr>
+<tr>
+<td>AIDL</td>
+<td>功能强大，支持一对多并发通信，支持实时通信</td>
+<td>使用稍复杂，需要处理好线程同步</td>
+<td>一对多通信且有RPC需求</td>
+</tr>
+<tr>
+<td>Messenger</td>
+<td>功能一般，支持一对多串行通信，支持实时通信</td>
+<td>不能处理高并发线程，不支持RPC，数据通过Message进行传输，因此只能传输Bundle支持的数据类型</td>
+<td>低并发的一对多即时通信，无RPC需求，或者无需返回结果的RPC需求</td>
+</tr>
+<tr>
+<td>ContentProvider</td>
+<td>在数据源访问方面功能强大，支持一对多并发数据共享，可通过Call方法扩展其他操作</td>
+<td>可以理解为受约束的AIDL，主要提供数据源的CRUD（Create、Retrieve、Update、Delete）操作</td>
+<td>一对多的进程间数据共享</td>
+</tr>
+<tr>
+<td>Socket</td>
+<td>功能强大，可以通过网络传输字节流，支持一对多并发实时通信</td>
+<td>实现细节稍微有点烦琐，不支持直接的RPC</td>
+<td>网络数据交换</td>
+</tr>
+</tbody></table>
+<h2 id="AIDL"><a href="#AIDL" class="headerlink" title="AIDL"></a>AIDL</h2><p>Android Interface Definition Language</p>
+<ul>
+<li><strong>新建AIDL接口文件</strong><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// RemoteService.aidl</span></span><br><span class="line"><span class="keyword">package</span> com.example.mystudyapplication3;</span><br><span class="line"></span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">IRemoteService</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> <span class="title function_">getUserId</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><strong>创建远程服务</strong><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RemoteService</span> <span class="keyword">extends</span> <span class="title class_">Service</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> <span class="variable">mId</span> <span class="operator">=</span> -<span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="type">Binder</span> <span class="variable">binder</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">IRemoteService</span>.Stub() &#123;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">getUserId</span><span class="params">()</span> <span class="keyword">throws</span> RemoteException &#123;</span><br><span class="line">            <span class="keyword">return</span> mId;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Nullable</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> IBinder <span class="title function_">onBind</span><span class="params">(Intent intent)</span> &#123;</span><br><span class="line">        mId = <span class="number">1256</span>;</span><br><span class="line">        <span class="keyword">return</span> binder;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><strong>声明远程服务</strong><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;service</span><br><span class="line">    android:name=<span class="string">&quot;.RemoteService&quot;</span></span><br><span class="line">    android:process=<span class="string">&quot;:aidl&quot;</span> /&gt;</span><br></pre></td></tr></table></figure></li>
+<li><strong>绑定远程服务</strong><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MainActivity</span> <span class="keyword">extends</span> <span class="title class_">AppCompatActivity</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">TAG</span> <span class="operator">=</span> <span class="string">&quot;wzq&quot;</span>;</span><br><span class="line"></span><br><span class="line">    IRemoteService iRemoteService;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">ServiceConnection</span> <span class="variable">mConnection</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ServiceConnection</span>() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onServiceConnected</span><span class="params">(ComponentName name, IBinder service)</span> &#123;</span><br><span class="line">            iRemoteService = IRemoteService.Stub.asInterface(service);</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                Log.d(TAG, String.valueOf(iRemoteService.getUserId()));</span><br><span class="line">            &#125; <span class="keyword">catch</span> (RemoteException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onServiceDisconnected</span><span class="params">(ComponentName name)</span> &#123;</span><br><span class="line">            iRemoteService = <span class="literal">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onCreate</span><span class="params">(Bundle savedInstanceState)</span> &#123;</span><br><span class="line">        <span class="built_in">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.activity_main);</span><br><span class="line">        bindService(<span class="keyword">new</span> <span class="title class_">Intent</span>(MainActivity.<span class="built_in">this</span>, RemoteService.class), mConnection, Context.BIND_AUTO_CREATE);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="Messenger"><a href="#Messenger" class="headerlink" title="Messenger"></a>Messenger</h2><p>Messenger可以在不同进程中传递Message对象，在Message中放入我们需要传递的数据，就可以轻松地实现数据的进程间传递了。Messenger是一种轻量级的IPC方案，底层实现是AIDL。</p>
+<h1 id="后台运行白名单-保活方式"><a href="#后台运行白名单-保活方式" class="headerlink" title="后台运行白名单-保活方式"></a>后台运行白名单-保活方式</h1><p><a target="_blank" rel="noopener" href="https://juejin.im/post/5dfaeccbf265da33910a441d?utm_source=gold_browser_extension">原文</a></p>
+<h2 id="后台运行白名单设置步骤"><a href="#后台运行白名单设置步骤" class="headerlink" title="后台运行白名单设置步骤"></a>后台运行白名单设置步骤</h2><ol>
+<li>获取权限</li>
+<li>判断应用是否在白名单中</li>
+<li>未在白名单中，申请加入白名单</li>
+</ol>
+<h2 id="具体步骤详情"><a href="#具体步骤详情" class="headerlink" title="具体步骤详情"></a>具体步骤详情</h2><ol>
+<li>获取权限</li>
+</ol>
+<p><code>AndroidManifest.xml</code></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">uses-permission</span> <span class="attr">android:name</span>=<span class="string">&quot;android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>判断应用是否在白名单中</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RequiresApi(api = Build.VERSION_CODES.M)</span></span><br><span class="line"><span class="keyword">private</span> <span class="type">boolean</span> <span class="title function_">isIgnoringBatteryOptimizations</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">boolean</span> <span class="variable">isIgnoring</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line">    <span class="type">PowerManager</span> <span class="variable">powerManager</span> <span class="operator">=</span> (PowerManager) getSystemService(Context.POWER_SERVICE);</span><br><span class="line">    <span class="keyword">if</span> (powerManager != <span class="literal">null</span>) &#123;</span><br><span class="line">        isIgnoring = powerManager.isIgnoringBatteryOptimizations(getPackageName());</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> isIgnoring;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>未在白名单中，申请加入白名单</li>
+</ol>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">@<span class="constructor">RequiresApi(<span class="params">api</span> = Build.VERSION_CODES.M)</span></span><br><span class="line">public void request<span class="constructor">IgnoreBatteryOptimizations()</span> &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        Intent intent = <span class="keyword">new</span> <span class="constructor">Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)</span>;</span><br><span class="line">        intent.set<span class="constructor">Data(Uri.<span class="params">parse</span>(<span class="string">&quot;package:&quot;</span> + <span class="params">getPackageName</span>()</span>));</span><br><span class="line">        start<span class="constructor">Activity(<span class="params">intent</span>)</span>;</span><br><span class="line">    &#125; catch (Exception e) &#123;</span><br><span class="line">        e.print<span class="constructor">StackTrace()</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>注意：</strong></p>
+<ul>
+<li><p>申请加入白名单会弹出申请的弹窗，弹窗中有必要加用户会影响电池续航的提醒。</p>
+</li>
+<li><p>如果点击了允许，可以在申请的时候调用startActivityForResult，在onActivityResult里再判断一次是否在白名单中。</p>
+</li>
+</ul>
+<hr>
+<h2 id="厂商后台管理"><a href="#厂商后台管理" class="headerlink" title="厂商后台管理"></a>厂商后台管理</h2><p>上面的添加到到后台运行白名单，但也会被厂商的后台管理干掉。所以要把应用也加入到厂商系统的后台管理白名单。</p>
+<p>整理了部分主流Android厂商，先给出两个方法</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 跳转到指定应用的首页</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span> void show<span class="constructor">Activity(@NonNull String <span class="params">packageName</span>)</span> &#123;</span><br><span class="line">    Intent intent = get<span class="constructor">PackageManager()</span>.get<span class="constructor">LaunchIntentForPackage(<span class="params">packageName</span>)</span>;</span><br><span class="line">    start<span class="constructor">Activity(<span class="params">intent</span>)</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 跳转到指定应用的指定页面</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span> void show<span class="constructor">Activity(@NonNull String <span class="params">packageName</span>, @NonNull String <span class="params">activityDir</span>)</span> &#123;</span><br><span class="line">    Intent intent = <span class="keyword">new</span> <span class="constructor">Intent()</span>;</span><br><span class="line">    intent.set<span class="constructor">Component(<span class="params">new</span> ComponentName(<span class="params">packageName</span>, <span class="params">activityDir</span>)</span>);</span><br><span class="line">    intent.add<span class="constructor">Flags(Intent.FLAG_ACTIVITY_NEW_TASK)</span>;</span><br><span class="line">    start<span class="constructor">Activity(<span class="params">intent</span>)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>以下是厂商判断，跳转方法及对应设置步骤。另外，跳转方法不保证在所有版本上都能成功所以都要加try catch</p>
+<h2 id="华为"><a href="#华为" class="headerlink" title="华为"></a>华为</h2><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 判断是否是华为厂商</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> boolean <span class="title">isHuawei</span>()</span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (Build.BRAND == <span class="literal">null</span>) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> Build.BRAND.toLowerCase().<span class="keyword">equals</span>(<span class="string">&quot;huawei&quot;</span>) || Build.BRAND.toLowerCase().<span class="keyword">equals</span>(<span class="string">&quot;honor&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 跳转到华为手机管理的启动管理页</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">goHuaweiSetting</span>()</span>&#123;</span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">		showActivity(<span class="string">&quot;com.huawei.systemmanager&quot;</span>, <span class="string">&quot;com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity&quot;</span>);</span><br><span class="line">	&#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">		showActivity(<span class="string">&quot;com.huawei.systemmanager&quot;</span>, <span class="string">&quot;com.huawei.systemmanager.optimize.bootstart.BootStartActivity&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>操作步骤：应用启动管理–》关闭应用开关–》打开允许自启动</p>
+<h2 id="小米"><a href="#小米" class="headerlink" title="小米"></a>小米</h2><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 是否是小米厂商的判断</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> boolean <span class="title">isXiaomi</span>()</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> Build.BRAND != <span class="literal">null</span> &amp;&amp; Build.BRAND.toLowerCase().<span class="keyword">equals</span>(<span class="string">&quot;xiaomi&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 跳转小米安全中心的自启动管理页面</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">goXiaomiSetting</span>()</span> &#123;</span><br><span class="line">	showActivity(<span class="string">&quot;com.miui.securitycenter&quot;</span>, <span class="string">&quot;com.miui.permcenter.autostart.AutoStartManagementActivity&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>操作步骤：授权管理–》自启动管理–》允许应用自启动</p>
+<h2 id="OPPO"><a href="#OPPO" class="headerlink" title="OPPO"></a>OPPO</h2><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 是否是OPPO厂商的判断</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> boolean <span class="title">isOPPO</span>()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> Build.BRAND != <span class="literal">null</span> &amp;&amp; Build.BRAND.toLowerCase().<span class="keyword">equals</span>(<span class="string">&quot;oppo&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 跳转手机管理</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_ invoke__">goOPPOSetting</span>() &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="title function_ invoke__">showActivity</span>(<span class="string">&quot;com.coloros.phonemanager&quot;</span>);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (<span class="built_in">Exception</span> e1) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="title function_ invoke__">showActivity</span>(<span class="string">&quot;com.oppo.safe&quot;</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (<span class="built_in">Exception</span> e2) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="title function_ invoke__">showActivity</span>(<span class="string">&quot;com.coloros.oppoguardelf&quot;</span>);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (<span class="built_in">Exception</span> e3) &#123;</span><br><span class="line">                <span class="title function_ invoke__">showActivity</span>(<span class="string">&quot;com.coloros.safecenter&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>操作步骤：权限隐私 -&gt; 自启动管理 -&gt; 允许应用自启动</p>
+<h2 id="VIVO"><a href="#VIVO" class="headerlink" title="VIVO"></a>VIVO</h2><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 是否是VIVO厂商的判断</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> boolean <span class="title">isVIVO</span>()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> Build.BRAND != <span class="literal">null</span> &amp;&amp; Build.BRAND.toLowerCase().<span class="keyword">equals</span>(<span class="string">&quot;vivo&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 跳转手机管理</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">goVIVOSetting</span>()</span> &#123;</span><br><span class="line">    showActivity(<span class="string">&quot;com.iqoo.secure&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>操作步骤：权限管理 -&gt; 自启动 -&gt; 允许应用自启动</p>
+<h2 id="魅族"><a href="#魅族" class="headerlink" title="魅族"></a>魅族</h2><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 是否是魅族厂商的判断</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> boolean <span class="title">isMeizu</span>()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> Build.BRAND != <span class="literal">null</span> &amp;&amp; Build.BRAND.toLowerCase().<span class="keyword">equals</span>(<span class="string">&quot;meizu&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 跳转手机管理</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">goMeizuSetting</span>()</span> &#123;</span><br><span class="line">    showActivity(<span class="string">&quot;com.meizu.safe&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>操作步骤：权限管理 -&gt; 后台管理 -&gt; 点击应用 -&gt; 允许后台运行</p>
+<h2 id="三星"><a href="#三星" class="headerlink" title="三星"></a>三星</h2><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 是否是三星厂商的判断</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> boolean <span class="title">isSamsung</span>()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> Build.BRAND != <span class="literal">null</span> &amp;&amp; Build.BRAND.toLowerCase().<span class="keyword">equals</span>(<span class="string">&quot;samsung&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 跳转手机管理</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">goSamsungSetting</span>()</span> &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        showActivity(<span class="string">&quot;com.samsung.android.sm_cn&quot;</span>);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        showActivity(<span class="string">&quot;com.samsung.android.sm&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>操作步骤：自动运行应用程序 -&gt; 打开应用开关 -&gt; 电池管理 -&gt; 未监视的应用程序 -&gt; 添加应用</p>
+<h2 id="乐视"><a href="#乐视" class="headerlink" title="乐视"></a>乐视</h2><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 是否是乐视厂商的判断</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> boolean <span class="title">isLeTV</span>()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> Build.BRAND != <span class="literal">null</span> &amp;&amp; Build.BRAND.toLowerCase().<span class="keyword">equals</span>(<span class="string">&quot;letv&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 跳转手机管理</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">goLetvSetting</span>()</span> &#123;</span><br><span class="line">    showActivity(<span class="string">&quot;com.letv.android.letvsafe&quot;</span>, </span><br><span class="line">        <span class="string">&quot;com.letv.android.letvsafe.AutobootManageActivity&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>操作步骤：自启动管理 -&gt; 允许应用自启动</p>
+<h2 id="锤子"><a href="#锤子" class="headerlink" title="锤子"></a>锤子</h2><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 是否是锤子厂商的判断</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> boolean <span class="title">isSmartisan</span>()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> Build.BRAND != <span class="literal">null</span> &amp;&amp; Build.BRAND.toLowerCase().<span class="keyword">equals</span>(<span class="string">&quot;smartisan&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 跳转手机管理</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">goSmartisanSetting</span>()</span> &#123;</span><br><span class="line">    showActivity(<span class="string">&quot;com.smartisanos.security&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>操作步骤：权限管理 -&gt; 自启动权限管理 -&gt; 点击应用 -&gt; 允许被系统启动</p>
+<h1 id="研究TIM保活方式"><a href="#研究TIM保活方式" class="headerlink" title="研究TIM保活方式"></a>研究TIM保活方式</h1><p><a target="_blank" rel="noopener" href="https://www.toutiao.com/i6781676821193687555/?tt_from=weixin&utm_campaign=client_share&wxshare_count=1&timestamp=1584377339&app=news_article&utm_source=weixin&utm_medium=toutiao_android&req_id=20200317004858010014047015076B5232&group_id=6781676821193687555">原文：史上最强Android保活思路：深入剖析腾讯TIM的进程永生技术</a></p>
+<h2 id="总结本文思路"><a href="#总结本文思路" class="headerlink" title="总结本文思路"></a>总结本文思路</h2><ol>
+<li>先有了初步分析过程中对一些常规套路的可能性的排除，并嗅到callingPid&#x3D;0的异常举动；</li>
+<li>沿着蛛丝马迹，不断反复杀进程，从中寻找更多的规律，不断地向自己提出疑问；</li>
+<li>结合signal、strace、traces、ps、binder、linux、kill等技能不断地给解答自己的疑惑。</li>
+</ol>
+<h2 id="主要提出过这些疑惑："><a href="#主要提出过这些疑惑：" class="headerlink" title="主要提出过这些疑惑："></a>主要提出过这些疑惑：</h2><p>问题1：安全中心已配置了禁止TIM的自启动，并且安全中心和Whetstone都有对进程自启动以及级联启动的严格限制，为何会有漏网之鱼？</p>
+<p>问题2：startService()的callingPid怎么可能等于0？</p>
+<p>问题3：进程内的名叫“Thread-89”的线程具有什么特点，如何做到把进程杀掉？</p>
+<p>问题4：为何需要4个indicator文件？</p>
+<p>问题5：这4个进程到底是什么如何相互监听的呢？</p>
+<p>问题6：app_d到底是如何创建出来？又是如何成为init进程的子进程的？</p>
+<p>问题7：为何单杀daemon，会牵连app_d进程被杀，这是什么原理？</p>
+<p>问题8：app_d是由daemon进程间接fork出来的，会共享binder fd，所以即便daemon进程被杀，死亡回调也不会触发，这又是如何触发的呢？</p>
+<p>问题9：TIM到底对Binder框架做了什么级别的修改？这4个互保进程，既然callingPid&#x3D;0，有没有办法知道到底是谁拉起谁的？</p>
+<h2 id="本文总结（TIM保活技术要点）"><a href="#本文总结（TIM保活技术要点）" class="headerlink" title="本文总结（TIM保活技术要点）"></a>本文总结（TIM保活技术要点）</h2><blockquote>
+<ol>
+<li>通过flock的文件排他锁方式来监听进程存活状态<ol>
+<li>先采用一对普通的进程Daemoon和MSF相互监听文件的方式获得对方进程是否存活的状态；</li>
+<li>同时再采用一对退孤给init进程的app_d进程相互监听文件的方式来获得对方进程是否存活的状态； 而这两个进程都有间接由Daemon和MSF进程所fork而来；双重保险。</li>
+</ol>
+</li>
+<li>不采用系统框架中startService的Binder框架代码，而是自身在Native层通过自己去查询获取BpActivityManager代理对象，然后自己实现startService接口，并修改为ONEWAY的binder调用，既增加分析问题的难度，也进一步隐藏自身策略；</li>
+<li>当监听进程死亡，则通过自身实现的StartService的Binder call去拉起对方进程，系统对于这种方式启动进程并没有拦截机制。</li>
+</ol>
+</blockquote>
+<p>这种flock方式至少比网上常说的通过<strong>循环监听</strong>的方式，要强很多。</p>
+<p>比往常的互保更厉害的是TIM共有6个进程（说明：使用过程也还会创建一些进程），其中4个进程，形成两组互动进程，其中一组利用Linux基础托孤原理，可谓是隐藏得很深来互保，进一步确保进程永生。</p>
+<p>当然，进程收到signal信号后，如果恰巧这四个进程在同一个时刻点退出，那么还是有概率会被杀。 </p>
+<p>不走系统框架代码，自己去实现启动服务的binder call也是一大亮点，不过还有更高级的玩法，直接封装ioctl跟驱动交互。之前针对这个问题，做过反保活方案，后来为了某些功能缘故又放开对这个的限制，这里就不再继续展开了。</p>
+<h2 id="TIM保活还有改进空间"><a href="#TIM保活还有改进空间" class="headerlink" title="TIM保活还有改进空间"></a>TIM保活还有改进空间</h2><p>TIM分别在Java层和Native层，主动向ServiceManager进程查询AMS后，获取BpActivityManager代理对象，然后继续使用框架中的IPCThreadState跟Binder驱动交互，并没有替换掉libbinder.so</p>
+<p>其实，还可以更高级的玩法，连IPCThreadState这些框架通信代码也不使用，彻底地去自定义Binder交互代码，类似于servicemanager的方式。可以自己封装ioctl()，直接talkWithDriver。TIM保活还有改进空间， 提供保活变种方案，这样的话，上面的调试代码也拦截不了其对flags修改为ONEWAY的过程。  即使如此，一切都在Control之中， 完全可以在Binder Driver中拦截再定位其策略， 玩得再高级也主要活动在用户态，  内核态的策略还是相对安全的， 此所谓“魔高一座，道高一尺”。</p>
+<!-- flag of hidden posts -->
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div></div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>Donate</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.jpg" alt=" WeChat Pay"/>
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/private/" rel="tag"># private</a>
+          
+            <a href="/tags/%E5%AE%89%E5%8D%93%E7%9F%A5%E8%AF%86%E7%82%B9/" rel="tag"># 安卓知识点</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">71</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">31</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@189.cn" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/shenbh" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://gitee.com/shen_bh" target="_blank" title="Gitee">
+                      
+                        <i class="fa fa-fw fa-git"></i>Gitee</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B"><span class="nav-text">进程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5%E4%B8%AA%E5%B8%B8%E7%94%A8%E8%BF%9B%E7%A8%8B"><span class="nav-text">5个常用进程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%89%8D%E5%8F%B0%E8%BF%9B%E7%A8%8B"><span class="nav-text">前台进程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%AF%E8%A7%81%E8%BF%9B%E7%A8%8B"><span class="nav-text">可见进程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E8%BF%9B%E7%A8%8B"><span class="nav-text">服务进程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%8E%E5%8F%B0%E8%BF%9B%E7%A8%8B"><span class="nav-text">后台进程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A9%BA%E8%BF%9B%E7%A8%8BEmpty-process"><span class="nav-text">空进程Empty process</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-text">进程生命周期</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8Service%E4%B8%AD%E6%96%B0%E5%BC%80%E7%BA%BF%E7%A8%8B%E6%AF%94%E5%9C%A8Activity%E4%B8%AD%E6%96%B0%E5%BC%80%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-text">在Service中新开线程比在Activity中新开线程的区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%9A%E8%BF%9B%E7%A8%8B"><span class="nav-text">多进程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%9A%E8%BF%9B%E7%A8%8B%E5%AF%BC%E8%87%B4%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-text">多进程导致的问题</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E5%AD%98%E6%B4%BB"><span class="nav-text">进程存活</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#OOM-ADJ"><span class="nav-text">OOM_ADJ</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E8%A2%AB%E6%9D%80%E6%83%85%E5%86%B5"><span class="nav-text">进程被杀情况</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E4%BF%9D%E6%B4%BB%E6%96%B9%E6%A1%88"><span class="nav-text">进程保活方案</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%9D%E8%AF%81Service%E4%B8%8D%E6%AD%BB%E7%9A%84%E6%96%B9%E6%A1%88"><span class="nav-text">保证Service不死的方案</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E4%BF%9D%E6%B4%BB%E7%A5%9E%E5%99%A8"><span class="nav-text">进程保活神器</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1"><span class="nav-text">进程间通信</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#IPC"><span class="nav-text">IPC</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E6%A6%82%E5%BF%B5%E4%BB%8B%E7%BB%8D"><span class="nav-text">基础概念介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Serializable"><span class="nav-text">Serializable</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Parcelable"><span class="nav-text">Parcelable</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Parcelable%E7%9A%84%E6%96%B9%E6%B3%95%E8%AF%B4%E6%98%8E"><span class="nav-text">Parcelable的方法说明</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Binder"><span class="nav-text">Binder</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IPC%E6%96%B9%E5%BC%8F"><span class="nav-text">IPC方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AIDL"><span class="nav-text">AIDL</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Messenger"><span class="nav-text">Messenger</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%90%8E%E5%8F%B0%E8%BF%90%E8%A1%8C%E7%99%BD%E5%90%8D%E5%8D%95-%E4%BF%9D%E6%B4%BB%E6%96%B9%E5%BC%8F"><span class="nav-text">后台运行白名单-保活方式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%8E%E5%8F%B0%E8%BF%90%E8%A1%8C%E7%99%BD%E5%90%8D%E5%8D%95%E8%AE%BE%E7%BD%AE%E6%AD%A5%E9%AA%A4"><span class="nav-text">后台运行白名单设置步骤</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B7%E4%BD%93%E6%AD%A5%E9%AA%A4%E8%AF%A6%E6%83%85"><span class="nav-text">具体步骤详情</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8E%82%E5%95%86%E5%90%8E%E5%8F%B0%E7%AE%A1%E7%90%86"><span class="nav-text">厂商后台管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%8E%E4%B8%BA"><span class="nav-text">华为</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%8F%E7%B1%B3"><span class="nav-text">小米</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#OPPO"><span class="nav-text">OPPO</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#VIVO"><span class="nav-text">VIVO</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%AD%85%E6%97%8F"><span class="nav-text">魅族</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E6%98%9F"><span class="nav-text">三星</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B9%90%E8%A7%86"><span class="nav-text">乐视</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%94%A4%E5%AD%90"><span class="nav-text">锤子</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%A0%94%E7%A9%B6TIM%E4%BF%9D%E6%B4%BB%E6%96%B9%E5%BC%8F"><span class="nav-text">研究TIM保活方式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%E6%9C%AC%E6%96%87%E6%80%9D%E8%B7%AF"><span class="nav-text">总结本文思路</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BB%E8%A6%81%E6%8F%90%E5%87%BA%E8%BF%87%E8%BF%99%E4%BA%9B%E7%96%91%E6%83%91%EF%BC%9A"><span class="nav-text">主要提出过这些疑惑：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%AC%E6%96%87%E6%80%BB%E7%BB%93%EF%BC%88TIM%E4%BF%9D%E6%B4%BB%E6%8A%80%E6%9C%AF%E8%A6%81%E7%82%B9%EF%BC%89"><span class="nav-text">本文总结（TIM保活技术要点）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TIM%E4%BF%9D%E6%B4%BB%E8%BF%98%E6%9C%89%E6%94%B9%E8%BF%9B%E7%A9%BA%E9%97%B4"><span class="nav-text">TIM保活还有改进空间</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

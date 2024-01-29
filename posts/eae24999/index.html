@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="private,Java知识点," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="反射（⭐⭐⭐）说说你对 Java 反射的理解？答：Java中的反射首先是能够获取到Java中要反射类的字节码，获取字节码有三种方法：  Class.forName(className) 类名.class this.getClass()  然后将字节码中的方法，变量，构造函数等映射成相应的Method、Filed、Constructor等类，这些类提供了丰富的方法可以被我们所使用。 深入解析 Jav">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java-反射、泛型、注解等">
+<meta property="og:url" content="http://shenbh.github.io/posts/eae24999/index.html">
+<meta property="og:site_name" content="AB">
+<meta property="og:description" content="反射（⭐⭐⭐）说说你对 Java 反射的理解？答：Java中的反射首先是能够获取到Java中要反射类的字节码，获取字节码有三种方法：  Class.forName(className) 类名.class this.getClass()  然后将字节码中的方法，变量，构造函数等映射成相应的Method、Filed、Constructor等类，这些类提供了丰富的方法可以被我们所使用。 深入解析 Jav">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-03-01T08:11:16.000Z">
+<meta property="article:modified_time" content="2022-11-02T07:22:57.106Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="private">
+<meta property="article:tag" content="Java知识点">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/eae24999/"/>
+
+
+
+
+
+  <title>Java-反射、泛型、注解等 | AB</title><meta name="robots" content="noindex">
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">AB</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Just do IT Now.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/eae24999/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="AB">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Java-反射、泛型、注解等</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2022-03-01T16:11:16+08:00">
+                2022-03-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index">
+                    <span itemprop="name">Java</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="反射（⭐⭐⭐）"><a href="#反射（⭐⭐⭐）" class="headerlink" title="反射（⭐⭐⭐）"></a>反射（⭐⭐⭐）</h1><h2 id="说说你对-Java-反射的理解？"><a href="#说说你对-Java-反射的理解？" class="headerlink" title="说说你对 Java 反射的理解？"></a>说说你对 <code>Java</code> 反射的理解？</h2><p>答：<code>Java</code>中的反射首先是能够获取到<code>Java</code>中要反射类的字节码，获取字节码有三种方法：</p>
+<ol>
+<li><code>Class.forName(className)</code></li>
+<li><code>类名.class</code></li>
+<li><code>this.getClass()</code></li>
+</ol>
+<p>然后将字节码中的方法，变量，构造函数等映射成相应的<code>Method</code>、<code>Filed</code>、<code>Constructor</code>等类，这些类提供了丰富的方法可以被我们所使用。</p>
+<p><a target="_blank" rel="noopener" href="https://www.sczyh30.com/posts/Java/java-reflection-1/">深入解析 Java 反射（1） - 基础</a> </p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/sinat_38259539/article/details/71799078">Java 基础之—反射（非常重要）</a></p>
+<h1 id="泛型（⭐⭐）"><a href="#泛型（⭐⭐）" class="headerlink" title="泛型（⭐⭐）"></a>泛型（⭐⭐）</h1><h2 id="简单介绍一下-java-中的泛型，泛型擦除以及相关的概念，解析与分派？"><a href="#简单介绍一下-java-中的泛型，泛型擦除以及相关的概念，解析与分派？" class="headerlink" title="简单介绍一下 java 中的泛型，泛型擦除以及相关的概念，解析与分派？"></a>简单介绍一下 <code>java</code> 中的泛型，泛型擦除以及相关的概念，解析与分派？</h2><p>泛型是 <code>Java SE1.5</code> 的新特性，泛型的本质是<strong>参数化类型</strong>，也就是说所操作的数据类型被指定为一个参数。这种参数类型可以用在类、接口和方法的创建中，分别称为泛型类、泛型接口、泛型方法。<code>Java</code>语言引入泛型的好处是安全简单。</p>
+<p>在<code>Java SE1.5</code>之前，没有泛型的情况下，通过对类型<code>Object</code>的引用来实现参数的“任意化”，“任意化”带来的缺点是要做显式的强制类型转换，而这种转换是要求开发者实际参数类型可以预知的情况下进行的。对于强制类型转换错误的情况，编译器可能不提示错误，在运行的时候出现异常，这是一个安全隐患。</p>
+<p>泛型的好处是在编译的时候<code>检查类型安全</code>，并且所有的转换都是自动和隐式的，提高代码的重用率。</p>
+<ol>
+<li><p>泛型的类型参数只能是<strong>类类型</strong>（包括自定义类），不是简单类型。</p>
+</li>
+<li><p>同一种泛型可以对应多个版本（因为参数类型是不确定的），不同版本的泛型类实例是不兼容的。</p>
+</li>
+<li><p>泛型的类型参数可以有多个。</p>
+</li>
+<li><p>泛型的参数类型可以使用<code>extends</code>语句。例如，习惯上称为“有界类型”。</p>
+</li>
+<li><p>泛型的参数类型还可以是通配符类型。例如，<code>Class&lt;?&gt; classType = Class.forName(&quot;java.lang.String&quot;);</code></p>
+</li>
+</ol>
+<h3 id="泛型擦除以及相关的概念"><a href="#泛型擦除以及相关的概念" class="headerlink" title="泛型擦除以及相关的概念"></a>泛型擦除以及相关的概念</h3><p>泛型信息只存在代码编译阶段，在进入<code>JVM</code>之前，与泛型相关的信息都会被擦除掉。</p>
+<p>在类型擦除的时候，如果泛型类里的类型参数没有指定上限，则会被转换成<code>Object</code>类型，如果指定了上限，则会被转换成对应的类型上限。</p>
+<p><code>Java</code>中的泛型基本上都是在编译器这个层次来实现的。生成的<code>Java</code>字节码中是不包含泛型中的类型信息的。使用泛型的时候加上类型参数，会在编译器在编译的时候擦除掉。这个过程就称为类型擦除。</p>
+<p>类型擦除引起的问题及解决方法：</p>
+<ol>
+<li>先检查，再编译，以及检查编译的对象和引用传递的问题</li>
+<li>自动类型转换</li>
+<li>类型擦除与多态的冲突和解决方法</li>
+<li>泛型类型变量不能是基本数据类型</li>
+<li>运行时类型查询</li>
+<li>异常中使用泛型的问题</li>
+<li>数组（这个不属于类型擦除引起的问题）</li>
+<li>类型擦除后的冲突</li>
+<li>泛型在静态方法和静态类中的问题</li>
+</ol>
+<h1 id="注解（⭐⭐）"><a href="#注解（⭐⭐）" class="headerlink" title="注解（⭐⭐）"></a>注解（⭐⭐）</h1><h2 id="说说你对-Java-注解的理解？"><a href="#说说你对-Java-注解的理解？" class="headerlink" title="说说你对 Java 注解的理解？"></a>说说你对 Java 注解的理解？</h2><p>注解相当于一种标记，在程序中加了注解就等于为程序打上了某种标记。程序可以利用 <code>Java</code> 的反射机制来了解你的类及各种元素上有无何种标记，针对不同的标记，就去做相应的事件。标记可以加在<strong>包，类，字段，方法，方法的参数</strong>以及<strong>局部变量</strong>上。</p>
+<h1 id="其他（⭐⭐）"><a href="#其他（⭐⭐）" class="headerlink" title="其他（⭐⭐）"></a>其他（⭐⭐）</h1><h2 id="Java-的-char-是两个字节，是怎么存-Utf-8-的字符的？"><a href="#Java-的-char-是两个字节，是怎么存-Utf-8-的字符的？" class="headerlink" title="Java 的 char 是两个字节，是怎么存 Utf-8 的字符的？"></a>Java 的 char 是两个字节，是怎么存 <code>Utf-8</code> 的字符的？</h2><h3 id="是否熟悉-Java-char-和字符串（初级）"><a href="#是否熟悉-Java-char-和字符串（初级）" class="headerlink" title="是否熟悉 Java char 和字符串（初级）"></a>是否熟悉 Java char 和字符串（初级）</h3><ul>
+<li><code>char</code> 是2个字节，<code>utf-8</code>是1~3个字节</li>
+<li>字符集（字符集不是编码）：<code>ASCII</code> 码与 <code>Unicode</code> 码</li>
+<li>字符 -&gt; <code>0xd83dde00</code>(码点）</li>
+</ul>
+<h3 id="是否了解字符的映射和存储细节（中级）"><a href="#是否了解字符的映射和存储细节（中级）" class="headerlink" title="是否了解字符的映射和存储细节（中级）"></a>是否了解字符的映射和存储细节（中级）</h3><p>人类认知：字符 &#x3D;&gt; 字符集：0x4e2d(char) &#x3D;&gt; 计算机存储(byte)：01001110:4e、00101101:2d编码：UTF-16 “中”.getBytes(“utf-6”); -&gt; fe ff 4e 2d：4 个字节，其中前面的 fe ff 只是字节序标志。</p>
+<h3 id="是否能触类旁通，横向对比其他语言（高级）"><a href="#是否能触类旁通，横向对比其他语言（高级）" class="headerlink" title="是否能触类旁通，横向对比其他语言（高级）"></a>是否能触类旁通，横向对比其他语言（高级）</h3><p>Python2 的字符串： </p>
+<ul>
+<li>byteString &#x3D; “中” </li>
+<li>unicodeString &#x3D; u”中”</li>
+</ul>
+<p>令人迷惑的字符串长度 </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">emoij = u<span class="string">&quot;表情&quot;</span> </span><br><span class="line">print(len(emoji) </span><br></pre></td></tr></table></figure>
+
+<p>Java 与 python 3.2 及以下：2 字节 python &gt;&#x3D; 3.3：1 字节 </p>
+<blockquote>
+<p>注意：Java 9 对 latin 字符的存储空间做了优化，但字符串长度还是 !&#x3D; 字符数。 </p>
+</blockquote>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ul>
+<li>Java char 不存 UTF-8 的字节，而是 UTF-16。 </li>
+<li>Unicode 通用字符集占两个字节，例如“中”。 </li>
+<li>Unicode 扩展字符集需要用一对 char 来表示，例如“表情”。 </li>
+<li>Unicode 是字符集，不是编码，作用类似于 ASCII 码。 </li>
+<li>Java String 的 length 不是字符数。</li>
+</ul>
+<h2 id="Java-String-可以有多长？"><a href="#Java-String-可以有多长？" class="headerlink" title="Java String 可以有多长？"></a>Java String 可以有多长？</h2><h3 id="是否对字符串编解码有深入了解（中级）"><a href="#是否对字符串编解码有深入了解（中级）" class="headerlink" title="是否对字符串编解码有深入了解（中级）"></a>是否对字符串编解码有深入了解（中级）</h3><p>分配到栈： </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">String</span> <span class="variable">longString</span> <span class="operator">=</span> <span class="string">&quot;aaa...aaa&quot;</span>; </span><br></pre></td></tr></table></figure>
+
+<p>分配到堆： </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">byte</span>[] bytes = loadFromFile(<span class="keyword">new</span> <span class="title class_">File</span>(<span class="string">&quot;superLongText.txt&quot;</span>); </span><br><span class="line"><span class="type">String</span> <span class="variable">superLongString</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">String</span>(bytes);</span><br></pre></td></tr></table></figure>
+
+<h3 id="是否对字符串在内存当中的存储形式有深入了解（高级）"><a href="#是否对字符串在内存当中的存储形式有深入了解（高级）" class="headerlink" title="是否对字符串在内存当中的存储形式有深入了解（高级）"></a>是否对字符串在内存当中的存储形式有深入了解（高级）</h3><h3 id="是否对-Java-虚拟机字节码有足够的了解（高级）"><a href="#是否对-Java-虚拟机字节码有足够的了解（高级）" class="headerlink" title="是否对 Java 虚拟机字节码有足够的了解（高级）"></a>是否对 Java 虚拟机字节码有足够的了解（高级）</h3><p>源文件：<code>*.java</code> </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">String</span> <span class="variable">longString</span> <span class="operator">=</span> <span class="string">&quot;aaa...aaa&quot;</span>; </span><br><span class="line">字节数 &lt;= <span class="number">65535</span> </span><br></pre></td></tr></table></figure>
+
+<p>字节码：<code>*.class</code> </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">CONSTANT_Utf8_info &#123; </span><br><span class="line">    u1 tag; </span><br><span class="line">    u2 length; </span><br><span class="line">    (<span class="number">0</span>~<span class="number">65535</span>) u1 bytes[length]; </span><br><span class="line">    最多 <span class="number">65535</span> 个字节 </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>javac 的编译器有问题，&lt; 65535 应该改为&lt; &#x3D; 65535。 </p>
+<h4 id="Java-String-栈分配"><a href="#Java-String-栈分配" class="headerlink" title="Java String 栈分配"></a>Java String 栈分配</h4><ul>
+<li>受字节码限制，字符串最终的 MUTF-8 字节数不超过 65535。 </li>
+<li>Latin 字符，受 Javac 代码限制，最多 65534 个。 </li>
+<li>非 Latin 字符最终对应字节个数差异较大，最多字节个数是 65535。 </li>
+<li>如果运行时方法区设置较小，也会受到方法区大小的限制。</li>
+</ul>
+<h3 id="是否对-java-虚拟机指令有一定的认识（高级）"><a href="#是否对-java-虚拟机指令有一定的认识（高级）" class="headerlink" title="是否对 java 虚拟机指令有一定的认识（高级）"></a>是否对 java 虚拟机指令有一定的认识（高级）</h3><p>new String(bytes)内部是采用了一个字符数组，其对应的虚拟机指令是 newarray [int] ，数组理论最大个数为 <code>Integer.MAX_VALUE</code>，有些虚拟机需要一些头部信息，所以 MAX_ARRAY_SIZE &#x3D; Integer.MAX_VALUE - 8。 </p>
+<h4 id="Java-String-堆分配"><a href="#Java-String-堆分配" class="headerlink" title="Java String 堆分配"></a>Java String 堆分配</h4><ul>
+<li>受虚拟机指令限制，字符数理论上限为 Integer.MAX_VALUE。 </li>
+<li>受虚拟机实现限制，实际上限可能会小于 Integer.MAX_VALUE。 </li>
+<li>如果堆内存较小，也会受到堆内存的限制。</li>
+</ul>
+<h3 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h3><h4 id="Java-String-字面量形式"><a href="#Java-String-字面量形式" class="headerlink" title="Java String 字面量形式"></a>Java String 字面量形式</h4><ul>
+<li>字节码中 CONSTANT_Utf8_info 的限制 </li>
+<li>Javac 源码逻辑的限制 </li>
+<li>方法区大小的限制</li>
+</ul>
+<h4 id="Java-String-运行时创建在堆上的形式"><a href="#Java-String-运行时创建在堆上的形式" class="headerlink" title="Java String 运行时创建在堆上的形式"></a>Java String 运行时创建在堆上的形式</h4><ul>
+<li>Java 虚拟机指令 newarray 的限制 </li>
+<li>Java 虚拟机堆内存大小的限制</li>
+</ul>
+<h2 id="Java-的匿名内部类有哪些限制？"><a href="#Java-的匿名内部类有哪些限制？" class="headerlink" title="Java 的匿名内部类有哪些限制？"></a>Java 的匿名内部类有哪些限制？</h2><h3 id="考察匿名内部类的概念和用法（初级）"><a href="#考察匿名内部类的概念和用法（初级）" class="headerlink" title="考察匿名内部类的概念和用法（初级）"></a>考察匿名内部类的概念和用法（初级）</h3><ul>
+<li>匿名内部类的名字：没有人类认知意义上的名字</li>
+<li>只能继承一个父类或实现一个接口 </li>
+<li><code>包名.OuterClass$1</code>，表示定位的第一个匿名内部类。外部类加<code>$N</code>，<code>N</code> 是匿名内部类的顺序。</li>
+</ul>
+<p><strong>考察语言规范以及语言的横向对比等（中级）</strong> </p>
+<p>匿名内部类的继承结构：Java 中的匿名内部类不可以继承，只有内部类才可以有实现继承、实现接口的特性。而 Kotlin 是的匿名内部类是支持继承的，如 </p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> runnableFoo = <span class="keyword">object</span>: Foo(),Runnable &#123; </span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">run</span><span class="params">()</span></span> &#123; </span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="作为考察内存泄漏的切入点（高级）"><a href="#作为考察内存泄漏的切入点（高级）" class="headerlink" title="作为考察内存泄漏的切入点（高级）"></a>作为考察内存泄漏的切入点（高级）</h3><p>匿名内部类的构造方法（深入源码字节码探索语言本质的能力）： </p>
+<ul>
+<li>匿名内部类会默认持有外部类的引用，可能会导致内存泄漏。 </li>
+<li>由编译器生成的。</li>
+</ul>
+<p>其参数列表包括 </p>
+<ul>
+<li>外部对象（定义在非静态域内） </li>
+<li>父类的外部对象（父类非静态） </li>
+<li>父类的构造方法参数（父类有构造方法且参数列表不为空） </li>
+<li>外部捕获的变量（方法体内有引用外部 final 变量）</li>
+</ul>
+<p>Lambda 转换(SAM 类型，仅支持单一接口类型）： </p>
+<p>如果 CallBack 是一个 interface，不是抽象类，则可以转换为 Lambda 表达式。 </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">CallBack</span> <span class="variable">callBack</span> <span class="operator">=</span> () -&gt; &#123; </span><br><span class="line"></span><br><span class="line">...&#125;;</span><br></pre></td></tr></table></figure>
+
+<h3 id="总结-2"><a href="#总结-2" class="headerlink" title="总结"></a>总结</h3><ul>
+<li>没有人类认知意义上的名字。 </li>
+<li>只能继承一个父类或实现一个接口。</li>
+<li>父类是非静态的类型，则需父类外部实例来初始化。 </li>
+<li>如果定义在非静态作用域内，会引用外部类实例。 </li>
+<li>只能捕获外部作用域内的 final 变量。 </li>
+<li>创建时只有单一方法的接口可以用 Lambda 转换。</li>
+</ul>
+<h3 id="技巧点拨"><a href="#技巧点拨" class="headerlink" title="技巧点拨"></a>技巧点拨</h3><p>关注语言版本的变化：</p>
+<ul>
+<li>体现对技术的热情</li>
+<li>体现好学的品质</li>
+<li>显得专业</li>
+</ul>
+<h2 id="Java-中对异常是如何进行分类的？"><a href="#Java-中对异常是如何进行分类的？" class="headerlink" title="Java 中对异常是如何进行分类的？"></a>Java 中对异常是如何进行分类的？</h2><h3 id="异常整体分类："><a href="#异常整体分类：" class="headerlink" title="异常整体分类："></a>异常整体分类：</h3><p>Java 异常结构中定义有 Throwable 类。 Exception 和 Error 为其子类。 </p>
+<p>Error 是程序无法处理的错误，比如 OutOfMemoryError、StackOverflowError。 </p>
+<p>这些异常发生时， Java 虚拟机（JVM）一般会选择线程终止。 </p>
+<p>Exception 是程序本身可以处理的异常，这种异常分两大类运行时异常和非运行时异常，程序中应当尽可能去处理这些异常。 </p>
+<p>运行时异常都是 RuntimeException 类及其子类异常，如 NullPointerException、IndexOutOfBoundsException 等， 这些异常是不检查异常，程序中可以选择捕获处理，也可以不处理。这些异常一般是由程序逻辑错误引起的， 程序应该从逻辑角度尽可能避免这类异常的发生。</p>
+<h3 id="异常处理的两个基本原则"><a href="#异常处理的两个基本原则" class="headerlink" title="异常处理的两个基本原则**:**"></a>异常处理的两个基本原则**:**</h3><ol>
+<li><p>尽量不要捕获类似 Exception 这样的通用异常，而是应该捕获特定异常。 </p>
+</li>
+<li><p>不要生吞异常。</p>
+</li>
+</ol>
+<h3 id="NoClassDefFoundError-和-ClassNotFoundException-有什么区别？"><a href="#NoClassDefFoundError-和-ClassNotFoundException-有什么区别？" class="headerlink" title="NoClassDefFoundError 和 ClassNotFoundException 有什么区别？"></a>NoClassDefFoundError 和 ClassNotFoundException 有什么区别？</h3><p>ClassNotFoundException 的产生原因主要是： Java 支持使用反射方式在运行时动态加载类，例如使用 Class.forName 方法来动态地加载类时，可以将类名作为参数传递给上述方法从而将指定类加载到 JVM 内存中，如果这个类在类路径中没有被找到，那么此时就会在运行时抛出ClassNotFoundException 异常。 解决该问题需要确保所需的类连同它依赖的包存在于类路径中，常见问题在于类名书写错误。 另外还有一个导致 ClassNotFoundException 的原因就是：当一个类已经由某个类加载器加载到内存中了，此时另一个类加载器又尝试着动态地从同一个包中加载这个类。通过控制动态类加载过程，可以避免上述情况发生。 </p>
+<p>NoClassDefFoundError 产生的原因在于： 如果 JVM 或者 ClassLoader 实例尝试加载（可以通过正常的方法调用，也可能是使用 new 来创建新的对象）类的时候却找不到类的定义。要查找的类在编译的时候是存在的，运行的时候却找不到了。这个时候就会导致 NoClassDefFoundError. 造成该问题的原因可能是打包过程漏掉了部分类，或者 jar 包出现损坏或者篡改。解决这个问题的办法是查找那些在开发期间存在于类路径下但在运行期间却不在类路径下的类。</p>
+<h2 id="String-为什么要设计成不可变的？"><a href="#String-为什么要设计成不可变的？" class="headerlink" title="String 为什么要设计成不可变的？"></a><strong>String 为什么要设计成不可变的？</strong></h2><p>String 是不可变的（修改 String 时，不会在原有的内存地址修改，而是重新指向一个新对象），String 用 final 修饰，不可继承，String 本质上是个 final 的 char[] 数组，所以 char[]数组的内存地址不会被修改，而且 String 也没有对外暴露修改char[]数组的方法。<strong>不可变性可以保证线程安全以及字符串串常量池的实现</strong>。</p>
+<h2 id="Java-里的幂等性了解吗？"><a href="#Java-里的幂等性了解吗？" class="headerlink" title="Java 里的幂等性了解吗？"></a>Java 里的幂等性了解吗？</h2><p>幂等性原本是数学上的一个概念，即：f(x) &#x3D; f(f(x))，对同一个系统，使用同样的条件，一次请求和重复的多次请求对系统资源的影响是一致的。 </p>
+<p>幂等性最为常见的应用就是电商的客户付款，试想一下如果你在付款的时候因为网络等各种问题失败了，然后去重复的付了一次，是一种多么糟糕的体验。幂等性就是为了解决这样的问题。 </p>
+<p>实现幂等性可以使用 Token 机制。 </p>
+<p><strong>核心思想</strong>是为每一次操作生成一个唯一性的凭证，也就是 token。一个 token 在操作的每一个阶段只有一次执行权，一旦执行成功则保存执行结果。对重复的请求，返回同一个结果。 </p>
+<p>例如：电商平台上的订单 id 就是最适合的 token。当用户下单时，会经历多个环节，比如生成订单，减库存，减优惠券等等。每一个环节执行时都先检测一下该订单 id 是否已经执行过这一步骤，对未执行的请求，执行操作并缓存结果，而对已经执行过的 id，则直接返回之前的执行结果，不做任何操 作。这样可以在最大程度上避免操作的重复执行问题，缓存起来的执行结果也能用于事务的控制等。</p>
+<h2 id="为什么-Java-里的匿名内部类只能访问-final-修饰的外部变量？"><a href="#为什么-Java-里的匿名内部类只能访问-final-修饰的外部变量？" class="headerlink" title="为什么 Java 里的匿名内部类只能访问 final 修饰的外部变量？"></a>为什么 Java 里的匿名内部类只能访问 final 修饰的外部变量？</h2><p>匿名内部类用法： </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">TryUsingAnonymousClass</span> &#123; </span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">useMyInterface</span><span class="params">()</span> &#123; </span><br><span class="line">        <span class="keyword">final</span> <span class="type">Integer</span> <span class="variable">number</span> <span class="operator">=</span> <span class="number">123</span>; </span><br><span class="line">        System.out.println(number); </span><br><span class="line">        <span class="type">MyInterface</span> <span class="variable">myInterface</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">MyInterface</span>() &#123; </span><br><span class="line">            <span class="meta">@Override</span> </span><br><span class="line">            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">doSomething</span><span class="params">()</span> &#123;</span><br><span class="line">                System.out.println(number); </span><br><span class="line">            &#125; </span><br><span class="line">        &#125;;</span><br><span class="line">        myInterface.doSomething(); </span><br><span class="line">        System.out.println(number); </span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>编译后的结果 </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">TryUsingAnonymousClass$1</span> <span class="keyword">implements</span> <span class="title class_">MyInterface</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> TryUsingAnonymousClass <span class="built_in">this</span>$<span class="number">0</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Integer paramInteger; </span><br><span class="line">    TryUsingAnonymousClass$<span class="number">1</span>(TryUsingAnonymousClass <span class="built_in">this</span>$<span class="number">0</span>, Integer paramInteger) &#123;</span><br><span class="line">        <span class="built_in">this</span>.<span class="built_in">this</span>$<span class="number">0</span> = <span class="built_in">this</span>$<span class="number">0</span>;</span><br><span class="line">        <span class="built_in">this</span>.paramInteger = paramInteger;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">doSomething</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.paramInteger);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>因为匿名内部类最终会编译成一个单独的类，而被该类使用的变量会以构造函数参数的形式传递给该类，例如：Integer paramInteger，如果变量不定义成 final的，paramInteger 在匿名内部类被可以被修改，进而造成和外部的 paramInteger 不一致的问题，为了避免这种不一致的情况，因次 Java 规定匿名内部类只能访问 final 修饰的外部变量。</p>
+<h2 id="讲一下-Java-的编码方式？"><a href="#讲一下-Java-的编码方式？" class="headerlink" title="讲一下 Java 的编码方式？"></a>讲一下 Java 的编码方式？</h2><p>为什么需要编码 </p>
+<p>计算机存储信息的最小单元是一个字节即 8bit，所以能示的范围是 0~255，这个范围无法保存所有的字符，所以要一个新的数据结构 char 来表示这些字符，从char 到 byte 需要编码。 </p>
+<p>常见的编码方式有以下几种： </p>
+<p>ASCII：总共有 128 个，用一个字节的低 7 位表示，031 是控制字符如换行回车删除等；32126 是打印字符，可以通过键盘输入并且能够显示出来。 </p>
+<p>GBK：码范围是 8140~FEFE（去掉 XX7F）总共有 23940 个码位，它能表示21003 个汉字，它的编码是和 GB2312 兼容的，也就是说用 GB2312 编码的汉字可以用 GBK 来解码，并且不会有乱码。 </p>
+<p>UTF-16：UTF-16 具体定义了 Unicode 字符在计算机中存取方法。UTF-16 用两个字节来表示 Unicode 转化格式，这个是定长的表示方法，不论什么字符都可以用两个字节表示，两个字节是 16 个 bit，所以叫 UTF-16。UTF-16 表示字符非常方便，每两个字节表示一个字符，这个在字符串操作时就大大简化了操作，这也是 Java 以 UTF-16 作为内存的字符存储格式的一个很重要的原因。 </p>
+<p>UTF-8：统一采用两个字节表示一个字符，虽然在表示上非常简单方便，但是也有其缺点，有很大一部分字符用一个字节就可以表示的现在要两个字节表示，存储空间放大了一倍，在现在的网络带宽还非常有限的今天，这样会增大网络传输的流量，而且也没必要。而 UTF-8 采用了一种变长技术，每个编码区域有不同的字码长度。不同类型的字符可以是由 1~6 个字节组成。 </p>
+<p>Java 中需要编码的地方一般都在字符到字节的转换上，这个一般包括磁盘 IO 和 网络 IO。 </p>
+<p>Reader 类是 Java 的 I&#x2F;O 中读字符的父类，而 InputStream 类是读字节的父类，InputStreamReader 类就是关联字节到字符的桥梁，它负责在 I&#x2F;O 过程中处理读取字节到字符的转换，而具体字节到字符解码实现由 StreamDecoder 去实现，在 StreamDecoder 解码过程中必须由用户指定 Charset 编码格式。</p>
+<h2 id="String，StringBuffer，StringBuilder-有哪些不同？"><a href="#String，StringBuffer，StringBuilder-有哪些不同？" class="headerlink" title="String，StringBuffer，StringBuilder 有哪些不同？"></a>String，StringBuffer，StringBuilder 有哪些不同？</h2><p>三者在执行速度方面的比较：StringBuilder &gt; StringBuffer &gt; String </p>
+<ul>
+<li>String 每次变化一个值就会开辟一个新的内存空间 </li>
+<li>StringBuilder：线程非安全的 </li>
+<li>StringBuffer：线程安全的</li>
+</ul>
+<p>对于三者使用的总结： </p>
+<ol>
+<li><p>如果要操作少量的数据用 String。 </p>
+</li>
+<li><p>单线程操作字符串缓冲区下操作大量数据用 StringBuilder。 </p>
+</li>
+<li><p>多线程操作字符串缓冲区下操作大量数据用 StringBuffer。</p>
+</li>
+</ol>
+<ul>
+<li><p>String 是 Java 语言非常基础和重要的类，提供了构造和管理字符串的各种基本逻辑。它是典型的 Immutable 类，被声明成为 final class，所有属性也都是 final 的。也由于它的不可变性，类似拼接、裁剪字符串等动作，都会产生新的 String 对象。由于字符串操作的普遍性，所以相关操作的效率往往对应用性能有明显影响。</p>
+</li>
+<li><p>StringBuffer 是为解决上面提到拼接产生太多中间对象的问题而提供的一个类，我们可以用 append 或者 add 方法，把字符串添加到已有序列的末尾或者指定位置。StringBuffer 本质是一个线程安全的可修改字符序列，它保证了线程安全，也随之带来了额外的性能开销，所以除非有线程安全的需要，不然还是推荐使用它的后继者，也就是 StringBuilder。 </p>
+</li>
+<li><p>StringBuilder 是 Java 1.5 中新增的，在能力上和 StringBuffer 没有本质区别，但是它去掉了线程安全的部分，有效减小了开销，是绝大部分情况下进行字符串拼接的首选。</p>
+</li>
+</ul>
+<h2 id="什么是内部类？内部类的作用。"><a href="#什么是内部类？内部类的作用。" class="headerlink" title="什么是内部类？内部类的作用。"></a>什么是内部类？内部类的作用。</h2><p>内部类可以有多个实例，每个实例都有自己的状态信息，并且与其他外围对象的信息相互独立。 </p>
+<p>在单个外围类中，可以让多个内部类以不同的方式实现同一个接口，或者继承同一个类。 </p>
+<p>创建内部类对象并不依赖于外围类对象的创建。 </p>
+<p>内部类并没有令人迷惑的“is-a”关系，他就是一个独立的实体。 </p>
+<p>内部类提供了更好的封装，除了该外围类，其他类都不能访问。。</p>
+<h2 id="抽象类和接口区别？"><a href="#抽象类和接口区别？" class="headerlink" title="抽象类和接口区别？"></a>抽象类和接口区别？</h2><p>共同点</p>
+<ul>
+<li>是上层的抽象层。 </li>
+<li>都不能被实例化。</li>
+<li>都能包含抽象的方法，这些抽象的方法用于描述类具备的功能，但是不提供具体的实现。</li>
+</ul>
+<p>区别：</p>
+<ol>
+<li>在抽象类中可以写非抽象的方法，从而避免在子类中重复书写他们，这样可以提高代码的复用性，这是抽象类的优势，接口中只能有抽象的方法。 </li>
+<li>多继承：一个类只能继承一个直接父类，这个父类可以是具体的类也可是抽象类，但是一个类可以实现多个接口。 </li>
+<li>抽象类可以有默认的方法实现，接口根本不存在方法的实现。 </li>
+<li>子类使用 extends 关键字来继承抽象类。如果子类不是抽象类的话，它需要提供抽象类中所有声明方法的实现。子类使用关键字 implements 来实现接口。它需要提供接口中所有声明方法的实现。 </li>
+<li>构造器：抽象类可以有构造器，接口不能有构造器。</li>
+<li>和普通 Java 类的区别：除了你不能实例化抽象类之外，抽象类和普通 Java 类没有任何区别，接口是完全不同的类型。</li>
+<li>访问修饰符:抽象方法可以有 public、protected 和 default 修饰符，接口方法默认修饰符是 public。你不可以使用其它修饰符。 </li>
+<li>main 方法:抽象方法可以有 main 方法并且我们可以运行它。接口没有 main 方法，因此我们不能运行它。</li>
+<li>速度:抽象类比接口速度要快，接口是稍微有点慢的，因为它需要时间去寻找在类中实现的方法。 </li>
+<li>添加新方法:如果你往抽象类中添加新的方法，你可以给它提供默认的实现。因此你不需要改变你现在的代码。如果你往接口中添加方法，那么你必须改变实现该接口的类。</li>
+</ol>
+<h2 id="接口的意义？"><a href="#接口的意义？" class="headerlink" title="接口的意义？"></a>接口的意义？</h2><p>规范、扩展、回调。 </p>
+<h2 id="父类的静态方法能否被子类重写？"><a href="#父类的静态方法能否被子类重写？" class="headerlink" title="父类的静态方法能否被子类重写？"></a>父类的静态方法能否被子类重写？</h2><p>不能。子类继承父类后，用相同的静态方法和非静态方法，这时非静态方法覆盖父类中的方法（即方法重写），父类的该静态方法被隐藏（如果对象是父类则调用该隐藏的方法），另外子类可继承父类的静态与非静态方法，至于方法重载我觉得它其中一要素就是在同一类中，不能说父类中的什么方法与子类里的什么方法是方法重载的体现。 </p>
+<h2 id="抽象类的意义"><a href="#抽象类的意义" class="headerlink" title="抽象类的意义?"></a>抽象类的意义?</h2><p>为其子类提供一个公共的类型，封装子类中的重复内容，定义抽象方法，子类虽然有不同的实现 但是定义是一致的。 </p>
+<h2 id="静态内部类、非静态内部类的理解？"><a href="#静态内部类、非静态内部类的理解？" class="headerlink" title="静态内部类、非静态内部类的理解？"></a>静态内部类、非静态内部类的理解？</h2><p>静态内部类：只是为了降低包的深度，方便类的使用，静态内部类适用于包含在类当中，但又不依赖与外在的类，不用使用外在类的非静态属性和方法，只是为了方便管理类结构而定义。在创建静态内部类的时候，不需要外部类对象的引用。 </p>
+<p>非静态内部类：持有外部类的引用，可以自由使用外部类的所有变量和方法。 </p>
+<h2 id="为什么复写-equals-方法的同时需要复写-hashcode-方法，前者相同后者是否相同，反过来-呢？为什么？"><a href="#为什么复写-equals-方法的同时需要复写-hashcode-方法，前者相同后者是否相同，反过来-呢？为什么？" class="headerlink" title="为什么复写 equals 方法的同时需要复写 hashcode 方法，前者相同后者是否相同，反过来 呢？为什么？"></a>为什么复写 equals 方法的同时需要复写 hashcode 方法，前者相同后者是否相同，反过来 呢？为什么？</h2><p>要考虑到类似 HashMap、HashTable、HashSet 的这种散列的数据类型的运用，当我们重写 equals 时，是为了用自身的方式去判断两个自定义对象是否相等，然而如果此时刚好需要我们用自定义的对象去充当 hashmap 的键值使用时，就会出现我们认为的同一对象，却因为 hash 值不同而导致 hashmap 中存了两个对象，从而才需要进行 hashcode 方法的覆盖。 </p>
+<h2 id="equals-和-hashcode-的关系？"><a href="#equals-和-hashcode-的关系？" class="headerlink" title="equals 和 hashcode 的关系？"></a>equals 和 hashcode 的关系？</h2><p>hashcode 和 equals 的约定关系如下： </p>
+<ol>
+<li>如果两个对象相等，那么他们一定有相同的哈希值（hashcode）。</li>
+<li>如果两个对象的哈希值相等，那么这两个对象有可能相等也有可能不相等。（需要再通过 equals 来判断）</li>
+</ol>
+<h2 id="java-为什么跨平台？"><a href="#java-为什么跨平台？" class="headerlink" title="java 为什么跨平台？"></a>java 为什么跨平台？</h2><p>因为 Java 程序编译之后的代码不是能被硬件系统直接运行的代码，而是一种“中间码”——字节码。然后不同的硬件平台上安装有不同的 Java 虚拟机(JVM)，由JVM 来把字节码再“翻译”成所对应的硬件平台能够执行的代码。因此对于 Java 编程者来说，不需要考虑硬件平台是什么。所以 Java 可以跨平台。 </p>
+<h2 id="浮点数的精准计算"><a href="#浮点数的精准计算" class="headerlink" title="浮点数的精准计算"></a>浮点数的精准计算</h2><p>BigDecimal 类进行商业计算，Float 和 Double 只能用来做科学计算或者是工程计算。 </p>
+<h2 id="final，finally，finalize-的区别？"><a href="#final，finally，finalize-的区别？" class="headerlink" title="final，finally，finalize 的区别？"></a>final，finally，finalize 的区别？</h2><ul>
+<li>final 可以用来修饰类、方法、变量，分别有不同的意义，final 修饰的 class 代表不可以继承扩展，final 的变量是不可以修改的，而 final 的方法也是不可以重写的（override）。 </li>
+<li>finally 则是 Java 保证重点代码一定要被执行的一种机制。我们可以使用 try-finally 或者 try-catch-finally 来进行类似关闭 JDBC 连接、保证 unlock 锁等动作。 </li>
+<li>finalize 是基础类 java.lang.Object 的一个方法，它的设计目的是保证对象在被垃圾收集前完成特定资源的回收。finalize 机制现在已经不推荐使用，并且在JDK 9 开始被标记为 deprecated。Java 平台目前在逐步使用 java.lang.ref.Cleaner 来替换掉原有的 finalize 实现。Cleaner 的实现利用了幻象引用（PhantomReference），这是一种常见的所谓 post-mortem 清理机制。利用幻象引用和引用队列，我们可以保证对象被彻底销毁前做一些类似资源回收的工作，比如关闭文件描述符（操作系统有限的资源），它比 finalize 更加轻量、更加可靠。</li>
+</ul>
+<h2 id="静态内部类的设计意图"><a href="#静态内部类的设计意图" class="headerlink" title="静态内部类的设计意图"></a>静态内部类的设计意图</h2><p>静态内部类与非静态内部类之间存在一个最大的区别：非静态内部类在编译完成之后会隐含地保存着一个引用，该引用是指向创建它的外围类，但是静态内部类却没有。 </p>
+<p>没有这个引用就意味着：它的创建是不需要依赖于外围类的。 它不能使用任何外围类的非 static 成员变量和方法。 </p>
+<h2 id="Java-中对象的生命周期"><a href="#Java-中对象的生命周期" class="headerlink" title="Java 中对象的生命周期"></a>Java 中对象的生命周期</h2><p>在 Java 中，对象的生命周期包括以下几个阶段： </p>
+<ol>
+<li><p>创建阶段(Created) </p>
+<p>JVM 加载类的 class 文件 此时所有的 static 变量和 static 代码块将被执行加载完成后，对局部变量进行赋值（先父后子的顺序） 再执行 new 方法 调用构造函数 一旦对象被创建，并被分派给某些变量赋值，这个对象的状态就切换到了应用阶段。 </p>
+</li>
+<li><p>应用阶段(In Use) </p>
+<p>对象至少被一个强引用持有着。 </p>
+</li>
+<li><p>不可见阶段(Invisible) </p>
+<p>当一个对象处于不可见阶段时，说明程序本身不再持有该对象的任何强引用，虽然该这些引用仍然是存在着的。 简单说就是程序的执行已经超出了该对象的作用域了。</p>
+</li>
+<li><p>不可达阶段(Unreachable) </p>
+<p>对象处于不可达阶段是指该对象不再被任何强引用所持有。 与“不可见阶段”相比，“不可见阶段”是指程序不再持有该对象的任何强引用，这种情况下，该对象仍可能被 JVM 等系统下的某些已装载的静态变量或线程或 JNI 等强引用持有着，这些特殊的强引用被称为”GC root”。存在着这些 GC root 会导致对象的内存泄露情况，无法被回收。 </p>
+</li>
+<li><p>收集阶段(Collected) </p>
+<p>当垃圾回收器发现该对象已经处于“不可达阶段”并且垃圾回收器已经对该对象的内存空间重新分配做好准备时，则对象进入了“收集阶段”。如果该对象已经重写了 finalize()方法，则会去执行该方法的终端操作。 </p>
+</li>
+<li><p>终结阶段(Finalized) </p>
+<p>当对象执行完 finalize()方法后仍然处于不可达状态时，则该对象进入终结阶段。在该阶段是等待垃圾回收器对该对象空间进行回收。 </p>
+</li>
+<li><p>对象空间重分配阶段(De-allocated) </p>
+<p>垃圾回收器对该对象的所占用的内存空间进行回收或者再分配了，则该对象彻底消失了，称之为“对象空间重新分配阶段。</p>
+</li>
+</ol>
+<h2 id="静态属性和静态方法是否可以被继承？是否可以被重写？以及原因？"><a href="#静态属性和静态方法是否可以被继承？是否可以被重写？以及原因？" class="headerlink" title="静态属性和静态方法是否可以被继承？是否可以被重写？以及原因？"></a>静态属性和静态方法是否可以被继承？是否可以被重写？以及原因？</h2><p>结论：</p>
+<p>java 中静态属性和静态方法可以被继承，但是不可以被重写而是<strong>被隐藏</strong>。 </p>
+<p>原因： </p>
+<ol>
+<li><p>静态方法和属性是属于类的，调用的时候直接通过<code>类名.方法名</code>完成，不需要继承机制即可以调用。如果子类里面定义了静态方法和属性，那么这时候父类的静态方法或属性称之为”隐藏”。如果你想要调用父类的静态方法和属性，直接通过父类名.方法或变量名完成，至于是否继承一说，子类是有继承静态方法和属性，但是跟实例方法和属性不太一样，存在”隐藏”的这种情况。 </p>
+</li>
+<li><p>多态之所以能够实现依赖于继承、接口和重写、重载（继承和重写最为关键）。有了继承和重写就可以实现父类的引用指向不同子类的对象。重写的功能是：”重写”后子类的优先级要高于父类的优先级，但是“隐藏”是没有这个优先级之分的。</p>
+</li>
+<li><p>静态属性、静态方法和非静态的属性都可以被继承和隐藏而不能被重写，因此不能实现多态，不能实现父类的引用可以指向不同子类的对象。非静态方法可以被继承和重写，因此可以实现多态。</p>
+</li>
+</ol>
+<h2 id="object-类的-equal-和-hashcode-方法重写，为什么？"><a href="#object-类的-equal-和-hashcode-方法重写，为什么？" class="headerlink" title="object 类的 equal 和 hashcode 方法重写，为什么？"></a>object 类的 equal 和 hashcode 方法重写，为什么？</h2><p>在 Java API 文档中关于 hashCode 方法有以下几点规定（原文来自 java 深入解析一书）： </p>
+<ol>
+<li><p>在 java 应用程序执行期间，如果在 equals 方法比较中所用的信息没有被修改，那么在同一个对象上多次调用 hashCode 方法时必须一致地返回相同的整数。如果多次执行同一个应用时，不要求该整数必须相同。 </p>
+</li>
+<li><p>如果两个对象通过调用 equals 方法是相等的，那么这两个对象调用 hashCode 方法必须返回相同的整数。 </p>
+</li>
+<li><p>如果两个对象通过调用 equals 方法是不相等的，不要求这两个对象调用hashCode 方法必须返回不同的整数。但是程序员应该意识到对不同的对象产生 不同的 hash 值可以提供哈希表的性能。</p>
+</li>
+</ol>
+<h2 id="java-中-x3D-x3D-和-equals-和-hashCode-的区别？"><a href="#java-中-x3D-x3D-和-equals-和-hashCode-的区别？" class="headerlink" title="java 中&#x3D;&#x3D;和 equals 和 hashCode 的区别？"></a>java 中&#x3D;&#x3D;和 equals 和 hashCode 的区别？</h2><p>默认情况下也就是从超类 Object 继承而来的 equals 方法与‘&#x3D;&#x3D;’是完全等价的，比较的都是对象的内存地址，但我们可以重写 equals 方法，使其按照我们的需求的方式进行比较，如 String 类重写了 equals 方法，使其比较的是字符的序列，而不再是内存地址。在 java 的集合中，判断两个对象是否相等的规则是： </p>
+<ol>
+<li><p>判断两个对象的 hashCode 是否相等。 </p>
+</li>
+<li><p>判断两个对象用 equals 运算是否相等。</p>
+</li>
+</ol>
+<h2 id="Java-的四种引用及使用场景？"><a href="#Java-的四种引用及使用场景？" class="headerlink" title="Java 的四种引用及使用场景？"></a>Java 的四种引用及使用场景？</h2><ul>
+<li>强引用（FinalReference）：在内存不足时不会被回收。平常用的最多的对象，如新创建的对象。</li>
+<li>软引用（SoftReference）：在内存不足时会被回收。用于实现内存敏感的高速缓存。 </li>
+<li>弱引用（WeakReferenc）：只要 GC 回收器发现了它，就会将之回收。用于 Map 数据结构中，引用占用内存空间较大的对象。</li>
+<li>虚引用（PhantomReference）：在回收之前，会被放入 ReferenceQueue，JVM 不会自动将该 referent 字段值设置成 null。其它引用被 JVM 回收之后才会被放入 ReferenceQueue 中。用于实现一个对象被回收之前做一些清理工作。</li>
+</ul>
+<h2 id="类的加载过程，Person-person-x3D-new-Person-为例进行说明。"><a href="#类的加载过程，Person-person-x3D-new-Person-为例进行说明。" class="headerlink" title="类的加载过程，Person person &#x3D; new Person();为例进行说明。"></a>类的加载过程，Person person &#x3D; new Person();为例进行说明。</h2><ol>
+<li>因为 new 用到了 Person.class，所以会先找到 Person.class 文件，并加载到内存中; </li>
+<li>执行该类中的 static 代码块，如果有的话，给 Person.class 类进行初始化; </li>
+<li>在堆内存中开辟空间分配内存地址;</li>
+<li>在堆内存中建立对象的特有属性，并进行默认初始化; </li>
+<li>对属性进行显示初始化; </li>
+<li>对对象进行构造代码块初始化; </li>
+<li>对对象进行与之对应的构造函数进行初始化; </li>
+<li>将内存地址付给栈内存中的 p 变量。</li>
+</ol>
+<h2 id="JAVA-常量池"><a href="#JAVA-常量池" class="headerlink" title="JAVA 常量池"></a>JAVA 常量池</h2><p>Interger 中的 128(-128~127) </p>
+<ol>
+<li><p>当数值范围为-128~127 时：如果两个 new 出来的 Integer 对象，即使值相同，通过“&#x3D;&#x3D;”比较结果为 false，但两个对直接赋值，则通过“&#x3D;&#x3D;”比较结果为“true，这一点与 String 非常相似。 </p>
+</li>
+<li><p>当数值不在-128~127 时，无论通过哪种方式，即使两对象的值相等，通过“&#x3D;&#x3D;” 比较，其结果为 false； </p>
+</li>
+<li><p>当一个 Integer 对象直接与一个 int 基本数据类型通过“&#x3D;&#x3D;”比较，其结果与第一点相同； </p>
+</li>
+<li><p>Integer 对象的 hash 值为数值本身；</p>
+</li>
+</ol>
+<p>为什么是-128-127? </p>
+<p>在 Integer 类中有一个静态内部类 IntegerCache，在 IntegrCache 类中有一个Integer 数组，用以缓存当前数值范围为-128~127 时的 Integer 对象。</p>
+<h2 id="在重写-equals-方法时，需要遵循哪些约定，具体介绍一下？"><a href="#在重写-equals-方法时，需要遵循哪些约定，具体介绍一下？" class="headerlink" title="在重写 equals 方法时，需要遵循哪些约定，具体介绍一下？"></a>在重写 equals 方法时，需要遵循哪些约定，具体介绍一下？</h2><p>重写 equals 方法时需要遵循通用约定：自反性、对称性、传递性、一致性、非空性</p>
+<ol>
+<li><p>自反性</p>
+<p>对于任何非 null 的引用值 x,x.equals(x)必须返回 true。—这一点基本上不会有啥问题</p>
+</li>
+<li><p>对称性</p>
+<p>对于任何非 null 的引用值 x 和 y，当且仅当 x.equals(y)为 true 时，y.equals(x)也为 true。 </p>
+</li>
+<li><p>传递性 </p>
+<p>对于任何非 null 的引用值 x、y、z。如果 x.equals(y)&#x3D;&#x3D;true,y.equals(z)&#x3D;&#x3D;true, 那么 x.equals(z)&#x3D;&#x3D;true。 </p>
+</li>
+<li><p>一致性 </p>
+<p>对于任何非 null 的引用值 x 和 y，只要 equals 的比较操作在对象所用的信息没有被修改，那么多次调用 x.equals(y)就会一致性地返回 true,或者一致性的返回false。 </p>
+</li>
+<li><p>非空性 </p>
+<p>所有比较的对象都不能为空。</p>
+</li>
+</ol>
+<h2 id="深拷贝和浅拷贝的区别"><a href="#深拷贝和浅拷贝的区别" class="headerlink" title="深拷贝和浅拷贝的区别"></a><a target="_blank" rel="noopener" href="https://www.cnblogs.com/chenssy/p/3308489.html">深拷贝和浅拷贝的区别</a></h2><h2 id="Integer-类对-int-的优化"><a href="#Integer-类对-int-的优化" class="headerlink" title="Integer 类对 int 的优化"></a><a target="_blank" rel="noopener" href="https://www.iteye.com/blog/denverj-745422">Integer 类对 int 的优化</a></h2><!-- flag of hidden posts -->
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div></div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>Donate</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.jpg" alt=" WeChat Pay"/>
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/private/" rel="tag"># private</a>
+          
+            <a href="/tags/Java%E7%9F%A5%E8%AF%86%E7%82%B9/" rel="tag"># Java知识点</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">71</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">31</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@189.cn" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/shenbh" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://gitee.com/shen_bh" target="_blank" title="Gitee">
+                      
+                        <i class="fa fa-fw fa-git"></i>Gitee</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%8D%E5%B0%84%EF%BC%88%E2%AD%90%E2%AD%90%E2%AD%90%EF%BC%89"><span class="nav-text">反射（⭐⭐⭐）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AF%B4%E8%AF%B4%E4%BD%A0%E5%AF%B9-Java-%E5%8F%8D%E5%B0%84%E7%9A%84%E7%90%86%E8%A7%A3%EF%BC%9F"><span class="nav-text">说说你对 Java 反射的理解？</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B3%9B%E5%9E%8B%EF%BC%88%E2%AD%90%E2%AD%90%EF%BC%89"><span class="nav-text">泛型（⭐⭐）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%80%E5%8D%95%E4%BB%8B%E7%BB%8D%E4%B8%80%E4%B8%8B-java-%E4%B8%AD%E7%9A%84%E6%B3%9B%E5%9E%8B%EF%BC%8C%E6%B3%9B%E5%9E%8B%E6%93%A6%E9%99%A4%E4%BB%A5%E5%8F%8A%E7%9B%B8%E5%85%B3%E7%9A%84%E6%A6%82%E5%BF%B5%EF%BC%8C%E8%A7%A3%E6%9E%90%E4%B8%8E%E5%88%86%E6%B4%BE%EF%BC%9F"><span class="nav-text">简单介绍一下 java 中的泛型，泛型擦除以及相关的概念，解析与分派？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B3%9B%E5%9E%8B%E6%93%A6%E9%99%A4%E4%BB%A5%E5%8F%8A%E7%9B%B8%E5%85%B3%E7%9A%84%E6%A6%82%E5%BF%B5"><span class="nav-text">泛型擦除以及相关的概念</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B3%A8%E8%A7%A3%EF%BC%88%E2%AD%90%E2%AD%90%EF%BC%89"><span class="nav-text">注解（⭐⭐）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AF%B4%E8%AF%B4%E4%BD%A0%E5%AF%B9-Java-%E6%B3%A8%E8%A7%A3%E7%9A%84%E7%90%86%E8%A7%A3%EF%BC%9F"><span class="nav-text">说说你对 Java 注解的理解？</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%85%B6%E4%BB%96%EF%BC%88%E2%AD%90%E2%AD%90%EF%BC%89"><span class="nav-text">其他（⭐⭐）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Java-%E7%9A%84-char-%E6%98%AF%E4%B8%A4%E4%B8%AA%E5%AD%97%E8%8A%82%EF%BC%8C%E6%98%AF%E6%80%8E%E4%B9%88%E5%AD%98-Utf-8-%E7%9A%84%E5%AD%97%E7%AC%A6%E7%9A%84%EF%BC%9F"><span class="nav-text">Java 的 char 是两个字节，是怎么存 Utf-8 的字符的？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%98%AF%E5%90%A6%E7%86%9F%E6%82%89-Java-char-%E5%92%8C%E5%AD%97%E7%AC%A6%E4%B8%B2%EF%BC%88%E5%88%9D%E7%BA%A7%EF%BC%89"><span class="nav-text">是否熟悉 Java char 和字符串（初级）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%98%AF%E5%90%A6%E4%BA%86%E8%A7%A3%E5%AD%97%E7%AC%A6%E7%9A%84%E6%98%A0%E5%B0%84%E5%92%8C%E5%AD%98%E5%82%A8%E7%BB%86%E8%8A%82%EF%BC%88%E4%B8%AD%E7%BA%A7%EF%BC%89"><span class="nav-text">是否了解字符的映射和存储细节（中级）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%98%AF%E5%90%A6%E8%83%BD%E8%A7%A6%E7%B1%BB%E6%97%81%E9%80%9A%EF%BC%8C%E6%A8%AA%E5%90%91%E5%AF%B9%E6%AF%94%E5%85%B6%E4%BB%96%E8%AF%AD%E8%A8%80%EF%BC%88%E9%AB%98%E7%BA%A7%EF%BC%89"><span class="nav-text">是否能触类旁通，横向对比其他语言（高级）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Java-String-%E5%8F%AF%E4%BB%A5%E6%9C%89%E5%A4%9A%E9%95%BF%EF%BC%9F"><span class="nav-text">Java String 可以有多长？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%98%AF%E5%90%A6%E5%AF%B9%E5%AD%97%E7%AC%A6%E4%B8%B2%E7%BC%96%E8%A7%A3%E7%A0%81%E6%9C%89%E6%B7%B1%E5%85%A5%E4%BA%86%E8%A7%A3%EF%BC%88%E4%B8%AD%E7%BA%A7%EF%BC%89"><span class="nav-text">是否对字符串编解码有深入了解（中级）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%98%AF%E5%90%A6%E5%AF%B9%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%9C%A8%E5%86%85%E5%AD%98%E5%BD%93%E4%B8%AD%E7%9A%84%E5%AD%98%E5%82%A8%E5%BD%A2%E5%BC%8F%E6%9C%89%E6%B7%B1%E5%85%A5%E4%BA%86%E8%A7%A3%EF%BC%88%E9%AB%98%E7%BA%A7%EF%BC%89"><span class="nav-text">是否对字符串在内存当中的存储形式有深入了解（高级）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%98%AF%E5%90%A6%E5%AF%B9-Java-%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%AD%97%E8%8A%82%E7%A0%81%E6%9C%89%E8%B6%B3%E5%A4%9F%E7%9A%84%E4%BA%86%E8%A7%A3%EF%BC%88%E9%AB%98%E7%BA%A7%EF%BC%89"><span class="nav-text">是否对 Java 虚拟机字节码有足够的了解（高级）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Java-String-%E6%A0%88%E5%88%86%E9%85%8D"><span class="nav-text">Java String 栈分配</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%98%AF%E5%90%A6%E5%AF%B9-java-%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%8C%87%E4%BB%A4%E6%9C%89%E4%B8%80%E5%AE%9A%E7%9A%84%E8%AE%A4%E8%AF%86%EF%BC%88%E9%AB%98%E7%BA%A7%EF%BC%89"><span class="nav-text">是否对 java 虚拟机指令有一定的认识（高级）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Java-String-%E5%A0%86%E5%88%86%E9%85%8D"><span class="nav-text">Java String 堆分配</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93-1"><span class="nav-text">总结</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Java-String-%E5%AD%97%E9%9D%A2%E9%87%8F%E5%BD%A2%E5%BC%8F"><span class="nav-text">Java String 字面量形式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Java-String-%E8%BF%90%E8%A1%8C%E6%97%B6%E5%88%9B%E5%BB%BA%E5%9C%A8%E5%A0%86%E4%B8%8A%E7%9A%84%E5%BD%A2%E5%BC%8F"><span class="nav-text">Java String 运行时创建在堆上的形式</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Java-%E7%9A%84%E5%8C%BF%E5%90%8D%E5%86%85%E9%83%A8%E7%B1%BB%E6%9C%89%E5%93%AA%E4%BA%9B%E9%99%90%E5%88%B6%EF%BC%9F"><span class="nav-text">Java 的匿名内部类有哪些限制？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%80%83%E5%AF%9F%E5%8C%BF%E5%90%8D%E5%86%85%E9%83%A8%E7%B1%BB%E7%9A%84%E6%A6%82%E5%BF%B5%E5%92%8C%E7%94%A8%E6%B3%95%EF%BC%88%E5%88%9D%E7%BA%A7%EF%BC%89"><span class="nav-text">考察匿名内部类的概念和用法（初级）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%9C%E4%B8%BA%E8%80%83%E5%AF%9F%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E5%88%87%E5%85%A5%E7%82%B9%EF%BC%88%E9%AB%98%E7%BA%A7%EF%BC%89"><span class="nav-text">作为考察内存泄漏的切入点（高级）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93-2"><span class="nav-text">总结</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8A%80%E5%B7%A7%E7%82%B9%E6%8B%A8"><span class="nav-text">技巧点拨</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Java-%E4%B8%AD%E5%AF%B9%E5%BC%82%E5%B8%B8%E6%98%AF%E5%A6%82%E4%BD%95%E8%BF%9B%E8%A1%8C%E5%88%86%E7%B1%BB%E7%9A%84%EF%BC%9F"><span class="nav-text">Java 中对异常是如何进行分类的？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%82%E5%B8%B8%E6%95%B4%E4%BD%93%E5%88%86%E7%B1%BB%EF%BC%9A"><span class="nav-text">异常整体分类：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E7%9A%84%E4%B8%A4%E4%B8%AA%E5%9F%BA%E6%9C%AC%E5%8E%9F%E5%88%99"><span class="nav-text">异常处理的两个基本原则**:**</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#NoClassDefFoundError-%E5%92%8C-ClassNotFoundException-%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB%EF%BC%9F"><span class="nav-text">NoClassDefFoundError 和 ClassNotFoundException 有什么区别？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#String-%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E8%AE%BE%E8%AE%A1%E6%88%90%E4%B8%8D%E5%8F%AF%E5%8F%98%E7%9A%84%EF%BC%9F"><span class="nav-text">String 为什么要设计成不可变的？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Java-%E9%87%8C%E7%9A%84%E5%B9%82%E7%AD%89%E6%80%A7%E4%BA%86%E8%A7%A3%E5%90%97%EF%BC%9F"><span class="nav-text">Java 里的幂等性了解吗？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88-Java-%E9%87%8C%E7%9A%84%E5%8C%BF%E5%90%8D%E5%86%85%E9%83%A8%E7%B1%BB%E5%8F%AA%E8%83%BD%E8%AE%BF%E9%97%AE-final-%E4%BF%AE%E9%A5%B0%E7%9A%84%E5%A4%96%E9%83%A8%E5%8F%98%E9%87%8F%EF%BC%9F"><span class="nav-text">为什么 Java 里的匿名内部类只能访问 final 修饰的外部变量？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%B2%E4%B8%80%E4%B8%8B-Java-%E7%9A%84%E7%BC%96%E7%A0%81%E6%96%B9%E5%BC%8F%EF%BC%9F"><span class="nav-text">讲一下 Java 的编码方式？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#String%EF%BC%8CStringBuffer%EF%BC%8CStringBuilder-%E6%9C%89%E5%93%AA%E4%BA%9B%E4%B8%8D%E5%90%8C%EF%BC%9F"><span class="nav-text">String，StringBuffer，StringBuilder 有哪些不同？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E5%86%85%E9%83%A8%E7%B1%BB%EF%BC%9F%E5%86%85%E9%83%A8%E7%B1%BB%E7%9A%84%E4%BD%9C%E7%94%A8%E3%80%82"><span class="nav-text">什么是内部类？内部类的作用。</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8A%BD%E8%B1%A1%E7%B1%BB%E5%92%8C%E6%8E%A5%E5%8F%A3%E5%8C%BA%E5%88%AB%EF%BC%9F"><span class="nav-text">抽象类和接口区别？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8E%A5%E5%8F%A3%E7%9A%84%E6%84%8F%E4%B9%89%EF%BC%9F"><span class="nav-text">接口的意义？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%88%B6%E7%B1%BB%E7%9A%84%E9%9D%99%E6%80%81%E6%96%B9%E6%B3%95%E8%83%BD%E5%90%A6%E8%A2%AB%E5%AD%90%E7%B1%BB%E9%87%8D%E5%86%99%EF%BC%9F"><span class="nav-text">父类的静态方法能否被子类重写？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8A%BD%E8%B1%A1%E7%B1%BB%E7%9A%84%E6%84%8F%E4%B9%89"><span class="nav-text">抽象类的意义?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%99%E6%80%81%E5%86%85%E9%83%A8%E7%B1%BB%E3%80%81%E9%9D%9E%E9%9D%99%E6%80%81%E5%86%85%E9%83%A8%E7%B1%BB%E7%9A%84%E7%90%86%E8%A7%A3%EF%BC%9F"><span class="nav-text">静态内部类、非静态内部类的理解？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%A4%8D%E5%86%99-equals-%E6%96%B9%E6%B3%95%E7%9A%84%E5%90%8C%E6%97%B6%E9%9C%80%E8%A6%81%E5%A4%8D%E5%86%99-hashcode-%E6%96%B9%E6%B3%95%EF%BC%8C%E5%89%8D%E8%80%85%E7%9B%B8%E5%90%8C%E5%90%8E%E8%80%85%E6%98%AF%E5%90%A6%E7%9B%B8%E5%90%8C%EF%BC%8C%E5%8F%8D%E8%BF%87%E6%9D%A5-%E5%91%A2%EF%BC%9F%E4%B8%BA%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-text">为什么复写 equals 方法的同时需要复写 hashcode 方法，前者相同后者是否相同，反过来 呢？为什么？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#equals-%E5%92%8C-hashcode-%E7%9A%84%E5%85%B3%E7%B3%BB%EF%BC%9F"><span class="nav-text">equals 和 hashcode 的关系？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#java-%E4%B8%BA%E4%BB%80%E4%B9%88%E8%B7%A8%E5%B9%B3%E5%8F%B0%EF%BC%9F"><span class="nav-text">java 为什么跨平台？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%AE%E7%82%B9%E6%95%B0%E7%9A%84%E7%B2%BE%E5%87%86%E8%AE%A1%E7%AE%97"><span class="nav-text">浮点数的精准计算</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#final%EF%BC%8Cfinally%EF%BC%8Cfinalize-%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%9F"><span class="nav-text">final，finally，finalize 的区别？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%99%E6%80%81%E5%86%85%E9%83%A8%E7%B1%BB%E7%9A%84%E8%AE%BE%E8%AE%A1%E6%84%8F%E5%9B%BE"><span class="nav-text">静态内部类的设计意图</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Java-%E4%B8%AD%E5%AF%B9%E8%B1%A1%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-text">Java 中对象的生命周期</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%99%E6%80%81%E5%B1%9E%E6%80%A7%E5%92%8C%E9%9D%99%E6%80%81%E6%96%B9%E6%B3%95%E6%98%AF%E5%90%A6%E5%8F%AF%E4%BB%A5%E8%A2%AB%E7%BB%A7%E6%89%BF%EF%BC%9F%E6%98%AF%E5%90%A6%E5%8F%AF%E4%BB%A5%E8%A2%AB%E9%87%8D%E5%86%99%EF%BC%9F%E4%BB%A5%E5%8F%8A%E5%8E%9F%E5%9B%A0%EF%BC%9F"><span class="nav-text">静态属性和静态方法是否可以被继承？是否可以被重写？以及原因？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#object-%E7%B1%BB%E7%9A%84-equal-%E5%92%8C-hashcode-%E6%96%B9%E6%B3%95%E9%87%8D%E5%86%99%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-text">object 类的 equal 和 hashcode 方法重写，为什么？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#java-%E4%B8%AD-x3D-x3D-%E5%92%8C-equals-%E5%92%8C-hashCode-%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%9F"><span class="nav-text">java 中&#x3D;&#x3D;和 equals 和 hashCode 的区别？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Java-%E7%9A%84%E5%9B%9B%E7%A7%8D%E5%BC%95%E7%94%A8%E5%8F%8A%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF%EF%BC%9F"><span class="nav-text">Java 的四种引用及使用场景？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B1%BB%E7%9A%84%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B%EF%BC%8CPerson-person-x3D-new-Person-%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E8%AF%B4%E6%98%8E%E3%80%82"><span class="nav-text">类的加载过程，Person person &#x3D; new Person();为例进行说明。</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#JAVA-%E5%B8%B8%E9%87%8F%E6%B1%A0"><span class="nav-text">JAVA 常量池</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8%E9%87%8D%E5%86%99-equals-%E6%96%B9%E6%B3%95%E6%97%B6%EF%BC%8C%E9%9C%80%E8%A6%81%E9%81%B5%E5%BE%AA%E5%93%AA%E4%BA%9B%E7%BA%A6%E5%AE%9A%EF%BC%8C%E5%85%B7%E4%BD%93%E4%BB%8B%E7%BB%8D%E4%B8%80%E4%B8%8B%EF%BC%9F"><span class="nav-text">在重写 equals 方法时，需要遵循哪些约定，具体介绍一下？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B7%B1%E6%8B%B7%E8%B4%9D%E5%92%8C%E6%B5%85%E6%8B%B7%E8%B4%9D%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-text">深拷贝和浅拷贝的区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Integer-%E7%B1%BB%E5%AF%B9-int-%E7%9A%84%E4%BC%98%E5%8C%96"><span class="nav-text">Integer 类对 int 的优化</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>
