@@ -86,18 +86,18 @@
 <meta property="og:site_name" content="AB">
 <meta property="og:description" content="卡顿优化在我们使用各种各样的App的时候，有时会看见有些App运行起来并不流畅，即出现了卡顿现象，那么如何去定义发生了卡顿现象呢？ 12如果App的FPS平均值小于30，最小值小于24，即表明应用发生了卡顿。  那我么又如何去分析应用是否出现了卡顿呢？下面，我们就先来了解一下解决卡顿问题时需要用到的分析方法与工具。 一、卡顿优化分析方法与工具1、背景介绍 很多性能问题不易被发现，但是卡顿问题很容易">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ef94b276db234359a0133603d5886aff~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0ed4c4f85af74f5f9265369cc790943a~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cf8f7e9679d943d0b4e60d7b93f65a1e~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/67ff298aadb3465e91fbdde156bd1277~tplv-k3u1fbpfcp-zoom-1.image">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/080a3bec391d4e85b5215ed37791c132~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="http://shenbh.github.io/posts/d7d2ba35/image-20240409164453997.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/d7d2ba35/image-20240409164512371.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/d7d2ba35/image-20240409164529119.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/d7d2ba35/image-20240409164541711.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/d7d2ba35/image-20240409164556854.png">
 <meta property="article:published_time" content="2020-09-03T02:31:58.000Z">
-<meta property="article:modified_time" content="2022-11-02T07:22:54.406Z">
+<meta property="article:modified_time" content="2024-04-09T08:45:59.799Z">
 <meta property="article:author" content="阿炳">
 <meta property="article:tag" content="private">
 <meta property="article:tag" content="安卓优化">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ef94b276db234359a0133603d5886aff~tplv-k3u1fbpfcp-zoom-1.image">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/d7d2ba35/image-20240409164453997.png">
 
 
 
@@ -547,11 +547,11 @@
 <p>对于Profilo来说，它<strong>集成了atrace功能，ftrace 所有的性能埋点数据都会通过 trace_marker 文件写入到内核缓冲区，Profilo 使用了 PLT Hook 拦截了写入操作，以选择部分关心的事件去做特定的分析</strong>。这样所有的 systrace 的探针我们都可以拿到，例如<strong>四大组件生命周期、锁等待时间、类校验、GC 时间等等</strong>。不过大部分的 atrace 事件都比较笼统，从事件“B|pid|activityStart”，我们无法明确知道该事件具体是由哪个 Activity 来创建的。</p>
 <p>此外，使用Profilo还能够快速获取Java堆栈。<strong>由于获取堆栈需要暂停主线程的运行，所以profilo通过间隔发送 SIGPROF 信号这样一种类似 Native 崩溃捕捉的方式去快速获取 Java 堆栈</strong>。</p>
 <p><strong>Profilo能够低耗时地快速获取Java堆栈的具体实现原理为当Signal Handler 捕获到信号后，它就会获取到当前正在执行的 Thread，通过 Thread 对象就可以拿到当前线程的 ManagedStack，ManagedStack 是一个单链表，它保存了当前的 ShadowFrame 或者 QuickFrame 栈指针，先依次遍历 ManagedStack 链表，然后遍历其内部的 ShadowFrame 或者 QuickFrame 还原一个可读的调用栈，从而 unwind 出当前的 Java 堆栈</strong>。关于ManagedStack与ShadowFrame、QuickFrame三者的关系如下图所示:</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ef94b276db234359a0133603d5886aff~tplv-k3u1fbpfcp-zoom-1.image" alt="image"></p>
+<p><img src="/posts/d7d2ba35/image-20240409164453997.png" alt="image-20240409164453997"></p>
 <p>Profilo通过这种方式，就可以实现线程同步运行的同时，我们还可以去帮它做检查，并且耗时基本可以忽略不计。但是目前 Profilo 快速获取堆栈的功能不支持 Android 8.0 和 Android 9.0，并且它内部使用了Hook等大量的黑科技手段，鉴于稳定性问题，建议采取<strong>抽样部分用户</strong>的方式来开启该功能。</p>
 <p><a href="https://link.juejin.cn/?target=https://github.com/facebookincubator/profilo">Profilo项目地址</a></p>
 <p>前面我们说过，Profilo最终也使用了ftrace，而Systrace主要也是根据Linux的ftrace机制来实现的，而<strong>ftrace的作用是帮助我们了解 Linux 内核的运行时行为，以便进行故障调试或性能分析</strong>。ftrace的整体架构如下所示：</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0ed4c4f85af74f5f9265369cc790943a~tplv-k3u1fbpfcp-zoom-1.image" alt="image"></p>
+<p><img src="/posts/d7d2ba35/image-20240409164512371.png" alt="image-20240409164512371"></p>
 <p>由上图可知，<strong>Ftrace 有两大组成部分，一个是 framework，另外就是一系列的 tracer 。每个 tracer 用于完成不同的功能，并且它们统一由 framework 管理。 ftrace 的 trace 信息保存在 ring buffer 中，由 framework 负责管理。 Framework 利用 debugfs 系统在 &#x2F;debugfs 下建立 tracing 目录，并提供了一系列的控制文件。</strong></p>
 <p>下面，我这里给出使用 PLTHook 技术来获取 Atrace 日志的一个项目。</p>
 <h3 id="1、使用profilo的PLTHook来hook-libc-so的-write-与-write-chk-方法"><a href="#1、使用profilo的PLTHook来hook-libc-so的-write-与-write-chk-方法" class="headerlink" title="1、使用profilo的PLTHook来hook libc.so的 write 与 __write_chk 方法"></a>1、使用profilo的PLTHook来hook libc.so的 write 与 __write_chk 方法</h3><p><a href="https://link.juejin.cn/?target=https://github.com/AndroidAdvanceWithGeektime/Chapter06">使用 PLTHook 技术来获取 Atrace 的日志-项目地址</a></p>
@@ -606,10 +606,10 @@
 <li>方便精准，能够定位到代码的某一行代码。</li>
 </ul>
 <h3 id="那么这种自动检测卡顿的方案有什么问题吗？"><a href="#那么这种自动检测卡顿的方案有什么问题吗？" class="headerlink" title="那么这种自动检测卡顿的方案有什么问题吗？"></a>那么这种自动检测卡顿的方案有什么问题吗？</h3><p>在卡顿的周期之内，应用确实发生了卡顿，但是获取到的卡顿信息可能会不准确，和我们的OOM一样，也就是<strong>最后的堆栈信息仅仅只是一个表象，并不是真正发生问题时的一个堆栈</strong>。下面，我们先看下如下的一个示意图：</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cf8f7e9679d943d0b4e60d7b93f65a1e~tplv-k3u1fbpfcp-zoom-1.image" alt="image"></p>
+<p><img src="/posts/d7d2ba35/image-20240409164529119.png" alt="image-20240409164529119"></p>
 <p>假设主线程在T1到T2的时间段内发生了卡顿，卡顿检测方案获取卡顿时的堆栈信息是T2时刻，但是实际上发生卡顿的时刻可能是在这段时间区域内另一个耗时过长的函数，那么可能在我们捕获卡顿的时刻时，真正的卡顿时机已经执行完成了，所以在T2时刻捕获到的一个卡顿信息并不能够反映卡顿的现场，也就是最后呈现出来的堆栈信息仅仅只是一个表象，并不是真正问题的藏身之处。</p>
 <h3 id="那么，我们如何对这种情况进行优化呢？"><a href="#那么，我们如何对这种情况进行优化呢？" class="headerlink" title="那么，我们如何对这种情况进行优化呢？"></a>那么，我们如何对这种情况进行优化呢？</h3><p>我们可以<strong>获取卡顿周期内的多个堆栈</strong>，而不仅仅是最后一个，这样的话，如果发生了卡顿，我们就可以<strong>根据这些堆栈信息来清晰地还原整个卡顿现场</strong>。因为我们有卡顿现场的多个堆栈信息，我们完全知道卡顿时究竟发生了什么，<strong>到底哪些函数它的调用时间比较长</strong>。接下来，我们看看下面的卡顿检测优化流程图：</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/67ff298aadb3465e91fbdde156bd1277~tplv-k3u1fbpfcp-zoom-1.image" alt="image"></p>
+<p><img src="/posts/d7d2ba35/image-20240409164541711.png" alt="image-20240409164541711"></p>
 <p>根据图中，可以梳理出优化后的具体实现步骤为：</p>
 <ul>
 <li>1、首先，我们会通过startMonitor方法对这个过程进行监控。</li>
@@ -685,7 +685,7 @@
 <li>最后，ANR-WatchDog就会判断发生了ANR，抛出一个异常给我们。</li>
 </ul>
 <p>最后，ANR-WatchDog的工作流程简图如下所示：</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/080a3bec391d4e85b5215ed37791c132~tplv-k3u1fbpfcp-zoom-1.image" alt="image"></p>
+<p><img src="/posts/d7d2ba35/image-20240409164556854.png" alt="image-20240409164556854"></p>
 <p>上面我们最后说到，如果检测到主线程发生了卡顿，则会抛出一个ANR异常，这将会导致应用崩溃，显然不能将这种方案带到线上，那么，<strong>有什么方式能够自定义最后发生卡顿时的处理过程吗？</strong></p>
 <p>其实ANR-WatchDog自身就实现了一个我们自身也可以去实现的<strong>ANRListener，通过它，我们就可以对ANR事件去做一个自定义的处理</strong>，比如将堆栈信息压缩后保存到本地，并在适当的时间上传到APM后台。</p>
 <h2 id="3、小结"><a href="#3、小结" class="headerlink" title="3、小结"></a>3、小结</h2><p>ANR-WatchDog是一种非侵入式的ANR监控方案，它能够弥补我们在高版本中没有权限去读取traces.txt文件的问题，需要注意的是，在线上这两种方案我们需要结合使用。</p>
@@ -1014,7 +1014,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">95</span>
+                  <span class="site-state-item-count">96</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

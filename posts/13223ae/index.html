@@ -86,37 +86,36 @@
 <meta property="og:site_name" content="AB">
 <meta property="og:description" content="今日头条 ANR 优化实践系列 - Barrier 导致主线程假死简述：前文，我们通过线上案例对影响 ANR 问题的六大场景进行剖析，这几类场景基本覆盖了线上大部分问题，详见ANR 案例分析集锦。同时我们选取了较多 NativePollOnce 场景的案例，便于大家更好理解，ANR 时看到的 NativePollOnce 场景的问题，并不是导致 ANR 的根本问题。 下面要介绍的这类问题，Trac">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6bb1a5c149f04a589b35ab7c3c6857f1~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/66c450ec7a5948719f247b3062f9bad8~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/e8eaae8ca88340e3b83dcc9ca168f680~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/9ac80e1321f94a2c88ec2a3ddc98a6d2~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b123d7167d7643628e48b7180672a68b~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/8d5369d43a2c4c30a1e9bfcf97c74e52~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/70e6d7b3438f48f790507540009f4df4~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/68a39031d77f4d0b8b866e036cc2f81b~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cd414b3b42ec41eda7e33ab83d062e27~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/78e651364fa94ed5873a5058af36a6e9~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a191f456d5574068af3194e8d29b7071~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b9d7e567601044cb86962ec49bd12790~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ca9909d9dcfe404782396ce9cc826411~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/99863aafa377466bbb32fed16c1fc96b~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cead0905d15642bf835cc79ccf24bd53~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/df13cc17b5df4ba5b1e5b0a71607b96f~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b6321ad7f97948d187cdfcc13e068a82~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/58fe60a106ea4e16bffc08056a1cfd7b~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b6d7719a36bc41b286337ac72ac88973~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6e7805d3ac064b9b84bb0218614f8b44~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/41ef0b019ded4372a6f3b4fc89e74576~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/9eddcf9aabaa4bceb1c1784f4b1d70e4~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/e8c4581aab1f44cfa1d1b495a17ddd73~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/f9ff9972be40498b8e18e0b8f39341c8~tplv-k3u1fbpfcp-watermark.awebp">
+<meta property="og:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171012731.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171025728.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171035990.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171054561.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171112856.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171137519.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171154819.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171209033.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171219967.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171230329.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171243438.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171252873.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171300251.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171308786.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171318508.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171326871.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171342277.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171351041.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171403623.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171417151.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171424247.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171438358.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171447345.png">
 <meta property="article:published_time" content="2021-11-29T02:31:58.000Z">
-<meta property="article:modified_time" content="2022-11-02T07:22:54.650Z">
+<meta property="article:modified_time" content="2024-04-09T09:15:01.606Z">
 <meta property="article:author" content="阿炳">
 <meta property="article:tag" content="private">
 <meta property="article:tag" content="安卓优化">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6bb1a5c149f04a589b35ab7c3c6857f1~tplv-k3u1fbpfcp-watermark.awebp">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171012731.png">
 
 
 
@@ -404,63 +403,62 @@
       
         <h1 id="今日头条-ANR-优化实践系列-Barrier-导致主线程假死"><a href="#今日头条-ANR-优化实践系列-Barrier-导致主线程假死" class="headerlink" title="今日头条 ANR 优化实践系列 - Barrier 导致主线程假死"></a><a target="_blank" rel="noopener" href="https://juejin.cn/post/6947986170135445535#heading-0">今日头条 ANR 优化实践系列 - Barrier 导致主线程假死</a></h1><h3 id="简述："><a href="#简述：" class="headerlink" title="简述："></a>简述：</h3><p>前文，我们通过线上案例对影响 <code>ANR</code> 问题的六大场景进行剖析，这几类场景基本覆盖了线上大部分问题，详见<a href="https://link.juejin.cn/?target=https://mp.weixin.qq.com/s/4-_SnG4dfjMnkrb3rhgUag">ANR 案例分析集锦</a>。同时我们选取了较多 <code>NativePollOnce</code> 场景的案例，便于大家更好理解，<code>ANR</code> 时看到的 <code>NativePollOnce</code> 场景的问题，并不是导致 <code>ANR</code> 的根本问题。</p>
 <p>下面要介绍的这类问题，Trace 现场依然是 <code>NativePollOnce</code> 信息，但与前几类问题不同的是，这类问题真的发生在 <code>NativePollOnce</code> 场景，接下来就看看到底是什么原因导致的。</p>
-<h3 id="主线程-Trace-堆栈："><a href="#主线程-Trace-堆栈：" class="headerlink" title="主线程 Trace 堆栈："></a>主线程 Trace 堆栈：</h3><p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6bb1a5c149f04a589b35ab7c3c6857f1~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<h3 id="主线程-Trace-堆栈："><a href="#主线程-Trace-堆栈：" class="headerlink" title="主线程 Trace 堆栈："></a>主线程 Trace 堆栈：</h3><p><img src="/posts/13223ae/image-20240409171012731.png" alt="image-20240409171012731"></p>
 <h3 id="分析思路："><a href="#分析思路：" class="headerlink" title="分析思路："></a>分析思路：</h3><p>针对该类问题，当看到这个信息时，第一判断依然是主线程历史消息耗时严重，或者系统负载过重导致的问题，因为工作日常分析了太多这类场景的 <code>ANR</code> 问题，而且最后的结论也证明都与此场景无关。但分析这个问题时，进一步拆解大盘指标发现一段时间内 <code>ANR</code> 增加的量级，基本全部落在这个场景，这不太符合我们的预期。但是鉴于 Trace 信息有限，只好把目光转移到系统侧，看看是否有线索。</p>
-<h4 id="分析系统-amp-进程负载："><a href="#分析系统-amp-进程负载：" class="headerlink" title="分析系统&amp;进程负载："></a>分析系统&amp;进程负载：</h4><p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/66c450ec7a5948719f247b3062f9bad8~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<h4 id="分析系统-amp-进程负载："><a href="#分析系统-amp-进程负载：" class="headerlink" title="分析系统&amp;进程负载："></a>分析系统&amp;进程负载：</h4><p><img src="/posts/13223ae/image-20240409171025728.png" alt="image-20240409171025728"></p>
 <p><strong>观察系统负载：</strong> 在 <code>ANR Info</code> 中查看 <code>Load</code> 关键字，发现系统在前 1 分钟，前 5 分钟，前 15 分钟各个时段负载并不高。</p>
 <p><strong>观察进程 CPU 分布：</strong> 进一步观察<code>&quot;CPU usage from 0 ms to 24301 later&quot;</code>，看到 <code>ANR</code> 之后这 24S 多的时间，应用主进程 <code>CPU</code> 占使用率只有 15%，但是 <code>com.meizu.mstore</code> 应用 CPU 使用率达到 92%，<code>user</code> 与 <code>kenel</code> 比例分别为 71%，20%。与此同时 <code>kswapd</code>,<code>mmc-cmdqd</code> 等内核线程 <code>CPU</code> 使用率并不高，说明系统负载总体正常。如果根据我们前面<a href="https://link.juejin.cn/?target=https://mp.weixin.qq.com/s/4-_SnG4dfjMnkrb3rhgUag">案例分析</a>得出的结论来看，这种场景难道是 <code>com.meizu.mstore</code> 进程严重抢占 <code>CPU</code> 导致的？带着这个疑惑，继续观察系统 <code>CPU</code> 分布。</p>
 <p><strong>观察系统 CPU 分布：</strong></p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/e8eaae8ca88340e3b83dcc9ca168f680~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<p><img src="/posts/13223ae/image-20240409171035990.png" alt="image-20240409171035990"></p>
 <p>进一步分析系统负载，发现整体 <code>CPU</code> 使用率稍微有些高。<code>user</code> 占比 37%，<code>kernel</code> 占比 24%，<code>iowait</code> 占比 6.9%，说明这段时间系统 <code>IO</code> 确实有些繁忙。</p>
 <p><strong>系统侧结论：</strong> 通过观察系统负载和各个进程的 <code>CPU</code> 使用情况，发现系统环境比较正常，但是 <code>com.meizu.mstore</code> 进程 <code>CPU</code> 占比偏高，而且 <code>kernel</code> 层 <code>cpu</code> 使用率(20%)较高，与系统 <code>iowait</code> (6.9%)占用较高可能存在一定关联，那么 <code>IO</code> 负载较高对当前应用有多大影响呢？我们回到应用侧进一步分析。</p>
 <h4 id="应用侧分析："><a href="#应用侧分析：" class="headerlink" title="应用侧分析："></a>应用侧分析：</h4><p>根据上面的分析，我们将方向再回到当前进程，通过对比各线程 <code>cpu</code> 耗时(<code>utm</code>+<code>stm</code>)，并没有看到某个线程存在明显异常。<strong>主线程 CPU 执行时长 utm:187，stm:57，基本正常。</strong></p>
 <p>在分析对比完线程 CPU 耗时之后，将目光再次聚焦到<a href="https://link.juejin.cn/?target=https://mp.weixin.qq.com/s/_Z6GdGRVWq-_JXf5Fs6fsw">Raster 监控工具</a>的调度时序图上面。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/9ac80e1321f94a2c88ec2a3ddc98a6d2~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<p><img src="/posts/13223ae/image-20240409171054561.png" alt="image-20240409171054561"></p>
 <p>通过该时序图，观察以下三类信息特征：**<code>ANR</code> 前的历史消息，正在执行的消息，被 <code>Block</code> 的消息**：</p>
 <p><strong>历史消息：</strong> 主线程并不存在单次历史消息耗时严重的现象。</p>
 <p><strong>当正在执行的消息：正在执行的消息</strong> <code>Wall Duration</code> 为 21744ms，<code>CPU Duration</code> 为 100ms。也就是说大量的时间发生在等待的场景，结合该场景，如果期间是因为执行 <code>Idle Task</code> 导致的耗时严重或长时间 <code>Wait</code>，那么 <code>ANR</code> 抓取的堆栈应该有 <code>IdleTask</code> 相关信息才对，因此首先排除了是 <code>Idle Task</code> 耗时严重导致的问题。</p>
 <p><strong>被 <code>Block</code> 消息：从上图可以看到，</strong> 第一个待调度的消息被 <code>block</code> 时长为 22343ms，其 <code>block</code> 时长基本等于当前正在执行消息的 <code>Wall Duration</code> 时长。也就说明了本场景大量消息 <code>blcok</code> 是受到了当前正在执行的消息影响。</p>
 <p>分析到这里我们就有些困惑了，<code>ANR</code> 发生时当前正处于 <code>NativePollOnce</code> 场景，但是前面我们多次在案例分析中提到，进入 <code>NativePollOnce</code> 场景的条件是：消息队列没有立刻调度的消息时，会有条件的进入 <code>wait</code> 状态，等到超时或者新消息加入时会唤醒该线程并执行，但是从上图可以看到消息队列中存在大量待调度消息，而且很多消息都被 <code>block</code> 了 20 多 S，既然这么多消息可以被调度，那么系统为何还是一直在 <code>NativePollOnce</code> 环境中呢？难道真的是底层发生了问题，导致无法唤醒当前线程？</p>
 <p>带着这个疑惑，我们陆续分析了同段时间内其他用户上报的问题，发现存在同样的现象：<code>NativePollOnce</code> 场景的 <code>WallDuration</code> 普遍较长，有的甚至超过了 100S，但是 <code>CPU</code> 时长很短。如下图：</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b123d7167d7643628e48b7180672a68b~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<p><img src="/posts/13223ae/image-20240409171112856.png" alt="image-20240409171112856"></p>
 <p>为此我们第一反应是系统出问题了？但是进一步对比来看，该类现象只在某个版本之后明显增加，而之前的版本并没有这类现象，如果是厂商更新 rom 导致的问题，应该影响全版本，甚至会影响所有应用，但事实并非如此，因此这与我们的推测并不符合，无法自圆其说。</p>
 <p>按照我们的理解，如果直接进入 <code>NativePollOnce</code> 场景并且一直没有唤醒的话，那么 CPU Duration 应该会很少，并不应该是这样表现(CPU Duration 达到或超过 100ms)。</p>
 <h4 id="定向监控："><a href="#定向监控：" class="headerlink" title="定向监控："></a>定向监控：</h4><p>考虑到国内厂商对 Rom 定制化的习惯，为了确认上面监控的 Cpu 耗时是否是厂商在底层定制产生的耗时，我们在 Native 层通过 Hook 代理对 <code>nativePollOnce</code> 接口进行了监测。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/8d5369d43a2c4c30a1e9bfcf97c74e52~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/70e6d7b3438f48f790507540009f4df4~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<p><img src="/posts/13223ae/image-20240409171137519.png" alt="image-20240409171137519"></p>
 <p>在线上小范围验证和复现，通过观察这类 ANR 问题时的线程调度时序图，最终找到一个 <code>NativePollOnce</code> 停留时长高达 100S 的案例，如下图：</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/68a39031d77f4d0b8b866e036cc2f81b~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<p><img src="/posts/13223ae/image-20240409171154819.png" alt="image-20240409171154819"></p>
 <p>通过上图(TYPE&#x3D;5)可以发现，ANR 发生前，主线程在消息调度结束与下次消息调度开始前，发生多次长时间停留的现象，而且期间都存在一定的 Cpu 耗时，但是远小于 Wall duration。与此同时查看本次进行 epoll_wait 期间，<code>NativePollOnce</code> 是否是一直没有返回，通过监控输出的日志，发现如下现象：</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cd414b3b42ec41eda7e33ab83d062e27~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<p><img src="/posts/13223ae/image-20240409171209033.png" alt="image-20240409171209033"></p>
 <p>在对齐监控时序图与上图日志时间戳之后，看到 Java 层调用 <code>looper.next()</code>获取下一个消息过程中，Native 层 <code>NativePollOnce</code> 接口调用了多次，而且每次进入 epollwait 时传入的参数 timeout 为-1。分析到这里有些疑惑了，这并不是我们预期的一直 wait 场景啊，参数-1 代表什么意思呢？继续向下看。</p>
 <h4 id="MessageQueue-代码分析："><a href="#MessageQueue-代码分析：" class="headerlink" title="MessageQueue 代码分析："></a>MessageQueue 代码分析：</h4><p>既然 ANR 这段时间，执行多次 <code>NativePollOnce</code>，就说明其它线程已经多次将主线程多次从 epoll wait 状态唤醒，但是消息队列已经有大量待调度的消息，为何主线程还依然停留在 <code>looper.next()</code>内部呢？分析到这里只好再次回到上层代码继续分析，这个参数-1 是哪里设置的。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/78e651364fa94ed5873a5058af36a6e9~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<p><img src="/posts/13223ae/image-20240409171219967.png" alt="image-20240409171219967"></p>
 <p>从上图可以看到，每当消息执行结束后，获取下个消息之前会先主动调用一次 <code>NativePollOnce</code>，但是 <code>nextPollTimeoutMillis</code> 默认为 0，并不是底层接口代理时看到的-1，那么这个-1 是哪里传入的呢？继续向下看。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a191f456d5574068af3194e8d29b7071~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<p><img src="/posts/13223ae/image-20240409171230329.png" alt="image-20240409171230329"></p>
 <p>通过上图可以看到，只有一个地点将 <code>nextPollTimeoutMillis</code> 设置为-1，但是通过注释可以清晰的看到提示<code>&quot;msg=mMessage&quot;</code>，没有消息？这与现实严重不符啊，ANR 发生时，消息队列明显有很多消息待执行，这里却提示<code>&quot;msg=mMessage&quot;</code>。</p>
 <p>通过进一步观察上述逻辑发现，该提示发生在 else 分支，如果进入到该分支，那么则说明 msg 对象获取为空，但是在上面明明看到赋值过程<code>&quot;msg=mMessage&quot;</code>，而且当前这种场景 mMessage 肯定不为 null，毕竟在 ANR 时获取的待调度消息也是通过 mMessage 遍历得到的。</p>
 <p>既然 <code>mMessage</code> 不是 null，那么就说明<code>&quot;msg=mMessage&quot;</code>肯定不是 null，但是到了下面却为 null，说明在此过程肯定被某个逻辑给重新赋值了，继续分析。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b9d7e567601044cb86962ec49bd12790~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<p><img src="/posts/13223ae/image-20240409171243438.png" alt="image-20240409171243438"></p>
 <p>通过上图可以看到只有这个场景可能将 msg 重新赋值，那么这部分逻辑是做什么的呢？</p>
 <h4 id="Barrier-机制介绍："><a href="#Barrier-机制介绍：" class="headerlink" title="Barrier 机制介绍："></a>Barrier 机制介绍：</h4><p>看到上面的注释瞬间明白了，原来是 Barrier 机制，是 Android 系统用来保障部分系统消息高优调度的一种机制，实现原理很简单：会在每次消息返回前，检测该消息是否是 barrier 消息，<strong>barrier 消息的典型特征就是 <code>msg.target</code> 对象为 null</strong>，如下图：</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ca9909d9dcfe404782396ce9cc826411~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<p><img src="/posts/13223ae/image-20240409171252873.png" alt="image-20240409171252873"></p>
 <p>如果是 Barrier 消息，那么将对消息队列中的消息进行遍历，找到第一个异步消息，然后将其赋值给 msg。但是如果遍历了所有的消息都没有找到异步消息，那么最后一个消息 msg.next 肯定为 null，此时 msg 会被置为 null，并退出循环。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/99863aafa377466bbb32fed16c1fc96b~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cead0905d15642bf835cc79ccf24bd53~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<p><img src="/posts/13223ae/image-20240409171300251.png" alt="image-20240409171300251"></p>
+<p><img src="/posts/13223ae/image-20240409171308786.png" alt="image-20240409171308786"></p>
 <p>上图为异步消息的设置和判断是否是异步消息的接口实现，我们日常创建的 Message 是不会设置该属性的。只有系统在某些特殊场景，如 UI 刷新，为了保障交互体验，会在请求 vsync 信号前，先发送一个 barrier 消息，然后等到 barrier 消息执行时，遍历 vsync 消息并将其强制调整到头部，以保证该类消息的响应能力：barrier 消息设置和移除，实现逻辑如下：</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/df13cc17b5df4ba5b1e5b0a71607b96f~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<p><img src="/posts/13223ae/image-20240409171318508.png" alt="image-20240409171318508"></p>
 <p>通过上面实现可以看到，barrier 消息是不会主动移除的，需要设置 barrier 消息的业务消息得到响应后主动移除该消息，否则 barrier 消息会一直存在！</p>
 <p>分析到这里就可以很好的解释为何在 <code>MessageQueue.next()</code>接口内部多次调用 <code>NativePollOnce</code> 了，一定是当前的 <code>mMessage</code> 是个 barrier 消息，但是与其关联的业务消息一直没有出现，或者执行之后没有同步移除该消息，导致该 barrier 消息一直处于消息队列头部，每次获取下一个消息时，都被 barrier 拦截和并遍历异步消息，如果有异步消息则响应，没有异步消息则通过 <code>nativePollOnce</code> 进行等待，从而阻塞了正常消息的调度和响应！</p>
 <p>进一步梳理 MessageQueue.next 接口执行逻辑，通过下图就可以清晰的看到我们在 Native 层 Hook 时看到 nextPollTimeMills 传参-1 的场景是怎么设置的。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b6321ad7f97948d187cdfcc13e068a82~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<p><img src="/posts/13223ae/image-20240409171326871.png" alt="image-20240409171326871"></p>
 <p>那么结合本类 ANR 问题，消息队列第一个待调度的消息是不是 barrier 消息呢？我们再次找到上面分析的案例，通过监控时序图观察第一个被 block 的消息。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/58fe60a106ea4e16bffc08056a1cfd7b~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<p><img src="/posts/13223ae/image-20240409171342277.png" alt="image-20240409171342277"></p>
 <p><strong>通过上图可以清晰的看到，当前消息 target 对象为 null，正是 barrier 消息！破案了！</strong></p>
 <h4 id="连锁反应："><a href="#连锁反应：" class="headerlink" title="连锁反应："></a>连锁反应：</h4><p>按照上面的分析，<strong>如果 barrier 消息没有及时移除，那么每次通过 <code>MessageQueue.next()</code>查询时，只能过滤并返回带有异步属性的消息，如用户点击消息 input，vsync 消息等等。</strong> 即使用户交互和 UI 刷新消息可以正常执行，但是大量业务消息无法执行，这就导致了 UI 展示可能存在异常或功能异常，并且应用 service，receiver 等消息并没有异步属性，因此也会被 block，最终造成响应超时发生 ANR！</p>
 <p>结合当前问题，我们发现该用户在第一次 ANR 不久之后再次发生 ANR，主线程 Trace：</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b6d7719a36bc41b286337ac72ac88973~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<p><img src="/posts/13223ae/image-20240409171351041.png" alt="image-20240409171351041"></p>
 <p>第二次 ANR 时，对应的调度时序图如下：</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6e7805d3ac064b9b84bb0218614f8b44~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<p><img src="/posts/13223ae/image-20240409171403623.png" alt="image-20240409171403623"></p>
 <p>通过当前用户连续 2 次 ANR 的消息调度监控时序图可以看到，本次 ANR 时，之前的历史消息记录没有发生任何变化，也就是说第一个 ANR 发生后确实没有再调度其他消息，但 2 次 ANR 的 WallTime 间隔超过 40S，也就是说这 40S 时间里，主线程确实一直 Block 在当前场景！</p>
 <p>在消息调度时序图上进一步对比分析，发现两次 ANRCase，<strong>主线程当前正在执行消息的 Cpu Time 时长却发生了变化，即从 100ms 增加 450ms</strong>。那么这个数据是否置信吗？</p>
 <p>结合这两次 ANR，分别分析一下 ANR Trace 主线程 utm+stm 的耗时(见上图 2 次 Trace 堆栈)：</p>
@@ -483,14 +481,14 @@
 
 <p><strong>但是时序调整后存在一定隐患，即在强制调用 DoFrame 消息期间，业务可能会再次触发 UI 刷新逻辑，产生 barrier 消息并发出 vsync 请求，如果系统及时响应 vsync，并产生 DoFrame 消息，那么调用 <code>removeCallbacks</code> 接口会一次性清除消息队列中所有的 DoFrame 消息，即：移除了消息队列之前的 DoFrame 消息和下次待调度的 DoFrame 消息，但是与下次 DoFrame 消息同步的 barrier 消息并没有被移除。</strong></p>
 <p>那么为什么会移除多个消息呢？这就要从<code>handler.removeCallbacks</code> 的实现说起了。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/41ef0b019ded4372a6f3b4fc89e74576~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<p><img src="/posts/13223ae/image-20240409171417151.png" alt="image-20240409171417151"></p>
 <p>进一步查看 <code>messageQueue.removeMessages</code> 接口实现，发现该接口会遍历消息队列中符合当前 runnable 以及 object 的消息，但是上面传递的 Object 对象是 null，因此就相当于移除了当前 Handler 对象下面所有相同 runnable 对象的消息！</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/9eddcf9aabaa4bceb1c1784f4b1d70e4~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<p><img src="/posts/13223ae/image-20240409171424247.png" alt="image-20240409171424247"></p>
 <p>因为强制刷新和时序调整的问题，导致了消息队列中同时存在 2 个 UI doFrame 消息，并在强制执行之后被同时移除，<strong>从而导致一个无人认领的 barrier 消息一直停留在消息队列 ！</strong></p>
 <h3 id="其它场景："><a href="#其它场景：" class="headerlink" title="其它场景："></a>其它场景：</h3><p>此外，除了上面遇到的场景会导致这类问题之外，还有一种场景也可能会导致这类问题，即:UI 异步刷新，尽管 Android 系统禁止异步刷新，并利用 checkThread 机制对 UI 刷新进行线程检查，但是百密一疏，如果开启硬件加速，在 AndroidO 及之后的版本会间接调用 <strong><code>onDescendantInvalidated</code> 触发 UI 刷新，该逻辑躲过了系统 checkThread 检查，将会造成线程并发隐患。如下图，如果并发执行则会导致前一个线程的 <code>mTraversalBarrier</code> 被覆盖，从而导致 vsync 消息与 barrier 出现同步问题</strong>。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/e8c4581aab1f44cfa1d1b495a17ddd73~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<p><img src="/posts/13223ae/image-20240409171438358.png" alt="image-20240409171438358"></p>
 <p>查看 Android Q 源码，看到 <strong><code>onDescendantInvalidated</code> 内部加上了 checkThread，但被注释掉了！解释如下：修复摄像头后重新启用或者通过 targetSdk 检查？好吧，或许是忘记这个 TODO 了。</strong></p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/f9ff9972be40498b8e18e0b8f39341c8~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<p><img src="/posts/13223ae/image-20240409171447345.png" alt="image-20240409171447345"></p>
 <h3 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h3><p>至此，我们完成了该类问题的分析和最终定位，综合来看该类问题因 Trace 场景(<code>NativePollOnce</code>)和问题本身的高度隐蔽性，给排查和定位带来了极大挑战，如果单纯依靠系统提供的日志，是很难发现 <code>MessageQueue.next()</code>内部发生了异常。这里我们通过 Raster 监控工具，还原了问题现场，并提供了重要线索。现在总结来看，<strong>该类问题其实具有很明显的特征，表现在以下几个方面</strong>：</p>
 <ul>
 <li><strong>问题场景 ANR Trace 集中聚合在 <code>NativePollOnce</code>，此过程 Wall duration 持续很长，并且屏蔽了后续所有正常消息调度，看起来像主线被冻结一样。</strong></li>
@@ -627,7 +625,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">95</span>
+                  <span class="site-state-item-count">96</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

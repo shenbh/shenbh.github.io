@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="private,安卓优化," />
+  <meta name="keywords" content="Hexo, NexT" />
 
 
 
@@ -79,46 +79,43 @@
 
 
 
-<meta name="description" content="今日头条 ANR 优化实践系列 - 监控工具与分析思路前言：在前文，我们对ANR 设计原理及影响因素进行了介绍，并对影响 ANR 的不同场景进行归类。但是依靠现有的系统日志，不足以完成复杂场景的问题归因，而且有些信息从应用侧无法获取，这就导致很多线上问题更加棘手。因此我们在应用侧探索了新的监控能力，以弥补信息获取不足的短板。同时对日常分析过程中用到日志信息和分析思路进行总结，以帮忙大家更好的掌握分">
+<meta name="description" content="title: 优化-今日头条 ANR 优化实践系列 - 监控工具与分析思路categories: Androidtags:  安卓优化 privatehide: trueabbrlink: bd97bfbdate: 2021-11-29 10:31:58  今日头条 ANR 优化实践系列 - 监控工具与分析思路">
 <meta property="og:type" content="article">
-<meta property="og:title" content="优化-今日头条 ANR 优化实践系列 - 监控工具与分析思路">
-<meta property="og:url" content="http://shenbh.github.io/posts/bd97bfb/index.html">
+<meta property="og:title" content="AB">
+<meta property="og:url" content="http://shenbh.github.io/posts/0/index.html">
 <meta property="og:site_name" content="AB">
-<meta property="og:description" content="今日头条 ANR 优化实践系列 - 监控工具与分析思路前言：在前文，我们对ANR 设计原理及影响因素进行了介绍，并对影响 ANR 的不同场景进行归类。但是依靠现有的系统日志，不足以完成复杂场景的问题归因，而且有些信息从应用侧无法获取，这就导致很多线上问题更加棘手。因此我们在应用侧探索了新的监控能力，以弥补信息获取不足的短板。同时对日常分析过程中用到日志信息和分析思路进行总结，以帮忙大家更好的掌握分">
+<meta property="og:description" content="title: 优化-今日头条 ANR 优化实践系列 - 监控工具与分析思路categories: Androidtags:  安卓优化 privatehide: trueabbrlink: bd97bfbdate: 2021-11-29 10:31:58  今日头条 ANR 优化实践系列 - 监控工具与分析思路">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/3c51ba0b0696449581d7008227609b31~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5c9441e452744844809d546fd2c5d8f3~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7390944a08204894a7cfca30c247ed59~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5166cd73caf3493bb95b4fa07ed4b780~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/8a9ba4a6669e4cffbdfad3bc4ce378ab~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cf41c2d7f3e8483e83a9a82f041c9f2d~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5fb325c9281c4dcbbabe6d5472ee08e9~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7475bc9ff7784b00a0187ce57a75ca01~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/81a57644d1a84fada45d11472eedfe36~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/717923a6f3024adc9960a0a53101cdfd~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/e6b0c2b8287640b9b8508c576dec0bd2~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/9068085d369748d88865ef9dc6271122~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a3ac9119bee44bef9b961861467bf4a9~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cebc95040e594b88b3e3dd7c9455ced9~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/89757e2b87c247c1b222842da3d6f2a0~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4714512203cd4c5fa460bad3d5be028f~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6743782983044ec788835b9865576a74~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/8a0271af13ca4d84b0d1cb667a07f940~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/10aec561b2394b4397abf69c92068665~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/451b21874ebd4157bdb8404a4c509f2b~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/3b0ec7b89df6468fb95f68c787e62b2e~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b4a15a18d4a7481b9096ce842ae7c412~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/8127b8a07f374bff90deb80d06c412fa~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a71cbd03fbab44e49486184ef79c2397~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/18456786bda247609e8ff07ea3e686cf~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="og:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b5c212ac4a0449a29dfb2c539de3f915~tplv-k3u1fbpfcp-watermark.awebp">
-<meta property="article:published_time" content="2021-11-29T02:31:58.000Z">
-<meta property="article:modified_time" content="2022-11-02T07:22:54.650Z">
+<meta property="og:image" content="http://shenbh.github.io/posts/0/image-20240409172247024.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/0/image-20240409172304446.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/0/image-20240409172316153.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/0/image-20240409172328196.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/0/image-20240409172340229.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/0/image-20240409172351815.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/0/image-20240409172403690.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/0/image-20240409172414649.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/0/image-20240409172424784.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/0/image-20240409172444028.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/0/image-20240409172457885.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/0/image-20240409172509218.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/0/image-20240409172527428.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/0/image-20240409172605631.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/0/image-20240409172626244.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/0/image-20240409172716390.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/0/image-20240409172747474.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/0/image-20240409172757119.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/0/image-20240409172814940.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/0/image-20240409172831442.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/0/image-20240409172846129.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/0/image-20240409172912473.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/0/image-20240409172944558.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/0/image-20240409172954276.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/0/image-20240409173003857.png">
+<meta property="article:published_time" content="2023-12-28T09:13:33.271Z">
+<meta property="article:modified_time" content="2024-04-09T09:30:15.911Z">
 <meta property="article:author" content="阿炳">
-<meta property="article:tag" content="private">
-<meta property="article:tag" content="安卓优化">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/3c51ba0b0696449581d7008227609b31~tplv-k3u1fbpfcp-watermark.awebp">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/0/image-20240409172247024.png">
 
 
 
@@ -148,13 +145,13 @@
 
 
 
-  <link rel="canonical" href="http://shenbh.github.io/posts/bd97bfb/"/>
+  <link rel="canonical" href="http://shenbh.github.io/posts/0/"/>
 
 
 
 
 
-  <title>优化-今日头条 ANR 优化实践系列 - 监控工具与分析思路 | AB</title><meta name="robots" content="noindex">
+  <title> | AB</title>
   
 
 
@@ -315,7 +312,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/bd97bfb/">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/0/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="">
@@ -332,7 +329,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">优化-今日头条 ANR 优化实践系列 - 监控工具与分析思路</h1>
+          <h1 class="post-title" itemprop="name headline"></h1>
         
 
         <div class="post-meta">
@@ -344,8 +341,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-11-29T10:31:58+08:00">
-                2021-11-29
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2023-12-28T17:13:33+08:00">
+                2023-12-28
               </time>
             
 
@@ -354,28 +351,6 @@
             
           </span>
 
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Android/" itemprop="url" rel="index">
-                    <span itemprop="name">Android</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
           
 
           
@@ -404,27 +379,39 @@
       
 
       
-        <h1 id="今日头条-ANR-优化实践系列-监控工具与分析思路"><a href="#今日头条-ANR-优化实践系列-监控工具与分析思路" class="headerlink" title="今日头条 ANR 优化实践系列 - 监控工具与分析思路"></a><a target="_blank" rel="noopener" href="https://juejin.cn/post/6942665216781975582#heading-47">今日头条 ANR 优化实践系列 - 监控工具与分析思路</a></h1><h2 id="前言："><a href="#前言：" class="headerlink" title="前言："></a>前言：</h2><p>在前文，我们对<a href="https://link.juejin.cn/?target=https://mp.weixin.qq.com/s?__biz=MzI1MzYzMjE0MQ==&mid=2247488116&idx=1&sn=fdf80fa52c57a3360ad1999da2a9656b&chksm=e9d0d996dea750807aadc62d7ed442948ad197607afb9409dd5a296b16fb3d5243f9224b5763&token=569762407&lang=zh_CN%23rd">ANR 设计原理及影响因素</a>进行了介绍，并对影响 ANR 的不同场景进行归类。但是依靠现有的系统日志，不足以完成复杂场景的问题归因，而且有些信息从应用侧无法获取，这就导致很多线上问题更加棘手。因此我们在应用侧探索了新的监控能力，以弥补信息获取不足的短板。同时对日常分析过程中用到日志信息和分析思路进行总结，以帮忙大家更好的掌握分析技巧，下面我们就来看看相关实现。</p>
+        <p>title: 优化-今日头条 ANR 优化实践系列 - 监控工具与分析思路<br>categories: Android<br>tags:</p>
+<ul>
+<li>安卓优化</li>
+<li>private<br>hide: true<br>abbrlink: bd97bfb<br>date: 2021-11-29 10:31:58</li>
+</ul>
+<h1 id="今日头条-ANR-优化实践系列-监控工具与分析思路"><a href="#今日头条-ANR-优化实践系列-监控工具与分析思路" class="headerlink" title="今日头条 ANR 优化实践系列 - 监控工具与分析思路"></a><a target="_blank" rel="noopener" href="https://juejin.cn/post/6942665216781975582#heading-47">今日头条 ANR 优化实践系列 - 监控工具与分析思路</a></h1><h2 id="前言："><a href="#前言：" class="headerlink" title="前言："></a>前言：</h2><p>在前文，我们对<a href="https://link.juejin.cn/?target=https://mp.weixin.qq.com/s?__biz=MzI1MzYzMjE0MQ==&mid=2247488116&idx=1&sn=fdf80fa52c57a3360ad1999da2a9656b&chksm=e9d0d996dea750807aadc62d7ed442948ad197607afb9409dd5a296b16fb3d5243f9224b5763&token=569762407&lang=zh_CN%23rd">ANR 设计原理及影响因素</a>进行了介绍，并对影响 ANR 的不同场景进行归类。但是依靠现有的系统日志，不足以完成复杂场景的问题归因，而且有些信息从应用侧无法获取，这就导致很多线上问题更加棘手。因此我们在应用侧探索了新的监控能力，以弥补信息获取不足的短板。同时对日常分析过程中用到日志信息和分析思路进行总结，以帮忙大家更好的掌握分析技巧，下面我们就来看看相关实现。</p>
 <h2 id="Raster-监控工具"><a href="#Raster-监控工具" class="headerlink" title="Raster 监控工具"></a>Raster 监控工具</h2><p>俗话说：“工欲善其事，必先利其器”，日常分析 ANR 问题也是如此，一个好的监控工具不仅可以帮助我们在解决常规问题时达到锦上添花的效果，在面对线上复杂隐蔽的问题时，也能为我们打开视野，提供更多线索和思路。</p>
 <h3 id="工具介绍："><a href="#工具介绍：" class="headerlink" title="工具介绍："></a>工具介绍：</h3><p>该工具主要是在主线程消息调度过程进行监控，并按照一定策略聚合，以保证监控工具本身对应用性能和内存抖动影响降至最低。同时对应用四大组件消息执行过程进行监控，便于对这类消息的调度及耗时情况进行跟踪和记录。另外对当前正在调度的消息及消息队列中待调度消息进行统计，从而在发生问题时，可以回放主线程的整体调度情况。此外，我们将系统服务的 CheckTime 机制迁移到应用侧，应用为线程 CheckTime 机制，以便于系统信息不足时，从线程调度及时性推测过去一段时间系统负载和调度情况。</p>
 <p>因此该工具用一句话来概括就是：由点到面，回放过去，现在和将来。</p>
 <p>因其实现原理和消息聚合后的效果，直观展示主线程调度过程长短不一的耗时片段，犹如一道道光栅，故将该工具命名为 **Raster[ˈræstər]**。</p>
-<h3 id="监控工具由来"><a href="#监控工具由来" class="headerlink" title="监控工具由来"></a>监控工具由来</h3><h4 id="举个例子："><a href="#举个例子：" class="headerlink" title="举个例子："></a>举个例子：</h4><p>例如下图，是线下遇到的 ANR 问题，从手机端获取的 Trace 日志，可以看到从主线程堆栈上基本得不到太多有效信息。 <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/3c51ba0b0696449581d7008227609b31~tplv-k3u1fbpfcp-watermark.awebp" alt="img"> 继续从 Trace 中分析其它信息，包含了各个进程的虚拟机和线程状态信息，以及 ANR 之前或之后一段时间，CPU 使用率比较高的进程乃至系统负载(CPU，IO)的相关信息等等，如下图： <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5c9441e452744844809d546fd2c5d8f3~tplv-k3u1fbpfcp-watermark.awebp" alt="img"> 但是从这些信息中，相信很多同学都很难再进一步分析，因为这些信息只是列举了当前各个进程或线程的状态，并没有很好的监控和记录影响这些指标的过程。而现实中这类场景的问题，每天都在线上大量发生。那么针对这种情况该如何更好的解决呢？下面就来介绍一下我们是如何应对的。</p>
-<h3 id="消息调度监控"><a href="#消息调度监控" class="headerlink" title="消息调度监控"></a>消息调度监控</h3><p>在<a href="https://link.juejin.cn/?target=https://mp.weixin.qq.com/s?__biz=MzI1MzYzMjE0MQ==&mid=2247488116&idx=1&sn=fdf80fa52c57a3360ad1999da2a9656b&chksm=e9d0d996dea750807aadc62d7ed442948ad197607afb9409dd5a296b16fb3d5243f9224b5763&token=569762407&lang=zh_CN%23rd">Android 系统的 ANR 设计原理及影响因素</a>一文中，我们讲到，ANR 问题很多场景都是历史消息耗时较长并不断累加后导致的，但是在 ANR 发生时我们并不知道之前都调度了哪些消息，如果可以监控每次消息调度的耗时并记录，当发生 ANR 时，获取这些记录信息，并能计算出当前正在执行消息的耗时，是不是就可以清晰的知道 ANR 发生前主线程都发生了什么？按照这个思路，整理出如下示意图： <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7390944a08204894a7cfca30c247ed59~tplv-k3u1fbpfcp-watermark.awebp" alt="img"> 但是通过上面示意图并结合实际业务场景，我们发现，对于大多数业务消息，单次耗时都很少，如果每个消息都单独记录，要想跟踪记录 ANR 前 10S 甚至更长时间范围内的所有消息，可能需要成千上万条记录，这个显然是不合理的，而且这么多的消息也不方便我们后续查看。</p>
+<h3 id="监控工具由来"><a href="#监控工具由来" class="headerlink" title="监控工具由来"></a>监控工具由来</h3><h4 id="举个例子："><a href="#举个例子：" class="headerlink" title="举个例子："></a>举个例子：</h4><p>例如下图，是线下遇到的 ANR 问题，从手机端获取的 Trace 日志，可以看到从主线程堆栈上基本得不到太多有效信息。 </p>
+<p><img src="/posts/0/image-20240409172247024.png" alt="image-20240409172247024"></p>
+<p>继续从 Trace 中分析其它信息，包含了各个进程的虚拟机和线程状态信息，以及 ANR 之前或之后一段时间，CPU 使用率比较高的进程乃至系统负载(CPU，IO)的相关信息等等，如下图： <img src="/posts/0/image-20240409172304446.png" alt="image-20240409172304446"> 但是从这些信息中，相信很多同学都很难再进一步分析，因为这些信息只是列举了当前各个进程或线程的状态，并没有很好的监控和记录影响这些指标的过程。而现实中这类场景的问题，每天都在线上大量发生。那么针对这种情况该如何更好的解决呢？下面就来介绍一下我们是如何应对的。</p>
+<h3 id="消息调度监控"><a href="#消息调度监控" class="headerlink" title="消息调度监控"></a>消息调度监控</h3><p>在<a href="https://link.juejin.cn/?target=https://mp.weixin.qq.com/s?__biz=MzI1MzYzMjE0MQ==&mid=2247488116&idx=1&sn=fdf80fa52c57a3360ad1999da2a9656b&chksm=e9d0d996dea750807aadc62d7ed442948ad197607afb9409dd5a296b16fb3d5243f9224b5763&token=569762407&lang=zh_CN%23rd">Android 系统的 ANR 设计原理及影响因素</a>一文中，我们讲到，ANR 问题很多场景都是历史消息耗时较长并不断累加后导致的，但是在 ANR 发生时我们并不知道之前都调度了哪些消息，如果可以监控每次消息调度的耗时并记录，当发生 ANR 时，获取这些记录信息，并能计算出当前正在执行消息的耗时，是不是就可以清晰的知道 ANR 发生前主线程都发生了什么？按照这个思路，整理出如下示意图： <img src="/posts/0/image-20240409172316153.png" alt="image-20240409172316153"> 但是通过上面示意图并结合实际业务场景，我们发现，对于大多数业务消息，单次耗时都很少，如果每个消息都单独记录，要想跟踪记录 ANR 前 10S 甚至更长时间范围内的所有消息，可能需要成千上万条记录，这个显然是不合理的，而且这么多的消息也不方便我们后续查看。</p>
 <h3 id="消息聚合分类"><a href="#消息聚合分类" class="headerlink" title="消息聚合分类"></a>消息聚合分类</h3><p>联想到实际业务场景很多情况都是耗时较少的消息，而在排查这类问题过程耗时较少的消息基本是可以直接忽略的，因此我们是不是可以对这类消息按照一定条件进行聚合，将一段时间以内的消息进行累加计算，如果累计耗时超过我们规定的阈值，那么就将这些消息的数量和累计耗时合并成一条记录，如 16 个消息累计耗时刚好超过 300ms，则生成一条记录。以此类推存储 100 条的话，就能监控到 ANR 发生前 30S 主线程的调度历史了(实际可能是大于 15S，至于为何是这个范围，我们会在后面说明)，如此一来就可以较好的解决大量记录和频繁更新带来的内存抖动问题。</p>
 <p>根据上面的思路，我们对消息监控及记录又进一步的进行聚合优化和关键消息过滤。总结来看，分为以下几种类型：</p>
-<h4 id="多消息聚合："><a href="#多消息聚合：" class="headerlink" title="多消息聚合："></a>多消息聚合：</h4><p><strong>该场景主要用于主线程连续调度多个消息，并且每个消息耗时都很少的情况下，将这些消息耗时累加，直到这些消息累计耗时超过设置的阈值，则汇总并生成一条记录</strong>，并在这条记录中标明本次聚合总共调度了多少个消息。按照消息聚合的思路，发生问题时主线程消息调度示意图如下： <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5166cd73caf3493bb95b4fa07ed4b780~tplv-k3u1fbpfcp-watermark.awebp" alt="img"> <em>Count 表示本条记录包含了多少个消息；Wall 表示本轮消息执行的累计耗时</em></p>
+<h4 id="多消息聚合："><a href="#多消息聚合：" class="headerlink" title="多消息聚合："></a>多消息聚合：</h4><p><strong>该场景主要用于主线程连续调度多个消息，并且每个消息耗时都很少的情况下，将这些消息耗时累加，直到这些消息累计耗时超过设置的阈值，则汇总并生成一条记录</strong>，并在这条记录中标明本次聚合总共调度了多少个消息。按照消息聚合的思路，发生问题时主线程消息调度示意图如下： </p>
+<p><img src="/posts/0/image-20240409172328196.png" alt="image-20240409172328196"></p>
+<p> <em>Count 表示本条记录包含了多少个消息；Wall 表示本轮消息执行的累计耗时</em></p>
 <h4 id="消息聚合拆分："><a href="#消息聚合拆分：" class="headerlink" title="消息聚合拆分："></a>消息聚合拆分：</h4><p>针对上面多消息聚合策略，会存在一些特殊情况，例如在将多个消息进行累计统计过程中，如果前 N 次消息调度结束后，累计耗时都没有超过阈值，但是调度完下一个消息之后，发现累计耗时超过阈值，并且还明显超出，如设置阈值是 300ms，但是前 N 个消息累计 200ms，加上本次消息累计耗时达到了 900ms，那么这种情况，我们明显知道是最后一次消息耗时严重，因此<strong>需要将本次消息单独记录，并标记其耗时和相关信息，同时将之前 N 次消息调度耗时和消息数聚合在一起并单独记录，这种场景相当于一次生成 2 条记录</strong>。</p>
 <p>为了考虑监控工具对性能的影响，我们只在每轮统计需要保存时，更新线程 cpu 执行时间，如果发生消息聚合拆分的场景，会默认前一条记录的 cpu 时间为-1，因为本条记录并不是我们重点关注的，所以会把本轮统计的 cpu 时间全部归到后一条消息。</p>
-<p>在一些极端场景下，如本轮监控第一个消息执行耗时为 1ms，但是加上本次消息耗时，累计超过 600ms，因此两次消息累计耗时远大于设定的阈值 300ms，那么就需要对本次耗时严重的消息单独记录，而前面那个 1ms 的消息也需要被单独进行记录。类似情形如此反复，就会出现上面说的保存 100 条记录，整体监控可回溯的时长区间存在波动的情况。该场景的示意图如下： <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/8a9ba4a6669e4cffbdfad3bc4ce378ab~tplv-k3u1fbpfcp-watermark.awebp" alt="img"> <em>Count 表示本条记录包含了多少个消息；Wall 表示本轮消息执行的累计耗时</em></p>
-<h4 id="关键消息聚合："><a href="#关键消息聚合：" class="headerlink" title="关键消息聚合："></a>关键消息聚合：</h4><p>除了上面单次耗时严重的消息需要拆分并单独记录之外，还有一类消息也需要我们单独标记，以达到更好的识别，那就是可能会引起 ANR 的应用组件，如 Activity，Service，Receiver，Provider 等等，为了监控这几种组件的执行过程，我们需要对 ActivityThread.H 的消息调度进行监控，当发现上面这些组件有关的消息在执行时，不管其耗时多少，都对其进行单独记录，并将之前监控的一个或多个消息也保存为一条记录。该场景的示意图如下： <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cf41c2d7f3e8483e83a9a82f041c9f2d~tplv-k3u1fbpfcp-watermark.awebp" alt="img"> <em>Count 表示本条记录包含了多少个消息；Wall 表示本轮消息执行的累计耗时</em></p>
-<h4 id="IDLE-场景聚合："><a href="#IDLE-场景聚合：" class="headerlink" title="IDLE 场景聚合："></a>IDLE 场景聚合：</h4><p>熟悉消息队列的同学都知道，主线程是基于消息队列的方式进行调度，在每次消息调度完成之后都会从消息队列读取下一个待调度的消息，如果消息队列没有消息，或者下一个消息没有到设定的调度时间，并且也没有 IDLE 消息等待调度，那么主线程将会进入 IDLE 状态，如下示意图： <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5fb325c9281c4dcbbabe6d5472ee08e9~tplv-k3u1fbpfcp-watermark.awebp" alt="img"> 正是因为上面的调度逻辑，使得主线程在消息调度过程中会多次进入 IDLE 状态，而这个过程也涉及到线程上下文切换(如：Java 环境切换到 Native 环境)，会去检测是否有挂起请求，所以对调用频繁的接口来说，会在 ANR 发生时被命中，理论上调用越频繁的接口被命中的概率越大，如下图堆栈： <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7475bc9ff7784b00a0187ce57a75ca01~tplv-k3u1fbpfcp-watermark.awebp" alt="img"> 但是上面这种场景的 IDLE 停留时长可长可短，如果按照完全上面那几类消息聚合策略，多个消息连续聚合的话，可能会把这类场景也给聚合进来，一定程度造成干扰，这显然不是我们想要的，为此需要进一步优化，在每次消息调度结束后，获取当前时间，在下次消息调度开始前，再次获取当前时间，并统计距离上次消息调度结束的间隔时长，如果间隔较长，那么也需要单独记录，如果间隔时间较短，我们认为可以忽略，并将其合并到之前统计的消息一起跟踪，到这里就完成了各类场景的监控和归类。该场景的示意图如下： <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/81a57644d1a84fada45d11472eedfe36~tplv-k3u1fbpfcp-watermark.awebp" alt="img"> <em>Count 表示本条记录包含了多少个消息；Wall 表示本轮消息执行的累计耗时</em></p>
+<p>在一些极端场景下，如本轮监控第一个消息执行耗时为 1ms，但是加上本次消息耗时，累计超过 600ms，因此两次消息累计耗时远大于设定的阈值 300ms，那么就需要对本次耗时严重的消息单独记录，而前面那个 1ms 的消息也需要被单独进行记录。类似情形如此反复，就会出现上面说的保存 100 条记录，整体监控可回溯的时长区间存在波动的情况。该场景的示意图如下： <img src="/posts/0/image-20240409172340229.png" alt="image-20240409172340229"> <em>Count 表示本条记录包含了多少个消息；Wall 表示本轮消息执行的累计耗时</em></p>
+<h4 id="关键消息聚合："><a href="#关键消息聚合：" class="headerlink" title="关键消息聚合："></a>关键消息聚合：</h4><p>除了上面单次耗时严重的消息需要拆分并单独记录之外，还有一类消息也需要我们单独标记，以达到更好的识别，那就是可能会引起 ANR 的应用组件，如 Activity，Service，Receiver，Provider 等等，为了监控这几种组件的执行过程，我们需要对 ActivityThread.H 的消息调度进行监控，当发现上面这些组件有关的消息在执行时，不管其耗时多少，都对其进行单独记录，并将之前监控的一个或多个消息也保存为一条记录。该场景的示意图如下： <img src="/posts/0/image-20240409172351815.png" alt="image-20240409172351815"></p>
+<p> <em>Count 表示本条记录包含了多少个消息；Wall 表示本轮消息执行的累计耗时</em></p>
+<h4 id="IDLE-场景聚合："><a href="#IDLE-场景聚合：" class="headerlink" title="IDLE 场景聚合："></a>IDLE 场景聚合：</h4><p>熟悉消息队列的同学都知道，主线程是基于消息队列的方式进行调度，在每次消息调度完成之后都会从消息队列读取下一个待调度的消息，如果消息队列没有消息，或者下一个消息没有到设定的调度时间，并且也没有 IDLE 消息等待调度，那么主线程将会进入 IDLE 状态，如下示意图： <img src="/posts/0/image-20240409172403690.png" alt="image-20240409172403690"> 正是因为上面的调度逻辑，使得主线程在消息调度过程中会多次进入 IDLE 状态，而这个过程也涉及到线程上下文切换(如：Java 环境切换到 Native 环境)，会去检测是否有挂起请求，所以对调用频繁的接口来说，会在 ANR 发生时被命中，理论上调用越频繁的接口被命中的概率越大，如下图堆栈： <img src="/posts/0/image-20240409172414649.png" alt="image-20240409172414649"> 但是上面这种场景的 IDLE 停留时长可长可短，如果按照完全上面那几类消息聚合策略，多个消息连续聚合的话，可能会把这类场景也给聚合进来，一定程度造成干扰，这显然不是我们想要的，为此需要进一步优化，在每次消息调度结束后，获取当前时间，在下次消息调度开始前，再次获取当前时间，并统计距离上次消息调度结束的间隔时长，如果间隔较长，那么也需要单独记录，如果间隔时间较短，我们认为可以忽略，并将其合并到之前统计的消息一起跟踪，到这里就完成了各类场景的监控和归类。该场景的示意图如下： <img src="/posts/0/image-20240409172424784.png" alt="image-20240409172424784"> <em>Count 表示本条记录包含了多少个消息；Wall 表示本轮消息执行的累计耗时</em></p>
 <h3 id="耗时消息堆栈采样："><a href="#耗时消息堆栈采样：" class="headerlink" title="耗时消息堆栈采样："></a>耗时消息堆栈采样：</h3><p>在上面重点讲述了主线程消息调度过程的监控和聚合策略，便于发生 ANR，在线下进行回放。但是那些耗时较长的消息，仅仅知道其耗时和消息 tag 是远远不够的，因为每个消息内部的业务逻辑对于我们来说都是黑盒，各个接口耗时也存在很多不确定性，如锁等待、Binder 通信、IO 等系统调用。</p>
 <p>因此需要知道这些耗时消息内部接口的耗时情况，我们选取了 2 种方案进行对比：</p>
 <p>第一种方案：是对每个函数进行插桩，在进入和退出过程统计其耗时，并进行聚合和汇总。该方案的优点是可以精确的知道每个函数的真实耗时，缺点是很影响包体积和性能，而且不利于其他产品高效复用。</p>
 <p>第二种方案，在每个消息开始执行时，触发子线程的超时监控，如果在超时之后本次消息还没执行结束，则抓取主线程堆栈，并继续对该消息设置下一次超时监控，直到该消息执行结束并取消本轮监控。如果在触发超时之前已经执行完毕，则取消本次监控并在下次消息开始执行时，再次设置超时监控，但是因为大部分消息耗时都很少，如果每次都频繁设置和取消，将会带来性能影响，因此我们对此进行优化，采用系统 ANR 超时监控相同的时间对齐方案，具体来说就是：</p>
 <p>以消息开始时间加上超时时长为目标超时时间，每次超时时间到了之后，检查当前时间是否大于或等于目标时间，如果满足，则说明目标时间没有更新，也就是说本次消息没结束，则抓取堆栈。如果每次超时之后，检查当前时间小于目标时间，则说明上次消息执行结束，新的消息开始执行并更新了目标超时时间，这时异步监控需对齐目标超时，再次设置超时监控，如此往复。</p>
-<p>根据上面的思路，整理流程图如下： <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/717923a6f3024adc9960a0a53101cdfd~tplv-k3u1fbpfcp-watermark.awebp" alt="img"> 需要注意的是，消息采样堆栈的超时时长不可设置太短，否则频繁抓取堆栈对主线程性能影响较大，同时也不能设置太长，否则会因为采样过低导致数据置信度降低。具体时长根据每个产品复杂度灵活调整即可。</p>
+<p>根据上面的思路，整理流程图如下： </p>
+<p><img src="/posts/0/image-20240409172444028.png" alt="image-20240409172444028"></p>
+<p> 需要注意的是，消息采样堆栈的超时时长不可设置太短，否则频繁抓取堆栈对主线程性能影响较大，同时也不能设置太长，否则会因为采样过低导致数据置信度降低。具体时长根据每个产品复杂度灵活调整即可。</p>
 <h3 id="监控正在调度消息及耗时："><a href="#监控正在调度消息及耗时：" class="headerlink" title="监控正在调度消息及耗时："></a>监控正在调度消息及耗时：</h3><p>除了监控 ANR 发生之前主线程历史消息调度及耗时之外，也需要知道 ANR 发生时正在调度的消息及其耗时，以便于在看到 ANR 的 Trace 堆栈时，可以清晰的知道当前 Trace 逻辑到底执行了多长时间，帮忙我们排除干扰，快速定位。借助这个监控可以很好的回答大家，ANR 发生时当前 Trace 堆栈是否耗时以及耗时多久的问题，避免陷入“Trace 堆栈”误区。</p>
 <h3 id="获取-Pending-消息："><a href="#获取-Pending-消息：" class="headerlink" title="获取 Pending 消息："></a>获取 Pending 消息：</h3><p>同时除了监控主线程历史消息调度及耗时之外，也需要在 ANR 发生时，获取消息队列中待调度的消息，为我们分析问题时提供更多线索，如：</p>
 <ul>
@@ -432,15 +419,22 @@
 <li>可以观察消息队列中是否存在发生 ANR 的应用组件消息，如 Service 消息，以及其在待调度消息队列中的位置和 Block 时长；</li>
 <li>可以观察消息队列中都有哪些消息，这些消息是否有一定规律，如大量重复消息，如果有大量重复消息，则说明很有可能与该消息相关的业务逻辑发生异常，频繁和主线程交互(后面的案例分析中我们也会有介绍)。</li>
 </ul>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/e6b0c2b8287640b9b8508c576dec0bd2~tplv-k3u1fbpfcp-watermark.awebp" alt="img"> 之前我们讲到，对于一次消息调度，它的耗时可以从两个维度进行统计，即 Wall Duration 和 Cpu Duration，通过这两个维度的统计，可以帮助我们更好的推测一次严重耗时，是执行大量业务逻辑还是处于等待或被抢占的情况，如果是后者，那么可以看到这类消息的 Wall Duration 和 Cpu Duration 比例会比较大，当然如何更好更全面的区分一次消息耗时是等待较多还是线程调度被抢占，我们将会在后面结合其他参考信息进行介绍。</p>
-<h3 id="完整示意图"><a href="#完整示意图" class="headerlink" title="完整示意图"></a>完整示意图</h3><p>在这里我们再把 Cpu Duration 耗时也给统计之后，那么整个有关主线程完整的消息调度监控功能就基本完成了。示意图如下： <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/9068085d369748d88865ef9dc6271122~tplv-k3u1fbpfcp-watermark.awebp" alt="img"> 通过这个消息调度监控工具，我们就可以很清晰的看到发生 ANR 时，主线程历史消息调度情况。当前正在调度消息耗时，以及消息队列待调度消息及相关信息。而且利用这个监控工具，一眼便知 ANR 发生时主线程 Trace 实际耗时情况，因此很好解决了部分同学对当前堆栈是否耗时以及耗时多久的疑问。</p>
+<p><img src="/posts/0/image-20240409172457885.png" alt="image-20240409172457885"></p>
+<p> 之前我们讲到，对于一次消息调度，它的耗时可以从两个维度进行统计，即 Wall Duration 和 Cpu Duration，通过这两个维度的统计，可以帮助我们更好的推测一次严重耗时，是执行大量业务逻辑还是处于等待或被抢占的情况，如果是后者，那么可以看到这类消息的 Wall Duration 和 Cpu Duration 比例会比较大，当然如何更好更全面的区分一次消息耗时是等待较多还是线程调度被抢占，我们将会在后面结合其他参考信息进行介绍。</p>
+<h3 id="完整示意图"><a href="#完整示意图" class="headerlink" title="完整示意图"></a>完整示意图</h3><p>在这里我们再把 Cpu Duration 耗时也给统计之后，那么整个有关主线程完整的消息调度监控功能就基本完成了。示意图如下： </p>
+<p><img src="/posts/0/image-20240409172509218.png" alt="image-20240409172509218"></p>
+<p> 通过这个消息调度监控工具，我们就可以很清晰的看到发生 ANR 时，主线程历史消息调度情况。当前正在调度消息耗时，以及消息队列待调度消息及相关信息。而且利用这个监控工具，一眼便知 ANR 发生时主线程 Trace 实际耗时情况，因此很好解决了部分同学对当前堆栈是否耗时以及耗时多久的疑问。</p>
 <p>从上面介绍可以看出，为了重点标记单次耗时消息和关键消息，我们使用了多种聚合策略，因此监控过程记录的信息可能会代表不同类型的消息，为了便于区分，我们在可视化展示时加上 Type 标识，便于区别。</p>
-<h4 id="应用示例："><a href="#应用示例：" class="headerlink" title="应用示例："></a>应用示例：</h4><p>例如下图，从 Trace 日志可以看到，ANR 发生时主线程被 Block 在 Binder 通信过程，可能很多同学第一反应是 WMS 服务没有及时响应 Binder 请求导致的问题 <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a3ac9119bee44bef9b961861467bf4a9~tplv-k3u1fbpfcp-watermark.awebp" alt="img"> 但是再结合下面的消息调度监控来核实一下，我们发现当前调度的消息 Wall duration 只有 44ms，而在该消息之前有两次历史消息耗时比较严重，分别为 2166ms，3277ms，也就是说本次 Binder 调用耗时并不严重，真正的问题是前面 2 次消息耗时较长，影响了后续消息调度，只有同时解决这 2 个消息耗时严重问题，该 ANR 问题才可能解决。 <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cebc95040e594b88b3e3dd7c9455ced9~tplv-k3u1fbpfcp-watermark.awebp" alt="img"> 如果没有消息调度监控工具，上去就盲目的分析当前逻辑调用的 IPC 问题，可能就犯了方向性的错误，掉入“Trace 堆栈”陷阱中。</p>
-<p>接下来再来看一个发生在线上的另外一个实例，从下图可以看到主线程正在调度的消息耗时超过 1S，但是在此之前的另一个历史消息耗时长达 9828ms。继续观察下图消息队列待调度的消息状态(灰色示意)，可以看到第一个待调度的消息被 Block 了 14S 之久。由此我们可以知道 ANR 消息之前的这个历史消息，才是导致 ANR 的罪魁祸首，当然这个正在执行的消息也需要优化一下性能，因为我们在前面说过：“发生 ANR 时，没有一个消息是无辜的”。 <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/89757e2b87c247c1b222842da3d6f2a0~tplv-k3u1fbpfcp-watermark.awebp" alt="img"> 正是因为有了上面这些监控能力，让我们在日常面对 Trace 日志中的业务逻辑是否耗时以及耗时多久的困惑，瞬间就会变得清晰起来。</p>
+<h4 id="应用示例："><a href="#应用示例：" class="headerlink" title="应用示例："></a>应用示例：</h4><p>例如下图，从 Trace 日志可以看到，ANR 发生时主线程被 Block 在 Binder 通信过程，可能很多同学第一反应是 WMS 服务没有及时响应 Binder 请求导致的问题 </p>
+<p><img src="/posts/0/image-20240409172527428.png" alt="image-20240409172527428"></p>
+<p> 但是再结合下面的消息调度监控来核实一下，我们发现当前调度的消息 Wall duration 只有 44ms，而在该消息之前有两次历史消息耗时比较严重，分别为 2166ms，3277ms，也就是说本次 Binder 调用耗时并不严重，真正的问题是前面 2 次消息耗时较长，影响了后续消息调度，只有同时解决这 2 个消息耗时严重问题，该 ANR 问题才可能解决。 <img src="/posts/0/image-20240409172605631.png" alt="image-20240409172605631"> 如果没有消息调度监控工具，上去就盲目的分析当前逻辑调用的 IPC 问题，可能就犯了方向性的错误，掉入“Trace 堆栈”陷阱中。</p>
+<p>接下来再来看一个发生在线上的另外一个实例，从下图可以看到主线程正在调度的消息耗时超过 1S，但是在此之前的另一个历史消息耗时长达 9828ms。继续观察下图消息队列待调度的消息状态(灰色示意)，可以看到第一个待调度的消息被 Block 了 14S 之久。由此我们可以知道 ANR 消息之前的这个历史消息，才是导致 ANR 的罪魁祸首，当然这个正在执行的消息也需要优化一下性能，因为我们在前面说过：“发生 ANR 时，没有一个消息是无辜的”。 </p>
+<p><img src="/posts/0/image-20240409172626244.png" alt="image-20240409172626244"></p>
+<p> 正是因为有了上面这些监控能力，让我们在日常面对 Trace 日志中的业务逻辑是否耗时以及耗时多久的困惑，瞬间就会变得清晰起来。</p>
 <h3 id="Checktime"><a href="#Checktime" class="headerlink" title="Checktime"></a>Checktime</h3><h4 id="Checktime-背景介绍："><a href="#Checktime-背景介绍：" class="headerlink" title="Checktime 背景介绍："></a>Checktime 背景介绍：</h4><p>Checktime 是 Android 系统针对一些系统服务(AMS，InputService 等)中高频访问的接口，执行时间的监控，当这类接口真实耗时超过预期值将会给出提示信息，此类设计为了在真实环境监测进程被调度和响应能力的一种结果反馈。</p>
-<p>具体实现是，在每个函数执行前和执行后分析获取当前系统时间，并计算差值，如果该接口耗时超过其设定的阈值，则会触发”slow operation”的信息提醒，部分代码实现如下： <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4714512203cd4c5fa460bad3d5be028f~tplv-k3u1fbpfcp-watermark.awebp" alt="img"> Checktime 逻辑很简单，用当前系统时间减去对比时间，如果超过 50ms，则给出 Waring 日志提示。 <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6743782983044ec788835b9865576a74~tplv-k3u1fbpfcp-watermark.awebp" alt="img"> 我们在分析线下问题，或者在系统层面分析这类问题时，经常会在 logcat 中看到这类消息，但是对于线上的三方应用来说，因为权限问题无法获取系统日志，只能自己实现了。</p>
+<p>具体实现是，在每个函数执行前和执行后分析获取当前系统时间，并计算差值，如果该接口耗时超过其设定的阈值，则会触发”slow operation”的信息提醒，部分代码实现如下： <img src="/posts/0/image-20240409172716390.png" alt="img"> Checktime 逻辑很简单，用当前系统时间减去对比时间，如果超过 50ms，则给出 Waring 日志提示。 <img src="/posts/0/image-20240409172747474.png" alt="image-20240409172747474"> 我们在分析线下问题，或者在系统层面分析这类问题时，经常会在 logcat 中看到这类消息，但是对于线上的三方应用来说，因为权限问题无法获取系统日志，只能自己实现了。</p>
 <h4 id="线程-Checktime："><a href="#线程-Checktime：" class="headerlink" title="线程 Checktime："></a>线程 Checktime：</h4><p>了解完系统 Checktime 设计思路及实现之后，我们就可以在应用层实现类似的功能了，通过借助其它子线程的周期检测机制，<strong>在每次调度前获取当前系统时间，然后减去我们设置延迟的时间，即可得到本次线程调度前的真实间隔时间，如设置线程每隔 300ms 调度一次，结果发现实际响应时间间隔有时会超过 300ms，如果偏差越大，则说明线程没有被及时调度，进一步反映系统响应能力变差。</strong></p>
-<p>通过这样的方式，即使在线上环境获取不到系统日志，也可以从侧面反映不同时段系统负载对线程调度影响，如下图示意，当连续发生多次严重 Delay 时，说明线程调度受到了影响。 <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/8a0271af13ca4d84b0d1cb667a07f940~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<p>通过这样的方式，即使在线上环境获取不到系统日志，也可以从侧面反映不同时段系统负载对线程调度影响，如下图示意，当连续发生多次严重 Delay 时，说明线程调度受到了影响。 <img src="/posts/0/image-20240409172757119.png" alt="image-20240409172757119"></p>
 <h3 id="小结："><a href="#小结：" class="headerlink" title="小结："></a>小结：</h3><p>通过上述监控能力，我们可以清晰的知道 ANR 发生时主线程历史消息调度以及耗时严重消息的采样堆栈，同时可以知道正在执行消息的耗时，以及消息队列待中调度消息的状态。同时通过线程 CheckTime 机制从侧面反映线程调度响应能力，由此完成了应用侧监控信息从点到面的覆盖。但是在面对 ANR 问题时，只有这个监控，是远远不够的，需要结合其他信息整体分析，以应对更为复杂的系统环境。下面就结合监控工具来介绍一下 ANR 问题的分析思路。</p>
 <h2 id="ANR-分析思路："><a href="#ANR-分析思路：" class="headerlink" title="ANR 分析思路："></a>ANR 分析思路：</h2><p>在介绍分析思路之前，我们先来说一下分析这类问题需要用到哪些日志，当然在不同的环境下，获取信息能力会有很大差别，如线下环境和线上环境，应用侧和系统角度都有差异。这里我们会将我们日常排查问题常用的信息都介绍一下，便于大家更好的理解，主要包括以下几种：</p>
 <ul>
@@ -454,7 +448,7 @@
 <p>对于应用侧来说，在线上环境可能只能拿到当前进程内部的线程堆栈(取决于实现原理，参见：<a href="https://link.juejin.cn/?target=https://mp.weixin.qq.com/s?__biz=MzI1MzYzMjE0MQ==&mid=2247488116&idx=1&sn=fdf80fa52c57a3360ad1999da2a9656b&chksm=e9d0d996dea750807aadc62d7ed442948ad197607afb9409dd5a296b16fb3d5243f9224b5763&token=569762407&lang=zh_CN%23rd">Android 系统的 ANR 设计原理及影响因素</a>)以及 ANR Info 信息。</p>
 <p>在系统侧，几乎能获取到上面的所有信息，对于这类问题获取的信息越多，分析定位成功率就越大，例如可以利用完整的 Trace 日志，分析跨进程 Block 或死锁问题，系统内存或 IO 紧张程度等等，甚至可以知道硬件状态，如低电状态，硬件频率(CPU，IO，GPU)等等。</p>
 <h3 id="关键信息解读："><a href="#关键信息解读：" class="headerlink" title="关键信息解读："></a>关键信息解读：</h3><p>在这里我们把上面列举的日志进行提取并解读，以便于大家在日常开发和面对线上问题，根据当前获取的信息进行参考。</p>
-<h4 id="Trace-信息"><a href="#Trace-信息" class="headerlink" title="Trace 信息"></a>Trace 信息</h4><p>在前文<a href="https://link.juejin.cn/?target=https://mp.weixin.qq.com/s?__biz=MzI1MzYzMjE0MQ==&mid=2247488116&idx=1&sn=fdf80fa52c57a3360ad1999da2a9656b&chksm=e9d0d996dea750807aadc62d7ed442948ad197607afb9409dd5a296b16fb3d5243f9224b5763&token=569762407&lang=zh_CN%23rd">Android 系统的 ANR 设计原理及影响因素</a>中，我们讲到了在发生 ANR 之后，系统会 Dump 当前进程以及关键进程的线程堆栈，状态(红框所示关键信息，稍后详细说明)，示例如下： <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/10aec561b2394b4397abf69c92068665~tplv-k3u1fbpfcp-watermark.awebp" alt="img"> 上面的日志包含很多信息，这里将常用的关键信息进行说明，如下：</p>
+<h4 id="Trace-信息"><a href="#Trace-信息" class="headerlink" title="Trace 信息"></a>Trace 信息</h4><p>在前文<a href="https://link.juejin.cn/?target=https://mp.weixin.qq.com/s?__biz=MzI1MzYzMjE0MQ==&mid=2247488116&idx=1&sn=fdf80fa52c57a3360ad1999da2a9656b&chksm=e9d0d996dea750807aadc62d7ed442948ad197607afb9409dd5a296b16fb3d5243f9224b5763&token=569762407&lang=zh_CN%23rd">Android 系统的 ANR 设计原理及影响因素</a>中，我们讲到了在发生 ANR 之后，系统会 Dump 当前进程以及关键进程的线程堆栈，状态(红框所示关键信息，稍后详细说明)，示例如下： <img src="/posts/0/image-20240409172814940.png" alt="image-20240409172814940"> 上面的日志包含很多信息，这里将常用的关键信息进行说明，如下：</p>
 <ul>
 <li><h5 id="线程堆栈："><a href="#线程堆栈：" class="headerlink" title="线程堆栈："></a>线程堆栈：</h5><ul>
 <li>这个比较好理解，也就是发生 ANR 时，线程正在执行的逻辑，但是很多场景下，获取的堆栈耗时并不长，原因详见<a href="https://link.juejin.cn/?target=https://mp.weixin.qq.com/s?__biz=MzI1MzYzMjE0MQ==&mid=2247488116&idx=1&sn=fdf80fa52c57a3360ad1999da2a9656b&chksm=e9d0d996dea750807aadc62d7ed442948ad197607afb9409dd5a296b16fb3d5243f9224b5763&token=569762407&lang=zh_CN%23rd">Android 系统的 ANR 设计原理及影响因素</a>。</li>
@@ -483,7 +477,7 @@
 </ul>
 </li>
 </ul>
-<h4 id="AnrInfo-信息"><a href="#AnrInfo-信息" class="headerlink" title="AnrInfo 信息"></a>AnrInfo 信息</h4><p>除了 Trace 之外，系统会在发生 ANR 时获取一些系统状态，如 ANR 问题发生之前和之后的系统负载以及 Top 进程和关键进程 CPU 使用率。这些信息如果在本地环境可以从 Logcat 日志中拿到，也可以在应用侧通过系统提供的 API 获取(参见：<a href="https://link.juejin.cn/?target=https://mp.weixin.qq.com/s?__biz=MzI1MzYzMjE0MQ==&mid=2247488116&idx=1&sn=fdf80fa52c57a3360ad1999da2a9656b&chksm=e9d0d996dea750807aadc62d7ed442948ad197607afb9409dd5a296b16fb3d5243f9224b5763&token=569762407&lang=zh_CN%23rd">Android 系统的 ANR 设计原理及影响因素</a>)，Anr Info 节选部分信息如下： <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/451b21874ebd4157bdb8404a4c509f2b~tplv-k3u1fbpfcp-watermark.awebp" alt="img"> 对于上图信息，主要对以下几部分关键信息进行介绍：</p>
+<h4 id="AnrInfo-信息"><a href="#AnrInfo-信息" class="headerlink" title="AnrInfo 信息"></a>AnrInfo 信息</h4><p>除了 Trace 之外，系统会在发生 ANR 时获取一些系统状态，如 ANR 问题发生之前和之后的系统负载以及 Top 进程和关键进程 CPU 使用率。这些信息如果在本地环境可以从 Logcat 日志中拿到，也可以在应用侧通过系统提供的 API 获取(参见：<a href="https://link.juejin.cn/?target=https://mp.weixin.qq.com/s?__biz=MzI1MzYzMjE0MQ==&mid=2247488116&idx=1&sn=fdf80fa52c57a3360ad1999da2a9656b&chksm=e9d0d996dea750807aadc62d7ed442948ad197607afb9409dd5a296b16fb3d5243f9224b5763&token=569762407&lang=zh_CN%23rd">Android 系统的 ANR 设计原理及影响因素</a>)，Anr Info 节选部分信息如下： <img src="/posts/0/image-20240409172831442.png" alt="image-20240409172831442"> 对于上图信息，主要对以下几部分关键信息进行介绍：</p>
 <ul>
 <li><h5 id="ANR-类型-longMsg-："><a href="#ANR-类型-longMsg-：" class="headerlink" title="ANR 类型(longMsg)："></a>ANR 类型(longMsg)：</h5><ul>
 <li>表示当前是哪种类型的消息或应用组件导致的 ANR，如 Input，Receiver，Service 等等。</li>
@@ -505,12 +499,13 @@
 </li>
 <li><h5 id="系统-CPU-分布："><a href="#系统-CPU-分布：" class="headerlink" title="系统 CPU 分布："></a>系统 CPU 分布：</h5></li>
 </ul>
-<p>如下图，反映一段时间内，系统整体 CPU 使用率，以及 user，kernel，iowait 方向的 CPU 占比，如果发生大量文件读写或内存紧张的场景，则 iowait 占比较高，这个时候则要进一步观察上述进程的 kernel 空间 CPU 使用情况，并通过进程 CPU 使用，再进一步对比各个线程的 CPU 使用，找出占比最大的一个或一类线程。 <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/3b0ec7b89df6468fb95f68c787e62b2e~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
-<h4 id="Logcat-日志："><a href="#Logcat-日志：" class="headerlink" title="Logcat 日志："></a>Logcat 日志：</h4><p>在 log 日志中，我们除了可以观察业务信息之外，还有一些关键字也可以帮我们去推测当前系统性能是否遇到问题，如下图， <strong>“Slow operation”，“Slow delivery”</strong> 等等。 <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b4a15a18d4a7481b9096ce842ae7c412~tplv-k3u1fbpfcp-watermark.awebp" alt="img"> <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/8127b8a07f374bff90deb80d06c412fa~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<p>如下图，反映一段时间内，系统整体 CPU 使用率，以及 user，kernel，iowait 方向的 CPU 占比，如果发生大量文件读写或内存紧张的场景，则 iowait 占比较高，这个时候则要进一步观察上述进程的 kernel 空间 CPU 使用情况，并通过进程 CPU 使用，再进一步对比各个线程的 CPU 使用，找出占比最大的一个或一类线程。 <img src="/posts/0/image-20240409172846129.png" alt="image-20240409172846129"></p>
+<h4 id="Logcat-日志："><a href="#Logcat-日志：" class="headerlink" title="Logcat 日志："></a>Logcat 日志：</h4><p>在 log 日志中，我们除了可以观察业务信息之外，还有一些关键字也可以帮我们去推测当前系统性能是否遇到问题，如下图， <strong>“Slow operation”，“Slow delivery”</strong> 等等。 </p>
+<p><img src="/posts/0/image-20240409172912473.png" alt="image-20240409172912473"></p>
 <h5 id="Slow-operation"><a href="#Slow-operation" class="headerlink" title="Slow operation"></a>Slow operation</h5><p>Android 系统在一些频繁调用的接口中，分别在方法前后利用 checktime 检测，以判断本次函数执行耗时是否超过设定阈值，通常这些值都会设置的较为宽松，如果实际耗时超过设置阈值，则会给出“Slow XXX”提示，表示系统进程调度受到了影响，一般来说系统进程优先级比较高，如果系统进程调度都受到了影响，那么则反映了这段时间内系统性能很有可能发生了问题。</p>
-<h4 id="Kernel-日志："><a href="#Kernel-日志：" class="headerlink" title="Kernel 日志："></a>Kernel 日志：</h4><p>对于应用侧来说，这类日志基本是拿不到的，但是如下是在线下测试或者从事系统开发的同学，可以通过 dmesg 命令进行查看。对于 kernel 日志，我们主要分析的是 lowmemkiller 相关信息，如下图： <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a71cbd03fbab44e49486184ef79c2397~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<h4 id="Kernel-日志："><a href="#Kernel-日志：" class="headerlink" title="Kernel 日志："></a>Kernel 日志：</h4><p>对于应用侧来说，这类日志基本是拿不到的，但是如下是在线下测试或者从事系统开发的同学，可以通过 dmesg 命令进行查看。对于 kernel 日志，我们主要分析的是 lowmemkiller 相关信息，如下图： <img src="/posts/0/image-20240409172944558.png" alt="image-20240409172944558"></p>
 <h5 id="Lowmemkiller："><a href="#Lowmemkiller：" class="headerlink" title="Lowmemkiller："></a>Lowmemkiller：</h5><p>从事性能(内存)优化的同学对该模块都比较熟悉，主要是用来监控和管理系统可用内存，当可用内存紧张时，从 kernel 层强制 Kill 一些低优先级的应用，以达到调节系统内存的目的。而选择哪些应用，则主要参考进程优先级(oom_score_adj)，这个优先级是 AMS 服务根据应用当前的状态，如前台还是后台，以及进程存活的应用组件类型而计算出来的，例如：对于用户感知比较明显的前台应用，优先级肯定是最高的，此外还有一些系统服务，和后台服务(播放器场景)优先级也会比较高。当然厂商也对此进行了大量的定制(优化)，以防止三方应用利用系统设计漏洞，将自身进程设置太高优先级进而达到保活目的。</p>
-<h4 id="消息调度时序图："><a href="#消息调度时序图：" class="headerlink" title="消息调度时序图："></a>消息调度时序图：</h4><p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/18456786bda247609e8ff07ea3e686cf~tplv-k3u1fbpfcp-watermark.awebp" alt="img"> 如上图，在我们分析完系统日志之后，会进一步的锁定或缩小范围，但是最终我们还是要回归到主线程进一步的分析 Trace 堆栈的业务逻辑以及耗时情况，以便于我们更加清晰的知道正在调度的消息持续了多长时间，但是很多情况当前 Trace 堆栈并不是我们期待的答案，因此需要进一步的确认 ANR 之前主线程的调度信息，评估历史消息对后续消息调度的影响，便于我们寻找“真凶”。</p>
+<h4 id="消息调度时序图："><a href="#消息调度时序图：" class="headerlink" title="消息调度时序图："></a>消息调度时序图：</h4><p><img src="/posts/0/image-20240409172954276.png" alt="image-20240409172954276"> 如上图，在我们分析完系统日志之后，会进一步的锁定或缩小范围，但是最终我们还是要回归到主线程进一步的分析 Trace 堆栈的业务逻辑以及耗时情况，以便于我们更加清晰的知道正在调度的消息持续了多长时间，但是很多情况当前 Trace 堆栈并不是我们期待的答案，因此需要进一步的确认 ANR 之前主线程的调度信息，评估历史消息对后续消息调度的影响，便于我们寻找“真凶”。</p>
 <p>当然，有时也需要进一步的参考消息队列中待调度消息，在这些消息里面，除了可以看到 ANR 时对应的应用组件被 Block 的时长之外，还可以了解一下都有哪些消息，这些消息的特征有时对于我们分析问题也会提供有力的证据和方向。</p>
 <h3 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h3><p>在上面我们对各类日志的关键信息进行了基本释义，下面就来介绍一下，当我们日常遇到 ANR 问题时，是如何分析的，总结思路如下：</p>
 <ul>
@@ -540,7 +535,7 @@
 <ul>
 <li>在分析进程 CPU 占比过程，有一个关键的信息，<strong>要看统计这些进程 CPU 过高的场景是发生在 ANR 之前的一段时间还是之后一段时间</strong>，如下图表示 ANR 之前 4339ms 到 22895ms 时间内进程的 CPU 使用率。</li>
 </ul>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b5c212ac4a0449a29dfb2c539de3f915~tplv-k3u1fbpfcp-watermark.awebp" alt="img"></p>
+<p><img src="/posts/0/image-20240409173003857.png" alt="image-20240409173003857"></p>
 <ul>
 <li><h4 id="五看-CPU-占比定线程-：对比各线程-CPU-占比，以及线程内部-user-和-kernel-占比"><a href="#五看-CPU-占比定线程-：对比各线程-CPU-占比，以及线程内部-user-和-kernel-占比" class="headerlink" title="五看 CPU 占比定线程 ：对比各线程 CPU 占比，以及线程内部 user 和 kernel 占比"></a>五看 CPU 占比定线程 <strong>：对比各线程 CPU 占比，以及线程内部 user 和 kernel 占比</strong></h4></li>
 </ul>
@@ -555,7 +550,7 @@
 <h4 id="更多信息："><a href="#更多信息：" class="headerlink" title="更多信息："></a>更多信息：</h4><p>除了上面的一些信息，我们还可以结合 logcat 日志分析 ANR 之前的一些信息，查看是否存在业务侧或系统侧的异常输出，如搜索“Slow operation”，”Slow delivery”等关键字。也可以观察当前进程和系统进程是否存在频繁 GC 等等，以帮忙我们更全面的分析系统状态。</p>
 <h3 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h3><p>上面我们重点介绍了基于主线程消息调度的监控工具，实现了”由点到面”的监控能力，以便于发生 ANR 问题时，可以更加清晰直观的整体评估主线程的“过去，现在和将来”。同时结合日常实践，介绍了在应用侧分析 ANR 问题经常用到的日志信息和分析思路。</p>
 <p>目前，Raster 监控工具因为其很好的提升了问题定位效率和成功率，成为 ANR 问题分析利器，并融合到公司性能稳定性监控平台，为公司众多产品广泛使用。接下来我们将利用该工具并结合上面的分析思路，讲一讲实际工作中遇到不同类型的 ANR 问题时，是如何快速分析和定位问题的。</p>
-<!-- flag of hidden posts -->
+
       
     </div>
     
@@ -594,19 +589,31 @@
 
     <footer class="post-footer">
       
-        <div class="post-tags">
-          
-            <a href="/tags/private/" rel="tag"># private</a>
-          
-            <a href="/tags/%E5%AE%89%E5%8D%93%E4%BC%98%E5%8C%96/" rel="tag"># 安卓优化</a>
-          
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/a37451f0/" rel="next" title="Jetpack Hilt">
+                <i class="fa fa-chevron-left"></i> Jetpack Hilt
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/e77ac4ba/" rel="prev" title="MPAndroidChart">
+                MPAndroidChart <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
         </div>
-      
-
-      
-      
-      
-
       
 
       
@@ -684,7 +691,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">95</span>
+                  <span class="site-state-item-count">96</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
