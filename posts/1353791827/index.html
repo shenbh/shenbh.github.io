@@ -86,16 +86,16 @@
 <meta property="og:site_name" content="AB">
 <meta property="og:description" content="RecyclerView 优化 数据处理和视图加载分离：数据的处理逻辑尽可能放在异步处理，onBindViewHolder 方法中只处理数据填充到视图中。 数据优化：分页拉取远端数据，对拉取下来的远端数据进行缓存，提升二次加载速度；对于新增或者删除数据通过 DiffUtil 来进行局部刷新数据，而不是一味地全局刷新数据。  示例 1234567891011121314151617181920212">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://shenbh.github.io/posts/1353791827/1642123569334.png">
-<meta property="og:image" content="http://shenbh.github.io/posts/1353791827/image-20220114162908808.png">
-<meta property="og:image" content="http://shenbh.github.io/posts/1353791827/image-20220114164826125.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/1353791827/RecyclerView%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/1353791827/RecyclerView%E7%9A%84ViewHolder.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/1353791827/RecyclerView%E7%9A%84ViewHolder2.png">
 <meta property="article:published_time" content="2020-03-16T02:18:58.000Z">
-<meta property="article:modified_time" content="2023-11-14T02:15:32.500Z">
+<meta property="article:modified_time" content="2024-04-10T07:25:58.695Z">
 <meta property="article:author" content="阿炳">
 <meta property="article:tag" content="private">
 <meta property="article:tag" content="安卓UI">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://shenbh.github.io/posts/1353791827/1642123569334.png">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/1353791827/RecyclerView%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1.png">
 
 
 
@@ -431,7 +431,7 @@
 <blockquote>
 <p>注释：如果我们在自定义适配器时，注意是否需要加载元素样式布局（如果需要加载，这个时候必须获取布局过滤器对象）—&gt;通常情况处理方式为：添加一个构造方法，里面的参数至少有Context c    在获取view,必须通过布局过滤器对象调用inflate方法，加载样式布局 返回View对象，记得赋值</p>
 </blockquote>
-<h1 id="RecyclerView"><a href="#RecyclerView" class="headerlink" title="RecyclerView"></a><a target="_blank" rel="noopener" href="https://juejin.cn/post/7044797219878223909"><code>RecyclerView</code></a></h1><h2 id="RecyclerView整体架构设计"><a href="#RecyclerView整体架构设计" class="headerlink" title="RecyclerView整体架构设计"></a><code>RecyclerView</code>整体架构设计</h2><p><img src="/posts/1353791827/1642123569334.png" alt="Android/RecyclerView1"></p>
+<h1 id="RecyclerView"><a href="#RecyclerView" class="headerlink" title="RecyclerView"></a><a target="_blank" rel="noopener" href="https://juejin.cn/post/7044797219878223909"><code>RecyclerView</code></a></h1><h2 id="RecyclerView整体架构设计"><a href="#RecyclerView整体架构设计" class="headerlink" title="RecyclerView整体架构设计"></a><code>RecyclerView</code>整体架构设计</h2><p><img src="/posts/1353791827/RecyclerView%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1.png" alt="Android/RecyclerView1"></p>
 <p><code>RecyclerView</code>类注释中对自己的解释：它是一种可以在有限区域内展示大量数据的<code>View</code>。</p>
 <ul>
 <li><code>RecyclerView</code>本质是<code>ViewGroup</code></li>
@@ -444,14 +444,14 @@
 <h2 id="RecyclerView的重要成员"><a href="#RecyclerView的重要成员" class="headerlink" title="RecyclerView的重要成员"></a><code>RecyclerView</code>的重要成员</h2><h3 id="ViewHolder"><a href="#ViewHolder" class="headerlink" title="ViewHolder"></a><code>ViewHolder</code></h3><p><code>RecyclerView</code>的基本单位：<code>ViewHolder</code>。</p>
 <p>如果用<code>Item</code>表示数据集中的一个数据对象，<code>ItemView</code>表示用来展示该<code>Item</code>的<code>View</code>对象。<code>ViewHolder</code>负责在<code>RecyclerView</code>中承载一个<code>ItemView</code>，除了维护<code>View</code>对象本身外，还维护着<code>Item</code>位置（<code>position</code>，此处的位置是指<code>Item</code>在<strong>数据集</strong>中的次序）、<code>item</code>类型、<code>item Id</code>等。大部分时候，<code>RecyclerView</code>内部或其辅助类不会直接操作<code>View</code>，而是操作<code>ViewHolder</code>。</p>
 <p>在阅读<code>RecyclerView</code>源码时发现，一些操作需要用View做参数，也有一些操作需要用<code>ViewHolder</code>做参数，实际上在<code>RecyclerView</code>中，可以通过任意一样拿到另一样，不必太过纠结<code>RecyclerView</code>的各个内部类的变量中究竟维护的是哪种类型。</p>
-<p><img src="/posts/1353791827/image-20220114162908808.png" alt="Android/RecyclerView2"></p>
+<p><img src="/posts/1353791827/RecyclerView%E7%9A%84ViewHolder.png" alt="Android/RecyclerView2"></p>
 <p>但一般认为，</p>
 <ul>
 <li>Adapter负责根据数据Item创建对应的ViewHolder；</li>
 <li>Recycler负责管理ViewHolder，根据实际情况创建新的ViewHolder或复用已有的ViewHolder；</li>
 <li>LayoutManager可以通过Recycler直接获取到View，负责讲其添加到RecyclerView的布局中，并通过Recycler回收已经不被展示的View。</li>
 </ul>
-<p><img src="/posts/1353791827/image-20220114164826125.png" alt="Android/RecyclerView3"></p>
+<p><img src="/posts/1353791827/RecyclerView%E7%9A%84ViewHolder2.png" alt="Android/RecyclerView3"></p>
 <h1 id="代码：baseadapter-recyclerview"><a href="#代码：baseadapter-recyclerview" class="headerlink" title="代码：baseadapter-recyclerview"></a><a target="_blank" rel="noopener" href="https://github.com/hongyangAndroid/baseAdapter/tree/master/baseadapter-recyclerview">代码：baseadapter-recyclerview</a></h1><figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">├── Common│   └── src│       └── main│           └── <span class="keyword">java│ </span>              └── utils│                   └── adapter.rvadapter│                       ── CommonRvAdapter.<span class="keyword">java│ </span>                      ── <span class="keyword">MultiItemTypeAdapter.java│ </span>                      └── <span class="keyword">base│ </span>                          ── ItemViewDelegate.<span class="keyword">java│ </span>                          ── ItemViewDelegateManager.<span class="keyword">java│ </span>                          ── ViewHolder.<span class="keyword">java│ </span>                      └── utils│                           ── WrapperUtils.<span class="keyword">java│ </span>                      └── wrapper│                           ── EmptyWrapper.<span class="keyword">java│ </span>                          ── HeaderAndFooterWrapper.<span class="keyword">java│ </span>                          ── LoadMoreWrapper.<span class="keyword">java</span></span><br></pre></td></tr></table></figure>
 
 <h2 id="具体工具类代码"><a href="#具体工具类代码" class="headerlink" title="具体工具类代码"></a>具体工具类代码</h2><h3 id="CommonRvAdapter-java"><a href="#CommonRvAdapter-java" class="headerlink" title="CommonRvAdapter.java"></a>CommonRvAdapter.java</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.xm597.common.utils.adapter.rvadapter;<span class="keyword">import</span> android.content.Context;<span class="keyword">import</span> android.view.LayoutInflater;<span class="keyword">import</span> com.xm597.common.utils.adapter.rvadapter.base.ItemViewDelegate;<span class="keyword">import</span> com.xm597.common.utils.adapter.rvadapter.base.ViewHolder;<span class="keyword">import</span> java.util.ArrayList;<span class="keyword">import</span> java.util.List;<span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">class</span> <span class="title class_">CommonRvAdapter</span>&lt;T&gt; <span class="keyword">extends</span> <span class="title class_">MultiItemTypeAdapter</span>&lt;T&gt; &#123;    <span class="keyword">protected</span> Context mContext;    <span class="keyword">protected</span> <span class="type">int</span> mLayoutId;    <span class="keyword">protected</span> List&lt;T&gt; mDatas;    <span class="keyword">protected</span> LayoutInflater mInflater;    <span class="keyword">public</span> <span class="title function_">CommonRvAdapter</span><span class="params">(<span class="keyword">final</span> Context context, <span class="keyword">final</span> <span class="type">int</span> layoutId)</span> &#123;        <span class="built_in">super</span>(context);        mContext = context;        mInflater = LayoutInflater.from(context);        mLayoutId = layoutId;        addItemViewDelegate(<span class="keyword">new</span> <span class="title class_">ItemViewDelegate</span>&lt;T&gt;() &#123;            <span class="meta">@Override</span>            <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">getItemViewLayoutId</span><span class="params">()</span> &#123;                <span class="keyword">return</span> layoutId;            &#125;            <span class="meta">@Override</span>            <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">isForViewType</span><span class="params">(T item, <span class="type">int</span> position)</span> &#123;                <span class="keyword">return</span> <span class="literal">true</span>;            &#125;            <span class="meta">@Override</span>            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">convert</span><span class="params">(ViewHolder holder, T t, <span class="type">int</span> position)</span> &#123;                CommonRvAdapter.<span class="built_in">this</span>.convert(holder, t, position);            &#125;        &#125;);    &#125;    <span class="meta">@Override</span>    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setDatas</span><span class="params">(List&lt;T&gt; datas)</span> &#123;        <span class="keyword">if</span> (datas == <span class="literal">null</span>) &#123;            datas = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();        &#125;        mDatas = datas;        <span class="built_in">super</span>.setDatas(mDatas);    &#125;    <span class="keyword">protected</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title function_">convert</span><span class="params">(ViewHolder holder, T t, <span class="type">int</span> position)</span>;&#125;</span><br></pre></td></tr></table></figure>
@@ -671,7 +671,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">95</span>
+                  <span class="site-state-item-count">96</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
