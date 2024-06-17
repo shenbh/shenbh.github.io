@@ -87,7 +87,7 @@
 <meta property="og:description" content="手写热更新热更新 &#x2F; 热修复不安装新版本的软件，直接从⽹络下载新功能模块来对软件进⾏局部更新">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-11-24T06:53:00.000Z">
-<meta property="article:modified_time" content="2024-04-09T07:22:43.336Z">
+<meta property="article:modified_time" content="2024-06-17T02:47:14.083Z">
 <meta property="article:author" content="阿炳">
 <meta property="article:tag" content="hencoder">
 <meta name="twitter:card" content="summary">
@@ -379,10 +379,8 @@
         <h1 id="手写热更新"><a href="#手写热更新" class="headerlink" title="手写热更新"></a>手写热更新</h1><h2 id="热更新-x2F-热修复"><a href="#热更新-x2F-热修复" class="headerlink" title="热更新 &#x2F; 热修复"></a>热更新 <strong>&#x2F;</strong> 热修复</h2><p>不安装新版本的软件，直接从⽹络下载新功能模块来对软件进⾏局部更新</p>
 <h2 id="热更新和插件化的区别"><a href="#热更新和插件化的区别" class="headerlink" title="热更新和插件化的区别"></a>热更新和插件化的区别</h2><p>区别有两点</p>
 <ol>
-<li><p>插件化的内容在原 App 中没有，⽽热更新是原 App 中的内容做了改动</p>
-</li>
-<li><p>插件化在代码中有固定的⼊⼝，⽽热更新则可能改变任何⼀个位置的代码</p>
-</li>
+<li>插件化的内容在原 App 中没有，⽽热更新是原 App 中的内容做了改动</li>
+<li>插件化在代码中有固定的⼊⼝，⽽热更新则可能改变任何⼀个位置的代码</li>
 </ol>
 <h2 id="热更新的原理"><a href="#热更新的原理" class="headerlink" title="热更新的原理"></a>热更新的原理</h2><ul>
 <li>ClassLoader 的 dex ⽂件替换</li>
@@ -391,48 +389,39 @@
 <h2 id="前置知识：loadClass-的类加载过程"><a href="#前置知识：loadClass-的类加载过程" class="headerlink" title="前置知识：loadClass() 的类加载过程"></a>前置知识：<strong>loadClass()</strong> 的类加载过程</h2><ul>
 <li><p>宏观上：是⼀个带缓存的、从上到下的加载过程（即⽹上所说的「<strong>双亲委托机制</strong>」）</p>
 </li>
-<li><p>对于具体的⼀个 ClassLo00000000ader：</p>
+<li><p>对于具体的⼀个 ClassLoader：</p>
 <ul>
 <li>先从⾃⼰的缓存中取</li>
-<li>⾃⼰没有缓存，就找⽗ ClassLoader 要（parent.loadClass()） </li>
-<li>⽗ View 也没有，就⾃⼰加载（fifindClass()）</li>
+<li>⾃⼰没有缓存，就找⽗ ClassLoader 要（<code>parent.loadClass()</code>） </li>
+<li>⽗ View 也没有，就⾃⼰加载（<code>findClass()</code>）</li>
 </ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//参数resolve没用到，是java中的loadClass有两个参数，此处与它一致</span></span><br><span class="line"><span class="keyword">protected</span> Class&lt;?&gt; loadClass(String name, <span class="type">boolean</span> resolve) </span><br><span class="line">    <span class="keyword">throws</span> ClassNotFoundException&#123;</span><br><span class="line">    <span class="comment">//First,check if the class has already been loaded</span></span><br><span class="line">    Class&lt;?&gt; c = findLoadedClass(name);</span><br><span class="line">    <span class="keyword">if</span>(c == <span class="literal">null</span>)&#123;</span><br><span class="line">        <span class="keyword">try</span>&#123;</span><br><span class="line">            <span class="keyword">if</span>(parent != <span class="literal">null</span>)&#123;</span><br><span class="line">                c = parent.loadClass(name, <span class="literal">false</span>);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                c = findBootstrapClassOrNull(name);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (ClassNotFoundException e)&#123;</span><br><span class="line">            <span class="comment">//ClassNotFoundException thrown if class not found</span></span><br><span class="line">            <span class="comment">//from the non-null parent class loader</span></span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span>(c == <span class="literal">null</span>)&#123;</span><br><span class="line">            <span class="comment">//If still not found, then invoke findClass in order</span></span><br><span class="line">            <span class="comment">//to find the class.</span></span><br><span class="line">            c = findClass(name);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> c;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//参数resolve没用到，是java中的loadClass有两个参数，此处与它一致</span></span><br><span class="line"><span class="keyword">protected</span> Class&lt;?&gt; loadClass(String name, <span class="type">boolean</span> resolve) </span><br><span class="line">    <span class="keyword">throws</span> ClassNotFoundException&#123;</span><br><span class="line">    <span class="comment">//First,check if the class has already been loaded</span></span><br><span class="line">    Class&lt;?&gt; c = findLoadedClass(name);</span><br><span class="line">    <span class="keyword">if</span>(c == <span class="literal">null</span>)&#123;</span><br><span class="line">        <span class="keyword">try</span>&#123;</span><br><span class="line">            <span class="keyword">if</span> (parent != <span class="literal">null</span>) &#123;</span><br><span class="line">                c = parent.loadClass(name, <span class="literal">false</span>);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                c = findBootstrapClassOrNull(name);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (ClassNotFoundException e)&#123;</span><br><span class="line">            <span class="comment">//ClassNotFoundException thrown if class not found</span></span><br><span class="line">            <span class="comment">//from the non-null parent class loader</span></span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span>(c == <span class="literal">null</span>)&#123;</span><br><span class="line">            <span class="comment">//If still not found, then invoke findClass in order</span></span><br><span class="line">            <span class="comment">//to find the class.</span></span><br><span class="line">            c = findClass(name);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> c;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 </li>
-<li><p><code>BaseDexClassLoader</code> 或者它的⼦类（<code>DexClassLoader</code>、<code>PathClassLoader</code> 等）的 <code>fifindClass()</code>：</p>
+<li><p><code>BaseDexClassLoader</code> 或者它的⼦类（<code>DexClassLoader</code>、<code>PathClassLoader</code> 等）的 <code>findClass()</code>：</p>
 <ul>
-<li>通过它的 <code>pathList.fifindClass()</code></li>
-<li>它的 <code>pathList.loadClass()</code> 通过 <code>DexPathList</code> 的 <code>dexElements</code> 的 <code>fifindClass()</code></li>
-<li>所以热更新的关键在于，把补丁 dex ⽂件加载放进⼀个 Element，并且插⼊到dexElements 这个数组的<strong>前⾯</strong>（插⼊到后⾯的话会被忽略掉）【先加载过的class，之后再遇到相同class就不会再加载】</li>
+<li>通过它的 <code>pathList.findClass()</code></li>
+<li>它的 <code>pathList.loadClass()</code> 通过 <code>DexPathList</code> 的 <code>dexElements</code> 的 <code>findClass()</code></li>
+<li>所以热更新的关键在于，把补丁 dex ⽂件加载放进⼀个 Element，并且插⼊到dexElements 这个数组的<strong>前⾯</strong>（插⼊到后⾯的话会被忽略掉）【<strong>先加载过的class，之后再遇到相同class就不会再加载</strong>】</li>
 </ul>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// src/main/assets/apk/27_hot_update-debug.apk</span></span><br><span class="line"><span class="type">File</span> <span class="variable">apk</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">File</span>(getCacheDir() + <span class="string">&quot;/27_hot_update-debug.apk&quot;</span>);</span><br><span class="line"><span class="keyword">if</span>(!apk.exists())&#123;</span><br><span class="line">    <span class="keyword">try</span>&#123;</span><br><span class="line">        <span class="type">InputStream</span> <span class="variable">is</span> <span class="operator">=</span>getAssets().open(<span class="string">&quot;apk/27_hot_update-debug.apk&quot;</span>);</span><br><span class="line">        <span class="type">int</span> <span class="variable">size</span> <span class="operator">=</span> is.available();</span><br><span class="line">        <span class="type">byte</span>[] buffer = <span class="keyword">new</span> <span class="title class_">byte</span>[size];</span><br><span class="line">        is.read(buffer);</span><br><span class="line">        is.close();</span><br><span class="line">        </span><br><span class="line">        <span class="type">FileOutputStream</span> <span class="variable">fos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FileOutputStream</span>(apk);</span><br><span class="line">        fos.write(buffer);</span><br><span class="line">        fos.close();</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e)&#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">try</span>&#123;</span><br><span class="line">    <span class="type">ClassLoader</span> <span class="variable">classLoader</span> <span class="operator">=</span> getClassLoader();</span><br><span class="line">    <span class="type">Class</span> <span class="variable">loaderClass</span> <span class="operator">=</span> BaseDexClassLoader.class;</span><br><span class="line">    <span class="type">Field</span> <span class="variable">pathListField</span> <span class="operator">=</span> loaderClass.getDeclaredField(<span class="string">&quot;pathList&quot;</span>);</span><br><span class="line">    pathListField.setAccessible(<span class="literal">true</span>);</span><br><span class="line">    <span class="type">Object</span> <span class="variable">pathListObject</span> <span class="operator">=</span> pathListField.get(classLoader);</span><br><span class="line">    <span class="type">Class</span> <span class="variable">pathListClass</span> <span class="operator">=</span> pathListObject.getClass();</span><br><span class="line">    <span class="type">Field</span> <span class="variable">dexElementsField</span> <span class="operator">=</span> pathListClass.getDeclaredField(<span class="string">&quot;dexElements&quot;</span>);</span><br><span class="line">    dexElementsField.setAccessible(<span class="literal">true</span>);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//classLoader.pathList.dexElements = ???</span></span><br><span class="line">    <span class="type">PathClassLoader</span> <span class="variable">newClassLoader</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">PathClassLoader</span>(apk.getPath(), <span class="literal">null</span>);</span><br><span class="line">    <span class="type">Object</span> <span class="variable">newPathListObject</span> <span class="operator">=</span> pathListField.get(newClassLoader);</span><br><span class="line">    <span class="type">Object</span> <span class="variable">newDexElementsObject</span> <span class="operator">=</span> dexElementsField.get(newPathListObject);</span><br><span class="line">    dexElementsField.set(pathListObject, newDexElementsObject);</span><br><span class="line">&#125; <span class="keyword">catch</span> (NoSuchFieldException e)&#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125; <span class="keyword">catch</span> (IllegalAccessException e)&#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
 </ul>
 <h2 id="⼿写热更新"><a href="#⼿写热更新" class="headerlink" title="⼿写热更新"></a>⼿写热更新</h2><ul>
-<li><p>因为⽆法在更新之前就指定要更新谁；所以不能定义新的 <code>ClassLoader</code>，⽽只能选择对 <code>ClassLoader</code> 进⾏修改，让它能够加载补丁⾥⾯的类</p>
-</li>
-<li><p>因为补丁的类在原先的 App 中已经存在，所以应该把补丁的 <code>Element</code> 对象插⼊到 <code>dexElements</code> 的前⾯才⾏，插⼊到后⾯会被忽略掉。</p>
-</li>
-<li><p>具体的做法：<strong>反射</strong></p>
-<ol>
-<li><p>⾃⼰⽤补丁创建⼀个 <code>PathClassLoader</code></p>
-</li>
-<li><p>把补丁 <code>PathClassLoader</code> ⾥⾯的 <code>elements</code> 替换到旧的⾥⾯去</p>
-</li>
-<li><p>注意：</p>
-<ol>
+<li>因为⽆法在更新之前就指定要更新谁；所以不能定义新的 <code>ClassLoader</code>，⽽只能选择对 <code>ClassLoader</code> 进⾏修改，让它能够加载补丁⾥⾯的类</li>
+<li>因为补丁的类在原先的 App 中已经存在，所以应该把补丁的 <code>Element</code> 对象插⼊到 <code>dexElements</code> 的前⾯才⾏，插⼊到后⾯会被忽略掉。</li>
+<li>具体的做法：<strong>反射</strong>  <ol>
+<li>⾃⼰⽤补丁创建⼀个 <code>PathClassLoader</code></li>
+<li>把补丁 <code>PathClassLoader</code> ⾥⾯的 <code>elements</code> 替换到旧的⾥⾯去</li>
+<li>注意：<ol>
 <li>尽早加载热更新（通⽤⼿段是把加载过程放在 <code>Application.attachBaseContext()</code>）</li>
 <li>热更新下载完成后在需要时先杀死程序才能让补丁⽣效</li>
 </ol>
 </li>
-<li><p>优化：热更新没必要把所有内容都打过来，只要把改变的类拿过来就⾏了</p>
-<ul>
+<li>优化：热更新没必要把所有内容都打过来，只要把改变的类拿过来就⾏了<ul>
 <li>⽤ d8 把指定的 class 打包进 dex</li>
 </ul>
 </li>
-<li><p>完整化：从⽹上加载</p>
-</li>
-<li><p>再优化：把打包过程写⼀个 task</p>
-</li>
+<li>完整化：从⽹上加载</li>
+<li>再优化：把打包过程写⼀个 task</li>
 </ol>
 </li>
 </ul>
@@ -619,7 +608,7 @@
             <div class="links-of-author motion-element">
                 
                   <span class="links-of-author-item">
-                    <a href="mailto:shenbh@189.cn" target="_blank" title="E-Mail">
+                    <a href="mailto:shenbh@qq.com" target="_blank" title="E-Mail">
                       
                         <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
                   </span>
