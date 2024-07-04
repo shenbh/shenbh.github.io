@@ -90,7 +90,7 @@
 <meta property="og:image" content="http://shenbh.github.io/posts/269438b3/AS%E8%A7%A3%E5%86%B3not-support-aar.png">
 <meta property="og:image" content="http://shenbh.github.io/posts/269438b3/981009fdgy1ge4m23rhc2j20u209ewff.jpg">
 <meta property="article:published_time" content="2021-07-07T02:25:00.000Z">
-<meta property="article:modified_time" content="2024-06-03T08:16:33.013Z">
+<meta property="article:modified_time" content="2024-06-21T03:58:40.498Z">
 <meta property="article:author" content="阿炳">
 <meta property="article:tag" content="安卓知识点">
 <meta name="twitter:card" content="summary">
@@ -389,24 +389,17 @@
 
 <h2 id="依赖多次（如果是同一个版本）没有问题"><a href="#依赖多次（如果是同一个版本）没有问题" class="headerlink" title="依赖多次（如果是同一个版本）没有问题"></a>依赖多次（如果是同一个版本）没有问题</h2><p>场景：moduleA依赖moduleB（B的libs中有个B.jar），moduleC依赖moduleA也依赖moduleB。moduleC调用这个B.jar，没有版本冲突等问题（因为是同一个版本的jar）</p>
 <h2 id="exclude排除依赖中的某个group"><a href="#exclude排除依赖中的某个group" class="headerlink" title="exclude排除依赖中的某个group"></a>exclude排除依赖中的某个group</h2><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 单独排除某个模块中的依赖  </span></span><br><span class="line">compile(<span class="string">&#x27;com.h6ah4i.android.widget.advrecyclerview:advrecyclerview:0.11.0@aar&#x27;</span>) &#123;</span><br><span class="line">    exclude <span class="attr">group:</span> <span class="string">&#x27;com.android.support&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 排除所有子依赖中的support依赖，统一使用主项目中的版本</span></span><br><span class="line">configurations &#123;</span><br><span class="line">    all*.exclude <span class="attr">group:</span> <span class="string">&#x27;com.android.support&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>用法：exclude group:’ ‘, module: ‘ ‘ 【group和module两个参数可分别单独使用】</p>
-<p>说明：排除某个依赖，可解决部分传递依赖。</p>
-<p>使用场景：</p>
+<p>用法：exclude group:’ ‘, module: ‘ ‘ 【group和module两个参数可分别单独使用】<br>说明：排除某个依赖，可解决部分传递依赖。<br>使用场景：  </p>
 <ul>
 <li>解决依赖冲突。若两个模块使用相同jar包的不同版本，gradle默认会使用最新版本的jar包，此时可通过exclude排除冲突。（版本冲突带来的问题最主要是API类或方法移除）</li>
 <li>运行期无需此模块。</li>
 <li>依赖传递无法找到时，可通过exclude排除。</li>
 <li>版权原因需排除。</li>
 </ul>
-<h2 id="transitive是否传递本身的依赖给宿主程序"><a href="#transitive是否传递本身的依赖给宿主程序" class="headerlink" title="transitive是否传递本身的依赖给宿主程序"></a>transitive是否传递本身的依赖给宿主程序</h2><p>用法：transitive &#x3D; true | false</p>
-<p>说明：是否传递本身的依赖给宿主程序（使用传递依赖时，Gradle会将传递依赖一起下载下来。compile默认时开启传递依赖）</p>
+<h2 id="transitive是否传递本身的依赖给宿主程序"><a href="#transitive是否传递本身的依赖给宿主程序" class="headerlink" title="transitive是否传递本身的依赖给宿主程序"></a>transitive是否传递本身的依赖给宿主程序</h2><p>用法：transitive &#x3D; true | false<br>说明：是否传递本身的依赖给宿主程序（使用传递依赖时，Gradle会将传递依赖一起下载下来。compile默认时开启传递依赖）  </p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">compile</span>(<span class="params"><span class="string">&#x27;com.alibaba.android:ultraviewpager:1.0.4@aar&#x27;</span></span>) &#123;</span><br><span class="line">    transitive = <span class="literal">false</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>@aar表示只下载该aar包，而不下该aar包所依赖的其他库。如果还不想使用@aar前提下的其依赖库，需要加transitive&#x3D;false（默认是true开启传递依赖）。其中transitive表示传递依赖（间接依赖）。</p>
-<p>transitive&#x3D;true，等同于没有使用exclude排除依赖，每个包的依赖项都会被递归分析并添加进来。</p>
-<p>transitive&#x3D;false，等同于用exclude排除依赖。</p>
-<h2 id="force强制使用某版本"><a href="#force强制使用某版本" class="headerlink" title="force强制使用某版本"></a>force强制使用某版本</h2><p>用法：force &#x3D; true<br>作用：强制使用某个版本。出现冲突时，优先使用该版本解决。</p>
+<p>@aar表示只下载该aar包，而不下该aar包所依赖的其他库。如果还不想使用@aar前提下的其依赖库，需要加transitive&#x3D;false（默认是true开启传递依赖）。其中transitive表示传递依赖（间接依赖）。<br>transitive&#x3D;true，等同于没有使用exclude排除依赖，每个包的依赖项都会被递归分析并添加进来。<br>transitive&#x3D;false，等同于用exclude排除依赖。</p>
+<h2 id="force强制使用某版本"><a href="#force强制使用某版本" class="headerlink" title="force强制使用某版本"></a>force强制使用某版本</h2><p>用法：force &#x3D; true<br>作用：强制使用某个版本。出现冲突时，优先使用该版本解决。  </p>
 <figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 强制使用 support-v4 26.1.0版本</span></span><br><span class="line">compile(<span class="string">&#x27;com.android.support:support-v4:26.1.0&#x27;</span>) &#123;</span><br><span class="line">   force = <span class="literal">true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 
