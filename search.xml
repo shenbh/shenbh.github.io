@@ -178,6 +178,83 @@
       </tags>
   </entry>
   <entry>
+    <title></title>
+    <url>/posts/0/</url>
+    <content><![CDATA[<h1 id="VPN技术核心原理与应用"><a href="#VPN技术核心原理与应用" class="headerlink" title="VPN技术核心原理与应用"></a><a href="https://baijiahao.baidu.com/s?id=1637664009162027887&wfr=spider&for=pc">VPN技术核心原理与应用</a></h1><h2 id="什么是VPN？"><a href="#什么是VPN？" class="headerlink" title="什么是VPN？"></a>什么是VPN？</h2><p>先上一张图:</p>
+<p><img src="/posts/0/9825bc315c6034a869251bbc0996445108237656.jpeg"></p>
+<p>某公司的北京总部有一台服务器，地址为192.168.3.2 &#x2F;24，因业务需求，该服务器同样给天津公司提供服务（假设北京公司出口路由器拥有公网IP10.1.1.2；天津分公司拥有公网IP20.1.1.2），但出于安全考虑，要求天津分公司只能以192.168.3.2这个地址来访问，而不是用诸如NAT技术将服务器发布到公网。众所周知，由于运营商并不会有私网地址的路由，所以上图要求无法实现。别急，接着往下看：</p>
+<p><img src="/posts/0/37d3d539b6003af306a0b87af7afcb591038b618.jpeg"></p>
+<p>假如北京和天津的两个公司出口路由器之间能接上一根网线就完美了！就好像两个公司的私有网络连在一起一样，可是这也不太现实啊，北就和天津这么远，怎么可能有这样的网线存在？！！！不过各位看官也不要灰心，办法总比困难多，我们试着能不能用技术方法来解决这个问题，既然真正的拉一条线不现实，那就虚拟一条这样的线路出来，感觉真的把两个私有网络连接一起一样，而这个技术就是VPN（Virtual Private Network）!即虚拟私有网络。</p>
+<p>而这个技术和核心就是在于如构建这线路，这条线路被形象地称为隧道（Tunnel）技术,就像在错综复杂的网络中打了一条隧道一样，把两个公司连接在一起，隧道的出口，就是两个公司出口路由器的公网IP地址（因为两边都是公网IP，所以它们是互相可达的，这是构建隧道的前提）。经过以上分析我们可以得出，隧道就是好比是一条直连的网线，把路由器连接了起来，所以路由器上还要有两个虚拟的接口（tunnel接口），然后再在这两个虚拟接口上配置同网段的IP地址</p>
+<h2 id="具体配置："><a href="#具体配置：" class="headerlink" title="具体配置："></a>具体配置：</h2><p>北京公司：</p>
+<p><img src="/posts/0/ac6eddc451da81cb40e526ec91e3dd130924311e.jpeg"></p>
+<p>启用隧道接口并设置隧道的源和目的</p>
+<p>天津公司：</p>
+<p><img src="/posts/0/80cb39dbb6fd5266cc53f936689d9a2ed4073626.jpeg"></p>
+<p>两地公司其它的接口按照正常配置即可，下面测试一下，隧道接口能不能通</p>
+<p><img src="/posts/0/024f78f0f736afc3f4b4964c719ce6c1b64512ed.jpeg"></p>
+<p>从测试得知，隧道已经可以通信了。我们接下来看看两地的私网地址能不能通？</p>
+<p><img src="/posts/0/6a63f6246b600c3370756f01dbc95c0ad8f9a172.jpeg"></p>
+<p>由此可见，天津的PC还是ping不通北京的服务器，我们分析一下，看看路由器上的路由表情况：</p>
+<p><img src="/posts/0/6159252dd42a2834028c4d269930c4ef15cebf7b.jpeg"></p>
+<p>通过分析路由表我们得知，出口路由器上并没有去往北京的路由，只有一条去公网的默认，也就是说，隧道虽然已经打通，具备了通车条件，但是路由器并不知道去往北京的话要走隧道，同理我们也可以得出，北京的路由器也不知道去天津的话要走隧道，怎么办？当然是添加相应路由了！</p>
+<p><img src="/posts/0/d1a20cf431adcbefb32a94ec6e2a23d8a2cc9f4d.jpeg"></p>
+<p>北京也一样：</p>
+<p><img src="/posts/0/b7003af33a87e95025eab87fd3bd5e46faf2b4aa.jpeg"></p>
+<p>告诉路由器去往对端的私网地址，走隧道接口就行了！接下来我们再测试一下：</p>
+<p><img src="/posts/0/b3119313b07eca80f60009ce53a69ad8a1448318.jpeg"></p>
+<p>可见，天津PC已经能够访问北京的服务器了，以上即为VPN的雏形，因为我们知道数据物理上依然还是走的公网，我们耳熟能详的IPsec VPN,其中一中形式就是基于以上的隧道，对数据进行加密保护的一种VPN。而我们通常把这种通过两边的路由器建立隧道然后实现两个私网网段互通的VPN的形态称为端到端（site-to-site）VPN。</p>
+<p>现在一句话总结VPN实现过程，即是打隧道，做路由的过程！</p>
+<p>接下来，我们看一下另外一种VPN形态，就是比如说出差员工用的笔记本电脑，想在酒店接到北京公司内部的服务器上，我们就不可能在酒店路由器上再去配置VPN了，还有出差员工地点也不固定，而不变的是笔记本电脑，我们可不可以用笔记本电脑和北京的路由器建立隧道呢？答案当然是肯定的，这种形态我们称为远程接入（Remote Access）VPN，下面，我们就以一个最简单的PPTPVPN加以说明：</p>
+<p>首先建立VPN的条件依然是笔记本可以ping通北京公司的公网IP</p>
+<p><img src="/posts/0/58ee3d6d55fbb2fb122c7b198dcf2da14723dcc4.jpeg"></p>
+<p>建立隧道的方式如上图所示</p>
+<p><img src="/posts/0/c8ea15ce36d3d5399a6065fff802e455352ab033.jpeg"></p>
+<p>笔记本电脑已经能够ping通北京公司的公网IP地址（实验模拟可以在原来的天津公司的路由器上开启NAT，把隧道接口删除掉）。</p>
+<p>接下来我们在北京公司路由器上开启PPTP VPN的服务，使得笔记本可以连接过来：</p>
+<p><img src="/posts/0/35a85edf8db1cb13e4232ad31fd15b4b93584b36.jpeg"></p>
+<p>首先，建立一个地址池，这个地址池用来给笔记本隧道接口下发地址，值得注意的是，PPTPVPN在建立的时候，远端隧道接口的地址必须和需要访问的服务器在同一网段，不然无法访问。</p>
+<p><img src="/posts/0/4d086e061d950a7b0f9a3ee3c8546fdcf3d3c9f0.jpeg"></p>
+<p><img src="/posts/0/1c950a7b02087bf4380a403230565a2913dfcf95.jpeg"></p>
+<p>定义一个虚拟拨号模块，该模块借用物理接口的IP地址，指定对端IP地址获得方式为从本地地址池获得，定义认证类型 pap chap ms-chap,然后开启远端拨入功能，拨入协议为pptp，并与虚拟模块1相关联。</p>
+<p><img src="/posts/0/d6ca7bcb0a46f21ffebb5f6b35a166650d33ae81.jpeg"></p>
+<p>最终定义一个用于远端拨入的用户名和密码。</p>
+<p>接下来，我们看笔记本上的配置，由于PPTP是Windows默认就支持的功能，所以并不虚拟安装任何软件：</p>
+<p><img src="/posts/0/b812c8fcc3cec3fd1ac885b0170dd93a8594278f.jpeg"></p>
+<p>右键选择网上邻居，点击属性。</p>
+<p><img src="/posts/0/6d81800a19d8bc3ebe89fcb5400eab1ba9d34552.jpeg"></p>
+<p>点击创建一个新的连接，按提示点下一步</p>
+<p><img src="/posts/0/f703738da9773912d6aa64103a9c8b1d377ae2ba.jpeg"></p>
+<p>选择连接到我的工作场所的网络，点击下一步</p>
+<p><img src="/posts/0/d0c8a786c9177f3ef1019e37b24a36c29f3d5659.jpeg"></p>
+<p>连接方式为虚拟专用网络连接，然后点击下一步</p>
+<p><img src="/posts/0/faf2b2119313b07e4ec17633ce529c2697dd8c13.jpeg"></p>
+<p>公司名称随意定义自己认识就好，点击下一步</p>
+<p><img src="/posts/0/f31fbe096b63f6244c465d7a45c1e6fd1a4ca33e.jpeg"></p>
+<p>IP 地址为北京公司公网IP地址，然后点击一下步</p>
+<p><img src="/posts/0/d833c895d143ad4b7a7e01e4408757aaa50f06c8.jpeg"></p>
+<p>为了后期使用方便，可以勾选在桌面上添加快捷方式，然后点完成。</p>
+<p><img src="/posts/0/b219ebc4b74543a9469da4e8dc928787b801149e.jpeg"></p>
+<p>注意，输入完用户名和密码后先不要着急连接，不然后会报错连接不上，这是由于XP系统支持的加密方式版本问题，先点属性做一下修改</p>
+<p><img src="/posts/0/023b5bb5c9ea15ce3b09a8da778537f63887b28c.jpeg"></p>
+<p>在安全选项卡点高级选项，然后点设置</p>
+<p><img src="/posts/0/9a504fc2d56285359075a43d526a7bc3a6ef639b.jpeg"></p>
+<p>数据加密选择可选加密即可。</p>
+<p>此外，还要做一下隧道分离，如果不做，当笔记本连接到VPN后，将不能上网，因为所有数据都走了隧道，隧道分离方式如下：</p>
+<p><img src="/posts/0/f31fbe096b63f624631f7c1c45c1e6fd1b4ca3fd.jpeg"></p>
+<p><img src="/posts/0/c8ea15ce36d3d539398ec700fb02e455372ab0c9.jpeg"></p>
+<p>在网络选项卡点TCP&#x2F;IP协议属性，然后点高级：</p>
+<p><img src="/posts/0/1e30e924b899a901b43239eedc10077e0308f56a.jpeg"></p>
+<p>把”在远程网络上使用默认网关”前而的钩去掉即可</p>
+<p><img src="/posts/0/7c1ed21b0ef41bd5f5a87203905f8cce3bdb3ddc.jpeg"></p>
+<p>连接成功后我们发现，电脑上多了一块虚拟网卡</p>
+<p><img src="/posts/0/8326cffc1e178a82a4e65c9034867e88a877e8b6.jpeg"></p>
+<p>该网卡已经按照我们的设置获取到了正确地址。</p>
+<p><img src="/posts/0/34fae6cd7b899e517e91a9d68322d436c9950d5b.jpeg"></p>
+<p>至此，VPN连接成功，出差员工的笔记本电脑已经能够访问公司内部的服务器了！</p>
+]]></content>
+  </entry>
+  <entry>
     <title>Jetpack Hilt</title>
     <url>/posts/a37451f0/</url>
     <content><![CDATA[<h2 id="Hilt-的使用"><a href="#Hilt-的使用" class="headerlink" title="Hilt 的使用"></a>Hilt 的使用</h2><h3 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h3><p>用 <code>@Inject</code> 对变量进⾏注解，表示「这个变量要用依赖注入的⽅式来加载」： </p>
@@ -5789,9 +5866,247 @@
 <figure class="highlight moonscript"><table><tr><td class="code"><pre><span class="line"><span class="name">C</span>:\Users\Administrator\AppData\Roaming\Google\AndroidStudio4<span class="number">.1</span>\templates</span><br><span class="line"><span class="name">C</span>:\Users\Administrator\AppData\Roaming\Google\AndroidStudio4<span class="number">.1</span>\fileTemplates</span><br></pre></td></tr></table></figure>
 
 
-
-
-
+<h2 id="模板变量表达式含义表"><a href="#模板变量表达式含义表" class="headerlink" title="模板变量表达式含义表"></a><a href="https://www.cnblogs.com/masahiro/p/15161432.html">模板变量表达式含义表</a></h2><p>以下是定义变量时支持的表达式基本含义（当匹配多个结果时结果将出现在待选列表中）：</p>
+<table>
+<thead>
+<tr>
+<th align="left">表达式</th>
+<th align="center">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>annotated(&lt;annotation&gt;)</code></td>
+<td align="center">返回具有指定注解的类，方法或字段名</td>
+</tr>
+<tr>
+<td align="left"><code>arrayVariable()</code></td>
+<td align="center">返回当前范围内数组变量，最近的优先展示</td>
+</tr>
+<tr>
+<td align="left"><code>lineCommentStart()</code></td>
+<td align="center">返回当前语言指示行注释开始的字符</td>
+</tr>
+<tr>
+<td align="left"><code>blockCommentStart()</code></td>
+<td align="center">返回当前语言指示块注释开始的字符</td>
+</tr>
+<tr>
+<td align="left"><code>blockCommentEnd()</code></td>
+<td align="center">返回当前语言指示块注释结束的字符</td>
+</tr>
+<tr>
+<td align="left"><code>commentStart()</code></td>
+<td align="center">返回当前语言指示注释开始的字符，对有行注释的返回行注释开头</td>
+</tr>
+<tr>
+<td align="left"><code>commentEnd()</code></td>
+<td align="center">返回当前语言指示注释结束的字符，对有行注释的返回空（行注释通常没有结束字符）</td>
+</tr>
+<tr>
+<td align="left"><code>camelCase(&lt;String&gt;)</code></td>
+<td align="center">将字符串转换为驼峰形式</td>
+</tr>
+<tr>
+<td align="left"><code>snakeCase(&lt;String&gt;)</code></td>
+<td align="center">将字符串转换为下划线分割形式</td>
+</tr>
+<tr>
+<td align="left"><code>spaceSeparated(&lt;String&gt;)</code></td>
+<td align="center">将字符串转换为空格分开形式</td>
+</tr>
+<tr>
+<td align="left"><code>spacesToUnderscores(&lt;String&gt;)</code></td>
+<td align="center">将字符串的空格替换为下划线</td>
+</tr>
+<tr>
+<td align="left"><code>capitalize(&lt;String&gt;)</code></td>
+<td align="center">将字符串首字母设为大写</td>
+</tr>
+<tr>
+<td align="left"><code>capitalizeAndUnderscore(&lt;String&gt;)</code></td>
+<td align="center">将字符串转换为大写并用下划线隔开</td>
+</tr>
+<tr>
+<td align="left"><code>decapitalize(&lt;String&gt;)</code></td>
+<td align="center">将字符串首字母设为小写</td>
+</tr>
+<tr>
+<td align="left"><code>underscoresToCamelCase(&lt;String&gt;)</code></td>
+<td align="center">将下划线形式字符串转换为驼峰形式</td>
+</tr>
+<tr>
+<td align="left"><code>underscoresToSpaces(&lt;String&gt;)</code></td>
+<td align="center">将下划线形式字符串转换为空格隔开形式</td>
+</tr>
+<tr>
+<td align="left"><code>lowercaseAndDash(&lt;String&gt;)</code></td>
+<td align="center">将字符串转为小写并使用中划线分割</td>
+</tr>
+<tr>
+<td align="left"><code>escapeString(&lt;String&gt;)</code></td>
+<td align="center">将字符串中的特殊符号进行转义，便于在java字符串中使用</td>
+</tr>
+<tr>
+<td align="left"><code>substringBefore(&lt;String&gt;, &lt;Delimeter&gt;)</code></td>
+<td align="center">截取字符串在<code>&lt;Delimeter&gt;</code>之前的部分</td>
+</tr>
+<tr>
+<td align="left"><code>firstWord(&lt;String&gt;)</code></td>
+<td align="center">返回字符串中的首个单词</td>
+</tr>
+<tr>
+<td align="left"><code>castToLeftSideType()</code></td>
+<td align="center">获取左侧变量的类型判断是否需要强转</td>
+</tr>
+<tr>
+<td align="left"><code>rightSideType()</code></td>
+<td align="center">获取右侧表达式的变量类型</td>
+</tr>
+<tr>
+<td align="left"><code>className()</code></td>
+<td align="center">返回当前所在类（在内部类则返回内部类）类名</td>
+</tr>
+<tr>
+<td align="left"><code>currentPackage()</code></td>
+<td align="center">返回当前所在包名</td>
+</tr>
+<tr>
+<td align="left"><code>qualifiedClassName()</code></td>
+<td align="center">返回当前所在类（在内部类则返回内部类）的全限定类名（包+类名）</td>
+</tr>
+<tr>
+<td align="left"><code>classNameComplete()</code></td>
+<td align="center">触发类名相关的代码补全</td>
+</tr>
+<tr>
+<td align="left"><code>clipboard()</code></td>
+<td align="center">返回系统剪贴板的内容</td>
+</tr>
+<tr>
+<td align="left"><code>complete()</code></td>
+<td align="center">调用一次代码补全，相当于调用一次<code>_Ctrl+Space_</code></td>
+</tr>
+<tr>
+<td align="left"><code>completeSmart()</code></td>
+<td align="center">调用一次智能代码补全，相当于调用一次<code>_Ctrl+Alt+Space_</code></td>
+</tr>
+<tr>
+<td align="left"><code>componentTypeOf(&lt;array&gt;)</code></td>
+<td align="center">返回数组类型</td>
+</tr>
+<tr>
+<td align="left"><code>concat(&lt;String&gt;, …)</code></td>
+<td align="center">拼接字符串</td>
+</tr>
+<tr>
+<td align="left"><code>date([format])</code></td>
+<td align="center">指定格式化方式返回当前系统时间字符串（根据<code>_SimpleDateFormat_</code>格式）</td>
+</tr>
+<tr>
+<td align="left"><code>time([format])</code></td>
+<td align="center">指定格式化方式返回当前系统时间字符串（无日期，根据<code>_SimpleDateFormat_</code>格式）</td>
+</tr>
+<tr>
+<td align="left"><code>descendantClassesEnum(&lt;String&gt;)</code></td>
+<td align="center">返回指定类的子类</td>
+</tr>
+<tr>
+<td align="left"><code>lineNumber()</code></td>
+<td align="center">返回当前行行号</td>
+</tr>
+<tr>
+<td align="left"><code>enum(&lt;String&gt;, …)</code></td>
+<td align="center">返回建议的字符串列表</td>
+</tr>
+<tr>
+<td align="left"><code>expectedType()</code></td>
+<td align="center">自动识别并返回期望的类型，一般用于赋值，方法参数，返回语句处。</td>
+</tr>
+<tr>
+<td align="left"><code>fileName()</code></td>
+<td align="center">返回当前文件名（带拓展名）</td>
+</tr>
+<tr>
+<td align="left"><code>fileNameWithoutExtension()</code></td>
+<td align="center">返回当前文件名（不带拓展名）</td>
+</tr>
+<tr>
+<td align="left"><code>filePath()</code></td>
+<td align="center">返回当前文件路径（带拓展名）</td>
+</tr>
+<tr>
+<td align="left"><code>fileRelativePath()</code></td>
+<td align="center">返回当前文件相对当前项目的路径（带拓展名）</td>
+</tr>
+<tr>
+<td align="left"><code>groovyScript(&lt;String&gt;, [arg, …])</code></td>
+<td align="center">执行作为字符串形式传递的<code>_groovy_</code>脚本</td>
+</tr>
+<tr>
+<td align="left"><code>guessElementType(&lt;Collection&gt;)</code></td>
+<td align="center">返回集合中元素的类型</td>
+</tr>
+<tr>
+<td align="left"><code>iterableComponentType(&lt;Iterable&gt;)</code></td>
+<td align="center">返回可迭代对象的类型</td>
+</tr>
+<tr>
+<td align="left"><code>iterableVariable()</code></td>
+<td align="center">返回当前范围内可迭代类型对象，最近的优先展示</td>
+</tr>
+<tr>
+<td align="left"><code>methodName()</code></td>
+<td align="center">返回当前所在方法名</td>
+</tr>
+<tr>
+<td align="left"><code>methodParameters()</code></td>
+<td align="center">返回当前所在方法的所有参数名</td>
+</tr>
+<tr>
+<td align="left"><code>methodReturnType()</code></td>
+<td align="center">返回当前所在方法的返回类型</td>
+</tr>
+<tr>
+<td align="left"><code>regularExpression(&lt;String&gt;, &lt;Pattern&gt;, &lt;Replacement&gt;)</code></td>
+<td align="center">查找字符串中满足<code>&lt;Pattern&gt;</code>的所有部分并替换为<code>&lt;Replacement&gt;</code></td>
+</tr>
+<tr>
+<td align="left"><code>typeOfVariable(&lt;String&gt;)</code></td>
+<td align="center">返回变量的类型</td>
+</tr>
+<tr>
+<td align="left"><code>variableOfType(&lt;String&gt;)</code></td>
+<td align="center">返回当前范围内满足类型条件的变量，最近的优先展示</td>
+</tr>
+<tr>
+<td align="left"><code>suggestFirstVariableName(&lt;String&gt;)</code></td>
+<td align="center">返回当前范围内满足类型条件的部分变量，最近的优先展示和<code>_variableOfType_</code>类似但不推荐true，false，this，和super</td>
+</tr>
+<tr>
+<td align="left"><code>subtypes(&lt;String&gt;)</code></td>
+<td align="center">返回指定类型的子类型</td>
+</tr>
+<tr>
+<td align="left"><code>suggestIndexName()</code></td>
+<td align="center">返回当前范围中未使用的第一个常用迭代下标变量名（i，j，k等）</td>
+</tr>
+<tr>
+<td align="left"><code>suggestVariableName()</code></td>
+<td align="center">根据变量命名规则的代码风格设置返回建议的变量名</td>
+</tr>
+<tr>
+<td align="left"><code>suggestShortVariableName()</code></td>
+<td align="center">建议的变量名精简版</td>
+</tr>
+<tr>
+<td align="left"><code>user()</code></td>
+<td align="center">返回当前系统的用户名称</td>
+</tr>
+<tr>
+<td align="left"><img src="/posts/8f94baaa/%E5%B0%86%E8%BE%93%E5%85%A5%E5%86%85%E5%AE%B9%E9%A6%96%E5%AD%97%E6%AF%8D%E5%B0%8F%E5%86%99.png" alt="将输入内容首字母小写"></td>
+<td align="center"></td>
+</tr>
+</tbody></table>
 <h2 id="shenbh"><a href="#shenbh" class="headerlink" title="shenbh"></a>shenbh</h2><h3 id="方法注释"><a href="#方法注释" class="headerlink" title="* 方法注释"></a>* <a href="https://www.jianshu.com/p/2b17c3879879">方法注释</a></h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">* &lt;pre&gt;</span><br><span class="line">*     <span class="meta">@desc</span>   : $cursor$</span><br><span class="line">*     <span class="meta">@Param</span>  : $PARAM$</span><br><span class="line">*     <span class="meta">@Return</span> : $RETURN$</span><br><span class="line">*     <span class="meta">@Author</span> : shenbh</span><br><span class="line">*     <span class="meta">@Date</span>   : $DATE$ $TIME$</span><br><span class="line">* &lt;/pre&gt;</span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
 
 <p><img src="/posts/8f94baaa/idea%E5%A2%9E%E5%8A%A0%E6%96%B9%E6%B3%95%E6%B3%A8%E9%87%8A%E6%A8%A1%E6%9D%BF.jpg" alt="idea增加方法注释模板.png"></p>
@@ -8440,97 +8755,6 @@ java中调用  <figure class="highlight java"><table><tr><td class="code"><pre><
       </tags>
   </entry>
   <entry>
-    <title>Kotlin类委托和属性委托</title>
-    <url>/posts/710c8103/</url>
-    <content><![CDATA[<h2 id="Kotlin类委托和属性委托"><a href="#Kotlin类委托和属性委托" class="headerlink" title="Kotlin类委托和属性委托"></a>Kotlin类委托和属性委托</h2><h3 id="kotlin类委托"><a href="#kotlin类委托" class="headerlink" title="kotlin类委托"></a>kotlin类委托</h3><h4 id="使用kotlin类委托"><a href="#使用kotlin类委托" class="headerlink" title="使用kotlin类委托"></a>使用kotlin类委托</h4><p>kotlin的类委托主要是接口代理，类似Java中代理模式。委托机制：类A需要实现的操作委托给类B来实现。举个例子：假设有个人A需要打官司但是不会，于是委托给律师B来打官司，在这个过程中A委托了B，B代理A来打官司，委托代理成对出现，一般先有委托再有代理，这个过程也可以通过代码来实现：</p>
-<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 接口 打官司</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">ILawsuit</span></span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">lawsuit</span><span class="params">()</span></span>; <span class="comment">// 方法 打官司</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 律师</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Lawyer</span> : <span class="type">ILawsuit&#123;</span></span></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">lawsuit</span><span class="params">()</span></span> &#123;</span><br><span class="line">        println(<span class="string">&quot;律师执行打官司&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 平民 通过by 关键字委托给律师类</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Civilian</span> : <span class="type">ILawsuit by Lawyer</span></span>()</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">val</span> civilian : Civilian = Civilian();</span><br><span class="line">    civilian.lawsuit() <span class="comment">// 平民执行打官司 实际上是委托给律师来执行</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>通过kotlin字节码反编译，可以很明显的看出其实现方式就是通过Java的代理模式来实现的：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 打官司接口</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">ILawsuit</span> &#123;</span><br><span class="line">   <span class="keyword">void</span> <span class="title function_">lawsuit</span><span class="params">()</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 律师</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">Lawyer</span> <span class="keyword">implements</span> <span class="title class_">ILawsuit</span> &#123;</span><br><span class="line">   <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">lawsuit</span><span class="params">()</span> &#123;</span><br><span class="line">      <span class="type">String</span> <span class="variable">var1</span> <span class="operator">=</span> <span class="string">&quot;律师执行打官司&quot;</span>;</span><br><span class="line">      System.out.println(var1);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 平民</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">Civilian</span> <span class="keyword">implements</span> <span class="title class_">ILawsuit</span> &#123;</span><br><span class="line">   <span class="comment">// $FF: synthetic field</span></span><br><span class="line">   <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">Lawyer</span> <span class="variable">$$delegate_0</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Lawyer</span>();</span><br><span class="line"></span><br><span class="line">   <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">lawsuit</span><span class="params">()</span> &#123;</span><br><span class="line">      <span class="built_in">this</span>.$$delegate_0.lawsuit();</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// main执行</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">()</span> &#123;</span><br><span class="line">      <span class="type">Civilian</span> <span class="variable">civilian</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Civilian</span>();</span><br><span class="line">      civilian.lawsuit();</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="覆写委托类方法"><a href="#覆写委托类方法" class="headerlink" title="覆写委托类方法"></a>覆写委托类方法</h4><p>有些时候在委托类实现的情况下，又需要自定义方法实现，在这种情况下可以通过覆写委托类方法来实现，具体如以下代码：</p>
-<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExampleList</span>&lt;<span class="type">T</span>&gt; </span>(<span class="keyword">val</span> innerList : MutableCollection&lt;T&gt; = mutableListOf()) : MutableCollection&lt;T&gt; <span class="keyword">by</span> innerList&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> count = <span class="number">0</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">add</span><span class="params">(element: <span class="type">T</span>)</span></span>: <span class="built_in">Boolean</span> &#123; <span class="comment">// 覆写方法，实现自定义方法</span></span><br><span class="line">        count ++;</span><br><span class="line">        <span class="keyword">return</span> innerList.add(element) <span class="comment">// 代理对象只能够在覆写方法中调用</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">addAll</span><span class="params">(elements: <span class="type">Collection</span>&lt;<span class="type">T</span>&gt;)</span></span>: <span class="built_in">Boolean</span> &#123; <span class="comment">// 覆写方法，实现自定义方法</span></span><br><span class="line">        count += elements.size</span><br><span class="line">        <span class="keyword">return</span> innerList.addAll(elements) <span class="comment">// 代理对象只能够在覆写方法中调用</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">val</span> exampleList = ExampleList&lt;<span class="built_in">Int</span>&gt;()</span><br><span class="line">    exampleList.addAll(listOf(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>))</span><br><span class="line">    println(<span class="string">&quot;已添加<span class="subst">$&#123;exampleList.count&#125;</span>个元素&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<h3 id="kotlin属性委托"><a href="#kotlin属性委托" class="headerlink" title="kotlin属性委托"></a>kotlin属性委托</h3><h4 id="定义一个被委托的类"><a href="#定义一个被委托的类" class="headerlink" title="定义一个被委托的类"></a>定义一个被委托的类</h4><p>与类委托类似，属性委托也是通过<code>by</code>关键字来定义的，其格式为：<code>var/val 变量 ：Type by 委托类</code>，具体代码如下：</p>
-<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * kotlin 属性代理</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ProxyExample</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> example : String <span class="keyword">by</span> Delegate()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 被委托的类 被委托的类必须有getValue 和 setValue的方法</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Delegate</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">operator</span> <span class="function"><span class="keyword">fun</span> <span class="title">getValue</span><span class="params">(thisRef: <span class="type">Any</span>?,property : <span class="type">KProperty</span>&lt;*&gt;)</span></span>:String&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;<span class="variable">$thisRef</span>,代理读取 <span class="subst">$&#123;property.name&#125;</span> 的值&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">operator</span> <span class="function"><span class="keyword">fun</span> <span class="title">setValue</span><span class="params">(thisRef: <span class="type">Any</span>?,property: <span class="type">KProperty</span>&lt;*&gt;,value: <span class="type">String</span>)</span></span>&#123;</span><br><span class="line">        print(<span class="string">&quot;<span class="variable">$thisRef</span>,代理写入 <span class="subst">$&#123;property.name&#125;</span> 的值为：<span class="variable">$value</span>&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">val</span> proxy  = ProxyExample();</span><br><span class="line">    println(proxy.example)</span><br><span class="line">    proxy.example = <span class="string">&quot;Name&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 运行结果：</span></span><br><span class="line">chapter7.yangn.five.<span class="symbol">ProxyExample@</span>76fb509a,代理读取 example 的值</span><br><span class="line">chapter7.yangn.five.<span class="symbol">ProxyExample@</span>76fb509a,代理写入 example 的值为：Name</span><br><span class="line">Process finished with exit code <span class="number">0</span></span><br></pre></td></tr></table></figure>
-
-<p>注意：</p>
-<p>对于<strong>只读</strong>属性，即<code>val</code>定义的变量，它的委托类<strong>必须提供一个getValue函数</strong>，且<strong>函数用operator关键字修饰</strong>，getValue有两个参数：</p>
-<ul>
-<li><code>thisRef</code>：根据以上运行结果，thisRef指的是当前调用对象（即<strong>属性所有者</strong>），其类型约束与调用对象一致或者是调用对象的超类型（子类型）</li>
-<li><code>property</code>：当前属性所持有者的反射，其类型约束为<code>KProperty&lt;*&gt;</code>或者是<code>KProperty&lt;*&gt;</code>的超类型（子类型）</li>
-</ul>
-<p>对于<strong>可读写</strong>属性，即<code>var</code>定义的变量，它的委托类<strong>除了提供getValue函数，还需要提供一个setValue函数</strong>，同样的，setValue函数也需要用operator关键字来修饰，setValue函数接收3个参数：</p>
-<ul>
-<li><code>thisRef</code>：同<code>getValue()</code></li>
-<li><code>property</code>：同<code>getValue()</code></li>
-<li><code>new value</code>：提供给当前属性用来赋新值的参数，其类型与当前属性一致或其超类型（子类型）</li>
-</ul>
-<p>通过字节码将其转为Java代码，查看属性委托其原理：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">ProxyExample</span> &#123;</span><br><span class="line">    <span class="meta">@NotNull</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">Delegate</span> <span class="variable">example$delegate</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Delegate</span>();</span><br><span class="line"></span><br><span class="line">    <span class="meta">@NotNull</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> String <span class="title function_">getExample</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>.example$delegate.getValue(<span class="built_in">this</span>, $$delegatedProperties[<span class="number">0</span>]);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">setExample</span><span class="params">(<span class="meta">@NotNull</span> String var1)</span> &#123;</span><br><span class="line">        Intrinsics.checkParameterIsNotNull(var1, <span class="string">&quot;&lt;set-?&gt;&quot;</span>);</span><br><span class="line">        <span class="built_in">this</span>.example$delegate.setValue(<span class="built_in">this</span>, $$delegatedProperties[<span class="number">0</span>], var1);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 委托类</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">Delegate</span> &#123;</span><br><span class="line">    <span class="meta">@NotNull</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> String <span class="title function_">getValue</span><span class="params">(<span class="meta">@Nullable</span> Object thisRef, <span class="meta">@NotNull</span> KProperty property)</span> &#123;</span><br><span class="line">        Intrinsics.checkParameterIsNotNull(property, <span class="string">&quot;property&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> thisRef + <span class="string">&quot;,代理读取 &quot;</span> + property.getName() + <span class="string">&quot; 的值&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">setValue</span><span class="params">(<span class="meta">@Nullable</span> Object thisRef, <span class="meta">@NotNull</span> KProperty property, <span class="meta">@NotNull</span> String value)</span> &#123;</span><br><span class="line">       Intrinsics.checkParameterIsNotNull(property, <span class="string">&quot;property&quot;</span>);</span><br><span class="line">       Intrinsics.checkParameterIsNotNull(value, <span class="string">&quot;value&quot;</span>);</span><br><span class="line">       <span class="type">String</span> <span class="variable">var4</span> <span class="operator">=</span> thisRef + <span class="string">&quot;,代理写入 &quot;</span> + property.getName() + <span class="string">&quot; 的值为：&quot;</span> + value;</span><br><span class="line">       System.out.print(var4);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">ProxyExample</span> <span class="variable">proxy</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ProxyExample</span>();</span><br><span class="line">    <span class="type">String</span> <span class="variable">var1</span> <span class="operator">=</span> proxy.getExample();</span><br><span class="line">    System.out.println(var1);</span><br><span class="line">    proxy.setExample(<span class="string">&quot;Name&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<h3 id="标准委托"><a href="#标准委托" class="headerlink" title="标准委托"></a>标准委托</h3><p>在kotlin标准库中也内置了很多工厂方法实现属性的委托。</p>
-<h4 id="延迟加载–Lazy-函数"><a href="#延迟加载–Lazy-函数" class="headerlink" title="延迟加载–Lazy()函数"></a>延迟加载–Lazy()函数</h4><p>延迟加载lazy()函数的用法，具体如下代码：</p>
-<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExampleByLazy</span></span>&#123;</span><br><span class="line">    <span class="keyword">val</span> example  <span class="keyword">by</span> lazy&#123;</span><br><span class="line">        println(<span class="string">&quot;lazy action&quot;</span>)</span><br><span class="line">        <span class="string">&quot;lazy&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><code>val example  by lazy</code>中<code>lazy</code>是标准库中的一个函数，该函数传入的参数是一个<code>lambda</code>表达式，其返回值是<code>lazy&lt;T&gt;</code>，即属性<code>example</code>实际上是委托给了<code>lazy&lt;T&gt;</code>类</p>
-<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">actual</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> <span class="title">lazy</span><span class="params">(initializer: () -&gt; <span class="type">T</span>)</span></span>: Lazy&lt;T&gt; = SynchronizedLazyImpl(initializer)</span><br></pre></td></tr></table></figure>
-
-<p><code>lazy</code>函数返回的是<code>lazy&lt;T&gt;</code>泛型类，但是实际上返回的是<code>SynchronizedLazyImpl&lt;out T&gt;</code></p>
-<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">SynchronizedLazyImpl</span>&lt;<span class="type">out T</span>&gt;</span>(initializer: () -&gt; T, lock: Any? = <span class="literal">null</span>) : Lazy&lt;T&gt;, Serializable &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">var</span> initializer: (() -&gt; T)? = initializer</span><br><span class="line">    <span class="meta">@Volatile</span> <span class="keyword">private</span> <span class="keyword">var</span> _value: Any? = UNINITIALIZED_VALUE</span><br><span class="line">    <span class="comment">// final field is required to enable safe publication of constructed instance</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">val</span> lock = lock ?: <span class="keyword">this</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="keyword">val</span> value: T</span><br><span class="line">        <span class="keyword">get</span>() &#123;</span><br><span class="line">            <span class="keyword">val</span> _v1 = _value</span><br><span class="line">            <span class="keyword">if</span> (_v1 !== UNINITIALIZED_VALUE) &#123;</span><br><span class="line">                <span class="meta">@Suppress(<span class="string">&quot;UNCHECKED_CAST&quot;</span>)</span></span><br><span class="line">                <span class="keyword">return</span> _v1 <span class="keyword">as</span> T</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> synchronized(lock) &#123;</span><br><span class="line">                <span class="keyword">val</span> _v2 = _value</span><br><span class="line">                <span class="keyword">if</span> (_v2 !== UNINITIALIZED_VALUE) &#123;</span><br><span class="line">                    <span class="meta">@Suppress(<span class="string">&quot;UNCHECKED_CAST&quot;</span>)</span> (_v2 <span class="keyword">as</span> T)</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    <span class="keyword">val</span> typedValue = initializer!!()</span><br><span class="line">                    _value = typedValue</span><br><span class="line">                    initializer = <span class="literal">null</span></span><br><span class="line">                    typedValue</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="meta">@kotlin</span>.<span class="keyword">internal</span>.InlineOnly</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">inline</span> <span class="keyword">operator</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> Lazy<span class="type">&lt;T&gt;</span>.<span class="title">getValue</span><span class="params">(thisRef: <span class="type">Any</span>?, property: <span class="type">KProperty</span>&lt;*&gt;)</span></span>: T = value</span><br></pre></td></tr></table></figure>
-
-<p>泛型类<code>lazy&lt;T&gt;</code>实现了一个<code>getValue</code> 的扩展方法，这是被委托类必须要实现的一个方法，<code>getValue</code>函数返回的是<code>lazy&lt;T&gt;</code>中的<code>value</code>属性值，<code>SynchronizedLazyImpl&lt;out T&gt;</code>是<code>lazy&lt;T&gt;</code>的具体实现类，因此实际返回的是<code>SynchronizedLazyImpl&lt;out T&gt;</code>中的<code>value</code>属性值，<code>value</code>属性值最终返回的就是<code>lambda</code>表达式返回的值</p>
-<p><strong>注意：</strong></p>
-<ul>
-<li><strong>泛型类<code>lazy&lt;T&gt;</code>并没有实现<code>setValue</code>的扩展函数，所以委托给<code>lazy&lt;T&gt;</code>的属性只能够使用<code>val</code>来声明而不能够使用<code>var</code>声明</strong></li>
-<li><strong><code>lazy</code>函数是懒加载函数，只有第一次调用时能够完整执行<code>lambda</code>函数，之后调用都只是返回值</strong></li>
-</ul>
-<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExampleByLazy</span></span>&#123;</span><br><span class="line">    <span class="keyword">val</span> example  <span class="keyword">by</span> lazy&#123;</span><br><span class="line">        println(<span class="string">&quot;lazy action&quot;</span>) <span class="comment">// 只有第一次调用时执行</span></span><br><span class="line">        <span class="string">&quot;lazy&quot;</span> <span class="comment">// 每次调用都会返回值</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">val</span> exampleByLazy = ExampleByLazy();</span><br><span class="line">    println(exampleByLazy.example); <span class="comment">// 第一次调用</span></span><br><span class="line">    println(exampleByLazy.example) <span class="comment">// 第二次调用</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">****************运行结果*****************************************</span><br><span class="line">lazy action</span><br><span class="line">lazy</span><br><span class="line">lazy</span><br><span class="line">Process finished with exit code <span class="number">0</span></span><br></pre></td></tr></table></figure>
-
-
-
-<h3 id="可观察属性Observable"><a href="#可观察属性Observable" class="headerlink" title="可观察属性Observable"></a>可观察属性Observable</h3><p>顾名思义，Dalegates.obserable()就是可观察的属性，可以对属性变化进行观察和处理，Delegates.observable传入两个参数：</p>
-<ul>
-<li>initialValue：提供该属性的初始值</li>
-<li>onChange：提供一个含有三个参数的lambda表达式，用于观察属性变化后对属性变化的额外处理，三个参数分别是<code>property: KProperty&lt;*&gt;, oldValue: T, newValue: T</code>，分别代表被赋值的属性，旧值，新值</li>
-</ul>
-<p>Delegates.observable使用：</p>
-<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="comment">// Delegates.observable</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExampleObservable</span></span>&#123;</span><br><span class="line">    <span class="keyword">var</span> value <span class="keyword">by</span> Delegates.observable(<span class="string">&quot;initValue&quot;</span>)&#123;</span><br><span class="line">        prop,oldValue,newValue -&gt;</span><br><span class="line">        println(<span class="string">&quot;被赋值的属性:<span class="variable">$prop</span>,旧值:<span class="variable">$oldValue</span>,新值:<span class="variable">$newValue</span>&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="comment">// Delegates.observable</span></span><br><span class="line">    <span class="keyword">val</span> observable = ExampleObservable()</span><br><span class="line">    observable.value = <span class="string">&quot;nice&quot;</span></span><br><span class="line">    observable.value = <span class="string">&quot;second&quot;</span></span><br><span class="line">&#125;</span><br><span class="line">*********************************************************</span><br><span class="line">运行结果：</span><br><span class="line">被赋值的属性:<span class="keyword">var</span> chapter7.yangn.five.ExampleObservable.value: kotlin.String,旧值:initValue,新值:nice</span><br><span class="line">被赋值的属性:<span class="keyword">var</span> chapter7.yangn.five.ExampleObservable.value: kotlin.String,旧值:nice,新值:second</span><br><span class="line">Process finished with exit code <span class="number">0</span></span><br></pre></td></tr></table></figure>
-
-<p>跟踪Delegates.observable代码实现，理解其具体实现过程：</p>
-<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">inline</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> <span class="title">observable</span><span class="params">(initialValue: <span class="type">T</span>, <span class="keyword">crossinline</span> onChange: (<span class="type">property</span>: <span class="type">KProperty</span>&lt;*&gt;, <span class="type">oldValue</span>: <span class="type">T</span>, <span class="type">newValue</span>: <span class="type">T</span>) -&gt; <span class="type">Unit</span>)</span></span>:</span><br><span class="line">            ReadWriteProperty&lt;Any?, T&gt; =</span><br><span class="line">        <span class="keyword">object</span> : ObservableProperty&lt;T&gt;(initialValue) &#123;</span><br><span class="line">            <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">afterChange</span><span class="params">(property: <span class="type">KProperty</span>&lt;*&gt;, oldValue: <span class="type">T</span>, newValue: <span class="type">T</span>)</span></span> = onChange(property, oldValue, newValue)</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">ObservableProperty</span>&lt;<span class="type">T</span>&gt;</span>(initialValue: T) : ReadWriteProperty&lt;Any?, T&gt; &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">var</span> value = initialValue</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">getValue</span><span class="params">(thisRef: <span class="type">Any</span>?, property: <span class="type">KProperty</span>&lt;*&gt;)</span></span>: T &#123;</span><br><span class="line">        <span class="keyword">return</span> value</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">setValue</span><span class="params">(thisRef: <span class="type">Any</span>?, property: <span class="type">KProperty</span>&lt;*&gt;, value: <span class="type">T</span>)</span></span> &#123;</span><br><span class="line">        <span class="keyword">val</span> oldValue = <span class="keyword">this</span>.value</span><br><span class="line">        <span class="keyword">if</span> (!beforeChange(property, oldValue, value)) &#123;</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">this</span>.value = value</span><br><span class="line">        afterChange(property, oldValue, value)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><code>observable</code>是单例类<code>Delegates中</code>的一个方法，<code>observable</code>方法返回了类<code>ObservableProperty</code>，<code>ObservableProperty</code>是一个抽象类，所以需要覆写<code>afterChange</code>函数，<code>afterChange</code>函数实际上就是传递进来的<code>onChange</code>lambda表达式，因而demo中<code>ExampleObservable</code>中<code>value</code>属性实际上是被委托给了<code>ObservableProperty</code>类，这样整个实现就一目了然了</p>
-<h4 id="集合map"><a href="#集合map" class="headerlink" title="集合map"></a>集合map</h4><p>kotlin为<code>Map</code>实现了<code>getValue</code>扩展函数，所以<code>Map</code>可以作为属性委托类，使用如下：</p>
-<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExampleMap</span></span>(<span class="keyword">val</span> map: Map&lt;String,Any?&gt;)&#123;</span><br><span class="line">    <span class="keyword">val</span> name <span class="keyword">by</span> map</span><br><span class="line">    <span class="keyword">val</span> age <span class="keyword">by</span> map</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="comment">// map</span></span><br><span class="line">    <span class="keyword">val</span> exampleMap = ExampleMap(mapOf(<span class="string">&quot;name&quot;</span> to <span class="string">&quot;kotlin&quot;</span>,<span class="string">&quot;age&quot;</span> to <span class="number">3</span>))</span><br><span class="line">    println(exampleMap.name)</span><br><span class="line">    println(exampleMap.age)</span><br><span class="line">&#125;</span><br><span class="line">***********************************************************</span><br><span class="line">运行结果：</span><br><span class="line">kotlin</span><br><span class="line"><span class="number">3</span></span><br><span class="line">Process finished with exit code <span class="number">0</span></span><br></pre></td></tr></table></figure>
-
-<h4 id="Delegates-NotNull"><a href="#Delegates-NotNull" class="headerlink" title="Delegates.NotNull"></a>Delegates.NotNull</h4><p>与Delegates.observable用法类似，不过Delegates,NotNull适用于那些无法在初始化阶段就确定属性值的场合。</p>
-<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExampleNotNull</span></span>()&#123;</span><br><span class="line">    <span class="keyword">var</span> notNullValue <span class="keyword">by</span> Delegates.notNull&lt;String&gt;()</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="comment">// not null</span></span><br><span class="line">    <span class="keyword">val</span> exampleNotNull = ExampleNotNull()</span><br><span class="line">    exampleNotNull.notNullValue = <span class="string">&quot;initValue&quot;</span></span><br><span class="line">    println(exampleNotNull.notNullValue)</span><br><span class="line">&#125;</span><br><span class="line">************************************************************</span><br><span class="line">运行结果：</span><br><span class="line">initValue</span><br><span class="line">Process finished with exit code <span class="number">0</span></span><br></pre></td></tr></table></figure>
-
-<p><strong>注意：使用Delegates.NotNull如果属性在赋值前访问会抛出异常</strong></p>
-<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line">Exception <span class="keyword">in</span> thread <span class="string">&quot;main&quot;</span> java.lang.IllegalStateException: Property notNullValue should be initialized before <span class="keyword">get</span>.</span><br><span class="line">	at kotlin.properties.NotNullVar.getValue(Delegates.kt:<span class="number">62</span>)</span><br><span class="line">	at chapter7.yangn.five.ExampleNotNull.getNotNullValue(Second.kt)</span><br><span class="line">	at chapter7.yangn.five.SecondKt.main(Second.kt:<span class="number">51</span>)</span><br><span class="line">	at chapter7.yangn.five.SecondKt.main(Second.kt)</span><br><span class="line">Process finished with exit code <span class="number">1</span></span><br></pre></td></tr></table></figure>
-
-
-
-
-
-]]></content>
-      <categories>
-        <category>Kotlin</category>
-      </categories>
-      <tags>
-        <tag>Kotlin知识点</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Kotlin泛型</title>
     <url>/posts/6f6a6f9c/</url>
     <content><![CDATA[<h2 id="Kotlin-泛型"><a href="#Kotlin-泛型" class="headerlink" title="Kotlin 泛型"></a>Kotlin 泛型</h2><h3 id="类型擦除"><a href="#类型擦除" class="headerlink" title="类型擦除"></a>类型擦除</h3><h4 id="kotlin伪泛型"><a href="#kotlin伪泛型" class="headerlink" title="kotlin伪泛型"></a>kotlin伪泛型</h4><p>与Java一样，kotlin的泛型也是编译时期的泛型，在运行时期的时候泛型会被擦除掉，这种泛型可以理解为伪泛型，与之相对，真泛型即在运行期还存在泛型类型。可以通过以下两个例子来验证kotlin类型擦除：</p>
@@ -8653,6 +8877,97 @@ java中调用  <figure class="highlight java"><table><tr><td class="code"><pre><
 <figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">Bound</span></span>&#123;&#125;</span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">Generic</span></span>&#123;&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">GenericBound</span>&lt;<span class="type">T</span>&gt; <span class="title">where</span> <span class="title">T</span> : <span class="type">Bound </span>, <span class="type">T : Generic&#123;&#125;</span></span></span><br></pre></td></tr></table></figure>
 
 <h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>kotlin泛型中比较难理解的是协变和逆变，感觉学习起来会比较的抽象，但是协变和逆变在Java中就有所体现，只不过是在kotlin中的使用方式与Java不同，kotlin中使用变得更加的简便；同样对于泛型边界来说，虽然多了一个关键字<code>where</code>，但是内容确实与Java完全一致，没有新增任何东西；总的来说，kotlin泛型的内容是与Java泛型一致的，只是在写法上有区分而已，要学习kotlin的泛型，可以先将Java泛型完全掌握，只要掌握了Java泛型，kotlin泛型学习起来就十分的简单，无非就是换个写法而已。</p>
+]]></content>
+      <categories>
+        <category>Kotlin</category>
+      </categories>
+      <tags>
+        <tag>Kotlin知识点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Kotlin类委托和属性委托</title>
+    <url>/posts/710c8103/</url>
+    <content><![CDATA[<h2 id="Kotlin类委托和属性委托"><a href="#Kotlin类委托和属性委托" class="headerlink" title="Kotlin类委托和属性委托"></a>Kotlin类委托和属性委托</h2><h3 id="kotlin类委托"><a href="#kotlin类委托" class="headerlink" title="kotlin类委托"></a>kotlin类委托</h3><h4 id="使用kotlin类委托"><a href="#使用kotlin类委托" class="headerlink" title="使用kotlin类委托"></a>使用kotlin类委托</h4><p>kotlin的类委托主要是接口代理，类似Java中代理模式。委托机制：类A需要实现的操作委托给类B来实现。举个例子：假设有个人A需要打官司但是不会，于是委托给律师B来打官司，在这个过程中A委托了B，B代理A来打官司，委托代理成对出现，一般先有委托再有代理，这个过程也可以通过代码来实现：</p>
+<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 接口 打官司</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">ILawsuit</span></span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">lawsuit</span><span class="params">()</span></span>; <span class="comment">// 方法 打官司</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 律师</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Lawyer</span> : <span class="type">ILawsuit&#123;</span></span></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">lawsuit</span><span class="params">()</span></span> &#123;</span><br><span class="line">        println(<span class="string">&quot;律师执行打官司&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 平民 通过by 关键字委托给律师类</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Civilian</span> : <span class="type">ILawsuit by Lawyer</span></span>()</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">val</span> civilian : Civilian = Civilian();</span><br><span class="line">    civilian.lawsuit() <span class="comment">// 平民执行打官司 实际上是委托给律师来执行</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过kotlin字节码反编译，可以很明显的看出其实现方式就是通过Java的代理模式来实现的：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 打官司接口</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">ILawsuit</span> &#123;</span><br><span class="line">   <span class="keyword">void</span> <span class="title function_">lawsuit</span><span class="params">()</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 律师</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">Lawyer</span> <span class="keyword">implements</span> <span class="title class_">ILawsuit</span> &#123;</span><br><span class="line">   <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">lawsuit</span><span class="params">()</span> &#123;</span><br><span class="line">      <span class="type">String</span> <span class="variable">var1</span> <span class="operator">=</span> <span class="string">&quot;律师执行打官司&quot;</span>;</span><br><span class="line">      System.out.println(var1);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 平民</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">Civilian</span> <span class="keyword">implements</span> <span class="title class_">ILawsuit</span> &#123;</span><br><span class="line">   <span class="comment">// $FF: synthetic field</span></span><br><span class="line">   <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">Lawyer</span> <span class="variable">$$delegate_0</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Lawyer</span>();</span><br><span class="line"></span><br><span class="line">   <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">lawsuit</span><span class="params">()</span> &#123;</span><br><span class="line">      <span class="built_in">this</span>.$$delegate_0.lawsuit();</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// main执行</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">()</span> &#123;</span><br><span class="line">      <span class="type">Civilian</span> <span class="variable">civilian</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Civilian</span>();</span><br><span class="line">      civilian.lawsuit();</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="覆写委托类方法"><a href="#覆写委托类方法" class="headerlink" title="覆写委托类方法"></a>覆写委托类方法</h4><p>有些时候在委托类实现的情况下，又需要自定义方法实现，在这种情况下可以通过覆写委托类方法来实现，具体如以下代码：</p>
+<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExampleList</span>&lt;<span class="type">T</span>&gt; </span>(<span class="keyword">val</span> innerList : MutableCollection&lt;T&gt; = mutableListOf()) : MutableCollection&lt;T&gt; <span class="keyword">by</span> innerList&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> count = <span class="number">0</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">add</span><span class="params">(element: <span class="type">T</span>)</span></span>: <span class="built_in">Boolean</span> &#123; <span class="comment">// 覆写方法，实现自定义方法</span></span><br><span class="line">        count ++;</span><br><span class="line">        <span class="keyword">return</span> innerList.add(element) <span class="comment">// 代理对象只能够在覆写方法中调用</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">addAll</span><span class="params">(elements: <span class="type">Collection</span>&lt;<span class="type">T</span>&gt;)</span></span>: <span class="built_in">Boolean</span> &#123; <span class="comment">// 覆写方法，实现自定义方法</span></span><br><span class="line">        count += elements.size</span><br><span class="line">        <span class="keyword">return</span> innerList.addAll(elements) <span class="comment">// 代理对象只能够在覆写方法中调用</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">val</span> exampleList = ExampleList&lt;<span class="built_in">Int</span>&gt;()</span><br><span class="line">    exampleList.addAll(listOf(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>))</span><br><span class="line">    println(<span class="string">&quot;已添加<span class="subst">$&#123;exampleList.count&#125;</span>个元素&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="kotlin属性委托"><a href="#kotlin属性委托" class="headerlink" title="kotlin属性委托"></a>kotlin属性委托</h3><h4 id="定义一个被委托的类"><a href="#定义一个被委托的类" class="headerlink" title="定义一个被委托的类"></a>定义一个被委托的类</h4><p>与类委托类似，属性委托也是通过<code>by</code>关键字来定义的，其格式为：<code>var/val 变量 ：Type by 委托类</code>，具体代码如下：</p>
+<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * kotlin 属性代理</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ProxyExample</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> example : String <span class="keyword">by</span> Delegate()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 被委托的类 被委托的类必须有getValue 和 setValue的方法</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Delegate</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">operator</span> <span class="function"><span class="keyword">fun</span> <span class="title">getValue</span><span class="params">(thisRef: <span class="type">Any</span>?,property : <span class="type">KProperty</span>&lt;*&gt;)</span></span>:String&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;<span class="variable">$thisRef</span>,代理读取 <span class="subst">$&#123;property.name&#125;</span> 的值&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">operator</span> <span class="function"><span class="keyword">fun</span> <span class="title">setValue</span><span class="params">(thisRef: <span class="type">Any</span>?,property: <span class="type">KProperty</span>&lt;*&gt;,value: <span class="type">String</span>)</span></span>&#123;</span><br><span class="line">        print(<span class="string">&quot;<span class="variable">$thisRef</span>,代理写入 <span class="subst">$&#123;property.name&#125;</span> 的值为：<span class="variable">$value</span>&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">val</span> proxy  = ProxyExample();</span><br><span class="line">    println(proxy.example)</span><br><span class="line">    proxy.example = <span class="string">&quot;Name&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 运行结果：</span></span><br><span class="line">chapter7.yangn.five.<span class="symbol">ProxyExample@</span>76fb509a,代理读取 example 的值</span><br><span class="line">chapter7.yangn.five.<span class="symbol">ProxyExample@</span>76fb509a,代理写入 example 的值为：Name</span><br><span class="line">Process finished with exit code <span class="number">0</span></span><br></pre></td></tr></table></figure>
+
+<p>注意：</p>
+<p>对于<strong>只读</strong>属性，即<code>val</code>定义的变量，它的委托类<strong>必须提供一个getValue函数</strong>，且<strong>函数用operator关键字修饰</strong>，getValue有两个参数：</p>
+<ul>
+<li><code>thisRef</code>：根据以上运行结果，thisRef指的是当前调用对象（即<strong>属性所有者</strong>），其类型约束与调用对象一致或者是调用对象的超类型（子类型）</li>
+<li><code>property</code>：当前属性所持有者的反射，其类型约束为<code>KProperty&lt;*&gt;</code>或者是<code>KProperty&lt;*&gt;</code>的超类型（子类型）</li>
+</ul>
+<p>对于<strong>可读写</strong>属性，即<code>var</code>定义的变量，它的委托类<strong>除了提供getValue函数，还需要提供一个setValue函数</strong>，同样的，setValue函数也需要用operator关键字来修饰，setValue函数接收3个参数：</p>
+<ul>
+<li><code>thisRef</code>：同<code>getValue()</code></li>
+<li><code>property</code>：同<code>getValue()</code></li>
+<li><code>new value</code>：提供给当前属性用来赋新值的参数，其类型与当前属性一致或其超类型（子类型）</li>
+</ul>
+<p>通过字节码将其转为Java代码，查看属性委托其原理：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">ProxyExample</span> &#123;</span><br><span class="line">    <span class="meta">@NotNull</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">Delegate</span> <span class="variable">example$delegate</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Delegate</span>();</span><br><span class="line"></span><br><span class="line">    <span class="meta">@NotNull</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> String <span class="title function_">getExample</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>.example$delegate.getValue(<span class="built_in">this</span>, $$delegatedProperties[<span class="number">0</span>]);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">setExample</span><span class="params">(<span class="meta">@NotNull</span> String var1)</span> &#123;</span><br><span class="line">        Intrinsics.checkParameterIsNotNull(var1, <span class="string">&quot;&lt;set-?&gt;&quot;</span>);</span><br><span class="line">        <span class="built_in">this</span>.example$delegate.setValue(<span class="built_in">this</span>, $$delegatedProperties[<span class="number">0</span>], var1);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 委托类</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">Delegate</span> &#123;</span><br><span class="line">    <span class="meta">@NotNull</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> String <span class="title function_">getValue</span><span class="params">(<span class="meta">@Nullable</span> Object thisRef, <span class="meta">@NotNull</span> KProperty property)</span> &#123;</span><br><span class="line">        Intrinsics.checkParameterIsNotNull(property, <span class="string">&quot;property&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> thisRef + <span class="string">&quot;,代理读取 &quot;</span> + property.getName() + <span class="string">&quot; 的值&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">setValue</span><span class="params">(<span class="meta">@Nullable</span> Object thisRef, <span class="meta">@NotNull</span> KProperty property, <span class="meta">@NotNull</span> String value)</span> &#123;</span><br><span class="line">       Intrinsics.checkParameterIsNotNull(property, <span class="string">&quot;property&quot;</span>);</span><br><span class="line">       Intrinsics.checkParameterIsNotNull(value, <span class="string">&quot;value&quot;</span>);</span><br><span class="line">       <span class="type">String</span> <span class="variable">var4</span> <span class="operator">=</span> thisRef + <span class="string">&quot;,代理写入 &quot;</span> + property.getName() + <span class="string">&quot; 的值为：&quot;</span> + value;</span><br><span class="line">       System.out.print(var4);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">ProxyExample</span> <span class="variable">proxy</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ProxyExample</span>();</span><br><span class="line">    <span class="type">String</span> <span class="variable">var1</span> <span class="operator">=</span> proxy.getExample();</span><br><span class="line">    System.out.println(var1);</span><br><span class="line">    proxy.setExample(<span class="string">&quot;Name&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="标准委托"><a href="#标准委托" class="headerlink" title="标准委托"></a>标准委托</h3><p>在kotlin标准库中也内置了很多工厂方法实现属性的委托。</p>
+<h4 id="延迟加载–Lazy-函数"><a href="#延迟加载–Lazy-函数" class="headerlink" title="延迟加载–Lazy()函数"></a>延迟加载–Lazy()函数</h4><p>延迟加载lazy()函数的用法，具体如下代码：</p>
+<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExampleByLazy</span></span>&#123;</span><br><span class="line">    <span class="keyword">val</span> example  <span class="keyword">by</span> lazy&#123;</span><br><span class="line">        println(<span class="string">&quot;lazy action&quot;</span>)</span><br><span class="line">        <span class="string">&quot;lazy&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>val example  by lazy</code>中<code>lazy</code>是标准库中的一个函数，该函数传入的参数是一个<code>lambda</code>表达式，其返回值是<code>lazy&lt;T&gt;</code>，即属性<code>example</code>实际上是委托给了<code>lazy&lt;T&gt;</code>类</p>
+<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">actual</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> <span class="title">lazy</span><span class="params">(initializer: () -&gt; <span class="type">T</span>)</span></span>: Lazy&lt;T&gt; = SynchronizedLazyImpl(initializer)</span><br></pre></td></tr></table></figure>
+
+<p><code>lazy</code>函数返回的是<code>lazy&lt;T&gt;</code>泛型类，但是实际上返回的是<code>SynchronizedLazyImpl&lt;out T&gt;</code></p>
+<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">SynchronizedLazyImpl</span>&lt;<span class="type">out T</span>&gt;</span>(initializer: () -&gt; T, lock: Any? = <span class="literal">null</span>) : Lazy&lt;T&gt;, Serializable &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">var</span> initializer: (() -&gt; T)? = initializer</span><br><span class="line">    <span class="meta">@Volatile</span> <span class="keyword">private</span> <span class="keyword">var</span> _value: Any? = UNINITIALIZED_VALUE</span><br><span class="line">    <span class="comment">// final field is required to enable safe publication of constructed instance</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">val</span> lock = lock ?: <span class="keyword">this</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="keyword">val</span> value: T</span><br><span class="line">        <span class="keyword">get</span>() &#123;</span><br><span class="line">            <span class="keyword">val</span> _v1 = _value</span><br><span class="line">            <span class="keyword">if</span> (_v1 !== UNINITIALIZED_VALUE) &#123;</span><br><span class="line">                <span class="meta">@Suppress(<span class="string">&quot;UNCHECKED_CAST&quot;</span>)</span></span><br><span class="line">                <span class="keyword">return</span> _v1 <span class="keyword">as</span> T</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> synchronized(lock) &#123;</span><br><span class="line">                <span class="keyword">val</span> _v2 = _value</span><br><span class="line">                <span class="keyword">if</span> (_v2 !== UNINITIALIZED_VALUE) &#123;</span><br><span class="line">                    <span class="meta">@Suppress(<span class="string">&quot;UNCHECKED_CAST&quot;</span>)</span> (_v2 <span class="keyword">as</span> T)</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    <span class="keyword">val</span> typedValue = initializer!!()</span><br><span class="line">                    _value = typedValue</span><br><span class="line">                    initializer = <span class="literal">null</span></span><br><span class="line">                    typedValue</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="meta">@kotlin</span>.<span class="keyword">internal</span>.InlineOnly</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">inline</span> <span class="keyword">operator</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> Lazy<span class="type">&lt;T&gt;</span>.<span class="title">getValue</span><span class="params">(thisRef: <span class="type">Any</span>?, property: <span class="type">KProperty</span>&lt;*&gt;)</span></span>: T = value</span><br></pre></td></tr></table></figure>
+
+<p>泛型类<code>lazy&lt;T&gt;</code>实现了一个<code>getValue</code> 的扩展方法，这是被委托类必须要实现的一个方法，<code>getValue</code>函数返回的是<code>lazy&lt;T&gt;</code>中的<code>value</code>属性值，<code>SynchronizedLazyImpl&lt;out T&gt;</code>是<code>lazy&lt;T&gt;</code>的具体实现类，因此实际返回的是<code>SynchronizedLazyImpl&lt;out T&gt;</code>中的<code>value</code>属性值，<code>value</code>属性值最终返回的就是<code>lambda</code>表达式返回的值</p>
+<p><strong>注意：</strong></p>
+<ul>
+<li><strong>泛型类<code>lazy&lt;T&gt;</code>并没有实现<code>setValue</code>的扩展函数，所以委托给<code>lazy&lt;T&gt;</code>的属性只能够使用<code>val</code>来声明而不能够使用<code>var</code>声明</strong></li>
+<li><strong><code>lazy</code>函数是懒加载函数，只有第一次调用时能够完整执行<code>lambda</code>函数，之后调用都只是返回值</strong></li>
+</ul>
+<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExampleByLazy</span></span>&#123;</span><br><span class="line">    <span class="keyword">val</span> example  <span class="keyword">by</span> lazy&#123;</span><br><span class="line">        println(<span class="string">&quot;lazy action&quot;</span>) <span class="comment">// 只有第一次调用时执行</span></span><br><span class="line">        <span class="string">&quot;lazy&quot;</span> <span class="comment">// 每次调用都会返回值</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">val</span> exampleByLazy = ExampleByLazy();</span><br><span class="line">    println(exampleByLazy.example); <span class="comment">// 第一次调用</span></span><br><span class="line">    println(exampleByLazy.example) <span class="comment">// 第二次调用</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">****************运行结果*****************************************</span><br><span class="line">lazy action</span><br><span class="line">lazy</span><br><span class="line">lazy</span><br><span class="line">Process finished with exit code <span class="number">0</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="可观察属性Observable"><a href="#可观察属性Observable" class="headerlink" title="可观察属性Observable"></a>可观察属性Observable</h3><p>顾名思义，Dalegates.obserable()就是可观察的属性，可以对属性变化进行观察和处理，Delegates.observable传入两个参数：</p>
+<ul>
+<li>initialValue：提供该属性的初始值</li>
+<li>onChange：提供一个含有三个参数的lambda表达式，用于观察属性变化后对属性变化的额外处理，三个参数分别是<code>property: KProperty&lt;*&gt;, oldValue: T, newValue: T</code>，分别代表被赋值的属性，旧值，新值</li>
+</ul>
+<p>Delegates.observable使用：</p>
+<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="comment">// Delegates.observable</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExampleObservable</span></span>&#123;</span><br><span class="line">    <span class="keyword">var</span> value <span class="keyword">by</span> Delegates.observable(<span class="string">&quot;initValue&quot;</span>)&#123;</span><br><span class="line">        prop,oldValue,newValue -&gt;</span><br><span class="line">        println(<span class="string">&quot;被赋值的属性:<span class="variable">$prop</span>,旧值:<span class="variable">$oldValue</span>,新值:<span class="variable">$newValue</span>&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="comment">// Delegates.observable</span></span><br><span class="line">    <span class="keyword">val</span> observable = ExampleObservable()</span><br><span class="line">    observable.value = <span class="string">&quot;nice&quot;</span></span><br><span class="line">    observable.value = <span class="string">&quot;second&quot;</span></span><br><span class="line">&#125;</span><br><span class="line">*********************************************************</span><br><span class="line">运行结果：</span><br><span class="line">被赋值的属性:<span class="keyword">var</span> chapter7.yangn.five.ExampleObservable.value: kotlin.String,旧值:initValue,新值:nice</span><br><span class="line">被赋值的属性:<span class="keyword">var</span> chapter7.yangn.five.ExampleObservable.value: kotlin.String,旧值:nice,新值:second</span><br><span class="line">Process finished with exit code <span class="number">0</span></span><br></pre></td></tr></table></figure>
+
+<p>跟踪Delegates.observable代码实现，理解其具体实现过程：</p>
+<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">inline</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> <span class="title">observable</span><span class="params">(initialValue: <span class="type">T</span>, <span class="keyword">crossinline</span> onChange: (<span class="type">property</span>: <span class="type">KProperty</span>&lt;*&gt;, <span class="type">oldValue</span>: <span class="type">T</span>, <span class="type">newValue</span>: <span class="type">T</span>) -&gt; <span class="type">Unit</span>)</span></span>:</span><br><span class="line">            ReadWriteProperty&lt;Any?, T&gt; =</span><br><span class="line">        <span class="keyword">object</span> : ObservableProperty&lt;T&gt;(initialValue) &#123;</span><br><span class="line">            <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">afterChange</span><span class="params">(property: <span class="type">KProperty</span>&lt;*&gt;, oldValue: <span class="type">T</span>, newValue: <span class="type">T</span>)</span></span> = onChange(property, oldValue, newValue)</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">ObservableProperty</span>&lt;<span class="type">T</span>&gt;</span>(initialValue: T) : ReadWriteProperty&lt;Any?, T&gt; &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">var</span> value = initialValue</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">getValue</span><span class="params">(thisRef: <span class="type">Any</span>?, property: <span class="type">KProperty</span>&lt;*&gt;)</span></span>: T &#123;</span><br><span class="line">        <span class="keyword">return</span> value</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">setValue</span><span class="params">(thisRef: <span class="type">Any</span>?, property: <span class="type">KProperty</span>&lt;*&gt;, value: <span class="type">T</span>)</span></span> &#123;</span><br><span class="line">        <span class="keyword">val</span> oldValue = <span class="keyword">this</span>.value</span><br><span class="line">        <span class="keyword">if</span> (!beforeChange(property, oldValue, value)) &#123;</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">this</span>.value = value</span><br><span class="line">        afterChange(property, oldValue, value)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>observable</code>是单例类<code>Delegates中</code>的一个方法，<code>observable</code>方法返回了类<code>ObservableProperty</code>，<code>ObservableProperty</code>是一个抽象类，所以需要覆写<code>afterChange</code>函数，<code>afterChange</code>函数实际上就是传递进来的<code>onChange</code>lambda表达式，因而demo中<code>ExampleObservable</code>中<code>value</code>属性实际上是被委托给了<code>ObservableProperty</code>类，这样整个实现就一目了然了</p>
+<h4 id="集合map"><a href="#集合map" class="headerlink" title="集合map"></a>集合map</h4><p>kotlin为<code>Map</code>实现了<code>getValue</code>扩展函数，所以<code>Map</code>可以作为属性委托类，使用如下：</p>
+<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExampleMap</span></span>(<span class="keyword">val</span> map: Map&lt;String,Any?&gt;)&#123;</span><br><span class="line">    <span class="keyword">val</span> name <span class="keyword">by</span> map</span><br><span class="line">    <span class="keyword">val</span> age <span class="keyword">by</span> map</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="comment">// map</span></span><br><span class="line">    <span class="keyword">val</span> exampleMap = ExampleMap(mapOf(<span class="string">&quot;name&quot;</span> to <span class="string">&quot;kotlin&quot;</span>,<span class="string">&quot;age&quot;</span> to <span class="number">3</span>))</span><br><span class="line">    println(exampleMap.name)</span><br><span class="line">    println(exampleMap.age)</span><br><span class="line">&#125;</span><br><span class="line">***********************************************************</span><br><span class="line">运行结果：</span><br><span class="line">kotlin</span><br><span class="line"><span class="number">3</span></span><br><span class="line">Process finished with exit code <span class="number">0</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="Delegates-NotNull"><a href="#Delegates-NotNull" class="headerlink" title="Delegates.NotNull"></a>Delegates.NotNull</h4><p>与Delegates.observable用法类似，不过Delegates,NotNull适用于那些无法在初始化阶段就确定属性值的场合。</p>
+<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExampleNotNull</span></span>()&#123;</span><br><span class="line">    <span class="keyword">var</span> notNullValue <span class="keyword">by</span> Delegates.notNull&lt;String&gt;()</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="comment">// not null</span></span><br><span class="line">    <span class="keyword">val</span> exampleNotNull = ExampleNotNull()</span><br><span class="line">    exampleNotNull.notNullValue = <span class="string">&quot;initValue&quot;</span></span><br><span class="line">    println(exampleNotNull.notNullValue)</span><br><span class="line">&#125;</span><br><span class="line">************************************************************</span><br><span class="line">运行结果：</span><br><span class="line">initValue</span><br><span class="line">Process finished with exit code <span class="number">0</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>注意：使用Delegates.NotNull如果属性在赋值前访问会抛出异常</strong></p>
+<figure class="highlight kotlin"><table><tr><td class="code"><pre><span class="line">Exception <span class="keyword">in</span> thread <span class="string">&quot;main&quot;</span> java.lang.IllegalStateException: Property notNullValue should be initialized before <span class="keyword">get</span>.</span><br><span class="line">	at kotlin.properties.NotNullVar.getValue(Delegates.kt:<span class="number">62</span>)</span><br><span class="line">	at chapter7.yangn.five.ExampleNotNull.getNotNullValue(Second.kt)</span><br><span class="line">	at chapter7.yangn.five.SecondKt.main(Second.kt:<span class="number">51</span>)</span><br><span class="line">	at chapter7.yangn.five.SecondKt.main(Second.kt)</span><br><span class="line">Process finished with exit code <span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+
 ]]></content>
       <categories>
         <category>Kotlin</category>
@@ -11953,6 +12268,102 @@ String 是一个比较特殊的类(str01: static final 修饰的变量不可变 
       </tags>
   </entry>
   <entry>
+    <title>命令相关-Aapt</title>
+    <url>/posts/5934b6dd/</url>
+    <content><![CDATA[<h1 id="aapt相关"><a href="#aapt相关" class="headerlink" title="aapt相关"></a>aapt相关</h1><p>要使用aapt命令前提是要把它加入到环境变量中</p>
+<p>如：<code>%SDK_HOME%\build-tools\33.0.0\</code></p>
+<h2 id="查看apk有哪些权限"><a href="#查看apk有哪些权限" class="headerlink" title="查看apk有哪些权限"></a>查看apk有哪些权限</h2> <figure class="highlight arduino"><table><tr><td class="code"><pre><span class="line">aapt d permissions app-release.apk</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<h1 id="lint相关"><a href="#lint相关" class="headerlink" title="lint相关"></a>lint相关</h1><h2 id="从命令行运行lint"><a href="#从命令行运行lint" class="headerlink" title="从命令行运行lint"></a><a href="https://developer.android.google.cn/studio/write/lint?hl=zh-cn">从命令行运行lint</a></h2><ul>
+<li><p>在Windows上</p>
+<figure class="highlight ebnf"><table><tr><td class="code"><pre><span class="line"><span class="attribute">gradlew lint</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在Linux或Mac上</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">./gradlew lint</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>如果项目包含“<a href="https://developer.android.google.cn/studio/build/build-variants?hl=zh-cn">构建变体</a>”，而您只想对某个特定的构建变体运行 <code>lint</code> 任务，您必须大写变体名称并在其前面加上 <code>lint</code> 前缀。</p>
+<figure class="highlight ebnf"><table><tr><td class="code"><pre><span class="line"><span class="attribute">gradlew lintDebug</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="检查无用资源"><a href="#检查无用资源" class="headerlink" title="检查无用资源"></a>检查无用资源</h2><ul>
+<li><p>AS 上 【推荐使用】</p>
+<figure class="highlight xl"><table><tr><td class="code"><pre><span class="line">A<span class="function"><span class="title">nalyze</span> -&gt;</span> R<span class="function"><span class="title">un</span> Inspection <span class="keyword">by</span> Name -&gt;</span> 输入：U<span class="function"><span class="title">nused</span> resources -&gt;</span> 跳出弹框选择范围即可</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>命令方式</p>
+<figure class="highlight ada"><table><tr><td class="code"><pre><span class="line">lint <span class="comment">--check UnusedResources &lt;project dir&gt;</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h1 id="keytool-相关"><a href="#keytool-相关" class="headerlink" title="keytool 相关"></a>keytool 相关</h1><h2 id="查看apk的签名"><a href="#查看apk的签名" class="headerlink" title="查看apk的签名"></a>查看apk的签名</h2><p>首先用解压软件解压出META-INF目录下的CERT.RSA文件</p>
+<figure class="highlight applescript"><table><tr><td class="code"><pre><span class="line">keytool -printcert -<span class="built_in">file</span> D:\Desktop\CERT.RSA</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="查看keystore的签名"><a href="#查看keystore的签名" class="headerlink" title="查看keystore的签名"></a>查看keystore的签名</h2><figure class="highlight livescript"><table><tr><td class="code"><pre><span class="line">keytool -<span class="keyword">list</span> -keystore D:<span class="string">\Desktop\app_key</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="查看keystore的签名-1"><a href="#查看keystore的签名-1" class="headerlink" title="查看keystore的签名"></a>查看keystore的签名</h2><figure class="highlight isbl"><table><tr><td class="code"><pre><span class="line"><span class="variable">keytool</span> -<span class="variable">list</span> -<span class="variable">v</span> -<span class="variable">keystore</span> <span class="variable">e</span>:\<span class="variable">debug.keystore</span> -<span class="variable">storepass</span> <span class="function"><span class="title">xxx</span>(密匙)</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/posts/5934b6dd/keytool%E5%BE%97%E5%88%B0%E7%9A%84%E5%BA%94%E7%94%A8%E7%AD%BE%E5%90%8D%E5%92%8C%E5%AE%89%E5%85%A8%E7%A0%81.jpg" alt="keytool得到的应用签名和安全码.png"></p>
+<blockquote>
+<p>其中的MD5去掉冒号就是”微信签名工具“得到的那串32位数（第三方参数文档中的”应用签名”)</p>
+<p>SHA1（对应第三方参数文档中”安全码“）</p>
+<p>去掉冒号的js代码：”CD:B0:3E:73:53:2B:C2:A2:54:5D:2E:75:67:74:BB:92”.replace(&#x2F;:&#x2F;g,””)</p>
+</blockquote>
+<h3 id="查看AS自带签名文件"><a href="#查看AS自带签名文件" class="headerlink" title="查看AS自带签名文件"></a>查看AS自带签名文件</h3><p><strong>Android Studio自带签名文件路径：（密码：android）</strong></p>
+<p><code>C:\Users\Administrator\.android\debug.keystore</code></p>
+<figure class="highlight moonscript"><table><tr><td class="code"><pre><span class="line">keytool -list -v -keystore <span class="name">C</span>:\Users\Administrator\.android\debug.keystore</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<h1 id="MonkeyRunner"><a href="#MonkeyRunner" class="headerlink" title="MonkeyRunner"></a>MonkeyRunner</h1><h2 id="执行键盘录制"><a href="#执行键盘录制" class="headerlink" title="执行键盘录制"></a>执行键盘录制</h2><h3 id="配置bat脚本，设置jdk环境"><a href="#配置bat脚本，设置jdk环境" class="headerlink" title="配置bat脚本，设置jdk环境"></a>配置bat脚本，设置jdk环境</h3><p>把 <a href="https://gist.github.com/LieutenantChips/ac05405324e40bb37da17a2d15408920">monkeyrunner.bat</a> 设置到环境变量中：把<code>D:\Android\SDK\tools\bin</code>添加到环境变量中；同时更改环境变量为jdk8</p>
+<h3 id="配置python脚本"><a href="#配置python脚本" class="headerlink" title="配置python脚本"></a>配置python脚本</h3><p><code>record.py</code></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env monkeyrunner</span></span><br><span class="line"><span class="comment"># Copyright 2010, The Android Open Source Project#</span></span><br><span class="line"><span class="comment"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span></span><br><span class="line"><span class="comment"># you may not use this file except in compliance with the License.</span></span><br><span class="line"><span class="comment"># You may obtain a copy of the License at#</span></span><br><span class="line"><span class="comment"># http://www.apache.org/licenses/LICENSE-2.0#</span></span><br><span class="line"><span class="comment"># Unless required by applicable law or agreed to in writing, software</span></span><br><span class="line"><span class="comment"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span></span><br><span class="line"><span class="comment"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span></span><br><span class="line"><span class="comment"># See the License for the specific language governing permissions and</span></span><br><span class="line"><span class="comment"># limitations under the License.</span></span><br><span class="line"><span class="keyword">from</span> com.android.monkeyrunner <span class="keyword">import</span> MonkeyRunner <span class="keyword">as</span> mr</span><br><span class="line"><span class="keyword">from</span> com.android.monkeyrunner.recorder <span class="keyword">import</span> MonkeyRecorder <span class="keyword">as</span> recorder</span><br><span class="line">device = mr.waitForConnection()</span><br><span class="line">recorder.start(device)</span><br></pre></td></tr></table></figure>
+
+<p><code>playback.py</code></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env monkeyrunner  </span></span><br><span class="line"><span class="comment"># Copyright 2010, The Android Open Source Project  </span></span><br><span class="line"><span class="comment">#  </span></span><br><span class="line"><span class="comment"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);  </span></span><br><span class="line"><span class="comment"># you may not use this file except in compliance with the License.  </span></span><br><span class="line"><span class="comment"># You may obtain a copy of the License at  </span></span><br><span class="line"><span class="comment">#  </span></span><br><span class="line"><span class="comment"># http://www.apache.org/licenses/LICENSE-2.0  </span></span><br><span class="line"><span class="comment">#  </span></span><br><span class="line"><span class="comment"># Unless required by applicable law or agreed to in writing, software  </span></span><br><span class="line"><span class="comment"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,  </span></span><br><span class="line"><span class="comment"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  </span></span><br><span class="line"><span class="comment"># See the License for the specific language governing permissions and  </span></span><br><span class="line"><span class="comment"># limitations under the License.   </span></span><br><span class="line"><span class="keyword">import</span> sys  </span><br><span class="line"><span class="keyword">from</span> com.android.monkeyrunner <span class="keyword">import</span> MonkeyRunner   </span><br><span class="line"><span class="comment"># The format of the file we are parsing is very carfeully constructed.  </span></span><br><span class="line"><span class="comment"># Each line corresponds to a single command. The line is split into 2  </span></span><br><span class="line"><span class="comment"># parts with a | character. Text to the left of the pipe denotes  </span></span><br><span class="line"><span class="comment"># which command to run. The text to the right of the pipe is a python  </span></span><br><span class="line"><span class="comment"># dictionary (it can be evaled into existence) that specifies the  </span></span><br><span class="line"><span class="comment"># arguments for the command. In most cases, this directly maps to the  </span></span><br><span class="line"><span class="comment"># keyword argument dictionary that could be passed to the underlying  </span></span><br><span class="line"><span class="comment"># command.   </span></span><br><span class="line"><span class="comment"># Lookup table to map command strings to functions that implement that  </span></span><br><span class="line"><span class="comment"># command.  </span></span><br><span class="line">CMD_MAP = &#123;  </span><br><span class="line">    <span class="string">&#x27;TOUCH&#x27;</span>: <span class="keyword">lambda</span> dev, arg: dev.touch(**arg),  </span><br><span class="line">    <span class="string">&#x27;DRAG&#x27;</span>: <span class="keyword">lambda</span> dev, arg: dev.drag(**arg),  </span><br><span class="line">    <span class="string">&#x27;PRESS&#x27;</span>: <span class="keyword">lambda</span> dev, arg: dev.press(**arg),  </span><br><span class="line">    <span class="string">&#x27;TYPE&#x27;</span>: <span class="keyword">lambda</span> dev, arg: dev.<span class="built_in">type</span>(**arg),  </span><br><span class="line">    <span class="string">&#x27;WAIT&#x27;</span>: <span class="keyword">lambda</span> dev, arg: MonkeyRunner.sleep(**arg)  </span><br><span class="line">    &#125;  </span><br><span class="line"><span class="comment"># Process a single file for the specified device.  </span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">process_file</span>(<span class="params">fp, device</span>):  </span><br><span class="line">    <span class="keyword">for</span> line <span class="keyword">in</span> fp:  </span><br><span class="line">        (cmd, rest) = line.split(<span class="string">&#x27;|&#x27;</span>)  </span><br><span class="line">        <span class="keyword">try</span>:  </span><br><span class="line">            <span class="comment"># Parse the pydict  </span></span><br><span class="line">            rest = <span class="built_in">eval</span>(rest)  </span><br><span class="line">        <span class="keyword">except</span>:  </span><br><span class="line">            <span class="built_in">print</span> <span class="string">&#x27;unable to parse options&#x27;</span>  </span><br><span class="line">            <span class="keyword">continue</span>   </span><br><span class="line">        <span class="keyword">if</span> cmd <span class="keyword">not</span> <span class="keyword">in</span> CMD_MAP:  </span><br><span class="line">            <span class="built_in">print</span> <span class="string">&#x27;unknown command: &#x27;</span> + cmd  </span><br><span class="line">            <span class="keyword">continue</span>   </span><br><span class="line">        CMD_MAP[cmd](device, rest)  </span><br><span class="line"><span class="keyword">def</span> <span class="title function_">main</span>():  </span><br><span class="line">    file = sys.argv[<span class="number">1</span>]  </span><br><span class="line">    fp = <span class="built_in">open</span>(file, <span class="string">&#x27;r&#x27;</span>)   </span><br><span class="line">    device = MonkeyRunner.waitForConnection()     </span><br><span class="line">    process_file(fp, device)  </span><br><span class="line">    fp.close();     </span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:  </span><br><span class="line">    main()</span><br></pre></td></tr></table></figure>
+
+<h3 id="执行录制脚本"><a href="#执行录制脚本" class="headerlink" title="执行录制脚本"></a>执行录制脚本</h3><figure class="highlight ada"><table><tr><td class="code"><pre><span class="line">monkeyrunner d:\replay\<span class="keyword">record</span>.py</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>wait： 用来插入下一次操作的时间间隔，点击后即可设置时间，单位是秒</p>
+<p>Press a Button：用来确定需要点击的按钮，包括menu、home、search，以及对按钮的press、down、up属性</p>
+<p>Type Something：用来输入内容到输入框</p>
+<p>Fling：用来进行拖动操作，可以向上、下、左、右，以及操作的范围</p>
+<p>Export Actions：用来导出脚本，不需要后缀名，也可以添加后缀名</p>
+<p>Refresh Display：用来刷新手机界面，估计只有在断开手机后，重新连接时才会用到</p>
+</blockquote>
+<p>点击“export actions”保存录制脚本到 <code>d:\replay\r</code></p>
+<h3 id="执行回放脚本"><a href="#执行回放脚本" class="headerlink" title="执行回放脚本"></a>执行回放脚本</h3><figure class="highlight livescript"><table><tr><td class="code"><pre><span class="line">monkeyrunner d:<span class="string">\replay\playback.py</span> d:<span class="string">\replay\r</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>其中r是上面录制的脚本文件</p>
+</blockquote>
+<h1 id="MonkeyRunner相关问题"><a href="#MonkeyRunner相关问题" class="headerlink" title="MonkeyRunner相关问题"></a>MonkeyRunner相关问题</h1><h2 id="如果录制脚本的时候报SWT-folder-39-framework-x86-64-39-does-not-exist-错误："><a href="#如果录制脚本的时候报SWT-folder-39-framework-x86-64-39-does-not-exist-错误：" class="headerlink" title="如果录制脚本的时候报SWT folder &#39;..\framework\x86_64&#39; does not exist.错误："></a><a href="https://www.jianshu.com/p/744324ac6ce8">如果录制脚本的时候报<code>SWT folder &#39;..\framework\x86_64&#39; does not exist.</code>错误：</a></h2><p>那么打开 <a href="https://gist.github.com/LieutenantChips/ac05405324e40bb37da17a2d15408920">monkeyrunner.bat</a> 更改：</p>
+<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">.<span class="built_in">set</span> <span class="attribute">frameworkdir</span>=lib （纠正）==》<span class="built_in">set</span> <span class="attribute">frameworkdir</span>=..\lib </span><br><span class="line"></span><br><span class="line">.Dcom.android.monkeyrunner.<span class="attribute">bindir</span>=..\framework -jar %jarpath% %* （纠正）==》Dcom.android.monkeyrunner.<span class="attribute">bindir</span>=..\..\platform-tools -jar %jarpath% %*</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+]]></content>
+      <categories>
+        <category>Android</category>
+      </categories>
+      <tags>
+        <tag>安卓命令相关</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>命令相关-ADB</title>
     <url>/posts/172981137/</url>
     <content><![CDATA[<p><a href="https://developer.android.google.cn/studio/command-line/adb?hl=zh-cn">adb官方链接</a></p>
@@ -12028,8 +12439,92 @@ String 是一个比较特殊的类(str01: static final 修饰的变量不可变 
 <h2 id="查看系统当前内存使用情况"><a href="#查看系统当前内存使用情况" class="headerlink" title="查看系统当前内存使用情况"></a>查看系统当前内存使用情况</h2><figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line">adb <span class="keyword">shell</span><span class="language-bash"> <span class="built_in">cat</span> /proc/meminfo</span></span><br></pre></td></tr></table></figure>
 
 <h3 id="查看指定包名应用内存使用情况"><a href="#查看指定包名应用内存使用情况" class="headerlink" title="查看指定包名应用内存使用情况"></a>查看指定包名应用内存使用情况</h3><p><code>adb shell dumpsys meminfo package</code></p>
+<p>示例：【因为命令行窗口展示不全所以打印到具体文件中】</p>
+<figure class="highlight stata"><table><tr><td class="code"><pre><span class="line">adb <span class="keyword">shell</span> dumpsys meminfo com.xm597.<span class="keyword">app</span> &gt;<span class="keyword">d</span>:meminfo.txt</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight mathematica"><table><tr><td class="code"><pre><span class="line"><span class="variable">Applications</span> <span class="variable">Memory</span> <span class="variable">Usage</span> <span class="punctuation">(</span><span class="variable">in</span> <span class="variable">Kilobytes</span><span class="punctuation">)</span><span class="operator">:</span> <span class="operator">//</span>应用程序内存使用情况（以千字节为单位）</span><br><span class="line"><span class="variable">Uptime</span><span class="operator">:</span> <span class="number">2398651762</span> <span class="variable">Realtime</span><span class="operator">:</span> <span class="number">2398651762</span> <span class="operator">//</span>运行时间、实时</span><br><span class="line"></span><br><span class="line"><span class="built_in">Total</span> <span class="variable">PSS</span> <span class="variable">by</span> <span class="variable">process</span><span class="operator">:</span> <span class="operator">//</span>按进程的总 <span class="variable">PSS</span>（<span class="built_in">Proportional</span> <span class="built_in">Set</span> <span class="variable">Size</span>）</span><br><span class="line">    <span class="number">474</span><span class="operator">,</span><span class="number">082</span><span class="built_in">K</span><span class="operator">:</span> <span class="variable">com</span><span class="operator">.</span><span class="variable">tencent</span><span class="operator">.</span><span class="variable">mm</span> <span class="punctuation">(</span><span class="variable">pid</span> <span class="number">12503</span><span class="punctuation">)</span></span><br><span class="line">    <span class="number">344</span><span class="operator">,</span><span class="number">542</span><span class="built_in">K</span><span class="operator">:</span> <span class="type">system_server</span> <span class="punctuation">(</span><span class="variable">pid</span> <span class="number">1917</span><span class="punctuation">)</span></span><br><span class="line">    。。。</span><br><span class="line"></span><br><span class="line"><span class="built_in">Total</span> <span class="variable">PSS</span> <span class="variable">by</span> <span class="variable">OOM</span> <span class="variable">adjustment</span><span class="operator">:</span> <span class="operator">//</span>按 <span class="variable">OOM</span>（<span class="built_in">Out</span> <span class="variable">of</span> <span class="variable">Memory</span>）调整的总 <span class="variable">PSS</span></span><br><span class="line">  <span class="number">6</span><span class="operator">,</span><span class="number">016</span><span class="operator">,</span><span class="number">369</span><span class="built_in">K</span><span class="operator">:</span> <span class="variable">Native</span> <span class="operator">//</span>本机（<span class="variable">Native</span>）</span><br><span class="line">        <span class="number">474</span><span class="operator">,</span><span class="number">082</span><span class="built_in">K</span><span class="operator">:</span> <span class="variable">com</span><span class="operator">.</span><span class="variable">tencent</span><span class="operator">.</span><span class="variable">mm</span> <span class="punctuation">(</span><span class="variable">pid</span> <span class="number">12503</span><span class="punctuation">)</span></span><br><span class="line">        <span class="number">344</span><span class="operator">,</span><span class="number">542</span><span class="built_in">K</span><span class="operator">:</span> <span class="type">system_server</span> <span class="punctuation">(</span><span class="variable">pid</span> <span class="number">1917</span><span class="punctuation">)</span></span><br><span class="line">        <span class="number">314</span><span class="operator">,</span><span class="number">535</span><span class="built_in">K</span><span class="operator">:</span> <span class="variable">com</span><span class="operator">.</span><span class="variable">sina</span><span class="operator">.</span><span class="variable">weibo</span> <span class="punctuation">(</span><span class="variable">pid</span> <span class="number">4753</span><span class="punctuation">)</span></span><br><span class="line">        。。。</span><br><span class="line">    <span class="number">226</span><span class="operator">,</span><span class="number">120</span><span class="built_in">K</span><span class="operator">:</span> <span class="variable">Foreground</span> <span class="operator">//</span>前台（<span class="variable">Foreground</span>）</span><br><span class="line">        <span class="number">226</span><span class="operator">,</span><span class="number">120</span><span class="built_in">K</span><span class="operator">:</span> <span class="variable">com</span><span class="operator">.</span><span class="variable">xm597</span><span class="operator">.</span><span class="variable">app</span> <span class="punctuation">(</span><span class="variable">pid</span> <span class="number">10282</span> <span class="operator">/</span> <span class="variable">activities</span><span class="punctuation">)</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">Total</span> <span class="variable">PSS</span> <span class="variable">by</span> <span class="variable">category</span><span class="operator">:</span> <span class="operator">//</span>按类别的总 <span class="variable">PSS</span></span><br><span class="line">    <span class="number">692</span><span class="operator">,</span><span class="number">168</span><span class="built_in">K</span><span class="operator">:</span> <span class="variable">Native</span> <span class="operator">//</span>本机（<span class="variable">Native</span>）</span><br><span class="line">    <span class="number">566</span><span class="operator">,</span><span class="number">750</span><span class="built_in">K</span><span class="operator">:</span> <span class="operator">.</span><span class="variable">art</span> <span class="variable">mmap</span></span><br><span class="line">    <span class="number">492</span><span class="operator">,</span><span class="number">547</span><span class="built_in">K</span><span class="operator">:</span> <span class="operator">.</span><span class="variable">dex</span> <span class="variable">mmap</span></span><br><span class="line">    <span class="number">460</span><span class="operator">,</span><span class="number">641</span><span class="built_in">K</span><span class="operator">:</span> <span class="variable">Dalvik</span></span><br><span class="line">    <span class="number">428</span><span class="operator">,</span><span class="number">202</span><span class="built_in">K</span><span class="operator">:</span> <span class="operator">.</span><span class="variable">so</span> <span class="variable">mmap</span></span><br><span class="line">    <span class="number">337</span><span class="operator">,</span><span class="number">887</span><span class="built_in">K</span><span class="operator">:</span> <span class="variable">Unknown</span></span><br><span class="line">    <span class="number">289</span><span class="operator">,</span><span class="number">652</span><span class="built_in">K</span><span class="operator">:</span> <span class="variable">EGL</span> <span class="variable">mtrack</span></span><br><span class="line">    <span class="number">281</span><span class="operator">,</span><span class="number">160</span><span class="built_in">K</span><span class="operator">:</span> <span class="variable">GL</span> <span class="variable">mtrack</span></span><br><span class="line">    <span class="number">264</span><span class="operator">,</span><span class="number">478</span><span class="built_in">K</span><span class="operator">:</span> <span class="operator">.</span><span class="variable">apk</span> <span class="variable">mmap</span></span><br><span class="line">    <span class="number">122</span><span class="operator">,</span><span class="number">646</span><span class="built_in">K</span><span class="operator">:</span> <span class="variable">Dalvik</span> <span class="variable">Other</span></span><br><span class="line">     <span class="number">73</span><span class="operator">,</span><span class="number">943</span><span class="built_in">K</span><span class="operator">:</span> <span class="variable">Other</span> <span class="variable">mmap</span></span><br><span class="line">     <span class="number">57</span><span class="operator">,</span><span class="number">874</span><span class="built_in">K</span><span class="operator">:</span> <span class="operator">.</span><span class="variable">jar</span> <span class="variable">mmap</span></span><br><span class="line">     <span class="number">43</span><span class="operator">,</span><span class="number">450</span><span class="built_in">K</span><span class="operator">:</span> <span class="operator">.</span><span class="variable">oat</span> <span class="variable">mmap</span></span><br><span class="line">     <span class="number">10</span><span class="operator">,</span><span class="number">436</span><span class="built_in">K</span><span class="operator">:</span> <span class="operator">.</span><span class="variable">ttf</span> <span class="variable">mmap</span></span><br><span class="line">      <span class="number">3</span><span class="operator">,</span><span class="number">364</span><span class="built_in">K</span><span class="operator">:</span> <span class="built_in">Stack</span>  <span class="operator">//</span>堆栈（<span class="built_in">Stack</span>）</span><br><span class="line">      <span class="number">2</span><span class="operator">,</span><span class="number">088</span><span class="built_in">K</span><span class="operator">:</span> <span class="variable">Other</span> <span class="variable">dev</span> <span class="operator">//</span>其他开发（<span class="variable">Other</span> <span class="variable">dev</span>）</span><br><span class="line">      <span class="number">1</span><span class="operator">,</span><span class="number">467</span><span class="built_in">K</span><span class="operator">:</span> <span class="variable">Ashmem</span></span><br><span class="line">          <span class="number">0</span><span class="built_in">K</span><span class="operator">:</span> <span class="variable">Cursor</span> <span class="operator">//</span>游标（<span class="variable">Cursor</span>）</span><br><span class="line">          <span class="number">0</span><span class="built_in">K</span><span class="operator">:</span> <span class="variable">Gfx</span> <span class="variable">dev</span></span><br><span class="line">          <span class="number">0</span><span class="built_in">K</span><span class="operator">:</span> <span class="variable">Other</span> <span class="variable">mtrack</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">Total</span> <span class="variable">RAM</span><span class="operator">:</span> <span class="number">7</span><span class="operator">,</span><span class="number">788</span><span class="operator">,</span><span class="number">984</span><span class="built_in">K</span> <span class="punctuation">(</span><span class="variable">status</span> <span class="variable">normal</span><span class="punctuation">)</span> <span class="operator">//</span>总 <span class="variable">RAM</span><span class="operator">:</span> <span class="number">7</span><span class="operator">,</span><span class="number">788</span><span class="operator">,</span><span class="number">984</span><span class="built_in">K</span> <span class="punctuation">(</span>状态正常<span class="punctuation">)</span></span><br><span class="line"> <span class="variable">Free</span> <span class="variable">RAM</span><span class="operator">:</span> <span class="number">1</span><span class="operator">,</span><span class="number">844</span><span class="operator">,</span><span class="number">924</span><span class="built_in">K</span> <span class="punctuation">(</span>        <span class="number">0</span><span class="built_in">K</span> <span class="variable">cached</span> <span class="variable">pss</span> <span class="operator">+</span> <span class="number">1</span><span class="operator">,</span><span class="number">591</span><span class="operator">,</span><span class="number">928</span><span class="built_in">K</span> <span class="variable">cached</span> <span class="variable">kernel</span> <span class="operator">+</span>   <span class="number">252</span><span class="operator">,</span><span class="number">996</span><span class="built_in">K</span> <span class="variable">free</span><span class="punctuation">)</span> <span class="operator">//</span>空闲 <span class="variable">RAM</span></span><br><span class="line"> <span class="variable">Used</span> <span class="variable">RAM</span><span class="operator">:</span> <span class="number">6</span><span class="operator">,</span><span class="number">932</span><span class="operator">,</span><span class="number">701</span><span class="built_in">K</span> <span class="punctuation">(</span><span class="number">6</span><span class="operator">,</span><span class="number">242</span><span class="operator">,</span><span class="number">489</span><span class="built_in">K</span> <span class="variable">used</span> <span class="variable">pss</span> <span class="operator">+</span>   <span class="number">690</span><span class="operator">,</span><span class="number">212</span><span class="built_in">K</span> <span class="variable">kernel</span><span class="punctuation">)</span> <span class="operator">//</span>已用 <span class="variable">RAM</span></span><br><span class="line"> <span class="variable">Lost</span> <span class="variable">RAM</span><span class="operator">:</span>   <span class="number">511</span><span class="operator">,</span><span class="number">031</span><span class="built_in">K</span> <span class="operator">//</span>丢失的 <span class="variable">RAM</span><span class="operator">:</span></span><br><span class="line">     <span class="variable">ZRAM</span><span class="operator">:</span>   <span class="number">614</span><span class="operator">,</span><span class="number">064</span><span class="built_in">K</span> <span class="variable">physical</span> <span class="variable">used</span> <span class="variable">for</span> <span class="number">2</span><span class="operator">,</span><span class="number">145</span><span class="operator">,</span><span class="number">976</span><span class="built_in">K</span> <span class="variable">in</span> <span class="variable">swap</span> <span class="punctuation">(</span><span class="number">4</span><span class="operator">,</span><span class="number">194</span><span class="operator">,</span><span class="number">300</span><span class="built_in">K</span> <span class="variable">total</span> <span class="variable">swap</span><span class="punctuation">)</span> <span class="operator">//</span><span class="number">614</span><span class="operator">,</span><span class="number">064</span><span class="built_in">K</span> 物理用于 <span class="number">2</span><span class="operator">,</span><span class="number">145</span><span class="operator">,</span><span class="number">976</span><span class="built_in">K</span> 在交换中 <span class="punctuation">(</span>总交换 <span class="number">4</span><span class="operator">,</span><span class="number">194</span><span class="operator">,</span><span class="number">300</span><span class="built_in">K</span><span class="punctuation">)</span></span><br><span class="line">   <span class="variable">Tuning</span><span class="operator">:</span> <span class="number">384</span> <span class="punctuation">(</span><span class="variable">large</span> <span class="number">512</span><span class="punctuation">)</span><span class="operator">,</span> <span class="variable">oom</span>   <span class="number">322</span><span class="operator">,</span><span class="number">560</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">restore</span> <span class="variable">limit</span>   <span class="number">107</span><span class="operator">,</span><span class="number">520</span><span class="built_in">K</span> <span class="punctuation">(</span><span class="variable">high</span><span class="operator">-</span><span class="variable">end</span><span class="operator">-</span><span class="variable">gfx</span><span class="punctuation">)</span> <span class="operator">//</span><span class="number">384</span> <span class="punctuation">(</span>大 <span class="number">512</span><span class="punctuation">)</span>，<span class="variable">oom</span> <span class="number">322</span><span class="operator">,</span><span class="number">560</span><span class="built_in">K</span>，恢复限制 <span class="number">107</span><span class="operator">,</span><span class="number">520</span><span class="built_in">K</span> <span class="punctuation">(</span>高端图形<span class="punctuation">)</span></span><br></pre></td></tr></table></figure>
 <h3 id="内存top10【3秒刷新一次】"><a href="#内存top10【3秒刷新一次】" class="headerlink" title="内存top10【3秒刷新一次】"></a>内存top10【3秒刷新一次】</h3><figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">adb</span> shell</span><br><span class="line"><span class="attribute">top</span> -m <span class="number">10</span> -d <span class="number">3</span></span><br></pre></td></tr></table></figure>
 
+<p>示例：</p>
+<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">Tasks</span>: <span class="number">719</span> total,   <span class="number">3</span> running, <span class="number">715</span> sleeping,   <span class="number">0</span> stopped,   <span class="number">1</span> zombie</span><br><span class="line">  <span class="attribute">Mem</span>:      <span class="number">7</span>.<span class="number">4</span>G total,      <span class="number">7</span>.<span class="number">1</span>G used,      <span class="number">324</span>M free,      <span class="number">8</span>.<span class="number">9</span>M buffers</span><br><span class="line"> <span class="attribute">Swap</span>:      <span class="number">4</span>.<span class="number">0</span>G total,      <span class="number">2</span>.<span class="number">2</span>G used,      <span class="number">1</span>.<span class="number">7</span>G free,      <span class="number">2</span>.<span class="number">4</span>G cached</span><br><span class="line"><span class="attribute">800</span>%cpu   <span class="number">9</span>%user   <span class="number">1</span>%nice  <span class="number">10</span>%sys <span class="number">775</span>%idle   <span class="number">0</span>%iow   <span class="number">3</span>%irq   <span class="number">2</span>%sirq   <span class="number">0</span>%host</span><br><span class="line">  <span class="attribute">PID</span> USER         PR  NI VIRT  RES  SHR S[%CPU] %MEM     TIME+ ARGS</span><br><span class="line"> <span class="attribute">1917</span> system       <span class="number">20</span>   <span class="number">0</span>  <span class="number">12</span>G <span class="number">340</span>M <span class="number">199</span>M S  <span class="number">4</span>.<span class="number">3</span>   <span class="number">4</span>.<span class="number">4</span> <span class="number">274</span>:<span class="number">09</span>.<span class="number">49</span> system_server</span><br><span class="line"><span class="attribute">11285</span> shell        <span class="number">20</span>   <span class="number">0</span>  <span class="number">30</span>M <span class="number">5</span>.<span class="number">0</span>M <span class="number">3</span>.<span class="number">4</span>M R  <span class="number">2</span>.<span class="number">3</span>   <span class="number">0</span>.<span class="number">0</span>   <span class="number">0</span>:<span class="number">00</span>.<span class="number">35</span> top -m <span class="number">10</span> -d <span class="number">3</span></span><br><span class="line"> <span class="attribute">9677</span> u0_a548      <span class="number">20</span>   <span class="number">0</span>  <span class="number">42</span>G <span class="number">261</span>M <span class="number">208</span>M S  <span class="number">2</span>.<span class="number">3</span>   <span class="number">3</span>.<span class="number">4</span>   <span class="number">4</span>:<span class="number">26</span>.<span class="number">66</span> com.mihoyo.hyperion</span><br><span class="line"><span class="attribute">10282</span> u0_a708      <span class="number">10</span> -<span class="number">10</span>  <span class="number">40</span>G <span class="number">417</span>M <span class="number">194</span>M S  <span class="number">1</span>.<span class="number">6</span>   <span class="number">5</span>.<span class="number">4</span>   <span class="number">0</span>:<span class="number">09</span>.<span class="number">26</span> com.xm597.app</span><br><span class="line"> <span class="attribute">5944</span> u0_a216      <span class="number">20</span>   <span class="number">0</span> <span class="number">6</span>.<span class="number">6</span>G <span class="number">296</span>M <span class="number">204</span>M S  <span class="number">1</span>.<span class="number">3</span>   <span class="number">3</span>.<span class="number">8</span>   <span class="number">1</span>:<span class="number">25</span>.<span class="number">20</span> com.alibaba.android.+</span><br><span class="line"> <span class="attribute">5726</span> u0_a216      <span class="number">20</span>   <span class="number">0</span>  <span class="number">57</span>G <span class="number">531</span>M <span class="number">383</span>M S  <span class="number">1</span>.<span class="number">3</span>   <span class="number">6</span>.<span class="number">9</span>   <span class="number">2</span>:<span class="number">20</span>.<span class="number">80</span> com.alibaba.android.+</span><br><span class="line"><span class="attribute">21543</span> root         RT   <span class="number">0</span> <span class="number">172</span>M <span class="number">7</span>.<span class="number">2</span>M <span class="number">5</span>.<span class="number">9</span>M R  <span class="number">1</span>.<span class="number">3</span>   <span class="number">0</span>.<span class="number">0</span>   <span class="number">0</span>:<span class="number">12</span>.<span class="number">88</span> aptouch_daemon</span><br><span class="line"> <span class="attribute">9561</span> root         <span class="number">20</span>   <span class="number">0</span>    <span class="number">0</span>    <span class="number">0</span>    <span class="number">0</span> I  <span class="number">0</span>.<span class="number">6</span>   <span class="number">0</span>.<span class="number">0</span>   <span class="number">0</span>:<span class="number">04</span>.<span class="number">41</span><span class="meta"> [kworker/u16:3]</span></span><br><span class="line"> <span class="attribute">9106</span> root         <span class="number">20</span>   <span class="number">0</span>    <span class="number">0</span>    <span class="number">0</span>    <span class="number">0</span> I  <span class="number">0</span>.<span class="number">6</span>   <span class="number">0</span>.<span class="number">0</span>   <span class="number">0</span>:<span class="number">07</span>.<span class="number">22</span><span class="meta"> [kworker/u16:4]</span></span><br><span class="line"><span class="attribute">20790</span> u0_a89        <span class="number">1</span> -<span class="number">19</span> <span class="number">7</span>.<span class="number">5</span>G <span class="number">165</span>M <span class="number">152</span>M S  <span class="number">0</span>.<span class="number">6</span>   <span class="number">2</span>.<span class="number">1</span>   <span class="number">1</span>:<span class="number">07</span>.<span class="number">34</span> com.huawei.hwid.core</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>[!参数解释]  </p>
+<h3 id="任务相关的参数"><a href="#任务相关的参数" class="headerlink" title="任务相关的参数"></a>任务相关的参数</h3><ol>
+<li><strong>Tasks</strong>（任务）:<ul>
+<li><strong>Total</strong>: 表示系统中总共有多少个任务（进程）。在此例中是 719 个。</li>
+<li><strong>Running</strong>: 当前正在运行的任务数量。在此例中是 3 个。</li>
+<li><strong>Sleeping</strong>: 当前处于“休眠”状态的任务数量，即正在等待某些事件（如 I&#x2F;O 操作）的进程。此例中是 715 个。</li>
+<li><strong>Stopped</strong>: 当前被停止的任务数量。此例为 0。</li>
+<li><strong>Zombie</strong>: 僵尸进程的数量。这是已经完成，但尚未被其父进程收集的进程。在此例中是 1 个。</li>
+</ul>
+</li>
+</ol>
+<h3 id="内存使用情况参数"><a href="#内存使用情况参数" class="headerlink" title="内存使用情况参数"></a>内存使用情况参数</h3><ol start="2">
+<li><p><strong>Mem</strong>（内存）:</p>
+<ul>
+<li><strong>Total</strong>: 总内存大小，单位为 GB（千兆字节）。在此例中是 7.4G。</li>
+<li><strong>Used</strong>: 已使用的内存量。此例中是 7.1G，这表示系统内存几乎耗尽。</li>
+<li><strong>Free</strong>: 当前空闲的内存，表示可以使用的内存量。此例中是 324M（兆字节）。</li>
+<li><strong>Buffers</strong>: 内核用于临时保存文件的缓冲区的内存量，帮助提高 I&#x2F;O 性能。在此例中是 8.9M。</li>
+</ul>
+</li>
+<li><p><strong>Swap</strong>（交换空间）:</p>
+<ul>
+<li><strong>Total</strong>: 总交换空间的大小。此例中是 4.0G。</li>
+<li><strong>Used</strong>: 已使用的交换空间。此例中是 2.2G，表明还有一部分交换空间可用。</li>
+<li><strong>Free</strong>: 当前可用的交换空间。此例中是 1.7G。</li>
+<li><strong>Cached</strong>: 被缓存以加速访问的数据量。此例中为 2.4G。</li>
+</ul>
+</li>
+</ol>
+<h3 id="CPU-使用情况参数"><a href="#CPU-使用情况参数" class="headerlink" title="CPU 使用情况参数"></a>CPU 使用情况参数</h3><ol start="4">
+<li><strong>CPU</strong>:<ul>
+<li><strong>CPU%</strong>: 显示系统总的 CPU 使用情况。800%代表可以用的最大 CPU 时间（如在 8 核心的系统中，每个核心最多 100%）。</li>
+<li><strong>%user</strong>: 在用户空间中运行的进程所占用的 CPU 百分比。在此例中为 9%。</li>
+<li><strong>%nice</strong>: 以“好”优先级（nice priority）运行的进程占用的 CPU 百分比。在此例中为 1%。</li>
+<li><strong>%sys</strong>: 内核和系统进程占用的 CPU 百分比。在此例中为 10%。</li>
+<li><strong>%idle</strong>: CPU 处于空闲状态的百分比。在此例中高达 775%，这表明系统有大量空闲 CPU。</li>
+<li><strong>%iowait</strong>: 进程等待 I&#x2F;O 操作所占用的 CPU 百分比。此例为 0%，表示没有进程因 I&#x2F;O 等待而占用 CPU。</li>
+<li><strong>%irq</strong>: 硬中断占用 CPU 的百分比。在此例中为 3%。</li>
+<li><strong>%sirq</strong>: 软件中断占用 CPU 的百分比。在此例中为 2%。</li>
+<li><strong>%host</strong>: 此值为 0，表示没有被标记为主机进程占用。</li>
+</ul>
+</li>
+</ol>
+<h3 id="进程相关的参数（进程列表）"><a href="#进程相关的参数（进程列表）" class="headerlink" title="进程相关的参数（进程列表）"></a>进程相关的参数（进程列表）</h3><p>每个进程的表格包含以下参数：</p>
+<ol start="5">
+<li><p><strong>PID</strong>: 进程标识符。每个进程都有一个唯一的 PID。</p>
+</li>
+<li><p><strong>USER</strong>: 启动该进程的用户。</p>
+</li>
+<li><p><strong>PR</strong>: 进程的优先级（Priority）。数值越低优先级越高。</p>
+</li>
+<li><p><strong>NI</strong>: niceness值，影响用户进程的优先级（正值降低优先级，负值提升优先级）。</p>
+</li>
+<li><p><strong>VIRT</strong>: 进程所使用的虚拟内存量，包括内存使用量、交换空间、共享库等。</p>
+</li>
+<li><p><strong>RES</strong>: 进程占用的实际物理内存（RAM）的量。</p>
+</li>
+<li><p><strong>SHR</strong>: 进程共享的内存（如共享库）量。</p>
+</li>
+<li><p><strong>S</strong>: 进程状态：</p>
+<ul>
+<li><strong>R</strong>: 正在运行。</li>
+<li><strong>S</strong>: 休眠中。</li>
+<li><strong>I</strong>: 空闲。</li>
+<li>其他状态也会被标记。</li>
+</ul>
+</li>
+<li><p><strong>%CPU</strong>: 该进程所占用的 CPU 百分比。</p>
+</li>
+<li><p><strong>%MEM</strong>: 该进程所占用的内存百分比。</p>
+</li>
+<li><p><strong>TIME+</strong>: 进程所使用的 CPU 总时间。</p>
+</li>
+<li><p><strong>ARGS</strong>: 执行该进程的命令或名称。</p>
+</li>
+</ol>
+</blockquote>
 <h3 id="查看某个进程的使用情况"><a href="#查看某个进程的使用情况" class="headerlink" title="查看某个进程的使用情况"></a>查看某个进程的使用情况</h3><figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">adb</span> shell</span><br><span class="line"><span class="attribute">top</span> -d <span class="number">0</span>.<span class="number">5</span> | grep <span class="number">13588</span></span><br></pre></td></tr></table></figure>
 
 <blockquote>
@@ -12468,102 +12963,6 @@ String 是一个比较特殊的类(str01: static final 修饰的变量不可变 
 <p>原因：类包中gson包不能export出去，一export出去那么就不能启动另一个程序CloudTestWeb</p>
 <p>CloudTest的类包导出情况截图如下：</p>
 <p><img src="http://ww1.sinaimg.cn/large/981009fdly1gi4ctbalxtj20kt0ki77w.jpg" alt="程序中用命令行启动另一个程序失败.png"></p>
-]]></content>
-      <categories>
-        <category>Android</category>
-      </categories>
-      <tags>
-        <tag>安卓命令相关</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>命令相关-Aapt</title>
-    <url>/posts/5934b6dd/</url>
-    <content><![CDATA[<h1 id="aapt相关"><a href="#aapt相关" class="headerlink" title="aapt相关"></a>aapt相关</h1><p>要使用aapt命令前提是要把它加入到环境变量中</p>
-<p>如：<code>%SDK_HOME%\build-tools\33.0.0\</code></p>
-<h2 id="查看apk有哪些权限"><a href="#查看apk有哪些权限" class="headerlink" title="查看apk有哪些权限"></a>查看apk有哪些权限</h2> <figure class="highlight arduino"><table><tr><td class="code"><pre><span class="line">aapt d permissions app-release.apk</span><br></pre></td></tr></table></figure>
-
-
-
-
-
-
-
-<h1 id="lint相关"><a href="#lint相关" class="headerlink" title="lint相关"></a>lint相关</h1><h2 id="从命令行运行lint"><a href="#从命令行运行lint" class="headerlink" title="从命令行运行lint"></a><a href="https://developer.android.google.cn/studio/write/lint?hl=zh-cn">从命令行运行lint</a></h2><ul>
-<li><p>在Windows上</p>
-<figure class="highlight ebnf"><table><tr><td class="code"><pre><span class="line"><span class="attribute">gradlew lint</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>在Linux或Mac上</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">./gradlew lint</span><br></pre></td></tr></table></figure></li>
-</ul>
-<p>如果项目包含“<a href="https://developer.android.google.cn/studio/build/build-variants?hl=zh-cn">构建变体</a>”，而您只想对某个特定的构建变体运行 <code>lint</code> 任务，您必须大写变体名称并在其前面加上 <code>lint</code> 前缀。</p>
-<figure class="highlight ebnf"><table><tr><td class="code"><pre><span class="line"><span class="attribute">gradlew lintDebug</span></span><br></pre></td></tr></table></figure>
-
-
-
-
-
-<h2 id="检查无用资源"><a href="#检查无用资源" class="headerlink" title="检查无用资源"></a>检查无用资源</h2><ul>
-<li><p>AS 上 【推荐使用】</p>
-<figure class="highlight xl"><table><tr><td class="code"><pre><span class="line">A<span class="function"><span class="title">nalyze</span> -&gt;</span> R<span class="function"><span class="title">un</span> Inspection <span class="keyword">by</span> Name -&gt;</span> 输入：U<span class="function"><span class="title">nused</span> resources -&gt;</span> 跳出弹框选择范围即可</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>命令方式</p>
-<figure class="highlight ada"><table><tr><td class="code"><pre><span class="line">lint <span class="comment">--check UnusedResources &lt;project dir&gt;</span></span><br></pre></td></tr></table></figure></li>
-</ul>
-<h1 id="keytool-相关"><a href="#keytool-相关" class="headerlink" title="keytool 相关"></a>keytool 相关</h1><h2 id="查看apk的签名"><a href="#查看apk的签名" class="headerlink" title="查看apk的签名"></a>查看apk的签名</h2><p>首先用解压软件解压出META-INF目录下的CERT.RSA文件</p>
-<figure class="highlight applescript"><table><tr><td class="code"><pre><span class="line">keytool -printcert -<span class="built_in">file</span> D:\Desktop\CERT.RSA</span><br></pre></td></tr></table></figure>
-
-
-<h2 id="查看keystore的签名"><a href="#查看keystore的签名" class="headerlink" title="查看keystore的签名"></a>查看keystore的签名</h2><figure class="highlight livescript"><table><tr><td class="code"><pre><span class="line">keytool -<span class="keyword">list</span> -keystore D:<span class="string">\Desktop\app_key</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="查看keystore的签名-1"><a href="#查看keystore的签名-1" class="headerlink" title="查看keystore的签名"></a>查看keystore的签名</h2><figure class="highlight isbl"><table><tr><td class="code"><pre><span class="line"><span class="variable">keytool</span> -<span class="variable">list</span> -<span class="variable">v</span> -<span class="variable">keystore</span> <span class="variable">e</span>:\<span class="variable">debug.keystore</span> -<span class="variable">storepass</span> <span class="function"><span class="title">xxx</span>(密匙)</span></span><br></pre></td></tr></table></figure>
-
-<p><img src="/posts/5934b6dd/keytool%E5%BE%97%E5%88%B0%E7%9A%84%E5%BA%94%E7%94%A8%E7%AD%BE%E5%90%8D%E5%92%8C%E5%AE%89%E5%85%A8%E7%A0%81.jpg" alt="keytool得到的应用签名和安全码.png"></p>
-<blockquote>
-<p>其中的MD5去掉冒号就是”微信签名工具“得到的那串32位数（第三方参数文档中的”应用签名”)</p>
-<p>SHA1（对应第三方参数文档中”安全码“）</p>
-<p>去掉冒号的js代码：”CD:B0:3E:73:53:2B:C2:A2:54:5D:2E:75:67:74:BB:92”.replace(&#x2F;:&#x2F;g,””)</p>
-</blockquote>
-<h3 id="查看AS自带签名文件"><a href="#查看AS自带签名文件" class="headerlink" title="查看AS自带签名文件"></a>查看AS自带签名文件</h3><p><strong>Android Studio自带签名文件路径：（密码：android）</strong></p>
-<p><code>C:\Users\Administrator\.android\debug.keystore</code></p>
-<figure class="highlight moonscript"><table><tr><td class="code"><pre><span class="line">keytool -list -v -keystore <span class="name">C</span>:\Users\Administrator\.android\debug.keystore</span><br></pre></td></tr></table></figure>
-
-
-
-
-
-
-
-<h1 id="MonkeyRunner"><a href="#MonkeyRunner" class="headerlink" title="MonkeyRunner"></a>MonkeyRunner</h1><h2 id="执行键盘录制"><a href="#执行键盘录制" class="headerlink" title="执行键盘录制"></a>执行键盘录制</h2><h3 id="配置bat脚本，设置jdk环境"><a href="#配置bat脚本，设置jdk环境" class="headerlink" title="配置bat脚本，设置jdk环境"></a>配置bat脚本，设置jdk环境</h3><p>把 <a href="https://gist.github.com/LieutenantChips/ac05405324e40bb37da17a2d15408920">monkeyrunner.bat</a> 设置到环境变量中：把<code>D:\Android\SDK\tools\bin</code>添加到环境变量中；同时更改环境变量为jdk8</p>
-<h3 id="配置python脚本"><a href="#配置python脚本" class="headerlink" title="配置python脚本"></a>配置python脚本</h3><p><code>record.py</code></p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env monkeyrunner</span></span><br><span class="line"><span class="comment"># Copyright 2010, The Android Open Source Project#</span></span><br><span class="line"><span class="comment"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span></span><br><span class="line"><span class="comment"># you may not use this file except in compliance with the License.</span></span><br><span class="line"><span class="comment"># You may obtain a copy of the License at#</span></span><br><span class="line"><span class="comment"># http://www.apache.org/licenses/LICENSE-2.0#</span></span><br><span class="line"><span class="comment"># Unless required by applicable law or agreed to in writing, software</span></span><br><span class="line"><span class="comment"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span></span><br><span class="line"><span class="comment"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span></span><br><span class="line"><span class="comment"># See the License for the specific language governing permissions and</span></span><br><span class="line"><span class="comment"># limitations under the License.</span></span><br><span class="line"><span class="keyword">from</span> com.android.monkeyrunner <span class="keyword">import</span> MonkeyRunner <span class="keyword">as</span> mr</span><br><span class="line"><span class="keyword">from</span> com.android.monkeyrunner.recorder <span class="keyword">import</span> MonkeyRecorder <span class="keyword">as</span> recorder</span><br><span class="line">device = mr.waitForConnection()</span><br><span class="line">recorder.start(device)</span><br></pre></td></tr></table></figure>
-
-<p><code>playback.py</code></p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env monkeyrunner  </span></span><br><span class="line"><span class="comment"># Copyright 2010, The Android Open Source Project  </span></span><br><span class="line"><span class="comment">#  </span></span><br><span class="line"><span class="comment"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);  </span></span><br><span class="line"><span class="comment"># you may not use this file except in compliance with the License.  </span></span><br><span class="line"><span class="comment"># You may obtain a copy of the License at  </span></span><br><span class="line"><span class="comment">#  </span></span><br><span class="line"><span class="comment"># http://www.apache.org/licenses/LICENSE-2.0  </span></span><br><span class="line"><span class="comment">#  </span></span><br><span class="line"><span class="comment"># Unless required by applicable law or agreed to in writing, software  </span></span><br><span class="line"><span class="comment"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,  </span></span><br><span class="line"><span class="comment"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  </span></span><br><span class="line"><span class="comment"># See the License for the specific language governing permissions and  </span></span><br><span class="line"><span class="comment"># limitations under the License.   </span></span><br><span class="line"><span class="keyword">import</span> sys  </span><br><span class="line"><span class="keyword">from</span> com.android.monkeyrunner <span class="keyword">import</span> MonkeyRunner   </span><br><span class="line"><span class="comment"># The format of the file we are parsing is very carfeully constructed.  </span></span><br><span class="line"><span class="comment"># Each line corresponds to a single command. The line is split into 2  </span></span><br><span class="line"><span class="comment"># parts with a | character. Text to the left of the pipe denotes  </span></span><br><span class="line"><span class="comment"># which command to run. The text to the right of the pipe is a python  </span></span><br><span class="line"><span class="comment"># dictionary (it can be evaled into existence) that specifies the  </span></span><br><span class="line"><span class="comment"># arguments for the command. In most cases, this directly maps to the  </span></span><br><span class="line"><span class="comment"># keyword argument dictionary that could be passed to the underlying  </span></span><br><span class="line"><span class="comment"># command.   </span></span><br><span class="line"><span class="comment"># Lookup table to map command strings to functions that implement that  </span></span><br><span class="line"><span class="comment"># command.  </span></span><br><span class="line">CMD_MAP = &#123;  </span><br><span class="line">    <span class="string">&#x27;TOUCH&#x27;</span>: <span class="keyword">lambda</span> dev, arg: dev.touch(**arg),  </span><br><span class="line">    <span class="string">&#x27;DRAG&#x27;</span>: <span class="keyword">lambda</span> dev, arg: dev.drag(**arg),  </span><br><span class="line">    <span class="string">&#x27;PRESS&#x27;</span>: <span class="keyword">lambda</span> dev, arg: dev.press(**arg),  </span><br><span class="line">    <span class="string">&#x27;TYPE&#x27;</span>: <span class="keyword">lambda</span> dev, arg: dev.<span class="built_in">type</span>(**arg),  </span><br><span class="line">    <span class="string">&#x27;WAIT&#x27;</span>: <span class="keyword">lambda</span> dev, arg: MonkeyRunner.sleep(**arg)  </span><br><span class="line">    &#125;  </span><br><span class="line"><span class="comment"># Process a single file for the specified device.  </span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">process_file</span>(<span class="params">fp, device</span>):  </span><br><span class="line">    <span class="keyword">for</span> line <span class="keyword">in</span> fp:  </span><br><span class="line">        (cmd, rest) = line.split(<span class="string">&#x27;|&#x27;</span>)  </span><br><span class="line">        <span class="keyword">try</span>:  </span><br><span class="line">            <span class="comment"># Parse the pydict  </span></span><br><span class="line">            rest = <span class="built_in">eval</span>(rest)  </span><br><span class="line">        <span class="keyword">except</span>:  </span><br><span class="line">            <span class="built_in">print</span> <span class="string">&#x27;unable to parse options&#x27;</span>  </span><br><span class="line">            <span class="keyword">continue</span>   </span><br><span class="line">        <span class="keyword">if</span> cmd <span class="keyword">not</span> <span class="keyword">in</span> CMD_MAP:  </span><br><span class="line">            <span class="built_in">print</span> <span class="string">&#x27;unknown command: &#x27;</span> + cmd  </span><br><span class="line">            <span class="keyword">continue</span>   </span><br><span class="line">        CMD_MAP[cmd](device, rest)  </span><br><span class="line"><span class="keyword">def</span> <span class="title function_">main</span>():  </span><br><span class="line">    file = sys.argv[<span class="number">1</span>]  </span><br><span class="line">    fp = <span class="built_in">open</span>(file, <span class="string">&#x27;r&#x27;</span>)   </span><br><span class="line">    device = MonkeyRunner.waitForConnection()     </span><br><span class="line">    process_file(fp, device)  </span><br><span class="line">    fp.close();     </span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:  </span><br><span class="line">    main()</span><br></pre></td></tr></table></figure>
-
-<h3 id="执行录制脚本"><a href="#执行录制脚本" class="headerlink" title="执行录制脚本"></a>执行录制脚本</h3><figure class="highlight ada"><table><tr><td class="code"><pre><span class="line">monkeyrunner d:\replay\<span class="keyword">record</span>.py</span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>wait： 用来插入下一次操作的时间间隔，点击后即可设置时间，单位是秒</p>
-<p>Press a Button：用来确定需要点击的按钮，包括menu、home、search，以及对按钮的press、down、up属性</p>
-<p>Type Something：用来输入内容到输入框</p>
-<p>Fling：用来进行拖动操作，可以向上、下、左、右，以及操作的范围</p>
-<p>Export Actions：用来导出脚本，不需要后缀名，也可以添加后缀名</p>
-<p>Refresh Display：用来刷新手机界面，估计只有在断开手机后，重新连接时才会用到</p>
-</blockquote>
-<p>点击“export actions”保存录制脚本到 <code>d:\replay\r</code></p>
-<h3 id="执行回放脚本"><a href="#执行回放脚本" class="headerlink" title="执行回放脚本"></a>执行回放脚本</h3><figure class="highlight livescript"><table><tr><td class="code"><pre><span class="line">monkeyrunner d:<span class="string">\replay\playback.py</span> d:<span class="string">\replay\r</span></span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>其中r是上面录制的脚本文件</p>
-</blockquote>
-<h1 id="MonkeyRunner相关问题"><a href="#MonkeyRunner相关问题" class="headerlink" title="MonkeyRunner相关问题"></a>MonkeyRunner相关问题</h1><h2 id="如果录制脚本的时候报SWT-folder-39-framework-x86-64-39-does-not-exist-错误："><a href="#如果录制脚本的时候报SWT-folder-39-framework-x86-64-39-does-not-exist-错误：" class="headerlink" title="如果录制脚本的时候报SWT folder &#39;..\framework\x86_64&#39; does not exist.错误："></a><a href="https://www.jianshu.com/p/744324ac6ce8">如果录制脚本的时候报<code>SWT folder &#39;..\framework\x86_64&#39; does not exist.</code>错误：</a></h2><p>那么打开 <a href="https://gist.github.com/LieutenantChips/ac05405324e40bb37da17a2d15408920">monkeyrunner.bat</a> 更改：</p>
-<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">.<span class="built_in">set</span> <span class="attribute">frameworkdir</span>=lib （纠正）==》<span class="built_in">set</span> <span class="attribute">frameworkdir</span>=..\lib </span><br><span class="line"></span><br><span class="line">.Dcom.android.monkeyrunner.<span class="attribute">bindir</span>=..\framework -jar %jarpath% %* （纠正）==》Dcom.android.monkeyrunner.<span class="attribute">bindir</span>=..\..\platform-tools -jar %jarpath% %*</span><br></pre></td></tr></table></figure>
-
-
-
-
-
 ]]></content>
       <categories>
         <category>Android</category>
@@ -14798,14 +15197,12 @@ false里的false被认为是一个Boolean类型的变量，而不是个字符串
 
 <p>上面的命令行以前可以看MD5，现在只有SHA1、SHA256</p>
 <blockquote>
-<p>去掉冒号的js代码：”CD:B0:3E:73:53:2B:C2:A2:54:5D:2E:75:67:74:BB:92”.replace(&#x2F;:&#x2F;g,””)</p>
+<p>去掉冒号的js代码：<code>&quot;CD:B0:3E:73:53:2B:C2:A2:54:5D:2E:75:67:74:BB:92&quot;.replace(/\:/g,&quot;&quot;)</code>【新版Chrome不让用了。那就直接用文本的全局替换】</p>
 </blockquote>
-<p>现在取MD5：</p>
+<p>现在取MD5：【AS配置的jdk11生成的签名文件】</p>
 <ol>
-<li><p>法一：AS右侧<code>Gradle：Tasks&gt;android&gt;signingReport</code>，双击</p>
-</li>
-<li><p>法二：单独取md5，使用腾讯工具【忘记包了】，有另外的apk：“<a href="https://www.pgyer.com/UNW28n">MD5签名生成器</a>”</p>
-</li>
+<li>法一：AS右侧<code>Gradle：Tasks&gt;android&gt;signingReport</code>，双击<br> 【报Algorithm HmacPBESHA256 not available，<strong>只</strong>更改AS的jdk为自带的jbr路径（jdk17）】  </li>
+<li>法二：单独取md5，使用腾讯工具【忘记包了】，有另外的apk：“<a href="https://www.pgyer.com/UNW28n">MD5签名生成器</a>”<br> 【报Algorithm HmacPBESHA256 not available，更改环境变量为AS的jbr路径】</li>
 </ol>
 <h2 id="命令行生成数字签名文件"><a href="#命令行生成数字签名文件" class="headerlink" title="命令行生成数字签名文件"></a>命令行生成数字签名文件</h2><figure class="highlight maxima"><table><tr><td class="code"><pre><span class="line">keytool -genkey -<span class="built_in">alias</span> <span class="built_in">demo</span>.keystore -keyalg RSA -validity <span class="number">40000</span> -keystore <span class="built_in">demo</span>.keystore</span><br></pre></td></tr></table></figure>
 
@@ -14911,20 +15308,6 @@ false里的false被认为是一个Boolean类型的变量，而不是个字符串
       </tags>
   </entry>
   <entry>
-    <title>方法反射实例</title>
-    <url>/posts/2926163701/</url>
-    <content><![CDATA[<h3 id="方法反射实例"><a href="#方法反射实例" class="headerlink" title="方法反射实例"></a>方法反射实例</h3><figure class="highlight typescript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ReflectCase</span> &#123;</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="built_in">void</span> <span class="title function_">main</span>(<span class="title class_">String</span>[] args) throws <span class="title class_">Exception</span> &#123;</span><br><span class="line">        <span class="title class_">Proxy</span> target = <span class="keyword">new</span> <span class="title class_">Proxy</span>();</span><br><span class="line">        <span class="title class_">Method</span> method = <span class="title class_">Proxy</span>.<span class="property">class</span>.<span class="title function_">getDeclaredMethod</span>(<span class="string">&quot;run&quot;</span>);</span><br><span class="line">        method.<span class="title function_">invoke</span>(target);</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">Proxy</span> &#123;</span><br><span class="line">        <span class="keyword">public</span> <span class="built_in">void</span> <span class="title function_">run</span>(<span class="params"></span>) &#123;</span><br><span class="line">            <span class="title class_">System</span>.<span class="property">out</span>.<span class="title function_">println</span>(<span class="string">&quot;run&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<span id="more"></span>
-]]></content>
-      <categories>
-        <category>Java代码片段</category>
-      </categories>
-      <tags>
-        <tag>Java代码片段</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>字符串相关</title>
     <url>/posts/16078591/</url>
     <content><![CDATA[<h1 id="java-判断是否中文字符"><a href="#java-判断是否中文字符" class="headerlink" title="java_判断是否中文字符"></a>java_判断是否中文字符</h1><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">IsChineseOrEnglish</span>&#123;</span><br><span class="line">    <span class="comment">//GENERAL_PUNCTUATION 判断中文的“号</span></span><br><span class="line">    <span class="comment">//CJK_SYMBOLS_and_punctuation 判断中文的。号</span></span><br><span class="line">    <span class="comment">//HALFWIDTH_AND_FULLWIDTH_FORMS 判断中中文的，号</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="type">boolean</span> <span class="title function_">isChinese</span><span class="params">(Char c)</span>&#123;</span><br><span class="line">        Character.<span class="type">UnicodeBlock</span> <span class="variable">ub</span> <span class="operator">=</span> Character.UnicodeBlock.of(c);</span><br><span class="line">        <span class="keyword">if</span>(ub == Character.UnicodeBlock.CJK_SYMBOLS_and_punctuation</span><br><span class="line">            || ub == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS</span><br><span class="line">            || ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A</span><br><span class="line">            || ub == Character.UnicodeBlock.GENERAL_PUNCTUATION</span><br><span class="line">            || ub == Character.UnicodeBlock.CJK_SYMBOLS_and_punctuation</span><br><span class="line">            || ub == Character.UnicodeBlock.HALFWIDTH_AND_FULLWIDTH_FORMS)&#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">isChiese</span><span class="params">(String strName)</span>&#123;</span><br><span class="line">        <span class="type">char</span>[] ch = strName.toCharArray();</span><br><span class="line">        <span class="keyword">for</span>(<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; ch.length; i++)&#123;</span><br><span class="line">            <span class="type">char</span> <span class="variable">c</span> <span class="operator">=</span> ch[i];</span><br><span class="line">            <span class="keyword">if</span>(isChinese(c) == <span class="literal">true</span>)&#123;</span><br><span class="line">                System.out.println(isChiese(c));</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                System.out.println(isChiese(c));</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span>&#123;</span><br><span class="line">        <span class="type">Random</span> <span class="variable">r</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Random</span>();</span><br><span class="line">        <span class="keyword">for</span>(<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; <span class="number">20</span>; i++)&#123;</span><br><span class="line">            System.out.println(r.nextInt(<span class="number">10</span>) + <span class="number">1</span>);</span><br><span class="line">            isChinese(<span class="string">&quot;き&quot;</span>);</span><br><span class="line">            isChinese(<span class="string">&quot;中国&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -14958,6 +15341,20 @@ false里的false被认为是一个Boolean类型的变量，而不是个字符串
 
 <h1 id="字符串的宽高"><a href="#字符串的宽高" class="headerlink" title="字符串的宽高"></a>字符串的宽高</h1><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Rect rect=<span class="keyword">new</span> <span class="title class_">Rect</span>();</span><br><span class="line">paint.getTextBounds(string, <span class="number">0</span>, string.length(), rect);</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> strWidth=rect.width();</span><br><span class="line"><span class="type">int</span> strHeight=rect.height();</span><br></pre></td></tr></table></figure>
 
+]]></content>
+      <categories>
+        <category>Java代码片段</category>
+      </categories>
+      <tags>
+        <tag>Java代码片段</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>方法反射实例</title>
+    <url>/posts/2926163701/</url>
+    <content><![CDATA[<h3 id="方法反射实例"><a href="#方法反射实例" class="headerlink" title="方法反射实例"></a>方法反射实例</h3><figure class="highlight typescript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ReflectCase</span> &#123;</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="built_in">void</span> <span class="title function_">main</span>(<span class="title class_">String</span>[] args) throws <span class="title class_">Exception</span> &#123;</span><br><span class="line">        <span class="title class_">Proxy</span> target = <span class="keyword">new</span> <span class="title class_">Proxy</span>();</span><br><span class="line">        <span class="title class_">Method</span> method = <span class="title class_">Proxy</span>.<span class="property">class</span>.<span class="title function_">getDeclaredMethod</span>(<span class="string">&quot;run&quot;</span>);</span><br><span class="line">        method.<span class="title function_">invoke</span>(target);</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">Proxy</span> &#123;</span><br><span class="line">        <span class="keyword">public</span> <span class="built_in">void</span> <span class="title function_">run</span>(<span class="params"></span>) &#123;</span><br><span class="line">            <span class="title class_">System</span>.<span class="property">out</span>.<span class="title function_">println</span>(<span class="string">&quot;run&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<span id="more"></span>
 ]]></content>
       <categories>
         <category>Java代码片段</category>
@@ -15405,12 +15802,17 @@ false里的false被认为是一个Boolean类型的变量，而不是个字符串
 
 <h1 id="Typora-页面跳转"><a href="#Typora-页面跳转" class="headerlink" title="Typora 页面跳转"></a>Typora 页面跳转</h1><h2 id="第一种，跳转到标题的地方"><a href="#第一种，跳转到标题的地方" class="headerlink" title="第一种，跳转到标题的地方"></a>第一种，跳转到标题的地方</h2><figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">[<span class="name">任意文字</span>](#标题名称)</span><br></pre></td></tr></table></figure>
 <p>例子：<br><a href="#%E6%9C%89%E5%BA%8F%E5%88%97%E8%A1%A8">我要跳转到有序列表的这个标题</a></p>
+<figure class="highlight lua"><table><tr><td class="code"><pre><span class="line">在obsidian中是 <span class="string">[[]]</span> 中间输入内容再接上#来链接文章标题位置</span><br></pre></td></tr></table></figure>
+
 <h2 id="第二种，跳转到非标题的地方"><a href="#第二种，跳转到非标题的地方" class="headerlink" title="第二种，跳转到非标题的地方"></a>第二种，跳转到非标题的地方</h2><p>页面内要跳转的地方加个锚点  </p>
 <figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">a</span> <span class="attr">name</span>=<span class="string">&quot;这是要跳转的地方的锚点&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br></pre></td></tr></table></figure>
 <p>要触发跳转的地方  </p>
 <figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">[<span class="name">我要跳转到那边去</span>](#这是要跳转的地方的锚点)</span><br></pre></td></tr></table></figure>
 <p>例子：<br><a name="锚点"></a></p>
 <p><a href="#%E9%94%9A%E7%82%B9">跳转到那</a></p>
+<figure class="highlight lua"><table><tr><td class="code"><pre><span class="line">在obsidian中是 <span class="string">[[]]</span> 中间输入内容再接上^来链接文本位置</span><br></pre></td></tr></table></figure>
+
+
 <h2 id="第三种，markdown跳别的文件"><a href="#第三种，markdown跳别的文件" class="headerlink" title="第三种，markdown跳别的文件"></a><a href="https://blog.csdn.net/weixin_43031092/article/details/105322677">第三种，markdown跳别的文件</a></h2><p>实现方法：  </p>
 <h3 id="相对路径方式"><a href="#相对路径方式" class="headerlink" title="相对路径方式"></a>相对路径方式</h3><ul>
 <li><code>../</code> 表示当前目录的上一级  </li>

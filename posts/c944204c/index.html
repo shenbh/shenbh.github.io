@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="private,安卓拓展," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="引用们的底层原理 [!总结]这篇文章深入剖析了 Android 中四种引用的底层原理，包括 WeakReference、SoftReference、PhantomReference 和 FinalizerReference。分别阐述了它们的特点、回收机制、处理逻辑等，如 WeakReference 如何欺骗 GC 及 get 方法的处理，SoftReference 的回收时机，PhantomRef">
+<meta property="og:type" content="article">
+<meta property="og:title" content="拓展-Android“引用们”的底层原理">
+<meta property="og:url" content="http://shenbh.github.io/posts/c944204c/index.html">
+<meta property="og:site_name" content="YULI">
+<meta property="og:description" content="引用们的底层原理 [!总结]这篇文章深入剖析了 Android 中四种引用的底层原理，包括 WeakReference、SoftReference、PhantomReference 和 FinalizerReference。分别阐述了它们的特点、回收机制、处理逻辑等，如 WeakReference 如何欺骗 GC 及 get 方法的处理，SoftReference 的回收时机，PhantomRef">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://shenbh.github.io/posts/c944204c/%E7%B1%BB%E5%9B%BE.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/c944204c/count_minus.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/c944204c/GC%E6%97%B6%E5%BA%8F.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/c944204c/PhantomReference.awebp">
+<meta property="og:image" content="http://shenbh.github.io/posts/c944204c/PhantomReference.png">
+<meta property="article:published_time" content="2024-11-14T05:53:00.000Z">
+<meta property="article:modified_time" content="2024-11-14T06:03:01.514Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="private">
+<meta property="article:tag" content="安卓拓展">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/c944204c/%E7%B1%BB%E5%9B%BE.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/c944204c/"/>
+
+
+
+
+
+  <title>拓展-Android“引用们”的底层原理 | YULI</title><meta name="robots" content="noindex">
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">YULI</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Just do IT Now.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/c944204c/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="YULI">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">拓展-Android“引用们”的底层原理</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2024-11-14T13:53:00+08:00">
+                2024-11-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="引用们的底层原理"><a href="#引用们的底层原理" class="headerlink" title="引用们的底层原理"></a><a target="_blank" rel="noopener" href="https://juejin.cn/post/7434471758813937700">引用们的底层原理</a></h1><blockquote>
+<p>[!总结]<br>这篇文章深入剖析了 Android 中四种引用的底层原理，包括 WeakReference、SoftReference、PhantomReference 和 FinalizerReference。分别阐述了它们的特点、回收机制、处理逻辑等，如 WeakReference 如何欺骗 GC 及 get 方法的处理，SoftReference 的回收时机，PhantomReference 借助 ReferenceQueue 的作用，FinalizerReference 与 finalize 方法的关联等，最后作者分享了研究起因和学习感悟。</p>
+</blockquote>
+<p><code>本文分析基于Android 15</code></p>
+<p>相信绝大多数开发者对WeakReference、SoftReference这种引用类都不会感到陌生。面试官们喜欢问：WeakReference和SoftReference有什么区别啊？一般适用于什么场景啊？但再往下就不会深究了。因为对应用开发而言，“会用”已经满足99%的需求，再多就事倍功半了。所以这种底层原理的文章大家就当饭后消遣，看不懂也没啥损失，因为它可能会有点难度。</p>
+<p>本文会针对四种引用做底层剖析，它们分别是WeakReference、SoftReference、PhantomReference以及FinalizerReference。FinalizerReference估计没什么人听过，因为它并非Java SE中的基本类，而是ART虚拟机为了管理<code>finalize()</code>所人为增加的类，且这种类只会被系统使用。</p>
+<p><img src="/posts/c944204c/%E7%B1%BB%E5%9B%BE.png" alt="类图"></p>
+<p>在正文开始之前，有必要针对这些引用做个简单的介绍。</p>
+<ul>
+<li><p>WeakReference：可以通过<code>get()</code>获取到referent（被引用者）对象；当referent仅被它引用时，该对象在下次GC时会被回收。</p>
+</li>
+<li><p>SoftReference：和WeakReference唯一的区别在于referent的回收时机。当referent仅被它引用时，该对象可以一直存活，直到堆内存真的被耗尽以至于马上要发生OOM时，referent才会被回收。</p>
+</li>
+<li><p>PhantomReference：和SoftReference和WeakReference相比，它无法通过<code>get()</code>获取到referent对象。它只会在referent回收时触发一些事件。</p>
+</li>
+<li><p>FinalizerReference：非Java SE中的基本类，创造出来的唯一目的就是管理对象的<code>finalize()</code>方法，因为<code>finalize()</code>被广泛用于对象销毁时的资源释放，虽然已被弃用，但仍大面积存在。</p>
+</li>
+</ul>
+<h2 id="WeakReference"><a href="#WeakReference" class="headerlink" title="WeakReference"></a>WeakReference</h2><p>下面我们从最简单的WeakReference入手。</p>
+<p><strong>[Use Case]</strong></p>
+<p>java</p>
+<p> 代码解读</p>
+<p>复制代码</p>
+<p><code>Object referent = new Object(); WeakReference weakReference = new WeakReference&lt;&gt;(referent); Object value = weakReference.get(); if (value != null) &#123;     // GC hasn&#39;t removed the referent yet &#125; else &#123;     // GC has cleared the referent &#125;</code></p>
+<p>用例可以引出两个问题：</p>
+<ol>
+<li>WeakReference构造时传入了referent对象，且Reference类中确实存在一个名为<code>referent</code>的引用字段。既然如此，referent对象又是如何逃脱GC标记的呢？</li>
+<li>WeakReference.get()中如何判定referent已经被回收？那如果referent正在被回收呢？</li>
+</ol>
+<p>带着这两个疑问，我们来看看ART虚拟机到底是如何应对的。</p>
+<p><img src="/posts/c944204c/count_minus.png" alt="count_minus"></p>
+<p>首先Reference类中确实存在<code>referent</code>字段，但ART里做了一个特殊处理，它欺骗了GC。欺骗的方法是将Reference类的instance reference fields count减一，由于字段在内存空间里是按照字母顺序排列的，因此<code>referent</code>字段（r开头）恰好是Reference类最后一个实例引用字段。将instance reference fields count减一后，GC遍历时就会认为<code>referent</code>字段只是一个基本类型，而非引用类型，因此不会标记。</p>
+<p>来到第二个问题，直觉告诉我Reference的<code>get()</code>方法绝对不会是简单地返回referent字段，因为GC中存在大量的并发，这会让处理变得复杂。事实也确实如此，Java中的<code>get()</code>方法最终会通过@FastNative的JNI方法调用Native层的<code>ReferenceProcessor::GetReferent()</code>方法，在那里会有不同情况的逻辑处理。</p>
+<p>选择什么样的处理逻辑取决于GC的状态。绝大多数情况下，<code>get()</code>都是将referent字段返回（fast path），只在一个很小的时间窗口中才会走复杂逻辑（slow path）。</p>
+<p><img src="/posts/c944204c/GC%E6%97%B6%E5%BA%8F.png" alt="GC时序"></p>
+<p>CMC（Concurrent Mark Compact）Collector的处理流程如上所示，其中两个标黄的圆圈（Marking Pause和Compaction Pause）代表需要暂停其他线程，也即人们常说的Stop The World，剩下的都是并发阶段。Reclaim Phase自然也属于并发阶段，它会清理没有标记过的对象，不过在正式清理之前会通过<code>ProcessReferences</code>对所有引用先进行处理。</p>
+<p>在<code>ProcessReferences</code>运行的这段时间内，其他线程通过<code>get()</code>获取referent就需要走slow path。其内部也分为三个阶段，分别是kStarting、kInitMarkingDone和kInitClearingDone。在kStarting阶段，其他线程在<code>get()</code>里需要等待，等待GC线程完成kStarting阶段，原因是这个阶段会进行“起死回生”的标记操作，它不做完，整个堆的标记状态无法最终确定。在kInitMarkingDone阶段，由于所有存活的对象都已被标记，因此可以通过referent-&gt;IsMarked来判断对象是否存活。这个阶段会遍历<code>weak_reference_queue_</code>和<code>soft_reference_queue_</code>，如果发现referent没有被标记，则会将对应的Reference对象里的referent字段置为null。因此来到kInitClearingDone阶段后，<code>get()</code>可以直接返回referent。</p>
+<h2 id="SoftReference"><a href="#SoftReference" class="headerlink" title="SoftReference"></a>SoftReference</h2><p>说完WeakReference，再来说说SoftReference，它和前者唯一的区别在于referent可以穿越GC周期。既然可以穿越GC周期，那么不免就会有两个疑问：</p>
+<ol>
+<li>什么时候referent必须被回收？</li>
+<li>多数时候如何保证referent不被回收？</li>
+</ol>
+<p>第一个问题可以参见如下注释。它发生在对象申请的过程中，当对象申请实在从堆中挤不出空间时，这一次的GC就要回收SoftReference了。</p>
+<p>c++</p>
+<p> 代码解读</p>
+<p>复制代码</p>
+<p><code>// Most allocations should have succeeded by now, so the heap is really full, really fragmented, // or the requested size is really big. Do another GC, collecting SoftReferences this time. The // VM spec requires that all SoftReferences have been collected and cleared before throwing // OOME.</code></p>
+<p>除此之外，还有两种情况也会回收SoftReference。一种是Zygote进程，每次GC都会回收SoftReference；另一种是dex2oat，过程中也会有回收SoftReference的动作。</p>
+<p>第二个问题其实前文回答了一部分，即<code>ProcessReferences</code>里对<code>soft_reference_queue_</code>里的referent进行标记，这样他们便可以安全度过此次GC。除了这里的标记外，Marking Phase结束前也会对<code>soft_reference_queue_</code>里的referent进行标记。为什么需要做两次？因为Marking Phase中完成了大部分的标记任务，而<code>ProcessReferences</code>发生在Marking Pause之后，<code>soft_reference_queue_</code>里又会有新增的对象，因此<code>ProcessReferences</code>需要对这些新增的小批量对象再做标记。</p>
+<h2 id="PhantomReference"><a href="#PhantomReference" class="headerlink" title="PhantomReference"></a>PhantomReference</h2><p>前面所说的两种Reference都可以通过<code>get()</code>来获取referent对象，但PhantomReference不可以。正如其名”Phantom”（幻象）所言，它仿佛就像退化版本的Reference。如果一个Reference连指向的引用对象都无法获取，那它还有什么价值？别着急，它还有一个用处。这种用法WeakReference和SoftReference也具备，所以PhantomReference说是退化版本一点不假，它有人有，人有它无。</p>
+<p>java</p>
+<p> 代码解读</p>
+<p>复制代码</p>
+<p><code>Reference(T referent, ReferenceQueue&lt;? super T&gt; queue) &#123;     this.referent = referent;     this.queue = queue; &#125;</code></p>
+<p>再来看看Reference的构造方法，它支持传入一个ReferenceQueue对象，而这个queue就是那个用处。</p>
+<p><img src="/posts/c944204c/PhantomReference.awebp" alt="PhantomReference.png"></p>
+<p><img src="/posts/c944204c/PhantomReference.png" alt="PhantomReference"></p>
+<p>当HeapTaskDaemon线程结束它的GC操作后，它还需要再做一件事才能去休息。这件事就是处理GC过程中所有referent被清空的Reference。本着专事专办的原则，这件事交由ReferenceQueueDaemon来做，HeapTaskDaemon只是把这些Reference加入到一个全局列表，然后唤醒ReferenceQueueDaemon。等候多时的ReferenceQueueDaemon终于来活了，它从这个列表中不断读取Reference，根据Reference的特点分三种情况处理：</p>
+<ol>
+<li>如果这个Reference的类别为sun.misc.Cleaner，那么将会调用该对象的<code>clean()</code>方法，我之前的<a target="_blank" rel="noopener" href="https://juejin.cn/post/6891918738846105614" title="https://juejin.cn/post/6891918738846105614">文章</a>提过这种用法。</li>
+<li>如果Reference的queue字段为空，那么不做任何处理。</li>
+<li>其他情况下，将Reference对象加入queue字段指向的队列中，并通过queue.lock.notify来唤醒其他等待处理的工作线程。至于工作线程是谁，那就看开发者怎么写了。</li>
+</ol>
+<p>对于PhantomReference而言，我们当然可以在构造时传入一个空的queue，但这样的PhantomReference就变成了废物，没有任何用处。因此但凡用的上PhantomReference的地方，一定会传一个有效的queue，用它来接收referent销毁事件。另外由于ReferenceQueueDaemon处理时GC已经结束，因此可以肯定的是，工作线程处理时referent对象已经被销毁了。</p>
+<h2 id="FinalizerReference"><a href="#FinalizerReference" class="headerlink" title="FinalizerReference"></a>FinalizerReference</h2><p>紧赶慢赶，故事终于来到最后一个章节。<code>finalize()</code>方法由于其使用上的便利性，一直深受开发者的喜爱。其机制上的诸多缺陷暂且按下不表（否则也不会被弃用），先来看看虚拟机是如何在对象销毁时调用<code>finalize()</code>的。</p>
+<p>当一个类override <code>finalize()</code>方法后，那么它就被打上了<code>kAccClassIsFinalizable</code>的标签。这种类在创建对象时有一个额外的动作，即创建一个FinalizerReference指向它，并把FinalizerReference加入到一个全局列表中。这些FinalizerReference创建时会传入同一个queue，而等待这个queue的线程就是FinalizerDaemon，相信看过ANR trace的朋友对这个线程名不会感到陌生。</p>
+<p>在PhantomReference那一章节，我们已经通过图解的方式展示了Reference的处理逻辑。当FinalizerDaemon被ReferenceQueueDaemon唤醒后，它便会执行referent的<code>finalize()</code>方法。</p>
+<p>可是如果<code>finalize()</code>方法中使用了this对象怎么办？它会不会访问到已经被清理的对象？答案是不会。因为GC的<code>ProcessReferences</code>阶段会针对FinalizerReference将未被引用的referent重新标记。单标记还不够，因为总不能每次GC都标记吧，那样被FinalizerReference指向的对象将永远得不到回收。因此需要把FinalizerReference的<code>referent</code>字段移动到<code>zombie</code>字段，然后<code>referent</code>字段清空。这么做有两个目的，一是<code>zombie</code>字段的指向可以保证referent在未被FinalizerDaemon处理完之前不会被回收；二是<code>referent</code>字段清空可以让下次<code>ProcessReferences</code>跳过此FinalizerReference。</p>
+<p>当FinalizerDaemon处理该对象时，除了会调用<code>finalize()</code>方法以外，它还会将对应的FinalizerReference从全局列表中清除，这样系统为对象自动生成的FinalizerReference也会在下次GC被清理掉。</p>
+<p>因此我们可以说，在FinalizerDaemon未处理referent之前，referent不会被清理，因此我们可以放心地在<code>finalize()</code>方法中使用this对象。但假设我们在<code>finalize()</code>中又将this对象赋值给其他人，那么之后的referent将变成一个普通的对象，因为对应的FinalizerReference已被释放。换言之，一个对象的<code>finalize()</code>方法只会执行一次，不论你耍什么样的小把戏。</p>
+<p>此外，由于<code>finalize()</code>方法的运行时间不可控，为了保证FinalizerDaemon不被某个任务阻塞住，系统又增加了一个名为FinalizerWatchdogDaemon的线程来监控它，当某个<code>finalize()</code>方法运行超过10秒，系统便会杀死进程。除了能监控FinalizerDaemon，FinalizerWatchdogDaemon还可以监控ReferenceQueueDaemon，这主要是因为ReferenceQueueDaemon中会执行Cleaner对象的<code>clean()</code>方法，也属于时间不可控的方法，监控的超时时间同样设置为10秒。</p>
+<h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h2><p>故事的起因只是因为我接到了一个FinalizerWatchdogDaemon的报错，在解决的过程中顺带把整个引用机制研究了一下。这种以点带面的学习方法确实很好，既解决了问题，也总结了知识，不至于落入“书呆子”式死学习的陷阱。这让我想起前段时间看到的一个账号，名叫“文科生学编程”，里面的视频都是对着某本编程书背诵的片段。这种账号自然是为了流量，但里面讽刺的画面也确实给人警醒。难道不明就里的抄代码就比背诵编程书好多少了么？</p>
+<p>作者：芦半山<br>链接：<a target="_blank" rel="noopener" href="https://juejin.cn/post/7434471758813937700">https://juejin.cn/post/7434471758813937700</a><br>来源：稀土掘金<br>著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</p>
+<!-- flag of hidden posts -->
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div></div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>Donate</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.jpg" alt=" WeChat Pay"/>
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/private/" rel="tag"># private</a>
+          
+            <a href="/tags/%E5%AE%89%E5%8D%93%E6%8B%93%E5%B1%95/" rel="tag"># 安卓拓展</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">96</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@qq.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/shenbh" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://gitee.com/shen_bh" target="_blank" title="Gitee">
+                      
+                        <i class="fa fa-fw fa-git"></i>Gitee</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BC%95%E7%94%A8%E4%BB%AC%E7%9A%84%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86"><span class="nav-text">引用们的底层原理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#WeakReference"><span class="nav-text">WeakReference</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SoftReference"><span class="nav-text">SoftReference</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PhantomReference"><span class="nav-text">PhantomReference</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#FinalizerReference"><span class="nav-text">FinalizerReference</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%8E%E8%AE%B0"><span class="nav-text">后记</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>
