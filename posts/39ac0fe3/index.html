@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="private,安卓进阶," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Android AMS 自述本文摘要本文采用自述的方式带大家认识ActivityManagerService是啥，它有哪些功能，它的启动过程，它的模块有哪些以及模块的作用是啥。(文中代码基于Android13) 本文大纲 我是一个binder服务大家好，我是ActivityManagerService，我存在于systemserver进程，大家可以看到我的名字中带有Service这个单词，没错我是">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AMS">
+<meta property="og:url" content="http://shenbh.github.io/posts/39ac0fe3/index.html">
+<meta property="og:site_name" content="YULI">
+<meta property="og:description" content="Android AMS 自述本文摘要本文采用自述的方式带大家认识ActivityManagerService是啥，它有哪些功能，它的启动过程，它的模块有哪些以及模块的作用是啥。(文中代码基于Android13) 本文大纲 我是一个binder服务大家好，我是ActivityManagerService，我存在于systemserver进程，大家可以看到我的名字中带有Service这个单词，没错我是">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://shenbh.github.io/posts/39ac0fe3/AMS%E8%87%AA%E8%BF%B0%E6%9C%AC%E6%96%87%E5%A4%A7%E7%BA%B2.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/39ac0fe3/AMS%E8%87%AA%E8%BF%B0Binder%E9%80%9A%E4%BF%A1.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/39ac0fe3/AMS%E8%87%AA%E8%BF%B0SystemServer%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B%E7%BB%8F%E5%8E%86%E7%9A%84%E4%B8%BB%E8%A6%81%E6%96%B9%E6%B3%95.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/39ac0fe3/AMS%E8%87%AA%E8%BF%B0SystemServer%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B%E5%AF%B9%E5%BA%94%E7%9A%84%E9%98%B6%E6%AE%B5%E5%80%BC.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/39ac0fe3/AMS%E8%87%AA%E8%BF%B0%E5%90%AF%E5%8A%A8%E6%AD%A5%E9%AA%A4.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/39ac0fe3/AMS%E8%87%AA%E8%BF%B0%E4%B8%BB%E8%A6%81%E6%A8%A1%E5%9D%97.jpg">
+<meta property="article:published_time" content="2025-01-16T06:21:08.000Z">
+<meta property="article:modified_time" content="2025-01-16T06:24:41.255Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="private">
+<meta property="article:tag" content="安卓进阶">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/39ac0fe3/AMS%E8%87%AA%E8%BF%B0%E6%9C%AC%E6%96%87%E5%A4%A7%E7%BA%B2.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/39ac0fe3/"/>
+
+
+
+
+
+  <title>AMS | YULI</title><meta name="robots" content="noindex">
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">YULI</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Just do IT Now.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/39ac0fe3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="YULI">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">AMS</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-01-16T14:21:08+08:00">
+                2025-01-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Android-AMS-自述"><a href="#Android-AMS-自述" class="headerlink" title="Android AMS 自述"></a><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/2dyKEgjZNKPX5rlUvzdsFg?poc_token=HCgHh2ejIDwAGIb67Lq802AkUb6LhbonR3dfiBuq">Android AMS 自述</a></h1><p><strong>本文摘要</strong><br>本文采用自述的方式带大家认识<code>ActivityManagerService</code>是啥，它有哪些功能，它的启动过程，它的模块有哪些以及模块的作用是啥。(文中代码基于<code>Android13</code>)</p>
+<h2 id="本文大纲"><a href="#本文大纲" class="headerlink" title="本文大纲"></a>本文大纲</h2><p><img src="/posts/39ac0fe3/AMS%E8%87%AA%E8%BF%B0%E6%9C%AC%E6%96%87%E5%A4%A7%E7%BA%B2.jpg" alt="AMS自述本文大纲"></p>
+<h2 id="我是一个binder服务"><a href="#我是一个binder服务" class="headerlink" title="我是一个binder服务"></a>我是一个binder服务</h2><p>大家好，我是<code>ActivityManagerService</code>，我存在于<code>systemserver</code>进程，大家可以看到我的名字中带有<code>Service</code>这个单词，没错我是一个服务是一个<code>binder</code>服务，在<code>systemserver</code>进程中存在着很多像我一样的<code>binder</code>服务。<br>既然我是一个服务，那我肯定会提供很多的功能供我的使用方来使用，请大家上眼看下图：(下图只是罗列了一部分功能)<br><img src="/posts/39ac0fe3/AMS%E8%87%AA%E8%BF%B0Binder%E9%80%9A%E4%BF%A1.jpg" alt="AMS自述Binder通信"><br>如上图，可以看到我提供的功能的<strong>使用方</strong>主要是<code>App</code>，它们与我不在同一进程，因此它们想要使用我的功能是需要通过<code>ActivityManager</code>和<code>ActivityTaskManager</code>进行<code>binder</code>调用来使用，这也就是为啥我被称为<code>binder</code>服务，而<strong>使用方</strong>自然被称为<code>binder client</code>。</p>
+<p>从上图还可以看出凡是与<code>Service</code>、<code>ContentProvider</code>、<code>BroadcastReceiver</code>三大组件有关系的事情都归我<code>ActivityManagerService</code>负责，而<code>Activity</code>相关的事情都归<code>ActivityTaskManagerService</code>负责 (以下简称<code>ATMS</code>)，其实在原先的Android版本中，<code>Activity</code>相关的事情是归我<code>ActivityManagerService</code>负责的，但是存在一个很大的问题，就是<code>ActivityManagerService</code>中的代码量越来越多，进而导致高耦合、难以维护等问题产生，为了解决这些问题故把<code>Activity</code>相关的事情放入了<code>ATMS</code>内。别看<code>ATMS</code>也是一个<code>binder</code>服务，但它还是归我<code>ActivityManagerService</code>管理的。</p>
+<p>我虽然是一个服务，但是我更愿意称自己为集中处理中心，正如上图四大组件的启动、销毁及生命周期方法的变化这些事情统统都需要经过我进行处理。比如某<code>App</code>要启动一个<code>Activity</code>，那启动该<code>Activity</code>的事件会通知到<code>ATMS</code>，<code>ATMS</code>会进行一些检查，最终“批准”是否能启动该<code>Activity</code>；比如某个<code>Service</code>需要销毁了，那我会把销毁的事件通过<code>binder</code>通信通知相应的<code>App</code>；比如某个<code>BroadcastReceiver</code>需要接收广播了，则我会把广播内容通过<code>binder</code>通信发送给相应<code>App</code>。</p>
+<p>你要是以为我的工作只是管理四大组件，那可是就小瞧我了，我可是<code>systemserver</code>进程中最忙碌、包含功能最多的服务，我还负责<strong>进程管理、App错误&#x2F;崩溃管理、性能分析</strong>等事情。<br>为啥进程管理这么重要的事情交给我呢？其主要原因是每个<code>App</code>进程的产生源头都是由于四大组件的启动，也就是说只有启动四大组件才会导致<code>App</code>进程的产生，并且四大组件的生命周期变化都会导致<code>App</code>进程状态发生变化，比如一个<code>App</code>的最后一个<code>Activity</code>由<code>resume</code>状态变为<code>stop</code>状态，那该<code>App</code>就变为了后台进程。由于以上原因，我就把进程管理功能也据为己有了。</p>
+<p><strong>进程管理</strong>就是管理<code>App</code>进程，比如<code>App</code>死亡了，那进程管理就需要把该<code>App</code>对应的进程信息进行销毁处理；比如<code>App</code>由前台退到后台了，那进程管理就需要把<code>App</code>对应进程的进程状态置为后台状态，并且为进程计算一个<code>oom_score</code> (一个分数值)，该分数值和该进程id会交给<a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzI2MjIyMjczMQ==&mid=2653046677&idx=1&sn=a6d599d3aa4b7cec69ff5cde056ba320&token=532871284&lang=zh_CN&scene=21#wechat_redirect">lmkd进程</a>，<a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzI2MjIyMjczMQ==&mid=2653046677&idx=1&sn=a6d599d3aa4b7cec69ff5cde056ba320&token=532871284&lang=zh_CN&scene=21#wechat_redirect">lmkd进程</a>会在低内存的时候根据<code>oom_score</code>杀掉对应进程以释放内存。当然进程管理可不止上面这点内容，后面文章会有详细介绍。</p>
+<p><code>App</code><strong>错误&#x2F;崩溃管理</strong>就是在<code>App</code>由于<code>crash</code>&#x2F;<code>ANR</code> (<code>Application not response</code>)&#x2F;自杀等原因导致<code>App</code>死亡，该模块会负责处理<code>App</code>死亡的相关事情，比如收集崩溃的堆栈信息，记录<code>App</code>死亡的信息等。<strong>性能分析</strong>可以帮助罗列出每个<code>App</code>占用的<strong>内存大小</strong>等这些数据，来帮助进行性能分析。</p>
+<p>大家对我拥有的能力有一定了解后，会不会有一种感觉，觉得我的名字<code>ActivityManagerService</code>是完全没有把我具有的能力表达出来的，还以为我只与<code>Activity</code>有关系。确实是这样的，我也一直在为这个“不合格的名字”而烦恼。但烦恼有啥用啊，已经是既定事实了，那只能接受了。</p>
+<p>以上就是关于我的一个介绍，因为我在整个<code>Android</code>系统中非常的有名气，就像大家对名人&#x2F;伟人的成长史有非常浓厚的兴趣一样，大家肯定对于我的“成长史”，也就是我的的启动过程也非常的感兴趣，那我就毫不保留的分享给大家。  </p>
+<h2 id="我的启动过程"><a href="#我的启动过程" class="headerlink" title="我的启动过程"></a>我的启动过程</h2><p>在介绍我的启动过程之前，我觉得非常有必要给大家简单介绍一个背景知识<code>SystemServe</code>r启动(<code>SystemServer</code>是一个类)，为啥要介绍<code>SystemServer</code>启动呢？首先因为我的启动过程是<code>SystemServer</code>启动过程中的一部分，我启动成功与否会关系到<code>SystemServer</code>启动成功与否；其次<code>SystemServer</code>启动时会发送各种阶段值，而和我<code>ActivityManagerService</code>有关的阶段值就有俩。</p>
+<h3 id="背景知识"><a href="#背景知识" class="headerlink" title="背景知识"></a>背景知识</h3><p><code>systemserver</code>进程被<code>zygote</code>进程<code>fork</code>成功后，<code>SystemServer</code>启动就是重头戏了，而<code>SystemServer</code>的启动过程其实就是各种服务的启动过程，只有<code>SystemServer</code>启动成功后，<code>Android</code>设备才可以被用户使用。下图展示了<code>SystemServer</code>启动过程的主要方法：(下面的方法都属于<code>SystemServer</code>类)<br><img src="/posts/39ac0fe3/AMS%E8%87%AA%E8%BF%B0SystemServer%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B%E7%BB%8F%E5%8E%86%E7%9A%84%E4%B8%BB%E8%A6%81%E6%96%B9%E6%B3%95.jpg" alt="AMS自述SystemServer启动流程经历的主要方法"><br>因为<code>systemserver</code>进程包含的服务非常多，那该如何保证这些服务顺利启动呢，<code>SystemServer</code>把所有的服务分类为<code>bootstrap service</code>、<code>core service</code>、<code>other service</code>、<code>apex service</code>这四种类型。先在<code>startBootstrapServices</code>方法中启动<code>bootstrap</code>类型的服务，其次在<code>startCoreServices</code>方法中启动<code>core</code>类型的服务，再次在<code>startOtherServices</code>方法中启动<code>other</code>类型的服务，最后在<code>startApexServices</code>启动<code>apex</code>类型的服务。因此<code>SystemServer</code>启动过程就是依照上面的<strong>顺序启动</strong>各种服务，而我<code>ActivityManagerService</code>很荣幸属于<code>bootstrap</code>类型的服务，因此是最早被初始化，为啥是初始化呢，因为<code>ActivityManagerService</code>的真正启动过程还在后面流程中。</p>
+<h4 id="阶段值-phase"><a href="#阶段值-phase" class="headerlink" title="阶段值 (phase)"></a>阶段值 (phase)</h4><p>对所有的服务进行分类，只是解决了它们启动先后的问题，而服务与服务之间是存在依赖关系的，比如<code>InputManagerService</code>、<code>WindowManagerService</code>等是需要知道<code>ActivityManagerService</code>是否启动完成了，当得知<code>ActivityManagerService</code>启动完成后，才可以使用它提供的功能比如注册广播接收器、发送广播等。而解决这个问题的办法就是<strong>发送阶段值</strong> (<code>phase</code>)，下图展示了<code>SystemServer</code>启动过程中发送的阶段值：<br><img src="/posts/39ac0fe3/AMS%E8%87%AA%E8%BF%B0SystemServer%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B%E5%AF%B9%E5%BA%94%E7%9A%84%E9%98%B6%E6%AE%B5%E5%80%BC.jpg" alt="AMS自述SystemServer启动流程对应的阶段值"><br>如上图，在<code>SystemServer</code>的启动过程中会分发不同的阶段值，不同的阶段值所代表的含义各不相同，服务收到这些阶段值就可以知道当前是到了哪个启动阶段了，同时根据自己的需求来做不同的事情。<br><strong>PHASE_WAIT_FOR_DEFAULT_DISPLAY</strong>代表当前阶段正在等待获取显示屏幕的硬件信息，这时候<code>SystemServer</code>的启动过程就暂时处于暂停状态，若屏幕硬件信息获取失败则停止启动；否则继续启动。<br><strong>PHASE_ACTIVITY_MANAGER_READY</strong>代表<code>ActivityManagerService</code>已经准备好了，其他的服务可以使用<code>ActivityManagerService</code>提供的服务了，比如发送广播。<br><strong>PHASE_BOOT_COMPLETED</strong>代表<code>SystemServer</code>启动完成了，所有的服务都已经准备好“进入工作状态”了，Android设备可以被用户使用了 (当然这只是解释几个常用的阶段值)。<br>想了解更多<code>SystemServer</code>的内容，可以看<a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzI2MjIyMjczMQ==&mid=2653047068&idx=1&sn=9b192e5b92e8af708dc9059ac520a2e2&token=532871284&lang=zh_CN&scene=21#wechat_redirect">此文章</a></p>
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p><code>ActivityManagerService</code>的启动过程对于<code>SystemServer</code>的启动来说非常重要，<code>ActivityManagerService</code>在<code>StartBootstrapServices</code>方法中<strong>被初始化</strong>，在<code>StartOtherServices</code>方法<strong>做收尾</strong>工作。<br>而<code>PHASE_ACTIVITY_MANAGER_READY</code>、<code>PHASE_BOOT_COMPLETED</code>这两个阶段值是与<code>ActivityManagerService</code>有关系的。<code>PHASE_ACTIVITY_MANAGER_READY</code>自不用说代表我<code>ActivityManagerService</code>已经准备好了。而<code>PHASE_BOOT_COMPLETED</code>阶段值是由我发送的，我再重复一遍&#x3D;&#x3D;&#x3D;PHASE_BOOT_COMPLETED这个值可是由我来发送的&#x3D;&#x3D;&#x3D;。  </p>
+<h3 id="启动步骤"><a href="#启动步骤" class="headerlink" title="启动步骤"></a>启动步骤</h3><p>好了背景知识介绍完毕后，那来看下我的启动分为哪些步骤，请大家看下图<br><img src="/posts/39ac0fe3/AMS%E8%87%AA%E8%BF%B0%E5%90%AF%E5%8A%A8%E6%AD%A5%E9%AA%A4.jpg" alt="AMS自述启动步骤"><br>如上图，我的启动可以分为<strong>出生、设置系统进程、准备、等待boot anim完成</strong>这四个步骤，出生这个步骤发生于<code>startBootstrapServices</code>方法的最前面，而设置系统进程这个步骤发生于<code>startBootstrapServices</code>方法的中间部分，准备这个步骤发生于<code>startOtherServices</code>方法的结尾部分，而等待<code>boot anim</code>则是最后一个步骤。可以看到<code>ActivityManagerService</code>的启动<strong>贯穿</strong>了<code>Systemserver</code>启动流程的全过程。那就按这四个步骤来介绍下我的启动吧。</p>
+<h3 id="出生"><a href="#出生" class="headerlink" title="出生"></a>出生</h3><p>别看我是一个服务，但我也像其他类一样也是一个类，我的“出生”是指创建一个<code>ActivityManagerService</code>实例，而我的“出生地”是在<code>SystemServer</code>类的<code>startBootstrapServices</code>的方法中，既然创建<code>ActivityManagerService</code>实例，那肯定需要调用它的构造方法，在<code>ActivityManagerService</code>的构造方法中对很多的属性做了初始化的操作，以下列出了对主要属性做的一些初始化操作：  </p>
+<ol>
+<li><strong>mProcessList属性</strong>，它是<code>ProcessList</code>类型，它负责进程管理的工作，会构造该类型的实例，并且调用它的<code>init</code>方法进行初始化。</li>
+<li><strong>mAppProfiler属性</strong>，它是<code>AppProfiler</code>类型，它负责性能分析的工作，会创建该类型的实例。</li>
+<li><strong>mOomAdjuster属性</strong>，它是<code>OomAdjuster</code>类型，它也负责进程管理的工作，同样也会创建该类型的实例。</li>
+<li><strong>mFgBroadcastQueue、mBgBroadcastQueue、mBgOffloadBroadcastQueue、mFgOffloadBroadcastQueue</strong>都是<code>BroadcastQueue</code>类型的，它们对<code>BroadcastReceiver</code>进行管理，同样也会创建这些类型的实例。</li>
+<li><strong>mServices属性</strong>，它是<code>ActiveServices</code>类型，它对<code>Service</code>进行管理，同样也会创建该类型的实例。</li>
+<li><strong>mCpHelper属性</strong>，它是<code>ContentProviderHelper</code>类型，它对<code>ContentProvider</code>进行管理，同样也会创建该类型的实例。</li>
+<li><strong>mAppErrors属性</strong>，它是<code>AppErrors</code>类型，它对<code>App</code>的死亡进行管理，同样也会创建该类型的实例。<br>上面只是列出了主要的属性初始化，在<code>ActivityManagerService</code>构造方法中还对其他的属性进行了初始化，自此我<code>ActivityManagerService</code>就“出生”了，在内存中占有了一席之地。<h3 id="设置系统进程"><a href="#设置系统进程" class="headerlink" title="设置系统进程"></a>设置系统进程</h3>我虽然“出生”了，但是我所在的<code>systemserver</code>进程很多信息还没有设置，它就犹如一个“黑户”的存在。大家都知道我有一个功能是<strong>进程管理</strong>，而进程管理有一个规定就是<strong>凡是App进程</strong>甚至包含<code>systemserver</code>进程在被创建后，都需要使用<code>ProcessRecord</code>对象把进程信息<strong>记录</strong>下来，这样进程管理才可以更好的对进程进行管理。<br>并且<a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzI2MjIyMjczMQ==&mid=2653046677&idx=1&sn=a6d599d3aa4b7cec69ff5cde056ba320&token=532871284&lang=zh_CN&scene=21#wechat_redirect">lmkd进程</a>也同样有一个规定，就是需要进程管理把进程的<code>pid</code>、<code>oom_score</code>交给它，这样它才可以查杀进程，而这里的进程是所有的<code>App进程</code>和<code>systemserver进程</code>，因此进程管理也需要把<code>systemserver进程</code>的<code>pid</code>和它的<code>oom_score</code>传递给<code>lmkd进程</code>。<br>而上面这些事情就是设置系统进程这一步所要做的，当然还做了别的一些事情。因为我具有进程管理的功能，因此设置系统进程的事情就落在了我的头上。设置系统进程同样也发生于<code>startBootstrapServices</code>方法，那该步到底都做了哪些事情呢，那就听我细细道来。  <h4 id="添加到ServiceManager服务"><a href="#添加到ServiceManager服务" class="headerlink" title="添加到ServiceManager服务"></a>添加到ServiceManager服务</h4>大家都知道我是一个<code>binder</code>服务，并且我是一个具名<code>binder</code>服务，为了让使用方能使用到我提供的这些能力，我需要做的一件事情就是把我自己添加到<code>ServiceManager</code>服务中，<code>ServiceManager</code>服务是位于<code>servicemanager</code>进程的服务，它的作用就是管理所有的具名<code>binder</code>服务。当然除了把我自己添加到<code>ServiceManager</code>服务外，还把其他的<code>binder</code>服务也加到了<code>ServiceManager</code>服务中，请看下面代码：  <figure class="highlight java"><figcaption><span>fold</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//ActivityManagerService  </span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setSystemProcess</span><span class="params">()</span> &#123;  </span><br><span class="line">        省略代码······  </span><br><span class="line">        <span class="comment">//Context.ACTIVITY_SERVICE的值是activity，下面方法把ActivityManagerService加入到ServiceManager服务中  </span></span><br><span class="line">        ServiceManager.addService(Context.ACTIVITY_SERVICE, <span class="built_in">this</span>, <span class="comment">/* allowIsolated= */</span> <span class="literal">true</span>,  </span><br><span class="line">                    DUMP_FLAG_PRIORITY_CRITICAL | DUMP_FLAG_PRIORITY_NORMAL | DUMP_FLAG_PROTO);   </span><br><span class="line">        <span class="comment">//下面代码把其他具名binder服务加入到ServiceManager服务中  </span></span><br><span class="line">        ServiceManager.addService(ProcessStats.SERVICE_NAME, mProcessStats);  </span><br><span class="line">        ServiceManager.addService(<span class="string">&quot;meminfo&quot;</span>, <span class="keyword">new</span> <span class="title class_">MemBinder</span>(<span class="built_in">this</span>), <span class="comment">/* allowIsolated= */</span> <span class="literal">false</span>, DUMP_FLAG_PRIORITY_HIGH);  </span><br><span class="line">        省略代码······  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="创建ProcessRecord"><a href="#创建ProcessRecord" class="headerlink" title="创建ProcessRecord"></a>创建ProcessRecord</h4>创建<code>ProcessRecord</code>对象把<code>systemserver</code>进程信息保存下来。大家都知道每个<code>App</code>进程都有对应的包名，而<code>systemserver</code>进程也不例外，我把它的包名定义为<code>android</code>，下面代码做了以上这些事情：<figure class="highlight java"><figcaption><span>fold</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//ActivityManagerService  </span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setSystemProcess</span><span class="params">()</span> &#123;  </span><br><span class="line">        省略代码······  </span><br><span class="line">        <span class="comment">//创建包名为 android 的ApplicationInfo对象  </span></span><br><span class="line">        <span class="type">ApplicationInfo</span> <span class="variable">info</span> <span class="operator">=</span> mContext.getPackageManager().getApplicationInfo(  </span><br><span class="line">                    <span class="string">&quot;android&quot;</span>, STOCK_PM_FLAGS | MATCH_SYSTEM_ONLY);  </span><br><span class="line">        mSystemThread.installSystemApplicationInfo(info, getClass().getClassLoader());  </span><br><span class="line">  </span><br><span class="line">        <span class="keyword">synchronized</span> (<span class="built_in">this</span>) &#123;  </span><br><span class="line">                <span class="comment">//创建ProcessRecord对象  </span></span><br><span class="line">                <span class="type">ProcessRecord</span> <span class="variable">app</span> <span class="operator">=</span> mProcessList.newProcessRecordLocked(info, info.processName,  </span><br><span class="line">                        <span class="literal">false</span>,  </span><br><span class="line">                        <span class="number">0</span>,  </span><br><span class="line">                        <span class="literal">false</span>,  </span><br><span class="line">                        <span class="number">0</span>,  </span><br><span class="line">                        <span class="literal">null</span>,  </span><br><span class="line">                        <span class="keyword">new</span> <span class="title class_">HostingRecord</span>(HostingRecord.HOSTING_TYPE_SYSTEM));  </span><br><span class="line">                app.setPersistent(<span class="literal">true</span>); <span class="comment">//设置为persistent  </span></span><br><span class="line">                app.setPid(MY_PID);  </span><br><span class="line">                app.mState.setMaxAdj(ProcessList.SYSTEM_ADJ);<span class="comment">//设置最大adj值，SYSTEM_ADJ的值为-900  </span></span><br><span class="line">                app.makeActive(mSystemThread.getApplicationThread(), mProcessStats);  </span><br><span class="line">                app.mProfile.addHostingComponentType(HOSTING_COMPONENT_TYPE_SYSTEM);  </span><br><span class="line">                addPidLocked(app);  </span><br><span class="line">                <span class="comment">//把app保存到ProcessLisst对象中  </span></span><br><span class="line">                updateLruProcessLocked(app, <span class="literal">false</span>, <span class="literal">null</span>);  </span><br><span class="line">        &#125;  </span><br><span class="line">        省略代码······  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="传递信息给lmkd进程"><a href="#传递信息给lmkd进程" class="headerlink" title="传递信息给lmkd进程"></a>传递信息给lmkd进程</h4><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzI2MjIyMjczMQ==&mid=2653046677&idx=1&sn=a6d599d3aa4b7cec69ff5cde056ba320&token=532871284&lang=zh_CN&scene=21#wechat_redirect">lmkd进程</a>规定在查杀进程的时候是按照<code>oom_score</code>从高到低进行查杀，也就是<code>oom_score</code>越高越先被杀掉。而我所在<code>systemserver</code>进程那可是非常非常重要的进程，肯定是不能随随便便让<code>lmkd</code>杀掉的，因此我把<code>systemserver</code>进程的<code>oom_score</code>设置为一个固定的值-900，这样lmkd就不会杀掉它了。如下是相应代码：<figure class="highlight java"><figcaption><span>fold</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//ActivityManagerService  </span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setSystemProcess</span><span class="params">()</span> &#123;  </span><br><span class="line">        省略代码······  </span><br><span class="line">        <span class="comment">//下面方法，会更新进程的oom_score及进程状态等信息，并且会把进程的新的oom_score及pid发送给lmkd进程  </span></span><br><span class="line">        updateOomAdjLocked(OomAdjuster.OOM_ADJ_REASON_NONE);  </span><br><span class="line">        省略代码······  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="小结-1"><a href="#小结-1" class="headerlink" title="小结"></a>小结</h4>经过此步骤，我被添加到<code>ServiceManager</code>服务中，这样我的使用方比如各种<code>App</code>就可以使用我的功能了。我所在的<code>systemserver</code>进程被<code>ProcessRecord</code>对象记录下来，并且它不再“无名无姓”了，它的包名就是<code>android</code>。这样进程管理就可以对<code>systemserver</code>进程进行管理了。同时<code>systemserver</code>进程的<code>pid</code>和<code>oom_score:-900</code>信息也传递给<code>lmkd</code>进程，便于<code>lmkd</code>更好的查杀进程。<br>经过此步骤后，<code>SystemServer</code>后面的启动流程中各种服务就可以从进程管理根据包名<code>android</code>拿到<code>systemserver</code>进程对应的<code>ProcessRecord</code>对象，进而做相应的处理了。  <h3 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h3><code>SystemServer</code>的启动流程依然在继续进行，经过<code>startBootstrapServices</code>、<code>startCoreServices</code>方法后，进入到<code>startOtherServices</code>方法的尾声时，这时候<code>SystemServer</code>的启动算是接近了尾声。而<code>SystemServer</code>会调用我<code>ActivityManagerService</code>的<code>systemReady</code>方法，告知我系统准备好了，但是准备好并不代表Android设备可以被用户使用了，而要达到完全可以工作状态，那剩下的事情还需要我来处理。自此我的启动进入了准备这一步。<br>而准备这一步又被我划分为<strong>准备前、准备好、准备后</strong>这三小步，那就依次来介绍下它们吧。<h4 id="准备前"><a href="#准备前" class="headerlink" title="准备前"></a>准备前</h4>在“出生”那一步的时候，<code>ActivityManagerService</code>实例被创建并且它包含的很多属性也被初始化，比如四大组件的管理类。虽然它们被初始化了，但是系统准备好这个激动人心的消息它们还一无所知，而准备前这一步，我会把系统准备好这个消息通知给它们，当然还做一些别的工作，请看下面代码：<figure class="highlight java"><figcaption><span>fold</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//ActivityManagerService  </span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">systemReady</span><span class="params">(<span class="keyword">final</span> Runnable goingCallback, <span class="meta">@NonNull</span> TimingsTraceAndSlog t)</span> &#123;  </span><br><span class="line">        省略代码······  </span><br><span class="line">        <span class="keyword">synchronized</span>(<span class="built_in">this</span>) &#123;  </span><br><span class="line">            省略代码······  </span><br><span class="line">            mLocalDeviceIdleController =  </span><br><span class="line">                    LocalServices.getService(DeviceIdleInternal.class);  </span><br><span class="line">  </span><br><span class="line">            <span class="comment">//告知相应模块，系统已经准备好了  </span></span><br><span class="line">            mActivityTaskManager.onSystemReady();  </span><br><span class="line">            <span class="comment">// Make sure we have the current profile info, since it is needed for security checks.  </span></span><br><span class="line">            mUserController.onSystemReady();  </span><br><span class="line">            mAppOpsService.systemReady();  </span><br><span class="line">            mProcessList.onSystemReady();  </span><br><span class="line">            mAppRestrictionController.onSystemReady();  </span><br><span class="line">            mSystemReady = <span class="literal">true</span>;  </span><br><span class="line">        &#125;  </span><br><span class="line">  </span><br><span class="line">        省略代码······  </span><br><span class="line">        retrieveSettings();<span class="comment">//检索一些数据从settings了或者其他地方，并且用这些数据来初始化一些属性  </span></span><br><span class="line">        省略代码······  </span><br><span class="line">  </span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<h4 id="准备好"><a href="#准备好" class="headerlink" title="准备好"></a>准备好</h4>准备前的事情做完后，我就进入准备好这一步，因为我及所有的属性都准备好了，可以很好的工作了，因此我会把<code>PHASE_ACTIVITY_MANAGER_READY</code>这个阶段值发送出去，告知各种服务，我<code>ActivityManagerService</code>已经准备好了啊，你们可以使用我的提供的服务了啊。<br>如下是相关代码：  <figure class="highlight java"><figcaption><span>fold</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">startOtherServices</span><span class="params">(<span class="meta">@NonNull</span> TimingsTraceAndSlog t)</span> &#123;  </span><br><span class="line">    省略代码······  </span><br><span class="line">    mActivityManagerService.systemReady(() -&gt; &#123;  </span><br><span class="line">            省略代码······  </span><br><span class="line">            <span class="comment">//发送PHASE_ACTIVITY_MANAGER_READY阶段值  </span></span><br><span class="line">            mSystemServiceManager.startBootPhase(t, SystemService.PHASE_ACTIVITY_MANAGER_READY);  </span><br><span class="line">            省略代码······  </span><br><span class="line">  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="准备后"><a href="#准备后" class="headerlink" title="准备后"></a>准备后</h4>我把我准备好的消息告知所有服务后，我还得继续回来把剩余的事情做完，其中最重要的一件事情是启动<code>launcher</code>，只有<code>launcher</code>启动起来后Android设备才可以被用户使用。<br>如下是相关代码：<figure class="highlight java"><figcaption><span>fold</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//ActivityManagerService  </span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">systemReady</span><span class="params">(<span class="keyword">final</span> Runnable goingCallback, <span class="meta">@NonNull</span> TimingsTraceAndSlog t)</span> &#123;  </span><br><span class="line">        省略代码······  </span><br><span class="line">        mAtmInternal.startHomeOnAllDisplays(currentUserId, <span class="string">&quot;systemReady&quot;</span>);  <span class="comment">//启动launcher  </span></span><br><span class="line">        省略代码······  </span><br><span class="line">  </span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="等待boot-anim完成"><a href="#等待boot-anim完成" class="headerlink" title="等待boot anim完成"></a>等待boot anim完成</h3>首先我来介绍下<code>boot anim</code>，它是在Android系统启动过程中显示的一个启动动画，这个启动动画消失后才可以代表Android设备完全可以被用户使用了，而该动画消失的一个前提是<code>launcher</code>已经启动完成了。而我在收到<code>launcher</code>启动完成的消息后会发送<code>PHASE_BOOT_COMPLETED</code>阶段值，该值一发出去后，就代表Android设备可以被用户使用了，所有的服务都打起精神来进入工作状态了。<br>如下代码：<figure class="highlight java"><figcaption><span>fold</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">ActivityManagerService  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">finishBooting</span><span class="params">()</span> &#123;  </span><br><span class="line">        省略代码······  </span><br><span class="line">        <span class="comment">// Let system services know.  </span></span><br><span class="line">        mSystemServiceManager.startBootPhase(t, SystemService.PHASE_BOOT_COMPLETED);  </span><br><span class="line">        省略代码······  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="小结-2"><a href="#小结-2" class="headerlink" title="小结"></a>小结</h3>我的启动贯穿了<code>SystemServer</code>启动的整个流程，如下是启动过程所做的事情：  </li>
+<li>在<code>SystemServer</code>最先启动的时候，会创建<code>ActivityManagerService</code>的实例，并且初始化它包含的各种属性</li>
+<li>我还承担了设置系统进程的任务，我会创建<code>ProcessRecord</code>对象把<code>SystemServer</code>进程信息记录下来，并且为<code>SystemServer</code>进程提供android这样的包名，这样<code>SystemServer</code>进程就可以被记录并且被进程管理进行管理了，同时我还会把<code>SystemServer</code>进程的<code>pid</code>和<code>oom_score:-900</code>的信息传递给<code>lmkd</code>进程</li>
+<li>在准备阶段我会把<code>PHASE_ACTIVITY_MANAGER_READY</code>这个阶段值发送给所有服务，并且还会启动<code>launcher</code>，启动<code>launcher</code>可是一个系统能不能被使用的一个重要环节</li>
+<li>当收到<code>launcher</code>启动完成的消息后，<code>boot anim</code>会消失，这时候我会发送<code>PHASE_BOOT_COMPLETED</code>阶段值，该值可是代表Android设备可以被用户使用了。<br>既然Android系统已经启动完成了，<code>SystemServer</code>进程中的服务以及其他的各种服务都已经进入“工作状态”了，那接下来我给大家介绍下我的“小伙伴”吧，正是由于它们的帮助才能保证我<code>ActivityManagerService</code>的工作能够顺利进行。<h2 id="我的“小伙伴”"><a href="#我的“小伙伴”" class="headerlink" title="我的“小伙伴”"></a>我的“小伙伴”</h2>大家大可不必把我想象成超人，能胜任这么多复杂的工作，完全是由我和我的“小伙伴”们一起完成的，先来通过下图来认识下我的主要“小伙伴”<br><img src="/posts/39ac0fe3/AMS%E8%87%AA%E8%BF%B0%E4%B8%BB%E8%A6%81%E6%A8%A1%E5%9D%97.jpg" alt="AMS自述主要模块"><br>如上图，我的主要“小伙伴”有<strong>Activity管理模块、Service管理模块、BroadcastReceiver管理模块、ContentProvider管理模块、进程管理模块、App错误管理模块、App性能分析模块</strong>，当然我还有别的不是很重要的模块没有展示出来，那就依次把我的“小伙伴”介绍给大家吧。<h3 id="Activity管理模块"><a href="#Activity管理模块" class="headerlink" title="Activity管理模块"></a>Activity管理模块</h3><code>Activity</code>管理模块的主要作用是管理整个Android系统中的所有<code>Activity</code>，比如<code>Activity</code>的启动，<code>Activity</code>的<code>pause</code>，<code>Activity</code>的<code>stop</code>等可都是要经过该模块，而每个被启动的<code>Activity</code>是使用一个<code>ActivityRecord</code>对象保存的，我把该模块所做的事情全权委托给了<code>ActivityTaskManagerService</code>类，该类也是一个<code>binder</code>服务。关于该模块就暂时介绍到这，后面文章会详细介绍它。<h3 id="Service管理模块"><a href="#Service管理模块" class="headerlink" title="Service管理模块"></a>Service管理模块</h3><code>Service</code>管理模块的主要作用是管理所有的<code>Service</code>，<code>Service</code>的启动、销毁等等都是该模块负责，而每个被启动的<code>Service</code>是使用一个<code>ServiceRecord</code>对象保存的，我同样把该模块所做的事情交给了<code>ActiveServices</code>类，该类可不是一个<code>binder</code>服务。<h3 id="BroadcastReceiver管理模块"><a href="#BroadcastReceiver管理模块" class="headerlink" title="BroadcastReceiver管理模块"></a>BroadcastReceiver管理模块</h3><code>BroadcastReceiver</code>管理模块的主要作用是管理所有的<code>BroadcastReceiver</code>，而每个被启动的<code>BroadcastReceiver</code>是使用一个<code>BroadcastRecord</code>对象保存的，我同样把该模块所做的事情交给了<code>BroadcastQueue</code>,而关于<code>BroadcastQueue</code>的分类可是有好几种分发，会在后面专题中详细介绍。<h3 id="ContentProvider管理模块"><a href="#ContentProvider管理模块" class="headerlink" title="ContentProvider管理模块"></a>ContentProvider管理模块</h3><code>ContentProvider</code>管理模块的主要作用是管理所有的<code>ContentProvider</code>，而每个被启动的<code>ContentProvider</code>同样使用一个<code>ContentProviderRecord</code>对象保存的，我同样把该模块所做的事情交给了<code>ContentProviderHelper</code>类。同样会在后面有专题详细介绍该模块。<h3 id="进程管理模块"><a href="#进程管理模块" class="headerlink" title="进程管理模块"></a>进程管理模块</h3>上面的四个模块所做的事情是管理四大组件，而我除了管理四大组件外我还有非常重要的一个功能就是进程管理，而进程管理主要是进程管理模块在负责，进程管理模块所做的事情主要由<code>ProcessList</code>和<code>OomAdjuster</code>两个类完成，那就来看下进程管理模块都做了哪些事情吧。<br>首先在<code>App</code>进程开始孵化(<code>fork</code>)之前，<code>ProcessList</code>会使用<code>ProcessRecord</code>对象来保存<code>App</code>进程，<code>ProcessList</code>把孵化<code> (fork)App</code>进程的请求发送给<code>zygote</code>进程，<code>zygote</code>进程孵化成功<code>App</code>进程后，<code>ProcessList</code>会收到这个消息，进而把孵化成功的<code>App</code>进程的<code>pid (进程id)</code>等信息保存到<code>ProcessRecord</code>对象中。因此<code>ProcessList</code>中保存了所有的<code>App</code>进程。<br>进程管理模块所做的事情可不是仅仅把<code>App</code>进程保存起来这么简单，不知道大家是否记得<code>lmkd</code>进程 (不记得可以看<a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzI2MjIyMjczMQ==&mid=2653046677&idx=1&sn=a6d599d3aa4b7cec69ff5cde056ba320&chksm=f1988171c6ef08670acf547d94318b79fb1dd71c9b40cc45bd200eaf2223d1475854320c3fed&token=1330133441&lang=zh_CN&scene=21#wechat_redirect">lmkd进程杀手</a>这篇文章)，<code>lmkd</code>进程的主要作用是根据内存的使用情况来杀掉分数最高的进程，而具有运行<code>Java/Kotlin</code>代码的进程的分数是由<code>OomAdjuster</code>来完成的，<code>OomAdjuster</code>会对所有的进程都计算出一个分数 (<code>oom_score</code>)，比如当前正在显示的<code>Activity</code>对应的<code>App</code>的分数值是0，并且把分数、进程id、uid这些信息发送给lmkd进程。<br><code>OomAdjuster</code>在计算每个进程的分数时，也同时会计算出每个进程对应的进程状态 (<code>procState</code>)，比如正在显示的<code>Activity</code>对应的进程状态值是<code>PROCESS_STATE_TOP</code> (它的值是2)，和进程分数一样，进程状态值越大越容易被杀掉以及分配的资源越少。<br>当然除了依靠<code>lmkd</code>进程杀进程外，<code>OomAdjuster</code>也会在合适的时机根据一些条件来把进程状态为<code>PROCESS_STATE_CACHED_EMPTY</code>或者<code>PROCESS_STATE_CACHED_ACTIVITY</code>或者<code>PROCESS_STATE_CACHED_ACTIVITY_CLIENT</code>的进程杀掉，这个杀进程的过程可是不需要<code>lmkd</code>进程参与的。<br>对于一些处于后台又没有<code>BroadcastReceiver</code>或者<code>Service</code>或者<code>ContentProvider</code>运行的进程，该模块会选择把它冻结或者杀死，负责冻结功能的类是<code>CachedAppOptimizer</code>。<br>这里只是先简单带大家认识进程管理模块，同样也会在后面专题中着重介绍它。<h3 id="App错误管理模块"><a href="#App错误管理模块" class="headerlink" title="App错误管理模块"></a>App错误管理模块</h3><code>App</code>进程同生物的生命一样也会存在生、死，当<code>App</code>进程死掉的时候，不管是由于崩溃或者<code>ANR (Application not response)</code>或者自身原因的死掉，都需要<code>App</code>错误管理模块来处理<code>App</code>进程的“后世”，若<code>App</code>死掉该模块会把<code>App</code>进程当时死掉的堆栈状态保存下来，如果是由于ANR导致的死亡，也会把<code>ANR</code>的各种信息保存下来。负责该模块的主要类是<code>AppErrors</code>。<br><code>App</code>进程在死掉的时候，也会把<code>App</code>进程死掉的相关重要信息保存在文件中，而做这个工作的类是<code>AppExitInfoTracker</code>，当然除了做这些工作之外，还有其他的工作内容就暂时不细说了。<h3 id="App性能分析模块"><a href="#App性能分析模块" class="headerlink" title="App性能分析模块"></a>App性能分析模块</h3><code>App</code>性能分析模块的主要作用是可以统计每个<code>App</code>进程所暂用的CPU资源、内存的使用情况等数据，负责该模块的主要类是<code>AppProfiler</code>，关于该模块会在后面专题详细介绍。<h3 id="小结-3"><a href="#小结-3" class="headerlink" title="小结"></a>小结</h3>通过上面的介绍大家应该对我<code>ActivityManagerService</code>和我的主要模块有了一个清晰的了解，当然对以上模块的介绍只是先简单带大家认识它们，后面会有各自专题详细的介绍它们。<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2>本文带大家认识了<code>ActivityManagerService</code>，及它的启动过程以及它的各个模块及模块作用。因为<code>ActivityManagerService</code>的功能实在是太多了，一两篇文章是根本不可能把它的“魅力”全部都给展示出来的，因此后面的文章会针对每个模块进行详细的介绍，比如进程管理、<code>Activity</code>管理、<code>OomAdj</code>、<code>Service</code>管理、<code>ANR</code>及<code>ANR</code>分析等内容。</li>
+</ol>
+<!-- flag of hidden posts -->
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div></div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>Donate</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.jpg" alt=" WeChat Pay"/>
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/private/" rel="tag"># private</a>
+          
+            <a href="/tags/%E5%AE%89%E5%8D%93%E8%BF%9B%E9%98%B6/" rel="tag"># 安卓进阶</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">100</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">29</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@qq.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/shenbh" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://gitee.com/shen_bh" target="_blank" title="Gitee">
+                      
+                        <i class="fa fa-fw fa-git"></i>Gitee</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Android-AMS-%E8%87%AA%E8%BF%B0"><span class="nav-text">Android AMS 自述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%AC%E6%96%87%E5%A4%A7%E7%BA%B2"><span class="nav-text">本文大纲</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%91%E6%98%AF%E4%B8%80%E4%B8%AAbinder%E6%9C%8D%E5%8A%A1"><span class="nav-text">我是一个binder服务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%91%E7%9A%84%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B"><span class="nav-text">我的启动过程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%83%8C%E6%99%AF%E7%9F%A5%E8%AF%86"><span class="nav-text">背景知识</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%98%B6%E6%AE%B5%E5%80%BC-phase"><span class="nav-text">阶段值 (phase)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-text">小结</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E6%AD%A5%E9%AA%A4"><span class="nav-text">启动步骤</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%87%BA%E7%94%9F"><span class="nav-text">出生</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E7%B3%BB%E7%BB%9F%E8%BF%9B%E7%A8%8B"><span class="nav-text">设置系统进程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B7%BB%E5%8A%A0%E5%88%B0ServiceManager%E6%9C%8D%E5%8A%A1"><span class="nav-text">添加到ServiceManager服务</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BAProcessRecord"><span class="nav-text">创建ProcessRecord</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BC%A0%E9%80%92%E4%BF%A1%E6%81%AF%E7%BB%99lmkd%E8%BF%9B%E7%A8%8B"><span class="nav-text">传递信息给lmkd进程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93-1"><span class="nav-text">小结</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%87%86%E5%A4%87"><span class="nav-text">准备</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%87%86%E5%A4%87%E5%89%8D"><span class="nav-text">准备前</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%87%86%E5%A4%87%E5%A5%BD"><span class="nav-text">准备好</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%87%86%E5%A4%87%E5%90%8E"><span class="nav-text">准备后</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AD%89%E5%BE%85boot-anim%E5%AE%8C%E6%88%90"><span class="nav-text">等待boot anim完成</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93-2"><span class="nav-text">小结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%91%E7%9A%84%E2%80%9C%E5%B0%8F%E4%BC%99%E4%BC%B4%E2%80%9D"><span class="nav-text">我的“小伙伴”</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Activity%E7%AE%A1%E7%90%86%E6%A8%A1%E5%9D%97"><span class="nav-text">Activity管理模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Service%E7%AE%A1%E7%90%86%E6%A8%A1%E5%9D%97"><span class="nav-text">Service管理模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#BroadcastReceiver%E7%AE%A1%E7%90%86%E6%A8%A1%E5%9D%97"><span class="nav-text">BroadcastReceiver管理模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ContentProvider%E7%AE%A1%E7%90%86%E6%A8%A1%E5%9D%97"><span class="nav-text">ContentProvider管理模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E6%A8%A1%E5%9D%97"><span class="nav-text">进程管理模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#App%E9%94%99%E8%AF%AF%E7%AE%A1%E7%90%86%E6%A8%A1%E5%9D%97"><span class="nav-text">App错误管理模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#App%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90%E6%A8%A1%E5%9D%97"><span class="nav-text">App性能分析模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93-3"><span class="nav-text">小结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>
