@@ -90,7 +90,7 @@
 <meta property="og:image" content="http://shenbh.github.io/posts/6f6a6f9c/4PxA1ykdOYwEhgt.png">
 <meta property="og:image" content="http://shenbh.github.io/posts/6f6a6f9c/kotlin%E4%B8%AD%E9%80%86%E5%8F%98in%E4%BD%8D%E7%BD%AE.png">
 <meta property="article:published_time" content="2020-03-23T02:17:01.000Z">
-<meta property="article:modified_time" content="2025-03-18T02:54:27.680Z">
+<meta property="article:modified_time" content="2025-03-19T03:43:46.939Z">
 <meta property="article:author" content="阿炳">
 <meta property="article:tag" content="Kotlin知识点">
 <meta name="twitter:card" content="summary">
@@ -398,11 +398,12 @@
 <p>为了版本兼容选择类型擦除无可厚非，但是类型擦除同时也带来了一些限制：</p>
 <figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> <span class="title">testGeneric</span><span class="params">(t: <span class="type">T</span>)</span></span>&#123;</span><br><span class="line">    println(T::<span class="keyword">class</span>.java)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>这段代码无法编译通过，泛型<code>T</code>只是一个泛型参数，无法获取<code>Class</code>信息，同样这也是伪泛型的体现；因为无法通过泛型参数获取<code>Class</code>，因此有时候需要另外传递一个<code>Class</code>参数，比如Gson框架中的<code>fromJson</code>方法：</p>
+<p>这段代码无法编译通过，泛型<code>T</code>只是一个泛型参数，无法获取<code>Class</code>信息，同样这也是伪泛型的体现；因为无法通过泛型参数获取<code>Class</code>，因此有时候需要另外传递一个<code>Class</code>参数，比如Gson框架中的<code>fromJson</code>方法：  </p>
 <figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> &lt;T&gt; T fromJson(String json, Class&lt;T&gt; classOfT) throws JsonSyntaxException &#123; </span><br><span class="line">   <span class="keyword">return</span> gson.fromJson(json, clazz); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>传递额外参数可以满足需要类对象的场景，kotlin还有另外更彻底的实现方式，通过关键字<code>reified</code>和<code>inline</code>的结合使用，把函数定义成内联函数，同时可以将函数中的泛型参数当成真实参数使用：</p>
+<p>传递额外参数可以满足需要类对象的场景，kotlin还有另外更彻底的实现方式，通过关键字<code>reified</code>和<code>inline</code>的结合使用，把函数定义成内联函数，同时可以将函数中的泛型参数当成真实参数使用：  </p>
 <figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// reified inline 使用</span></span><br><span class="line"><span class="keyword">inline</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;<span class="keyword">reified</span> T&gt;</span> <span class="title">testGenericTwo</span><span class="params">()</span></span>&#123;</span><br><span class="line">    println(T::<span class="keyword">class</span>.java)</span><br><span class="line">&#125;</span><br><span class="line">********************************************</span><br><span class="line">运行结果：</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">java</span>.<span class="title">lang</span>.<span class="title">String</span></span></span><br><span class="line">Process finished with exit code <span class="number">0</span></span><br></pre></td></tr></table></figure>
+
 
 <h3 id="Kotlin型变"><a href="#Kotlin型变" class="headerlink" title="Kotlin型变"></a>Kotlin型变</h3><h4 id="Java协变和逆变"><a href="#Java协变和逆变" class="headerlink" title="Java协变和逆变"></a>Java协变和逆变</h4><p>假设有两个类<code>Father</code>和<code>Son</code>，<code>Son</code>是<code>Father</code>的子类，但是包含这两个泛型的泛型类之间没有任何关系，例如：<code>List&lt;Father&gt;</code>和<code>List&lt;Son&gt;</code>之间没有任何关系，这也意味着以下的代码是走不通的：</p>
 <figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Father</span></span>&#123;&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Son</span> <span class="title">extends</span> <span class="title">Father</span></span>&#123;&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Family</span>&lt;<span class="type">T</span>&gt;</span>&#123;&#125;</span><br><span class="line">void addElement(Family&lt;Father&gt; family)&#123;&#125;</span><br><span class="line"><span class="keyword">public</span> void main()&#123;</span><br><span class="line">    Family&lt;Son&gt; sonFamily = new Family&lt;&gt;();</span><br><span class="line">    addElement(sonFamily);</span><br><span class="line">&#125;</span><br><span class="line">************************************************</span><br><span class="line">编译报错：</span><br><span class="line">Type mismatch.</span><br><span class="line">Required:</span><br><span class="line">Family&lt;Father&gt;</span><br><span class="line">Found:</span><br><span class="line">Family&lt;Son&gt;</span><br></pre></td></tr></table></figure>
@@ -465,7 +466,7 @@
 <p>对于逆变，泛型参数作为消费使用的时候，传入的参数一定是该泛型<code>T</code>的子类，能够保证泛型使用的安全；上述代码中定义了一个函数<code>putWaste</code>，需要传递的参数是<code>RefuseBin&lt;RecyclableWaste&gt;</code>，在函数中声明一个可回收垃圾，然后放入垃圾桶中，从逻辑上看，可回收垃圾桶放入可回收垃圾，没毛病；由于泛型参数被声明逆变，<code>RefuseBin&lt;Waste&gt;</code>是<code> RefuseBin&lt;RecyclableWaste&gt;</code>的子类型，那么在<code>main</code>函数中传递给  <code>putWaste</code>的参数是<code>RefuseBin&lt;Waste&gt;</code>是合理的，<code>RefuseBin&lt;Waste&gt;</code>是一个可以装任意垃圾的垃圾桶，垃圾桶装可回收垃圾，也没有毛病，666。因此泛型参数用在<code>in</code>位置是合法的。</p>
 <figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">open</span> <span class="class"><span class="keyword">class</span> <span class="title">Waste</span></span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RecyclableWaste</span> : <span class="type">Waste</span></span>()</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HarmfulWaste</span> : <span class="type">Waste</span></span>()</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RefuseBin</span>&lt;<span class="type">in T</span>&gt;</span>&#123;</span><br><span class="line">    <span class="comment">// 倒垃圾 泛型参数T 不能作为返回类型 编译错误</span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">pour</span><span class="params">()</span></span> : T&#123;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 扔垃圾到垃圾桶 </span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">put</span><span class="params">(t : <span class="type">T</span>)</span></span>&#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 倒出可回收垃圾</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">pourRecyclableWaste</span><span class="params">(refuseBin: <span class="type">RefuseBin</span>&lt;<span class="type">RecyclableWaste</span>&gt;)</span></span> : RecyclableWaste&#123;</span><br><span class="line">    <span class="keyword">val</span> recyclableWaste : RecyclableWaste = refuseBin.pour()</span><br><span class="line">    <span class="keyword">return</span> recyclableWaste</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="comment">// 逆变调用</span></span><br><span class="line">    <span class="keyword">val</span> pourWaste : RefuseBin&lt;Waste&gt; = RefuseBin()</span><br><span class="line">    pourRecyclableWaste(pourWaste)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>假设在逆变声明的<code>RefuseBin&lt;in T&gt;</code>中的pour函数是合法的，定义两个函数：<code>pourRecyclableWaste</code>函数中传递的参数是<code>RefuseBin&lt;RecyclableWaste&gt;</code>，在<code>pourRecyclableWaste</code>函数中返回从可回收垃圾桶中获取的可回收垃圾，但是在<code>main</code>函数中传递给<code>pourRecyclableWaste</code>的是可以装任意垃圾的垃圾桶（<code>RefuseBin&lt;Waste&gt;</code>），这样就会导致在<code>pourRecyclableWaste</code>获取到的就有可能不是可回收垃圾，因为普通垃圾桶可能倒出有害垃圾或者其他垃圾，这就出现了泛型类安全问题。所以逆变泛型类中泛型参数不能作为生产者角色出现（即不能出现在<code>out</code>位置）。</p>
-<h5 id="逆变总结"><a href="#逆变总结" class="headerlink" title="逆变总结"></a>逆变总结</h5><p>对泛型类泛型参数逆变，即用<code>in</code>关键字声明，那么：</p>
+<h5 id="逆变总结"><a href="#逆变总结" class="headerlink" title="逆变总结"></a>逆变总结</h5><p>对泛型类泛型参数逆变，即用<code>in</code>关键字声明，那么：  </p>
 <ul>
 <li>子类型化关系会被逆转（<code>Family&lt;Father&gt;</code> 是<code>Family&lt;Son&gt;</code>的子类型）</li>
 <li>泛型类型（T）必须只能用在<code>&quot;out&quot;</code>位置上</li>
@@ -655,7 +656,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">100</span>
+                  <span class="site-state-item-count">92</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -666,7 +667,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-count">12</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
@@ -677,7 +678,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">29</span>
+                  <span class="site-state-item-count">26</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
