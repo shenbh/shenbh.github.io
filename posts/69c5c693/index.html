@@ -83,13 +83,13 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="Y13SNAPSHOT版本检查">
 <meta property="og:url" content="http://shenbh.github.io/posts/69c5c693/index.html">
-<meta property="og:site_name" content="YULI">
+<meta property="og:site_name" content="阿炳的博客">
 <meta property="og:description" content="原文：https:&#x2F;&#x2F;juejin.cn&#x2F;post&#x2F;7292416512333840438 什么是SNAPSHOTSNAPSHOT版本是指尚未发布的版本，是一个「动态版本」，它始终指向最新的发布工件（gav），也就是说同一个SNAPSHOT版本可以反复用来发布。 这种情况在大型app多团队的开发中比较常见，比如user模块依赖base模块，因为是在开发阶段，base模块可能会不断的修bug或者提供">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://shenbh.github.io/posts/69c5c693/image-20231204091859802.png">
 <meta property="og:image" content="http://shenbh.github.io/posts/69c5c693/image-20231204091924141.png">
 <meta property="article:published_time" content="2023-12-05T00:35:00.000Z">
-<meta property="article:modified_time" content="2024-12-06T01:51:38.014Z">
+<meta property="article:modified_time" content="2025-04-21T09:58:49.512Z">
 <meta property="article:author" content="阿炳">
 <meta property="article:tag" content="private">
 <meta property="article:tag" content="Gradle">
@@ -131,7 +131,7 @@
 
 
 
-  <title>Y13SNAPSHOT版本检查 | YULI</title><meta name="robots" content="noindex">
+  <title>Y13SNAPSHOT版本检查 | 阿炳的博客</title><meta name="robots" content="noindex">
   
 
 
@@ -161,7 +161,7 @@
     <div class="custom-logo-site-title">
       <a href="/"  class="brand" rel="start">
         <span class="logo-line-before"><i></i></span>
-        <span class="site-title">YULI</span>
+        <span class="site-title">阿炳的博客</span>
         <span class="logo-line-after"><i></i></span>
       </a>
     </div>
@@ -301,7 +301,7 @@
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="YULI">
+      <meta itemprop="name" content="阿炳的博客">
     </span>
 
     
@@ -416,9 +416,9 @@
 <h2 id="遍历依赖项"><a href="#遍历依赖项" class="headerlink" title="遍历依赖项"></a>遍历依赖项</h2><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">configuration.getResolvedConfiguration().getLenientConfiguration().getAllModuleDependencies().forEach(resolvedDependency -&gt; &#123;</span><br><span class="line">    ModuleVersionIdentifier identifier = resolvedDependency.getModule().getId();</span><br><span class="line">    <span class="keyword">if</span> (isSnapshot(identifier.getVersion())) &#123;</span><br><span class="line">        snapshotList.add(identifier.getGroup() + <span class="string">&quot;:&quot;</span> + identifier.getName() + <span class="string">&quot;:&quot;</span> + identifier.getVersion());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
 
 <ul>
-<li>这里我们要用getResolvedConfiguration()来获取版本决议后的依赖项；</li>
-<li>然后通过getLenientConfiguration().getAllModuleDependencies()获取所有依赖，包括依赖中的子依赖；</li>
-<li>在遍历中，我们还要获取ModuleVersionIdentifier对象，通过它获取依赖项的坐标GAV；</li>
+<li>这里我们要用<code>getResolvedConfiguration()</code>来获取版本决议后的依赖项；</li>
+<li>然后通过<code>getLenientConfiguration().getAllModuleDependencies()</code>获取所有依赖，包括依赖中的子依赖；</li>
+<li>在遍历中，我们还要获取<code>ModuleVersionIdentifier</code>对象，通过它获取依赖项的坐标GAV；</li>
 </ul>
 <h2 id="Snapshot校验"><a href="#Snapshot校验" class="headerlink" title="Snapshot校验"></a>Snapshot校验</h2><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="type">boolean</span> isSnapshot(String version) &#123;</span><br><span class="line">    String checkRules = <span class="string">&quot;SNAPSHOT&quot;</span>;</span><br><span class="line">    <span class="keyword">return</span> version.endsWith(checkRules) || version.contains(checkRules);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -427,7 +427,6 @@
 <li>符合规则的就添加到集合中，然后打印出来；</li>
 </ul>
 <h2 id="打断编译"><a href="#打断编译" class="headerlink" title="打断编译"></a>打断编译</h2><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="type">void</span> blockBuilding() &#123;</span><br><span class="line">    String errorMassage = <span class="string">&quot;检测到有SNAPSHOT版本依赖&quot;</span>;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> GradleException(errorMassage, <span class="keyword">new</span> Exception(errorMassage));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>打断编译也比较简单，直接抛个异常就好了。</p>
 <h3 id="异常类型"><a href="#异常类型" class="headerlink" title="异常类型"></a>异常类型</h3><ul>
 <li><code>GradleException</code>：一般用于在Gradle构建过程中抛出异常，比如自定义Plugin中的逻辑错误等；</li>
@@ -444,9 +443,7 @@
 <p>然后在插件配置中加上Snapshot检查和编译打断（默认关）。</p>
 <figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">gradleX &#123;</span><br><span class="line">    checkSnapshot = <span class="literal">true</span></span><br><span class="line">    blockSnapshot = <span class="literal">true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>最终效果：</p>
-<p><img src="/posts/69c5c693/image-20231204091924141.png" alt="image-20231204091924141"></p>
-<p>是不是还挺简单的~</p>
+<p>最终效果：<br><img src="/posts/69c5c693/image-20231204091924141.png" alt="image-20231204091924141"></p>
 <blockquote>
 <p>在实际开发中，如果有CI&#x2F;CD流程可以添加一个后置执行卡口，再补一个白名单和审批流，如果没有，也可以整个构建报告。</p>
 </blockquote>
@@ -473,7 +470,7 @@
     
       <div>
         <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
-  <div></div>
+  <div>浇个朋友</div>
   <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
     <span>Donate</span>
   </button>
