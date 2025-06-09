@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="private,clippings," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="使用协程已经有较长的时间了，但一直停留在launch、async启动协程，suspend方法挂起的阶段。这段时间系统梳理Kotlin知识时才发现，对协程（仅对Kotlin）还有很多概念不甚了解。例如CoroutineScope对协程生命周期的重要性、协程父子结构的作用、结构化并发、一些Kotlin协程中约定俗称的规定等。概述解释协程解释协程这一概念，是个作死的行为，这里斗胆一试。我们尝试从几个比较">
+<meta property="og:type" content="article">
+<meta property="og:title" content="可能是最全的Kotlin协程讲解-CSDN博客">
+<meta property="og:url" content="http://shenbh.github.io/posts/b84fa5/index.html">
+<meta property="og:site_name" content="积跬步">
+<meta property="og:description" content="使用协程已经有较长的时间了，但一直停留在launch、async启动协程，suspend方法挂起的阶段。这段时间系统梳理Kotlin知识时才发现，对协程（仅对Kotlin）还有很多概念不甚了解。例如CoroutineScope对协程生命周期的重要性、协程父子结构的作用、结构化并发、一些Kotlin协程中约定俗称的规定等。概述解释协程解释协程这一概念，是个作死的行为，这里斗胆一试。我们尝试从几个比较">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://shenbh.github.io/posts/b84fa5/2ce6b135ba4e383f24d4535006b8d2a6.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/b84fa5/13b3c21f0c72618a02f6f9c6247f46ff.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/b84fa5/9af4fa0f5a75a1ac2bd001280f4f12de.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/b84fa5/5549e0b178bf84004d1bf783c636230e.png">
+<meta property="article:published_time" content="2025-06-06T01:27:08.000Z">
+<meta property="article:modified_time" content="2025-06-06T03:58:06.265Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="private">
+<meta property="article:tag" content="clippings">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/b84fa5/2ce6b135ba4e383f24d4535006b8d2a6.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/b84fa5/"/>
+
+
+
+
+
+  <title>可能是最全的Kotlin协程讲解-CSDN博客 | 积跬步</title><meta name="robots" content="noindex">
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">积跬步</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just do IT Now.</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/b84fa5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="积跬步">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">可能是最全的Kotlin协程讲解-CSDN博客</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-06-06T09:27:08+08:00">
+                2025-06-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+              <div class="post-description">
+                  使用协程已经有较长的时间了，但一直停留在launch、async启动协程，suspend方法挂起的阶段。这段时间系统梳理Kotlin知识时才发现，对协程（仅对Kotlin）还有很多概念不甚了解。例如CoroutineScope对协程生命周期的重要性、协程父子结构的作用、结构化并发、一些Kotlin协程中约定俗称的规定等。概述解释协程解释协程这一概念，是个作死的行为，这里斗胆一试。我们尝试从几个比较流行的说法来解释协程到底是个什么东西，而不是再增加一种让人猜不透的说法协程是轻量级线程(官方表述)_kotlin协程
+              </div>
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>使用协程已经有较长的时间了，但一直停留在launch、async启动协程，suspend方法挂起的阶段。这段时间系统梳理Kotlin知识时才发现，对协程（仅对Kotlin）还有很多概念不甚了解。例如CoroutineScope对协程生命周期的重要性、协程父子结构的作用、结构化并发、一些Kotlin协程中约定俗称的规定等。</p>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><h3 id="解释协程"><a href="#解释协程" class="headerlink" title="解释协程"></a>解释协程</h3><p>解释协程这一概念，是个作死的行为，这里斗胆一试。<br>我们尝试从几个比较流行的说法来解释协程到底是个什么东西，而不是再增加一种让人猜不透的说法  </p>
+<ol>
+<li>协程是轻量级线程(官方表述)<br> 可以换个说法，协程就是方法调用封装成类线程的API。方法调用当然比线程切换轻量；而封装成类线程的API后，它形似线程（可手动启动、有各种运行状态、能够协作工作、能够并发执行）。因此从这个角度说，它是轻量级线程没错。<br> 当然，协程绝不仅仅是方法调用，因为方法调用不能在一个方法执行到一半时挂起，之后又在原点恢复。这一点可以使用EventLoop之类的方式实现。想象一下在库级别将回调风格或Promise&#x2F;Future风格的异步代码封装成同步风格，封装的结果就非常接近协程了。<br> 而协程和线程之间的区别，往大了说，那就是普通函数与线程的区别；往小了说，就是EventLoop和线程的区别。他们之间的唯一的关系，仅仅在于协程的代码是运行在线程中。一个不恰当的类比，人和地球(地球提供生成环境，人在其中生存)</li>
+<li>线程运行在内核态，协程运行在用户态<br> 主要明白什么叫用户态，我们写的几乎所有代码，都执行在用户态，协程对于操作系统来说仅仅是第三方提供的库而已，当然运行在用户态。而线程是操作系统级别的东西，运行在内核态。</li>
+<li>协程是一个线程框架(扔物线表述)<br> 对某些语言，比如Kotlin，这样说是没有问题的，Kotlin的协程库可以指定协程运行的线程池，我们只需要操作协程，必要的线程切换操作交给库，从这个角度来说，协程就是一个线程框架。<br> 但理论上我们可以在单线程语言如JavaScript、Python上实现协程(事实上他们已经实现了协程)，这时我们再叫它线程框架可能就不合适了。</li>
+</ol>
+<p>私以为，协程要从两方面看  </p>
+<ul>
+<li>概念上：coroutine(协程)和subroutine(子程序)是一个级别的(从命名上也类似)。子程序是一段具备一定功能的代码，一个函数、一个方法、一段代码都算是一个子程序。而协程，顾名思义，就是相互协作的子程序，多个子程序之间通过一定的机制相互关联、协作地完成某项任务。比如一个协程在执行上可以被分为多个子程序，每个子程序执行完成后主动挂起，等待合适的时机再恢复；一个协程被挂起时，线程可以执行其它子程序，从而达到线程高利用率的多任务处理目的——协程在一个线程上执行多个任务，而传统线程只能执行一个任务，从多任务执行的角度，协程自然比线程轻量。<br>  通过提高线程利用率来提高多任务执行效率，这一点和IO多路复用、Reactor模型等基本思想一致，从这个角度看，协程并不是什么新东西。</li>
+<li>实现上：协程的重点和难点就在于执行到挂起点时挂起和恢复的行为。它在底层技术实现上和我们常用的异步回调没有本质的区别，仅仅是根据不同的编程思想封装成对应的API。<br>  其具体实现原理我们将在其它文章讨论，这里仅介绍协程概念。</li>
+</ul>
+<p>协程解决的问题——以同步的方式写异步代码。如果不使用协程，我们目前能够使用的API形式主要有三种：纯回调风格(如AIO)、RxJava、Promise&#x2F;Future风格，他们普遍存在回调地狱问题，解回调地狱只能通过行数换层数，且对于不熟悉异步风格的程序员来说，能够看懂较为复杂的异步代码就比较费劲。</p>
+<h3 id="Kotlin的协程"><a href="#Kotlin的协程" class="headerlink" title="Kotlin的协程"></a>Kotlin的协程</h3><p>根据 <a target="_blank" rel="noopener" href="https://github.com/Kotlin-zh/KEEP/blob/master/proposals/coroutines.md">Kotlin协程设计提案</a> ，Kotlin协程的设计目标有如下三点</p>
+<ul>
+<li>不依赖 Future 之类复杂的库提供的特定实现</li>
+<li>同时涵盖 “async&#x2F;await” 用例以及“生成器代码块”</li>
+<li>使 Kotlin 协程能包装各种现有的异步 API （如 Java NIO、各种 Future 的实现等）</li>
+</ul>
+<p>可以认为，Kotlin是想在自己的代码环境中用协程消除传统的异步API，以原语的方式提供。</p>
+<h3 id="本文介绍"><a href="#本文介绍" class="headerlink" title="本文介绍"></a>本文介绍</h3><p>上面介绍了协程的基本概念和Kotlin协程的设计目的，接下来介绍Kotlin中协程的使用方法、核心组件、核心概念以及常见使用约定。有关实现原理，尚未探索，计划另开文章详述。</p>
+<h2 id="使用协程"><a href="#使用协程" class="headerlink" title="使用协程"></a>使用协程</h2><h3 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h3><p>协程需要运行在协程上下文环境，在非协程环境中凭空启动协程，有三种方式</p>
+<ul>
+<li>runBlocking{}<br>  启动一个新协程，并阻塞当前线程，直到其内部所有逻辑及子协程逻辑全部执行完成。<br>  该方法的设计目的是让suspend风格编写的库能够在常规阻塞代码中使用，常在main方法和测试中使用。</li>
+<li>GlobalScope.launch{}<br>  在应用范围内启动一个新协程，协程的生命周期与应用程序一致。这样启动的协程并不能使线程保活，就像守护线程。<br>  由于这样启动的协程存在启动协程的组件已被销毁但协程还存在的情况，极限情况下可能导致资源耗尽，因此并不推荐这样启动，尤其是在客户端这种需要频繁创建销毁组件的场景。</li>
+<li>实现CoroutineScope + launch{}<br>  这是在应用中最推荐使用的协程使用方式——为自己的组件实现CoroutieScope接口，在需要的地方使用launch{}方法启动协程。使得协程和该组件生命周期绑定，组件销毁时，协程一并销毁。从而实现安全可靠地协程调用。</li>
+</ul>
+<p>在一个协程中启动子协程，一般来说有两种方式</p>
+<ul>
+<li>launch{}<br>  异步启动一个子协程</li>
+<li>async{}<br>  异步启动一个子协程，并返回Deffer对象，可通过调用Deffer.await()方法等待该子协程执行完成并获取结果，常用于并发执行-同步等待的情况</li>
+</ul>
+<p>一个合适的例子</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TtpServiceImpl</span></span>(<span class="keyword">val</span> vertx: Vertx): TtpService, CoroutineScope &#123;</span><br><span class="line">    <span class="keyword">override</span> <span class="keyword">val</span> coroutineContext: CoroutineContext <span class="keyword">by</span> lazy &#123; vertx.dispatcher() &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">getContentList</span><span class="params">(resultHandler: <span class="type">Handler</span>&lt;<span class="type">AsyncResult</span>&lt;<span class="type">OperationResponse</span>&gt;&gt;)</span></span>&#123;</span><br><span class="line">        launch&#123;</span><br><span class="line">            <span class="keyword">val</span> deffer1 = async&#123; awaitResult&lt;List&lt;JsonObject&gt;&gt;&#123; dbService.getContentList(it) &#125; &#125;</span><br><span class="line">            <span class="keyword">val</span> deffer2 = async&#123; awaitResult&lt;List&lt;JsonObject&gt;&gt;&#123; dbService.getAuthorList(it) &#125; &#125;</span><br><span class="line">            <span class="keyword">val</span> contents = deffer1.await()</span><br><span class="line">            <span class="keyword">val</span> authors = deffer2.await()</span><br><span class="line">            <span class="keyword">val</span> reuslt = contents.map&#123; content -&gt; </span><br><span class="line">                content.put(<span class="string">&quot;author&quot;</span>, authors.filter&#123; ... &#125;.first())</span><br><span class="line">            &#125;</span><br><span class="line">            resultHandler.succeed(reuslt)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="取消"><a href="#取消" class="headerlink" title="取消"></a>取消</h3><p><code>launch&#123;&#125;</code>返回<code>Job</code>，<code>async&#123;&#125;</code>返回<code>Deffer</code>，<code>Job</code>和<code>Deffer</code>都有<code>cancel()</code>方法，用于取消协程。</p>
+<p><strong>从协程内部看取消的效果</strong></p>
+<ul>
+<li>标准库的挂起方法会抛出CancellationException异常。</li>
+<li>用户自定义的常规逻辑并不会收到影响，除非我们手动检测<code>isActive</code>标志。</li>
+</ul>
+<p>上面两个特性和线程的interrupt机制非常类似，理解起来并不难。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> job = launch &#123;</span><br><span class="line">    <span class="comment">// 如果这里不检测isActive标记，协程就不会被正常cancel，而是执行直到正常结束</span></span><br><span class="line">    <span class="keyword">while</span> (isActive) &#123; </span><br><span class="line">        ......</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">job.cancelAndJoin() <span class="comment">// 取消该作业并等待它结束</span></span><br></pre></td></tr></table></figure>
+<p>了解协程的启动和取消，对于最基本的使用已经足够了。不过为了更加安全放心地使用，需要更加深入地了解，我们从核心组件说起。</p>
+<h3 id="异常"><a href="#异常" class="headerlink" title="异常"></a>异常</h3><p>Kotlin协程的异常有两种</p>
+<ul>
+<li>因协程取消，协程内部suspend方法抛出的CancellationException</li>
+<li>常规异常，这类异常，有两种异常传播机制<ul>
+<li>launch：将异常自动向父协程抛出，将会导致父协程退出</li>
+<li>async：将异常暴露给用户(通过捕获<code>deffer.await()</code>抛出的异常)</li>
+</ul>
+</li>
+</ul>
+<p>这里借用官方例子讲解</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span> = runBlocking &#123;</span><br><span class="line">    <span class="keyword">val</span> job = GlobalScope.launch &#123; <span class="comment">// root coroutine with launch</span></span><br><span class="line">        println(<span class="string">&quot;Throwing exception from launch&quot;</span>)</span><br><span class="line">        <span class="keyword">throw</span> IndexOutOfBoundsException() <span class="comment">// 我们将在控制台打印 Thread.defaultUncaughtExceptionHandler</span></span><br><span class="line">    &#125;</span><br><span class="line">    job.join()</span><br><span class="line">    println(<span class="string">&quot;Joined failed job&quot;</span>)</span><br><span class="line">    <span class="keyword">val</span> deferred = GlobalScope.async &#123; <span class="comment">// root coroutine with async</span></span><br><span class="line">        println(<span class="string">&quot;Throwing exception from async&quot;</span>)</span><br><span class="line">        <span class="keyword">throw</span> ArithmeticException() <span class="comment">// 没有打印任何东西，依赖用户去调用等待</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        deferred.await()</span><br><span class="line">        println(<span class="string">&quot;Unreached&quot;</span>)</span><br><span class="line">    &#125; <span class="keyword">catch</span> (e: ArithmeticException) &#123;</span><br><span class="line">        println(<span class="string">&quot;Caught ArithmeticException&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出结果</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Throwing exception from launch</span><br><span class="line">Exception <span class="keyword">in</span> thread <span class="string">&quot;DefaultDispatcher-worker-2 @coroutine#2&quot;</span> java.lang.IndexOutOfBoundsException</span><br><span class="line">Joined failed job</span><br><span class="line">Throwing exception from async</span><br><span class="line">Caught ArithmeticException</span><br></pre></td></tr></table></figure>
+<p>注意，例子是在<code>GlobalScope.launch&#123;&#125;</code>中抛异常，不会导致父协程退出。  </p>
+<p><strong>全局异常处理</strong><br>指定全局异常处理器，省时省力。  </p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">getContentList</span><span class="params">(resultHandler: <span class="type">Handler</span>&lt;<span class="type">AsyncResult</span>&lt;<span class="type">OperationResponse</span>&gt;&gt;)</span></span> &#123;</span><br><span class="line">    launch(CoroutineExceptionHandler &#123; _, e -&gt;</span><br><span class="line">      logger.error(<span class="string">&quot;Exception when get content list.&quot;</span>, e)</span><br><span class="line">      resultHandler.fail()</span><br><span class="line">    &#125;) &#123;</span><br><span class="line">            <span class="keyword">val</span> deffer1 = async&#123; awaitResult&lt;List&lt;JsonObject&gt;&gt;&#123; dbService.getContentList(it) &#125; &#125;</span><br><span class="line">            <span class="keyword">val</span> deffer2 = async&#123; awaitResult&lt;List&lt;JsonObject&gt;&gt;&#123; dbService.getAuthorList(it) &#125; &#125;</span><br><span class="line">            <span class="keyword">val</span> contents = deffer1.await()</span><br><span class="line">            <span class="keyword">val</span> authors = deffer2.await()</span><br><span class="line">            <span class="keyword">val</span> reuslt = contents.map&#123; content -&gt; </span><br><span class="line">                content.put(<span class="string">&quot;author&quot;</span>, authors.filter&#123; ... &#125;.first())</span><br><span class="line">            &#125;</span><br><span class="line">            resultHandler.succeed(reuslt)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="核心组件"><a href="#核心组件" class="headerlink" title="核心组件"></a>核心组件</h2><p>Kotlin的协程实现是以附加库<code>kotlinx-coroutines-core</code>的形式提供的，但其实协程的接口定义在核心库<code>kotlin-stdlib-common</code>的<code>kotlin.coroutines</code>中。</p>
+<h3 id="协程上下文"><a href="#协程上下文" class="headerlink" title="协程上下文"></a>协程上下文</h3><p>顾名思义，协程上下文表示协程的运行环境，包括协程调度器、代表协程本身的<code>Job</code>、协程名称、协程ID等。通过CoroutineContext定义，CoroutineContext被定义为一个<strong>带索引的&#x3D;&#x3D;集合&#x3D;&#x3D;<strong>，集合的元素为</strong>Element</strong>，上面所提到调度器、Job等都实现了Eelement接口。</p>
+<p>由于CoroutineContext被定义为集合，因此在实际使用时可以自由组合加减各种上下文元素。</p>
+<p>启动子协程时，子协程默认会继承除Job外的所有父协程上下文元素，创建新的Job，并将父Job设置为当前Job的父亲。</p>
+<p>启动子协程时，可以指定协程上下文元素，如果父上下文中存在该元素则覆盖，不存在则添加。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">getContentList</span><span class="params">(resultHandler: <span class="type">Handler</span>&lt;<span class="type">AsyncResult</span>&lt;<span class="type">OperationResponse</span>&gt;&gt;)</span></span>&#123;</span><br><span class="line">        <span class="comment">// 自定义新协程名称</span></span><br><span class="line">        launch(CoroutineName(<span class="string">&quot;customName&quot;</span>))&#123;</span><br><span class="line">            ... ...</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="调度器"><a href="#调度器" class="headerlink" title="调度器"></a>调度器</h4><p>调度器是协程上下文中众多元素中最重要的一个，通过CoroutineDispatcher定义，它控制了协程以何种策略分配到哪些线程上运行。这里介绍几种常见的调度器</p>
+<ul>
+<li><code>Dispatcher.Default</code><br>  默认调度器。它使用JVM的共享线程池，该调度器的最大并发度是CPU的核心数，默认为2</li>
+<li><code>Dispatcher.Unconfined</code><br>  非受限调度器，它不会将操作限制在任何线程上执行——在发起协程的线程上执行第一个挂起点之前的操作，在挂起点恢复后由对应的挂起函数决定接下来在哪个线程上执行。</li>
+<li><code>Dispathcer.IO</code><br>  IO调度器，他将阻塞的IO任务分流到一个共享的线程池中，使得不阻塞当前线程。该线程池大小为环境变量kotlinx.coroutines.io.parallelism的值，默认是64或核心数的较大者。<br>  该调度器和Dispatchers.Default共享线程，因此使用withContext(Dispatchers.IO)创建新的协程不一定会导致线程的切换。</li>
+<li><code>Dispathcer.Main</code><br>  该调度器限制所有执行都在UI主线程，它是专门用于UI的，并且会随着平台的不同而不同<ul>
+<li>对于JS或Native，其效果等同于Dispatchers.Default</li>
+<li>对于JVM，它是Android的主线程、JavaFx或者Swing EDT的dispatcher之一。<br>  并且为了使用该调度器，还必须增加对应的组件</li>
+<li><code>kotlinx-coroutines-android</code></li>
+<li><code>kotlinx-coroutines-javafx</code></li>
+<li><code>kotlinx-coroutines-swing</code></li>
+</ul>
+</li>
+<li>其它<br>  在其它支持协程的第三方库中，也存在对应的调度器，如Vertx的vertx.dispatcher()，它将协程分配到vertx的EventLoop线程池执行。</li>
+</ul>
+<p>注意，由于上下文具有继承关系，因此启动子协程时不显式指定调度器时，子协程和父协程是使用相同调度器的。</p>
+<h4 id="Job"><a href="#Job" class="headerlink" title="Job"></a>Job</h4><p>Job也是上下文元素，它代表协程本身。Job能够被组织成父子层次结构，并具有如下重要特性。</p>
+<ul>
+<li>父Job退出，所有子job会马上退出</li>
+<li>子job抛出除CancellationException(意味着正常取消)意外的异常会导致父Job马上退出</li>
+</ul>
+<p>类似Thread，一个Job可能存在多种状态</p>
+<table>
+<thead>
+<tr>
+<th><strong>State</strong></th>
+<th>[isActive]</th>
+<th>[isCompleted]</th>
+<th>[isCancelled]</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><em>New</em> (optional initial state)</td>
+<td><code>false</code></td>
+<td><code>false</code></td>
+<td><code>false</code></td>
+</tr>
+<tr>
+<td><em>Active</em> (default initial state)</td>
+<td><code>true</code></td>
+<td><code>false</code></td>
+<td><code>false</code></td>
+</tr>
+<tr>
+<td><em>Completing</em> (transient state)</td>
+<td><code>true</code></td>
+<td><code>false</code></td>
+<td><code>false</code></td>
+</tr>
+<tr>
+<td><em>Cancelling</em> (transient state)</td>
+<td><code>false</code></td>
+<td><code>false</code></td>
+<td><code>true</code></td>
+</tr>
+<tr>
+<td><em>Cancelled</em> (final state)</td>
+<td><code>false</code></td>
+<td><code>true</code></td>
+<td><code>true</code></td>
+</tr>
+<tr>
+<td><em>Completed</em> (final state)</td>
+<td><code>false</code></td>
+<td><code>true</code></td>
+<td><code>false</code></td>
+</tr>
+</tbody></table>
+<p>我们直接使用launch获取到的job已经处于Active装填，启动时加上LAZY参数时则得到New状态的Active。<br>各状态转换关系如下，注意，Completing只是一个内部状态，外部观察还是Active状态。<br><img src="/posts/b84fa5/2ce6b135ba4e383f24d4535006b8d2a6.png" alt="在这里插入图片描述"><br>要区分是主动取消还是异常导致一个协程退出，可以getCancellationException()查看退出原因。</p>
+<h3 id="作用域"><a href="#作用域" class="headerlink" title="作用域"></a>作用域</h3><p>协程作用域——CoroutineScope，用于管理协程，管理的内容有</p>
+<ul>
+<li>启动协程的方式 - 它定义了launch、async、withContext等协程启动方法(以extention的方式)，并在这些方法内定义了启动子协程时上下文的继承方式。</li>
+<li>管理协程生命周期 - 它定义了cancel()方法，用于取消当前作用域，同时取消作用域内所有协程。</li>
+</ul>
+<h3 id="区分作用域和上下文"><a href="#区分作用域和上下文" class="headerlink" title="区分作用域和上下文"></a>区分作用域和上下文</h3><p>从类定义看，CoroutineScope和CoroutineContext非常类似，最终目的都是协程上下文，但正如Kotlin协程负责人Roman Elizarov在 <a target="_blank" rel="noopener" href="https://medium.com/@elizarov/coroutine-context-and-scope-c8b255d59055">Coroutine Context and Scope</a> 中所说，二者的区别只在于使用目的的不同—— <strong>作用域用于管理协程；而上下文只是一个记录协程运行环境的集合</strong> 。他们的关系如下。<br><img src="/posts/b84fa5/13b3c21f0c72618a02f6f9c6247f46ff.png" alt="在这里插入图片描述"></p>
+<p>Roman Elizarov的文章说得可能不是很明晰，我认为比较容易理解的说法是</p>
+<ul>
+<li>CoroutineScope规范了CoroutineContext的继承和管理方式。</li>
+</ul>
+<h2 id="约定和经验"><a href="#约定和经验" class="headerlink" title="约定和经验"></a>约定和经验</h2><h3 id="避免使用GlobalScope-launch"><a href="#避免使用GlobalScope-launch" class="headerlink" title="避免使用GlobalScope.launch"></a>避免使用GlobalScope.launch</h3><p>GlobalScope是实现了CoroutineScope的单例对象，含有一个空的上下文对象</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// GlobalScope的定义</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">object</span> GlobalScope : CoroutineScope &#123;</span><br><span class="line">    <span class="keyword">override</span> <span class="keyword">val</span> coroutineContext: CoroutineContext</span><br><span class="line">        <span class="keyword">get</span>() = EmptyCoroutineContext</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这意味着它的生命周期与整个应用绑定，并且永远不会被主动取消。这样启动的协程只有两个归宿:</p>
+<ul>
+<li>协程正常执行完成</li>
+<li>协程内部发生错误，导致协程因异常自动取消</li>
+</ul>
+<p>这是危险的。考虑极端情况:</p>
+<ol>
+<li>在一个实例方法中使用GlobalScope.launch启动了一个CPU密集型协程，且执行时间较长</li>
+<li>在启动协程后，该实例方法因异常退出，所属对象也被销毁</li>
+<li>反复多次出现步骤1\2</li>
+</ol>
+<p>这样导致的结果是启动了超多CPU密集型任务，最终导致应用卡顿，甚至资源耗尽。</p>
+<p>解决方案是避免使用GlobalScope。正确的做法是将自己的组件实现CoroutineScope，并在组件销毁时调用作用域的cancel()方法。实现方式多使用委托。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 官方例子</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyActivity</span> : <span class="type">AppCompatActivity</span></span>(), CoroutineScope <span class="keyword">by</span> MainScope() &#123;</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onDestroy</span><span class="params">()</span></span> &#123;</span><br><span class="line">         cancel() <span class="comment">// cancel is extension on CoroutineScope</span></span><br><span class="line">    &#125;</span><br><span class="line">    ... ...</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// vertx例子</span></span><br><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">CoroutineVerticle</span> : <span class="type">Verticle</span>, <span class="type">CoroutineScope &#123;</span></span></span><br><span class="line">  <span class="comment">// 默认上下文使用context.dispatcher()</span></span><br><span class="line">  <span class="keyword">override</span> <span class="keyword">val</span> coroutineContext: CoroutineContext <span class="keyword">by</span> lazy &#123; context.dispatcher() &#125;</span><br><span class="line">  ... ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="结构化并发"><a href="#结构化并发" class="headerlink" title="结构化并发"></a>结构化并发</h3><p>首先从结构化并发这一概念说起(参考 <a target="_blank" rel="noopener" href="https://vorpus.org/blog/notes-on-structured-concurrency-or-go-statement-considered-harmful/">这篇文章</a>)。</p>
+<p><strong>非结构化并发</strong></p>
+<p>与结构化并发相对的是非结构化并发，即传统的异步框架和异步库。这种异步框架在工作时，可能会在函数中启动一个新的协程，或新注册一个回调函数，当函数调用返回时，从语义上，函数貌似返回了，但实际上它仍然在后台运行(对于启动的协程，他会运行直到结束；对于注册的回调函数，仍然属于原函数的一部分，会在将来执行)，如果不了解其中的因果关系，就不知道它什么时候结束， <strong>这违反了因果关系</strong> 。</p>
+<p>正是由于异步框架的非结构化并发的缺点，导致出现背压这样更加复杂的副产物。尽管它们能够使程序正常工作，但会很麻烦，违反编程直觉——你不是在编程，而是在使用一种工具。</p>
+<p>一个非结构化并发的逻辑流如同go语句产生的效果。<br><img src="/posts/b84fa5/9af4fa0f5a75a1ac2bd001280f4f12de.png" alt="在这里插入图片描述"><br><strong>结构化并发</strong></p>
+<p>结构化并发，就是将多个分开的并发路径最终再次连接起来，使得符合因果关系，在意义上类比将面条代码始作俑者go语句从编程语言中剔除。<br><img src="/posts/b84fa5/5549e0b178bf84004d1bf783c636230e.png" alt="在这里插入图片描述"><br>实现结构化并发需要运行环境，用于包装真正的异步操作，并暴露取消机制、异常传播机制等API。</p>
+<p><strong>Kotlin如何实现结构化并发</strong></p>
+<p>Kotlin协程通过CoroutineScope实现结构化并发。因为作用域具有如下特性</p>
+<ul>
+<li>能够控制内部协程的生命周期</li>
+<li>可以取消内部所有协程</li>
+<li>所有子协程完成后作用域才结束</li>
+</ul>
+<p>为了让我们能够对一部分代码块实现结构化并发，Kotlin提供了coroutineScope{}方法(官方声称其目的在于并行分解，即将一个长耗时任务分解成多个并发的短耗时任务，并在最终组装，正是利用了作用域的结构化并发特性，才能够实现并行分解)</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 常用的示意例子，这里用的是async，实际上用launch时，coroutineScope也会等待其结束后再返回。</span></span><br><span class="line"><span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">loadAndCombine</span><span class="params">(name1: <span class="type">String</span>, name2: <span class="type">String</span>)</span></span>: Image = coroutineScope &#123;</span><br><span class="line">    <span class="keyword">val</span> deferred1 = async &#123; loadImage(name1) &#125;</span><br><span class="line">    <span class="keyword">val</span> deferred2 = async &#123; loadImage(name2) &#125;</span><br><span class="line">    combineImages(deferred1.await(), deferred2.await())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>此外，从结构化并发的概念上看，runBlocking{}也能够结构化并发。</p>
+<h3 id="suspend方法和CoroutineScope扩展方法的取舍"><a href="#suspend方法和CoroutineScope扩展方法的取舍" class="headerlink" title="suspend方法和CoroutineScope扩展方法的取舍"></a>suspend方法和CoroutineScope扩展方法的取舍</h3><p>Kotlin中，有两个约定俗成的东西</p>
+<ol>
+<li>每一个声明为CoroutineScope的扩展方法的方法，都会马上返回，但是会并发地执行扩展方法指定的内容<br> 这也是runBlocking不是CoroutineScope的扩展方法的原因之一</li>
+<li>每一个仅声明为suspend的方法，会等待其内部逻辑完成后再返回给调用者</li>
+</ol>
+<p>但如果拥有如下签名的方法会怎么样呢？它是suspend方法，同时也是CoroutineScope的扩展方法。调用者并不知道在方法内是否会启动新的协程，凭空给代码增加了复杂度，因此不推荐使用。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> CoroutineScope.<span class="title">obfuscate</span><span class="params">(<span class="keyword">data</span>: <span class="type">Data</span>)</span></span></span><br></pre></td></tr></table></figure>
+
+<p>suspend方法就应该在所有任务都完成后再返回。如果在suspend方法内部有需要并发执行的内容，那就应该等待他们都完成后再返回，此时可以使用coroutineScope{}，而不是在方法签名上加上CoroutineScope扩展。</p>
+<h2 id="区分与对比"><a href="#区分与对比" class="headerlink" title="区分与对比"></a>区分与对比</h2><p>Kotlin中，有几种方式能够启动协程，或者看似能够启动协程，这里列举</p>
+<ul>
+<li>launch{}<br>  CoroutineScope的扩展方法， <strong>启动一个协程</strong> ，不阻塞当前协程，并返回新协程的Job。</li>
+<li>async{}<br>  CoroutineScope的扩展方法， <strong>启动一个协程</strong> ，不阻塞当前协程，返回一个Deffer，除包装了未来的结果外，其余特性与launch{}一致</li>
+<li>withContext(){}<br>  一个suspend方法，在给定的上下文执行给定挂起块并返回结果， <strong>它并不启动协程</strong> ，只会(可能会)导致线程的切换。用它执行的挂起块中的上下文是当前协程的上下文和由它执行的上下文的合并结果。<br>  withContext的目的不在于启动子协程，它最初用于将长耗时操作从UI线程切走，完事再切回来。<br>  前面我们说过，协程取消后，位于协程中的标准库的suspend函数会抛出CancellationException，withContext也不例外。</li>
+<li>coroutineScope{}<br>  一个suspend方法，创建一个新的作用域，并在该作用域内执行指定代码块， <strong>它并不启动协程</strong> 。其存在的目的是进行符合结构化并发的并行分解（即，将长耗时任务拆分为并发的多个短耗时任务，并等待所有并发任务完成后再返回）。</li>
+<li>runBlocking{}<br>  是一个裸方法， <strong>创建一个协程，并阻塞当前线程</strong> ，直到协程执行完毕。前面说过，这里不再赘述。</li>
+</ul>
+<h2 id="Kotlin协程的其它功能"><a href="#Kotlin协程的其它功能" class="headerlink" title="Kotlin协程的其它功能"></a>Kotlin协程的其它功能</h2><h3 id="异步流"><a href="#异步流" class="headerlink" title="异步流"></a>异步流</h3><p>首先说，Kotlin中的异步流和RxJava中的流在概念上非常类似，可以被归为响应式流。并且Kotlin也提供响应的库将它转换为其它响应式流</p>
+<ul>
+<li>kotlinx-coroutines-reactive 用于Reactive Streams</li>
+<li>kotlinx-coroutines-reactor 用于Project Reactor</li>
+<li>kotlinx-coroutines-rx2 用于RxJava2</li>
+</ul>
+<h4 id="为什么需要异步流"><a href="#为什么需要异步流" class="headerlink" title="为什么需要异步流"></a>为什么需要异步流</h4><p>一个挂起函数能够异步地返回单一的值，如果我们要异步返回多个值并针对每个都做处理呢？这也是一般响应式流遇到的场景，在Kotlin中，异步流用来解决它。</p>
+<p><strong>已有现成的响应式流，为啥还有异步流？</strong></p>
+<p>从功能上说，现有的响应式流库能够解决问题，但在Kotlin中不够优雅。Flow的设计目标是拥有尽可能精简的设计，能够完美融合到Kotlin的协程API中。</p>
+<h4 id="使用异步流"><a href="#使用异步流" class="headerlink" title="使用异步流"></a>使用异步流</h4><figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> flow = flow &#123;</span><br><span class="line">    <span class="comment">// 耗时操作1</span></span><br><span class="line">    delay(<span class="number">1000</span>)</span><br><span class="line">    emit(<span class="number">12</span>)</span><br><span class="line">    <span class="comment">// 耗时操作2</span></span><br><span class="line">    delay(<span class="number">1000</span>)</span><br><span class="line">    emit(<span class="number">13</span>)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  runBlocking &#123;</span><br><span class="line">    flow.collect &#123; println(it) &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>flow接收的lambda表达式是一个协程环境，里面的操作实在一个协程中执行</li>
+<li>collect是收集操作， <strong>只有收集时才会真的去执行流中定义的逻辑</strong></li>
+<li>flow也可以被取消</li>
+</ul>
+<p>更多详情，移步 <a target="_blank" rel="noopener" href="https://www.kotlincn.net/docs/reference/coroutines/flow.html">官方手册</a></p>
+<h3 id="通道"><a href="#通道" class="headerlink" title="通道"></a>通道</h3><p>通道(Channel)用于在多个协程之间传输数据。Channel是和BlockingQueue非常相似的概念。不同的是写入和读取数据用的是异步的send和recieve</p>
+<p>这里展示简单的使用</p>
+<ul>
+<li>直接通过Channel构造函数  <figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> channel = Channel&lt;<span class="built_in">Int</span>&gt;()</span><br><span class="line">launch &#123;</span><br><span class="line">    <span class="keyword">for</span> (x <span class="keyword">in</span> <span class="number">1.</span><span class="number">.5</span>) channel.send(x * x)</span><br><span class="line">    channel.close()</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">for</span> (y <span class="keyword">in</span> channel) println(y)</span><br><span class="line">println(<span class="string">&quot;Done!&quot;</span>)</span><br></pre></td></tr></table></figure></li>
+<li>使用produce构建器  <figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> channel = produce &#123;</span><br><span class="line">    send(<span class="number">12</span>)</span><br><span class="line">    send(<span class="number">13</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">for</span> (value <span class="keyword">in</span> channel) &#123;</span><br><span class="line">    println(value)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>在通道没有数据时，调用recieve会导致协程挂起；在通道缓冲满时，调用send会导致协程挂起。</p>
+<p>通道遵循FIFO原则，先发出的消息会先被获取。</p>
+<h3 id="监督"><a href="#监督" class="headerlink" title="监督"></a>监督</h3><p>常规的Job当子协程抛异常时，父协程也会被退出。有时不想要这种情况发生，可以使用监督。使用方式是将SupervisorJob在协程启动时当上下文元素传入。</p>
+<h3 id="协程-通道实现actor"><a href="#协程-通道实现actor" class="headerlink" title="协程+通道实现actor"></a>协程+通道实现actor</h3><p>Kotlin的协程本质上说是更好用的线程的封装，因此还是会有共享的可变状态的并发问题。解决方式无非几种</p>
+<ul>
+<li>共享变量使用并发数据结构，如Atomic数据类</li>
+<li>限制访问共享变量的协程在单线程上执行</li>
+<li>对共享变量的访问加锁</li>
+<li>使用actor模式，将共享变量封装在actor中，通过actor的消息邮箱将并发变串行</li>
+</ul>
+<p>Kotlin的actor是由一个 <strong>协程</strong> 、协程封装的 <strong>状态</strong> 、一个它与其它协程通信的 <strong>通道</strong> 组成。</p>
+<p>和scala一样，正确使用actor的方式是先创建消息类，然后定义actor，然后发送消息</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 计数器 Actor 的各种类型</span></span><br><span class="line"><span class="keyword">sealed</span> <span class="class"><span class="keyword">class</span> <span class="title">CounterMsg</span></span></span><br><span class="line"><span class="keyword">object</span> IncCounter : CounterMsg() <span class="comment">// 递增计数器的单向消息</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">GetCounter</span></span>(<span class="keyword">val</span> response: CompletableDeferred&lt;<span class="built_in">Int</span>&gt;) : CounterMsg() <span class="comment">// 携带回复的请求</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span> = runBlocking&lt;<span class="built_in">Unit</span>&gt; &#123;</span><br><span class="line">  <span class="keyword">val</span> counter = actor&lt;CounterMsg&gt; &#123;</span><br><span class="line">    <span class="keyword">var</span> counter = <span class="number">0</span> <span class="comment">// actor 状态</span></span><br><span class="line">    <span class="keyword">for</span> (msg <span class="keyword">in</span> channel) &#123; <span class="comment">// 即将到来消息的迭代器</span></span><br><span class="line">      <span class="keyword">when</span> (msg) &#123;</span><br><span class="line">        <span class="keyword">is</span> IncCounter -&gt; counter++</span><br><span class="line">        <span class="keyword">is</span> GetCounter -&gt; msg.response.complete(counter)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  withContext(Dispatchers.Default) &#123;</span><br><span class="line">    counter.send(IncCounter)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 发送一条消息以用来从一个 actor 中获取计数值</span></span><br><span class="line">  <span class="keyword">val</span> response = CompletableDeferred&lt;<span class="built_in">Int</span>&gt;()</span><br><span class="line">  counter.send(GetCounter(response))</span><br><span class="line">  println(<span class="string">&quot;Counter = <span class="subst">$&#123;response.await()&#125;</span>&quot;</span>)</span><br><span class="line">  counter.close() <span class="comment">// 关闭该actor</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>actor能够并发安全的原因是它将并发过来的请求存储在通道中，再一个一个地处理。达到了不需要加锁的串行调用。比直接并发安全，比加锁高效。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本文详述了Kotlin协程的基本用法及重要组件的运行机制，对它们有了足够详细的了解和清晰的认识有助于我们写出正确的Kotlin协程代码。当然实际使用还需要根据具体情况选择恰当的API。文章的最后大致介绍了Kotlin协程中的其它功能，虽然不常用到，但了解总是没错的，万一有用呢。</p>
+<p>文章中偏重讲解，示例代码较少，且部分实例代码来自官方，部分来自自己，并不一定能够直接运行，重在展示用法，阅读时注意区分。</p>
+<p>写本文前打了很多草稿，如有兴趣翻阅，可以看 <a target="_blank" rel="noopener" href="https://github.com/zou8944/Draft/tree/master/src/main/kotlin/com/github/zou8944/kotlin/coroutine">这里</a> 。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ol>
+<li>协程 - 维基百科</li>
+<li><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV164411C7FK?from=search&seid=6066955533575291649">[码上开学]协程系列视频(扔物线，共3集)</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/Kotlin-zh/KEEP/blob/master/proposals/coroutines.md">Kotlin协程设计提案(翻译版)</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.kotlincn.net/docs/reference/coroutines/coroutines-guide.html">Kotlin协程官方手册</a></li>
+<li>Kotlin核心组件Javadoc</li>
+<li><a target="_blank" rel="noopener" href="https://medium.com/@elizarov/coroutine-context-and-scope-c8b255d59055">Coroutine Context and Scope - Roman Elizarov</a></li>
+<li><a target="_blank" rel="noopener" href="https://medium.com/@elizarov/the-reason-to-avoid-globalscope-835337445abc">The reason to avoid GlobalScope - Roman Elizarov</a></li>
+<li><a target="_blank" rel="noopener" href="https://medium.com/@elizarov/structured-concurrency-722d765aa952">Structed concurrency - Roman Elizarov</a></li>
+<li><a target="_blank" rel="noopener" href="https://vorpus.org/blog/notes-on-structured-concurrency-or-go-statement-considered-harmful/">Structed concurrency - Somebody</a></li>
+<li><a target="_blank" rel="noopener" href="https://medium.com/@elizarov/explicit-concurrency-67a8e8fd9b25">Explicit Concurrency - Roman Elizarov</a></li>
+</ol>
+<!-- flag of hidden posts -->
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/private/" rel="tag"># private</a>
+          
+            <a href="/tags/clippings/" rel="tag"># clippings</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">281</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">21</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">44</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@qq.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E9%87%8A%E5%8D%8F%E7%A8%8B"><span class="nav-text">解释协程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Kotlin%E7%9A%84%E5%8D%8F%E7%A8%8B"><span class="nav-text">Kotlin的协程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%AC%E6%96%87%E4%BB%8B%E7%BB%8D"><span class="nav-text">本文介绍</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%8D%8F%E7%A8%8B"><span class="nav-text">使用协程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8"><span class="nav-text">启动</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%96%E6%B6%88"><span class="nav-text">取消</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%82%E5%B8%B8"><span class="nav-text">异常</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E7%BB%84%E4%BB%B6"><span class="nav-text">核心组件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%8F%E7%A8%8B%E4%B8%8A%E4%B8%8B%E6%96%87"><span class="nav-text">协程上下文</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%B0%83%E5%BA%A6%E5%99%A8"><span class="nav-text">调度器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Job"><span class="nav-text">Job</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%9C%E7%94%A8%E5%9F%9F"><span class="nav-text">作用域</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8C%BA%E5%88%86%E4%BD%9C%E7%94%A8%E5%9F%9F%E5%92%8C%E4%B8%8A%E4%B8%8B%E6%96%87"><span class="nav-text">区分作用域和上下文</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%A6%E5%AE%9A%E5%92%8C%E7%BB%8F%E9%AA%8C"><span class="nav-text">约定和经验</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%81%BF%E5%85%8D%E4%BD%BF%E7%94%A8GlobalScope-launch"><span class="nav-text">避免使用GlobalScope.launch</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%93%E6%9E%84%E5%8C%96%E5%B9%B6%E5%8F%91"><span class="nav-text">结构化并发</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#suspend%E6%96%B9%E6%B3%95%E5%92%8CCoroutineScope%E6%89%A9%E5%B1%95%E6%96%B9%E6%B3%95%E7%9A%84%E5%8F%96%E8%88%8D"><span class="nav-text">suspend方法和CoroutineScope扩展方法的取舍</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8C%BA%E5%88%86%E4%B8%8E%E5%AF%B9%E6%AF%94"><span class="nav-text">区分与对比</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Kotlin%E5%8D%8F%E7%A8%8B%E7%9A%84%E5%85%B6%E5%AE%83%E5%8A%9F%E8%83%BD"><span class="nav-text">Kotlin协程的其它功能</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%82%E6%AD%A5%E6%B5%81"><span class="nav-text">异步流</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E5%BC%82%E6%AD%A5%E6%B5%81"><span class="nav-text">为什么需要异步流</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%BC%82%E6%AD%A5%E6%B5%81"><span class="nav-text">使用异步流</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%9A%E9%81%93"><span class="nav-text">通道</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9B%91%E7%9D%A3"><span class="nav-text">监督</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%8F%E7%A8%8B-%E9%80%9A%E9%81%93%E5%AE%9E%E7%8E%B0actor"><span class="nav-text">协程+通道实现actor</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="nav-text">参考资料</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>
