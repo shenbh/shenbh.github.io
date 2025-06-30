@@ -79,25 +79,28 @@
 
 
 
-<meta name="description" content="apk构建过程 安全相关">
+<meta name="description" content="安全相关 免混淆规则是全局生效（但推荐在各模块自己配置免混淆规则，这样移除该模块的时候会直接把该模块的免混淆规则一起移除） 混淆开关是模块内生效  学习加密，防止核心代码泄露">
 <meta property="og:type" content="article">
 <meta property="og:title" content="后期-安全相关">
 <meta property="og:url" content="http://shenbh.github.io/posts/3904036473/index.html">
 <meta property="og:site_name" content="积跬步">
-<meta property="og:description" content="apk构建过程 安全相关">
+<meta property="og:description" content="安全相关 免混淆规则是全局生效（但推荐在各模块自己配置免混淆规则，这样移除该模块的时候会直接把该模块的免混淆规则一起移除） 混淆开关是模块内生效  学习加密，防止核心代码泄露">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://shenbh.github.io/posts/3904036473/apk%E6%9E%84%E5%BB%BA%E8%BF%87%E7%A8%8B.png">
 <meta property="og:image" content="http://shenbh.github.io/posts/3904036473/apk%E6%96%87%E4%BB%B6%E7%94%9F%E6%88%90%E8%BF%87%E7%A8%8B.png">
 <meta property="og:image" content="http://shenbh.github.io/posts/3904036473/apk%E5%8A%A0%E5%AF%86.png">
 <meta property="og:image" content="http://shenbh.github.io/posts/3904036473/apk%E5%8A%A0%E5%AF%86-%E5%A6%82%E4%BD%95%E4%BB%8Edex%E4%B8%AD%E6%89%BEclass.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/3904036473/%E6%A3%80%E6%9F%A5%E7%A0%B4%E8%A7%A3%E5%BA%94%E7%94%A8%E7%AD%BE%E5%90%8D.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/3904036473/image-20250612091026979.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/3904036473/image-20250612091423483.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/3904036473/image-20250612091604781.png">
 <meta property="og:image" content="http://shenbh.github.io/posts/3904036473/%E4%BB%A3%E7%A0%81%E6%B7%B7%E6%B7%86%E9%97%AE%E9%A2%981.png">
 <meta property="og:image" content="http://shenbh.github.io/posts/3904036473/%E4%BB%A3%E7%A0%81%E6%B7%B7%E6%B7%86%E9%97%AE%E9%A2%982.png">
 <meta property="article:published_time" content="2019-12-24T09:23:13.000Z">
-<meta property="article:modified_time" content="2025-05-14T09:58:58.700Z">
+<meta property="article:modified_time" content="2025-06-19T09:59:24.505Z">
 <meta property="article:author" content="阿炳">
 <meta property="article:tag" content="安卓后期">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://shenbh.github.io/posts/3904036473/apk%E6%9E%84%E5%BB%BA%E8%BF%87%E7%A8%8B.png">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/3904036473/apk%E6%96%87%E4%BB%B6%E7%94%9F%E6%88%90%E8%BF%87%E7%A8%8B.png">
 
 
 
@@ -383,11 +386,155 @@
       
 
       
-        <h1 id="apk构建过程"><a href="#apk构建过程" class="headerlink" title="apk构建过程"></a>apk构建过程</h1><p><img src="/posts/3904036473/apk%E6%9E%84%E5%BB%BA%E8%BF%87%E7%A8%8B.png" alt="apk构建过程"></p>
-<h1 id="安全相关"><a href="#安全相关" class="headerlink" title="安全相关"></a>安全相关</h1><ul>
+        <h1 id="安全相关"><a href="#安全相关" class="headerlink" title="安全相关"></a>安全相关</h1><ul>
 <li>免混淆规则是全局生效（但推荐在<strong>各模块自己配置免混淆规则</strong>，这样移除该模块的时候会直接把该模块的免混淆规则一起移除）</li>
 <li>混淆开关是<strong>模块内生效</strong></li>
 </ul>
+<h2 id="学习加密，防止核心代码泄露"><a href="#学习加密，防止核心代码泄露" class="headerlink" title="学习加密，防止核心代码泄露"></a>学习加密，防止核心代码泄露</h2><ul>
+<li>反编译出来的目录MATE-INF 是放签名文件的。如果dex等代码有变动那么需要重新签名</li>
+<li><code>.apk</code>文件生成过程：<br>  <img src="/posts/3904036473/apk%E6%96%87%E4%BB%B6%E7%94%9F%E6%88%90%E8%BF%87%E7%A8%8B.png" alt="apk文件生成过程"><br>  <img src="/posts/3904036473/apk%E5%8A%A0%E5%AF%86.png" alt="image-20210218113341085"></li>
+</ul>
+<p>问题：</p>
+<ol>
+<li>如何达到加密效果？</li>
+<li>为什么是两个系列的dex？<br> 用后台代码运行。壳dex存放加解密的细节。核心代码在另一个dex中，对这个dex进行加密，这样<code>classLoader</code>就无法识别这个dex。这样反编译就打不开这个dex，达到保护核心代码的目的。</li>
+<li>壳dex怎么来的？</li>
+<li>壳dex如何保护源dex？</li>
+<li>如何签名？</li>
+<li>如何运行新dex（如何脱壳）？</li>
+</ol>
+<p>后台代码：<br>加密流程：对<code>apk</code>进行<code>unzip</code>，遍历<code>dex</code>，对<code>dex</code>进行<code>AES</code>加密，用流写回文件<br>获取壳<code>dex</code>（这是个<code>library</code>工程中的<code>aar</code>得到的）流程：对<code>apk</code>进行<code>unzip</code>，遍历获取<code>classes.jar</code>，调用命令行<code>dx.bat</code>获取壳<code>dex</code><br>解密流程：（安装<code>apk</code>过程中只做校验签名）解密发生在运行时，一边运行一边解密。  </p>
+<p>思路来源于tinker热修复（github上可以找到源码）（热修复：对Framework层的hook技术）<br>dex加载顺序（有个数组<code>dexpath[]</code>保存<code>dex</code>，通过<code>dexpath[]</code>的脚标来顺序加载。我们热修复就是新建一个数组，把修复过bug的dex放到数组的最前面）</p>
+<p>ClassLoader<br>双亲委托机制（谁先加载就用谁作为执行的class）–》热修复原理  </p>
+<p>Application最早执行的方法是<code>attachBaseContext</code><br><img src="/posts/3904036473/apk%E5%8A%A0%E5%AF%86-%E5%A6%82%E4%BD%95%E4%BB%8Edex%E4%B8%AD%E6%89%BEclass.png" alt="image-20210218114921013"></p>
+<h3 id="完成apk加固，需要具备的知识体系有哪些？"><a href="#完成apk加固，需要具备的知识体系有哪些？" class="headerlink" title="完成apk加固，需要具备的知识体系有哪些？"></a>完成apk加固，需要具备的知识体系有哪些？</h3><table>
+<thead>
+<tr>
+<th>知识点</th>
+<th>面试体系</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>熟练掌握Java IO相关代码</td>
+<td>Java语言进阶<a href="../Java/Java-RandomAccessFile.md"><code>RandomAccessFile</code></a></td>
+</tr>
+<tr>
+<td>深入研究Android apk的启动流程</td>
+<td>精通<code>Android FrameWork</code>层</td>
+</tr>
+<tr>
+<td>精通Multidex文件加载机制，精通类加载机制</td>
+<td>精通<code>Android FrameWork</code>层 <code>JVM</code>，<code>DVM ClassLoader</code></td>
+</tr>
+<tr>
+<td>明确dex文件的基本构造，了解dex文件相关源码</td>
+<td>精通<code>Android FrameWork</code>层 <code>dex</code></td>
+</tr>
+<tr>
+<td>APK打包的基本流程需要理解</td>
+<td>Gradle工具数量</td>
+</tr>
+<tr>
+<td>掌握C&#x2F;C++语言及NDK开发</td>
+<td>精通C&#x2F;C++及NDK开发</td>
+</tr>
+<tr>
+<td>掌握Java反射和动态代理</td>
+<td>Java语言进阶基础</td>
+</tr>
+</tbody></table>
+<p>扩展：<br>微信中加密后的有些类部分可见有些类都不可见：实现是针对某些核心代码进行做标记，针对有标记的部分（都是二进制数据）进行加密，就可以部分不可见。</p>
+<hr>
+<h2 id="加固"><a href="#加固" class="headerlink" title="加固"></a>加固</h2><h3 id="apk-上架之前需要加固（借助加固工具）"><a href="#apk-上架之前需要加固（借助加固工具）" class="headerlink" title="apk 上架之前需要加固（借助加固工具）"></a>apk 上架之前需要加固（借助加固工具）</h3><p>加固都会把签名去掉，需要重新签名</p>
+<ul>
+<li><del>乐固只有 exe，只有加固的功能【不能用了】</del></li>
+<li>360 加固宝，<a target="_blank" rel="noopener" href="https://jiagu.360.cn/#/global/download">下载</a>【只勾选“签名校验”】，有加固<del>和重新签名的功能</del>【只有每日一次免费加固，oppo、三星不能上架】</li>
+<li><a target="_blank" rel="noopener" href="https://open.oppomobile.com/omas/reinforceManage">oppo在线加固</a> 【用基础版加固即可，分oppo渠道包】</li>
+<li><a target="_blank" rel="noopener" href="https://dev.bangcle.com/apps/index">梆梆加固</a>（我用PC版加固）【加固比较慢，加固后的包也比较大，分三星渠道包】</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/LazyIonEs/AndroidToolKit/tree/main?tab=readme-ov-file">AndroidToolKit安卓工具包</a>，功能有：<ul>
+<li>签名信息 - 分析(APK&#x2F;签名)的签名信息（modulus、md5、sha-1、sha-256等）</li>
+<li>APK信息 - 解析<code>AndroidManifest.xml</code>，提取部分信息</li>
+<li>APK签名 - 对APK进行签名</li>
+<li>签名生成 - 生成签名证书</li>
+<li>图标生成 - 一键生成多尺寸图标</li>
+<li>缓存清理 - 清理Android项目缓存目录</li>
+</ul>
+</li>
+<li></li>
+</ul>
+<h3 id="安全-Android应用加固原理"><a href="#安全-Android应用加固原理" class="headerlink" title="安全-Android应用加固原理"></a><a href="../Android%E6%89%A9%E5%B1%95/%E5%AE%89%E5%85%A8-Android%E5%BA%94%E7%94%A8%E5%8A%A0%E5%9B%BA%E5%8E%9F%E7%90%86.md">安全-Android应用加固原理</a></h3><h3 id="so加固"><a href="#so加固" class="headerlink" title="so加固"></a>so加固</h3><ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/upx/upx">https://github.com/upx/upx</a></li>
+</ul>
+<p>加壳步骤：</p>
+<ol>
+<li>增加init函数：<code>cpp</code>文件添加 <code>void my_init()&#123;&#125;</code></li>
+<li><code>Android.mk</code>文件添加：<code>LOCAL_LDFLAGS += -WI,-init=my_init</code></li>
+<li>将编译好的<code>so</code>拷贝到 <code>upx-3.96-win64</code> 文件夹中</li>
+<li>用命令行进入 <code>upx-3.96-win64</code> 目录中</li>
+<li>输入命令：<code>upx --android-shlib 文件名称.so</code></li>
+<li>加壳后的<code>so</code>会替换原有的<code>so</code></li>
+</ol>
+<hr>
+<h2 id="加固了就安全了？几个措施让你的-Android-应用更安全"><a href="#加固了就安全了？几个措施让你的-Android-应用更安全" class="headerlink" title="加固了就安全了？几个措施让你的 Android 应用更安全"></a><a target="_blank" rel="noopener" href="https://juejin.im/post/6877920266807312398?utm_source=gold_browser_extension">加固了就安全了？几个措施让你的 Android 应用更安全</a></h2><h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>最近新开发了一款工具类型的软件 <a target="_blank" rel="noopener" href="https://appgallery.huawei.com/#/app/C102887067">移动工具箱</a>，然而某天下午忽然群里来了一个不速之客说我的软件被破解了。虽然，该软件无需付费并且没有广告（很良心 :) ），也进行了安全加固，但是还是很轻易得被别人破解了。现象是，启动页换成了别人的页面，需要用户点击页面上的按钮分享几次破解者的信息才能进入应用。并且，每次打开应用都是如此。</p>
+<p>看到这我的心情还是非常复杂的。一开始觉得自己做个应用都赚不到钱，还要被这些人利用。本是同根生，相煎何太急呀。然而，转念一想，这里有些东西还是可以学习一下，于是我去他们的链接下载了软件，本着学习的精神进行了一波分析并制定了几个方案来加强应用安全。</p>
+<h3 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h3><h4 id="检查破解应用签名"><a href="#检查破解应用签名" class="headerlink" title="检查破解应用签名"></a>检查破解应用签名</h4><p>决定要进行分析之后，我首先想到的就是去检查下应用的签名，这里使用 keytool 即可，指令如下:</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">keytool -printcert -<span class="keyword">jarfile </span>你的apk地址</span><br></pre></td></tr></table></figure>
+
+<p>获取的结果如下，</p>
+<p><img src="/posts/3904036473/%E6%A3%80%E6%9F%A5%E7%A0%B4%E8%A7%A3%E5%BA%94%E7%94%A8%E7%AD%BE%E5%90%8D.png" alt="检查破解应用签名"></p>
+<p>很显然，应用的签名已经发生了变化，应用被别人二次打包了。实际上，我的应用是在 360 上面进行了软件加固（免费版），但是还是如此轻松地被别人完成了二次打包。</p>
+<h4 id="签名校验"><a href="#签名校验" class="headerlink" title="签名校验"></a>签名校验</h4><p>如果仅仅是签名发生了变化，那么解决方式倒也简单。在应用内部增加一个签名校验就可以了。不过签名校验也有需要注意的地方。其一，签名校验可以放在 Java 层来完成，也可以放在 native 层通过 C++ 来完成。其二，在应用内部进行整个数字签名的校验还是部分校验。这是因为如果写入完整的数字签名很容易被别人发现，即便写入到 so 中，写入完整字符串比部分更容易被别人找到。</p>
+<p>在 Java 中，你可以按照下面这种方式获取应用的数字签名。我已经把相关的方法写成了工具类，你可以在 Github 上面获取 <a href="https://link.juejin.cn/?target=https://github.com/Shouheng88/Android-utils/blob/master/utils/src/main/java/me/shouheng/utils/app/AppUtils.java">AppUtils</a>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title function_">getAppSignatureMD5</span><span class="params">(<span class="keyword">final</span> String packageName)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> getAppSignatureHash(packageName, <span class="string">&quot;MD5&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> String <span class="title function_">getAppSignatureHash</span><span class="params">(<span class="keyword">final</span> String packageName, <span class="keyword">final</span> String algorithm)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (StringUtils.isSpace(packageName)) <span class="keyword">return</span> <span class="string">&quot;&quot;</span>;</span><br><span class="line">    Signature[] signature = getAppSignature(packageName);</span><br><span class="line">    <span class="keyword">if</span> (signature == <span class="literal">null</span> || signature.length &lt;= <span class="number">0</span>) <span class="keyword">return</span> <span class="string">&quot;&quot;</span>;</span><br><span class="line">    <span class="keyword">return</span> StringUtils.bytes2HexString(EncryptUtils.hashTemplate(signature[<span class="number">0</span>].toByteArray(), algorithm))</span><br><span class="line">        .replaceAll(<span class="string">&quot;(?&lt;=[0-9A-F]&#123;2&#125;)[0-9A-F]&#123;2&#125;&quot;</span>, <span class="string">&quot;:$0&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果是使用 C++ 进行签名校验可以使用下面的方法，</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">jbyteArray <span class="title">getSignatureByteArray</span><span class="params">(JNIEnv *env, jobject context, jstring algorithm)</span> </span>&#123;</span><br><span class="line">    jclass context_clazz = env-&gt;<span class="built_in">GetObjectClass</span>(context);</span><br><span class="line">    <span class="comment">// context.getPackageManager()</span></span><br><span class="line">    jmethodID methodID_getPackageManager = env-&gt;<span class="built_in">GetMethodID</span>(context_clazz,</span><br><span class="line">            <span class="string">&quot;getPackageManager&quot;</span>, <span class="string">&quot;()Landroid/content/pm/PackageManager;&quot;</span>);</span><br><span class="line">    jobject packageManager = env-&gt;<span class="built_in">CallObjectMethod</span>(context, methodID_getPackageManager);</span><br><span class="line">    jclass packageManager_clazz = env-&gt;<span class="built_in">GetObjectClass</span>(packageManager);</span><br><span class="line">    jmethodID methodID_getPackageInfo = env-&gt;<span class="built_in">GetMethodID</span>(packageManager_clazz,</span><br><span class="line">            <span class="string">&quot;getPackageInfo&quot;</span>, <span class="string">&quot;(Ljava/lang/String;I)Landroid/content/pm/PackageInfo;&quot;</span>);</span><br><span class="line">    jmethodID methodID_getPackageName = env-&gt;<span class="built_in">GetMethodID</span>(context_clazz,</span><br><span class="line">            <span class="string">&quot;getPackageName&quot;</span>, <span class="string">&quot;()Ljava/lang/String;&quot;</span>);</span><br><span class="line">    <span class="comment">// context.getPackageName()</span></span><br><span class="line">    jobject application_package_obj = env-&gt;<span class="built_in">CallObjectMethod</span>(context, methodID_getPackageName);</span><br><span class="line">    jstring application_package = <span class="built_in">static_cast</span>&lt;jstring&gt;(application_package_obj);</span><br><span class="line">    <span class="type">const</span> <span class="type">char</span>* package_name = env-&gt;<span class="built_in">GetStringUTFChars</span>(application_package, JNI_FALSE);</span><br><span class="line">    __android_log_print(ANDROID_LOG_DEBUG, <span class="string">&quot;DiDiDaDa&quot;</span>, <span class="string">&quot;Package Name : %s&quot;</span>, package_name);</span><br><span class="line">    <span class="comment">// packageManager-&gt;getPackageInfo(packageName, GET_SIGNATURES);</span></span><br><span class="line">    jobject packageInfo = env-&gt;<span class="built_in">CallObjectMethod</span>(packageManager, methodID_getPackageInfo, application_package_obj, <span class="comment">/*GET_SIGNATURES*/</span> <span class="number">64</span>);</span><br><span class="line">    jclass packageinfo_clazz = env-&gt;<span class="built_in">GetObjectClass</span>(packageInfo);</span><br><span class="line">    jfieldID fieldID_signatures = env-&gt;<span class="built_in">GetFieldID</span>(packageinfo_clazz, <span class="string">&quot;signatures&quot;</span>, <span class="string">&quot;[Landroid/content/pm/Signature;&quot;</span>);</span><br><span class="line">    jobjectArray signature_arr = (jobjectArray)env-&gt;<span class="built_in">GetObjectField</span>(packageInfo, fieldID_signatures);</span><br><span class="line">    <span class="comment">// packageInfo.signatures[0]</span></span><br><span class="line">    jobject signature = env-&gt;<span class="built_in">GetObjectArrayElement</span>(signature_arr, <span class="number">0</span>);</span><br><span class="line">    <span class="comment">// signature.toByteArray()</span></span><br><span class="line">    jclass signature_clazz = env-&gt;<span class="built_in">GetObjectClass</span>(signature);</span><br><span class="line">    jmethodID signature_toByteArray = env-&gt;<span class="built_in">GetMethodID</span>(signature_clazz,<span class="string">&quot;toByteArray&quot;</span>, <span class="string">&quot;()[B&quot;</span>);</span><br><span class="line">    jbyteArray sig_bytes = (jbyteArray) env-&gt;<span class="built_in">CallObjectMethod</span>(signature, signature_toByteArray);</span><br><span class="line">    <span class="comment">// MessageDigest.getInstance(&quot;SHA1&quot;)</span></span><br><span class="line">    jclass message_digest_clazz = env-&gt;<span class="built_in">FindClass</span>(<span class="string">&quot;java/security/MessageDigest&quot;</span>);</span><br><span class="line">    jmethodID message_digest_getInstance = env-&gt;<span class="built_in">GetStaticMethodID</span>(message_digest_clazz,</span><br><span class="line">            <span class="string">&quot;getInstance&quot;</span>,<span class="string">&quot;(Ljava/lang/String;)Ljava/security/MessageDigest;&quot;</span>);</span><br><span class="line">    <span class="type">const</span> <span class="type">char</span>* algorithm_bytes = env-&gt;<span class="built_in">GetStringUTFChars</span>(algorithm, JNI_FALSE);</span><br><span class="line">    jstring algorithm_name = env-&gt;<span class="built_in">NewStringUTF</span>(algorithm_bytes);</span><br><span class="line">    jobject message_object = env-&gt;<span class="built_in">CallStaticObjectMethod</span>(message_digest_clazz, message_digest_getInstance, algorithm_name);</span><br><span class="line">    jthrowable exception = env-&gt;<span class="built_in">ExceptionOccurred</span>();</span><br><span class="line">    env-&gt;<span class="built_in">ExceptionClear</span>();</span><br><span class="line">    <span class="keyword">if</span> (exception) <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    <span class="comment">// sha1.update()</span></span><br><span class="line">    jmethodID message_digest_update = env-&gt;<span class="built_in">GetMethodID</span>(message_digest_clazz,<span class="string">&quot;update&quot;</span>,<span class="string">&quot;([B)V&quot;</span>);</span><br><span class="line">    env-&gt;<span class="built_in">CallVoidMethod</span>(message_object, message_digest_update, sig_bytes);</span><br><span class="line">    <span class="comment">// sha1.digest()</span></span><br><span class="line">    jmethodID digest = env-&gt;<span class="built_in">GetMethodID</span>(message_digest_clazz, <span class="string">&quot;digest&quot;</span>, <span class="string">&quot;()[B&quot;</span>);</span><br><span class="line">    jbyteArray sha1_bytes = (jbyteArray) env-&gt;<span class="built_in">CallObjectMethod</span>(message_object, digest);</span><br><span class="line">    <span class="keyword">return</span> sha1_bytes;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里使用的是 CMake 进行编译，使用 Android Studio 进行开发。上面的逻辑很简单，就是把之前的 java 层获取签名的方法照搬到了 native 方法里。而且，借助于 Android Studio 进行开发，可以帮助我们减轻很多工作量，比如方法的映射关系就不需要你一个一个的进行对比，可以通过提示直接完成转换。当然，上面只是使用 java 的类完成了获取签名的字节数组的逻辑，进一步转换成为 hash 字符串还要进行其他操作。这里就不把代码贴出来了。</p>
+<p>因为除了进行这些签名校验我还加了其他的安全措施，所以这部分代码不便开源。不过，我已经把一些基础功能的代码和环境配置打包成了压缩文件，你可以到我公众号里回复【安卓签名校验】获取完整的代码。</p>
+<p>拿到了签名之后当然是进行签名校验了，基本的字符串比较即可。当然，你可以进行部分匹配，这样增加了破解的难度。</p>
+<h4 id="签名校验就安全了？"><a href="#签名校验就安全了？" class="headerlink" title="签名校验就安全了？"></a>签名校验就安全了？</h4><p>增加了上述的签名校验只不过是第一步，也是比较常规的安全操作。但是这样操作未必就能防止其他用户破解。进一步进行反编译，我又发现一些新的东西。破解包的目录结构挺有意思的，</p>
+<p><img src="/posts/3904036473/image-20250612091026979.png" alt="image-20250612091026979"></p>
+<p>相比于没有破解的包，在 lib 下面多了两个文件，这里的 libarm.so 的内容尚不清楚，这里的 libhook.apk 是一个 apk 文件，并且签名跟我的原始的包的签名一致，但是 apk 内容并不是我的完整包。所以，我猜测这里的 Apk 文件有其他用途，并且仅仅使用签名校验并不安全。因为别人可以读取你的应用的签名，然后通过某种方式进行伪造，让获取签名的方法返回的结果不是安装包真实的签名而是你的真实包的签名。这里的 apk 很有可能就是用来获取签名的。</p>
+<p>于是，我进一步对应用进行资源反编译，这里使用 apktool 来完成，这里如下：</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apktool d 破解应用<span class="string">.apk</span></span><br></pre></td></tr></table></figure>
+
+<p>于是我发现启动应用是被篡改掉了的，这里的启动应用已经被修改为 <code>arm.SignerPro</code>，并且这里的启动类已经被修改为 <code>SplashActivity</code>：</p>
+<p><img src="/posts/3904036473/image-20250612091423483.png" alt="image-20250612091423483"></p>
+<p>然后，我们将 Apk 解压之后对 dex 文件进行反编译。这里使用的是 d2j-dex2jar 来完成。命令如下，</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">d2j-dex2jar classes.dex</span><br></pre></td></tr></table></figure>
+
+<p>然后，我们根据反编译的结果，查看启动 Application，</p>
+<p><img src="/posts/3904036473/image-20250612091604781.png" alt="image-20250612091604781"></p>
+<p>这里的 Application 继承了 InvocationHandler。InvocationHandler 想必大家都不陌生，Retrofit 就是通过在 InvocationHandler 实现的代理来解析请求参数，并根据注解和入参来完成 OkHttp 请求的。我们找到该接口的实现方法 <code>invoke()</code>. 从上图中很明显得可以看出，我们的 <code>getPackageInfo()</code> 方法有很大可能被别人 hook 了。这个方法就是上面说的用来获取应用签名的方法，这里会对 <code>getPackageInfo()</code>  方法进行处理，并返回 signs 作为签名的获取结果而不是应用真实的签名结果。</p>
+<p>当然，上面都是猜着，因为他们也只破解了第一个版本的包，第二个版本的包我加了新的安全措施，并且悄悄地增加了几个隐藏的页面用来在应用内获取签名和其他的信息来验证我的想法。</p>
+<p>不管怎么说，仅仅加上签名校验很可能是<strong>不安全</strong>的！</p>
+<h4 id="其他安全措施"><a href="#其他安全措施" class="headerlink" title="其他安全措施"></a>其他安全措施</h4><p>其实即便他们 hook 了获取签名的 <code>getPackageInfo()</code> 方法我们仍然有许多措施来应对。他们这里的 hook 有几个地方可以入手，</p>
+<ol>
+<li><p>首先，我们并没看到 signs 的赋值操作，我猜测是通过 native 方法来完成的赋值，他们如果每次都尝试返回 signs 的话并没有屡次对 signs 进行重新赋值。而从 PackageManager 中多次读取到的 Signature 对象应该是不同的。所以，如果我们多次读取签名的时候返回的同一对象，是不是可以认为该方法被别人 hook 了呢？</p>
+</li>
+<li><p>另外，这里 hook 了 <code>getPackageInfo()</code> 方法。只是我们无法判断他们 hook 的范围，我们可以尝试自定义一个 <code>getPackageInfo()</code> 方法，然后自定义返回的对象类型，如果返回的不是我们指定的类型，就可以得出结论，我们的 <code>getPackageInfo()</code> 方法被别人 hook 了。比如，</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Fake</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">getPackageInfo</span><span class="params">()</span> &#123; &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> FakePackageInfo <span class="title function_">getPackageInfo</span><span class="params">(<span class="meta">@NonNull</span> String packageName, <span class="type">int</span> flags)</span> <span class="keyword">throws</span> PackageManager.NameNotFoundException &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">FakePackageInfo</span>();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> FakePackageInfo <span class="title function_">getPackageInfo</span><span class="params">(<span class="meta">@NonNull</span> VersionedPackage versionedPackage, <span class="type">int</span> flags)</span> <span class="keyword">throws</span> PackageManager.NameNotFoundException &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">FakePackageInfo</span>();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">FakePackageInfo</span> &#123; &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当然，如果他们只 hook 了 PackageManager 的方法，这个就不适用了。</p>
+</li>
+<li><p>除了签名校验，我们还可以检查其他项。比如检查 Application 是否是我们的启动 Application，可以使用如下代码获取应用的 Application 并进行比较，</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title function_">getApplicationName</span><span class="params">(<span class="keyword">final</span> String pkgName)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (StringUtils.isSpace(pkgName)) <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">PackageManager</span> <span class="variable">pm</span> <span class="operator">=</span> UtilsApp.getApp().getPackageManager();</span><br><span class="line">        <span class="type">ApplicationInfo</span> <span class="variable">ai</span> <span class="operator">=</span> pm.getApplicationInfo(pkgName, <span class="number">0</span>);</span><br><span class="line">        <span class="type">return</span> <span class="variable">ai</span> <span class="operator">=</span>= <span class="literal">null</span> ? <span class="literal">null</span> : ai.className;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (PackageManager.NameNotFoundException e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>此外，我们还可以对应用的启动 Activity 进行校验。因为他们对我们的应用的启动 Activity 进行了修改，于是我们启动 Activity 进行了修改，所以这也可以作为一个应对措施：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title function_">getAppLauncher</span><span class="params">(<span class="keyword">final</span> String pkgName)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (StringUtils.isSpace(pkgName)) <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">PackageManager</span> <span class="variable">pm</span> <span class="operator">=</span> UtilsApp.getApp().getPackageManager();</span><br><span class="line">        <span class="type">PackageInfo</span> <span class="variable">pi</span> <span class="operator">=</span> pm.getPackageInfo(pkgName, <span class="number">0</span>);</span><br><span class="line">        <span class="keyword">if</span> (pi == <span class="literal">null</span>) <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">        <span class="type">Intent</span> <span class="variable">resolveIntent</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Intent</span>(Intent.ACTION_MAIN, <span class="literal">null</span>);</span><br><span class="line">        resolveIntent.addCategory(Intent.CATEGORY_LAUNCHER);</span><br><span class="line">        resolveIntent.setPackage(pi.packageName);</span><br><span class="line">        List&lt;ResolveInfo&gt; resolveInfoList = pm.queryIntentActivities(resolveIntent, <span class="number">0</span>);</span><br><span class="line">        <span class="type">ResolveInfo</span> <span class="variable">resolveInfo</span> <span class="operator">=</span> resolveInfoList.iterator().next();</span><br><span class="line">        <span class="keyword">if</span> (resolveInfo != <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> resolveInfo.activityInfo.name;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (PackageManager.NameNotFoundException e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>上面提到的也只是一部分方法，当然还有其他的可以操作的方法。我们也可以在对类似的破解事件进行多分析来总结，尝试从多个维度做好安全防护。</p>
+</li>
+</ol>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>上面是我在应对破解方面的一些简单的总结，除了进行常规的加固之外，还进行了其他的维度的校验。当然，我其实对逆向和破解的了解并不是那么深入，这里权当抛砖引玉了。</p>
+<p>上文中提到的反编译工具，如果需要的话可以到我的工号里回复【安卓反编译工具】领取。这里提到的移动工具箱呢是我最近开发的一款工具软件，除了一些常用的工具之外，内部还包含了 18 种基于 OpenCV 的图像处理，部分代码我也丢到了 Github 上面。此外，还包含了两个 Github 爬虫工具用来帮助开发者更好地使用 Github，以及常见的字符串加密、文件加密和时间戳工具等，希望能够对你有帮助。</p>
+<hr>
+<h2 id="脱壳"><a href="#脱壳" class="headerlink" title="脱壳"></a>脱壳</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://juejin.cn/post/6925965844191117320">https://juejin.cn/post/6925965844191117320</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/CodingGay/BlackDex">https://github.com/CodingGay/BlackDex</a></li>
+</ul>
+<hr>
 <h2 id="反编译"><a href="#反编译" class="headerlink" title="反编译"></a>反编译</h2><h3 id="反编译需要用到的工具"><a href="#反编译需要用到的工具" class="headerlink" title="反编译需要用到的工具"></a>反编译需要用到的工具</h3><p><code>apktool</code>：资源文件获取，可以提取出图片文件和布局文件进行使用查看</p>
 <p><code>dex2jar</code>：将apk反编译成java源码（<code>classes.dex</code>转化成jar文件）</p>
 <p><code>jd-gui</code>：查看apk中<code>classes.dex</code>转化出额jar，即源码文件</p>
@@ -408,73 +555,7 @@
 </blockquote>
 <p>问题：出现错误<code>Exception in thread “main” java.lang.OutOfMemoryError: Java heap space</code></p>
 <p>解决：<code>d2j_invoke.bat</code>内更改jvm大小为2048  <code>java -Xms512m -Xmx2048m -cp &quot;%CP%&quot; %*</code></p>
-<p><a target="_blank" rel="noopener" href="https://juejin.im/post/6877920266807312398?utm_source=gold_browser_extension">加固了就安全了？几个措施让你的 Android 应用更安全</a></p>
-<h2 id="学习加密，防止核心代码泄露"><a href="#学习加密，防止核心代码泄露" class="headerlink" title="学习加密，防止核心代码泄露"></a>学习加密，防止核心代码泄露</h2><ul>
-<li>反编译出来的目录MATE-INF 是放签名文件的。如果dex等代码有变动那么需要重新签名</li>
-<li>.apk文件生成过程：<br>  <img src="/posts/3904036473/apk%E6%96%87%E4%BB%B6%E7%94%9F%E6%88%90%E8%BF%87%E7%A8%8B.png" alt="image-20210218113223120"><br>  <img src="/posts/3904036473/apk%E5%8A%A0%E5%AF%86.png" alt="image-20210218113341085"></li>
-</ul>
-<p>问题：</p>
-<ol>
-<li><p>如何达到加密效果？</p>
-</li>
-<li><p>为什么是两个系列的dex？</p>
-<blockquote>
-<p>用后台代码运行。壳dex存放加解密的细节。核心代码在另一个dex中，对这个dex进行加密，这样classLoader就无法识别这个dex。这样反编译就打不开这个dex，达到保护核心代码的目的。</p>
-</blockquote>
-</li>
-<li><p>壳dex怎么来的？</p>
-</li>
-<li><p>壳dex如何保护源dex？</p>
-</li>
-<li><p>如何签名？</p>
-</li>
-<li><p>如何运行新dex（如何脱壳）？</p>
-</li>
-</ol>
-<p>后台代码：<br>加密流程：对<code>apk</code>进行<code>unzip</code>，遍历<code>dex</code>，对<code>dex</code>进行<code>AES</code>加密，用流写回文件<br>获取壳<code>dex</code>（这是个<code>library</code>工程中的<code>aar</code>得到的）流程：对<code>apk</code>进行<code>unzip</code>，遍历获取<code>classes.jar</code>，调用命令行<code>dx.bat</code>获取壳<code>dex</code><br>解密流程：（安装<code>apk</code>过程中只做校验签名）解密发生在运行时，一边运行一边解密。</p>
-<p>思路来源于tinker热修复（github上可以找到源码）（热修复：对Framework层的hook技术）<br>dex加载顺序（有个数组<code>dexpath[]</code>保存<code>dex</code>，通过<code>dexpath[]</code>的脚标来顺序加载。我们热修复就是新建一个数组，把修复过bug的dex放到数组的最前面）</p>
-<p>ClassLoader<br>双亲委托机制（谁先加载就用谁作为执行的class）–》热修复原理</p>
-<p>Application最早执行的方法是<code>attachBaseContext</code></p>
-<p><img src="/posts/3904036473/apk%E5%8A%A0%E5%AF%86-%E5%A6%82%E4%BD%95%E4%BB%8Edex%E4%B8%AD%E6%89%BEclass.png" alt="image-20210218114921013"></p>
-<p>完成apk加固，需要具备的知识体系有哪些？</p>
-<table>
-<thead>
-<tr>
-<th>知识点</th>
-<th>面试体系</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>熟练掌握Java IO相关代码</td>
-<td>Java语言进阶RadomAccessFile</td>
-</tr>
-<tr>
-<td>深入研究Android apk的启动流程</td>
-<td>精通Android FrameWork层</td>
-</tr>
-<tr>
-<td>精通Multidex文件加载机制，精通类加载机制</td>
-<td>精通Android FrameWork层 JVM，DVM ClassLoader</td>
-</tr>
-<tr>
-<td>明确dex文件的基本构造，了解dex文件相关源码</td>
-<td>精通Android FrameWork层 dex</td>
-</tr>
-<tr>
-<td>APK打包的基本流程需要理解</td>
-<td>Gradle工具数量</td>
-</tr>
-<tr>
-<td>掌握C&#x2F;C++语言及NDK开发</td>
-<td>精通C&#x2F;C++及NDK开发</td>
-</tr>
-<tr>
-<td>掌握Java反射和动态代理</td>
-<td>Java语言进阶基础</td>
-</tr>
-</tbody></table>
-<p>扩展：</p>
-<p>微信中加密后的有些类部分可见有些类都不可见：实现是针对某些核心代码进行做标记，针对有标记的部分（都是二进制数据）进行加密，就可以部分不可见。</p>
+<h3 id="后期-反编译-Null大佬的"><a href="#后期-反编译-Null大佬的" class="headerlink" title="后期-反编译-Null大佬的"></a><a href="%E5%90%8E%E6%9C%9F-%E5%8F%8D%E7%BC%96%E8%AF%91-Null%E5%A4%A7%E4%BD%AC%E7%9A%84.md">后期-反编译-Null大佬的</a></h3><hr>
 <h1 id="安全相关问题"><a href="#安全相关问题" class="headerlink" title="安全相关问题"></a>安全相关问题</h1><h2 id="H5文件加固检测"><a href="#H5文件加固检测" class="headerlink" title="H5文件加固检测"></a>H5文件加固检测</h2><p>应用内若存在明文存储的H5资源文件，则会泄露页面基本布局和一些重要的信息，如登录界面、支付界面等。攻击者可篡改H5资源文件，可能植入钓鱼页面或者恶意代码，导致用户账号、密码、支付密码等敏感信息泄露。更有甚者，通过H5代码暴露相关活动的业务逻辑，可能被黑产团队用来刷红包、薅羊毛等，造成经济损失。</p>
 <p><strong>解决方案</strong></p>
 <p>可以使用第三方的专业安全加固方案，对应用中的H5文件进行加固保护。</p>
@@ -504,6 +585,7 @@
 <h2 id="日志数据泄露风险"><a href="#日志数据泄露风险" class="headerlink" title="日志数据泄露风险"></a>日志数据泄露风险</h2><p>调试信息函数可能输出重要的调试信息，常见的就是Log日志类其中包含的信息可能会导致用户信息泄露，泄露核心代码逻辑等，为发起攻击提供便利，例如：Activity的组件名；通信交互的日志；跟踪的变量值等。</p>
 <p><strong>解决方案</strong></p>
 <p>应用内使用统一的Log控制基类，可以灵活的控制Log的输出打印。（测试环境允许打印日志、正式环境不打印）；或者使用第三方的日志框架。</p>
+<hr>
 <h1 id="代码混淆相关问题"><a href="#代码混淆相关问题" class="headerlink" title="代码混淆相关问题"></a>代码混淆相关问题</h1><h2 id="at-com-netease-nis-sdkwrapper-Utils-rL-Native-method"><a href="#at-com-netease-nis-sdkwrapper-Utils-rL-Native-method" class="headerlink" title="at com.netease.nis.sdkwrapper.Utils.rL(Native method)"></a><code>at com.netease.nis.sdkwrapper.Utils.rL(Native method)</code></h2><p><img src="/posts/3904036473/%E4%BB%A3%E7%A0%81%E6%B7%B7%E6%B7%86%E9%97%AE%E9%A2%981.png" alt="安卓/代码混淆问题1"></p>
 <p>原因：少添加了对<code>oaid</code>（<code>oaid_sdk_1.0.25.aar</code>）的免混淆。</p>
 <blockquote>
@@ -520,13 +602,11 @@
 <figure class="highlight axapta"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#OAID</span></span><br><span class="line">-keep <span class="keyword">class</span> <span class="title class_">XI</span>.CA.XI.**&#123;*;&#125;</span><br><span class="line">-keep <span class="keyword">class</span> <span class="title class_">XI</span>.K0.XI.**&#123;*;&#125;</span><br><span class="line">-keep <span class="keyword">class</span> <span class="title class_">XI</span>.XI.K0.**&#123;*;&#125;</span><br><span class="line">-keep <span class="keyword">class</span> <span class="title class_">XI</span>.vs.K0.**&#123;*;&#125;</span><br><span class="line">-keep <span class="keyword">class</span> <span class="title class_">XI</span>.xo.XI.XI.**&#123;*;&#125; </span><br><span class="line">-keep <span class="keyword">class</span> <span class="title class_">com</span>.asus.msa.SupplementaryDID.**&#123;*;&#125;</span><br><span class="line">-keep <span class="keyword">class</span> <span class="title class_">com</span>.asus.msa.sdid.**&#123;*;&#125;</span><br><span class="line">-keep <span class="keyword">class</span> <span class="title class_">com</span>.bun.lib.**&#123;*;&#125;</span><br><span class="line">-keep <span class="keyword">class</span> <span class="title class_">com</span>.bun.miitmdid.**&#123;*;&#125;</span><br><span class="line">-keep <span class="keyword">class</span> <span class="title class_">com</span>.huawei.hms.ads.identifier.**&#123;*;&#125;</span><br><span class="line">-keep <span class="keyword">class</span> <span class="title class_">com</span>.samsung.android.deviceidservice.**&#123;*;&#125;</span><br><span class="line">-keep <span class="keyword">class</span> <span class="title class_">org</span>.json.**&#123;*;&#125;</span><br><span class="line">-keep <span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">com</span>.netease.nis.sdkwrapper.Utils &#123;<span class="keyword">public</span> &lt;methods&gt;;&#125;</span><br></pre></td></tr></table></figure>
 
 
+<h2 id="“-keepclassmembers-class-extends-android-app-Activity-public-void-android-view-View-”-混淆报错"><a href="#“-keepclassmembers-class-extends-android-app-Activity-public-void-android-view-View-”-混淆报错" class="headerlink" title="“-keepclassmembers class * extends android.app.Activity {public void *(android.view.View);}” 混淆报错"></a>“-keepclassmembers class * extends android.app.Activity {public void *(android.view.View);}” 混淆报错</h2><p>aapt_rules.txt 出现</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">AGPBI</span>: &#123;<span class="string">&quot;kind&quot;</span>:<span class="string">&quot;error&quot;</span>,<span class="string">&quot;text&quot;</span>:<span class="string">&quot;Expected field or method name at D:<span class="subst">\\</span>code<span class="subst">\\</span>Company<span class="subst">\\</span>xm597_dev<span class="subst">\\</span>app<span class="subst">\\</span>build<span class="subst">\\</span>intermediates<span class="subst">\\</span>aapt_proguard_file<span class="subst">\\</span>a0032Release<span class="subst">\\</span>aapt_rules.txt:1315:33<span class="subst">\n</span>-keepclassmembers class * &#123; *** @&#123;view::onUserProfileClick&#125;(android.view.View); &#125;<span class="subst">\n</span>                                ^&quot;</span>,<span class="string">&quot;sources&quot;</span>:[&#123;<span class="string">&quot;file&quot;</span>:<span class="string">&quot;D:<span class="subst">\\</span>code<span class="subst">\\</span>Company<span class="subst">\\</span>xm597_dev<span class="subst">\\</span>app<span class="subst">\\</span>build<span class="subst">\\</span>intermediates<span class="subst">\\</span>aapt_proguard_file<span class="subst">\\</span>a0032Release<span class="subst">\\</span>aapt_rules.txt&quot;</span>,<span class="string">&quot;position&quot;</span>:&#123;<span class="string">&quot;startLine&quot;</span>:<span class="number">1314</span>,<span class="string">&quot;startColumn&quot;</span>:<span class="number">32</span>,<span class="string">&quot;startOffset&quot;</span>:<span class="number">95272</span>&#125;&#125;],<span class="string">&quot;tool&quot;</span>:<span class="string">&quot;R8&quot;</span>&#125;</span><br></pre></td></tr></table></figure>
 
-
-
-
-
-
-
+<p>~~解决：所有layout中 <code>android:onClick=&quot;@&#123;view::clickMethod&#125;&quot;</code> 更改成 <code>android:onClick=&quot;@&#123;() -&gt; view.clickMethod()&#125;&quot;</code> ~~  </p>
+<p>最后发现改错layout了，所以上面的都不起效。正确的layout中有这个方法，但是相关联的View中没有这个方法，所以在release开启混淆的情况下会报错（在不开混淆的时候居然不报错）</p>
 
       
     </div>
@@ -650,7 +730,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">281</span>
+                  <span class="site-state-item-count">291</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -672,7 +752,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">44</span>
+                  <span class="site-state-item-count">47</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
@@ -721,7 +801,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#apk%E6%9E%84%E5%BB%BA%E8%BF%87%E7%A8%8B"><span class="nav-text">apk构建过程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3"><span class="nav-text">安全相关</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%8D%E7%BC%96%E8%AF%91"><span class="nav-text">反编译</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%8D%E7%BC%96%E8%AF%91%E9%9C%80%E8%A6%81%E7%94%A8%E5%88%B0%E7%9A%84%E5%B7%A5%E5%85%B7"><span class="nav-text">反编译需要用到的工具</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%95dex%E7%9A%84%E5%8F%8D%E7%BC%96%E8%AF%91%E6%AD%A5%E9%AA%A4"><span class="nav-text">单dex的反编译步骤</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%9Adex%E7%9A%84%E5%8F%8D%E7%BC%96%E8%AF%91%E6%AD%A5%E9%AA%A4"><span class="nav-text">多dex的反编译步骤</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%A6%E4%B9%A0%E5%8A%A0%E5%AF%86%EF%BC%8C%E9%98%B2%E6%AD%A2%E6%A0%B8%E5%BF%83%E4%BB%A3%E7%A0%81%E6%B3%84%E9%9C%B2"><span class="nav-text">学习加密，防止核心代码泄露</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3%E9%97%AE%E9%A2%98"><span class="nav-text">安全相关问题</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#H5%E6%96%87%E4%BB%B6%E5%8A%A0%E5%9B%BA%E6%A3%80%E6%B5%8B"><span class="nav-text">H5文件加固检测</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RSA%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95%E4%B8%8D%E5%AE%89%E5%85%A8%E4%BD%BF%E7%94%A8%E5%B8%A6%E6%9D%A5%E7%9A%84%E5%AE%89%E5%85%A8%E9%A3%8E%E9%99%A9"><span class="nav-text">RSA加密算法不安全使用带来的安全风险</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%AA%E5%B1%8F%E6%94%BB%E5%87%BB%E9%A3%8E%E9%99%A9"><span class="nav-text">截屏攻击风险</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ZipperDown%E6%BC%8F%E6%B4%9E"><span class="nav-text">ZipperDown漏洞</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%A8%E6%88%B7%E6%95%8F%E6%84%9F%E4%BF%A1%E6%81%AF%E6%98%8E%E6%96%87%E4%BC%A0%E8%BE%93"><span class="nav-text">用户敏感信息明文传输</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Java%E5%B1%82%E4%BB%A3%E7%A0%81%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%E9%A3%8E%E9%99%A9%E9%97%AE%E9%A2%98"><span class="nav-text">Java层代码动态调试风险问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E8%B6%8A%E6%9D%83%E5%A4%87%E4%BB%BD%E9%A3%8E%E9%99%A9"><span class="nav-text">数据越权备份风险</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%97%A5%E5%BF%97%E6%95%B0%E6%8D%AE%E6%B3%84%E9%9C%B2%E9%A3%8E%E9%99%A9"><span class="nav-text">日志数据泄露风险</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E6%B7%B7%E6%B7%86%E7%9B%B8%E5%85%B3%E9%97%AE%E9%A2%98"><span class="nav-text">代码混淆相关问题</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#at-com-netease-nis-sdkwrapper-Utils-rL-Native-method"><span class="nav-text">at com.netease.nis.sdkwrapper.Utils.rL(Native method)</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3"><span class="nav-text">安全相关</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%A6%E4%B9%A0%E5%8A%A0%E5%AF%86%EF%BC%8C%E9%98%B2%E6%AD%A2%E6%A0%B8%E5%BF%83%E4%BB%A3%E7%A0%81%E6%B3%84%E9%9C%B2"><span class="nav-text">学习加密，防止核心代码泄露</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%8C%E6%88%90apk%E5%8A%A0%E5%9B%BA%EF%BC%8C%E9%9C%80%E8%A6%81%E5%85%B7%E5%A4%87%E7%9A%84%E7%9F%A5%E8%AF%86%E4%BD%93%E7%B3%BB%E6%9C%89%E5%93%AA%E4%BA%9B%EF%BC%9F"><span class="nav-text">完成apk加固，需要具备的知识体系有哪些？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A0%E5%9B%BA"><span class="nav-text">加固</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#apk-%E4%B8%8A%E6%9E%B6%E4%B9%8B%E5%89%8D%E9%9C%80%E8%A6%81%E5%8A%A0%E5%9B%BA%EF%BC%88%E5%80%9F%E5%8A%A9%E5%8A%A0%E5%9B%BA%E5%B7%A5%E5%85%B7%EF%BC%89"><span class="nav-text">apk 上架之前需要加固（借助加固工具）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E5%85%A8-Android%E5%BA%94%E7%94%A8%E5%8A%A0%E5%9B%BA%E5%8E%9F%E7%90%86"><span class="nav-text">安全-Android应用加固原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#so%E5%8A%A0%E5%9B%BA"><span class="nav-text">so加固</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A0%E5%9B%BA%E4%BA%86%E5%B0%B1%E5%AE%89%E5%85%A8%E4%BA%86%EF%BC%9F%E5%87%A0%E4%B8%AA%E6%8E%AA%E6%96%BD%E8%AE%A9%E4%BD%A0%E7%9A%84-Android-%E5%BA%94%E7%94%A8%E6%9B%B4%E5%AE%89%E5%85%A8"><span class="nav-text">加固了就安全了？几个措施让你的 Android 应用更安全</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%83%8C%E6%99%AF"><span class="nav-text">背景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E6%9E%90"><span class="nav-text">分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%A3%80%E6%9F%A5%E7%A0%B4%E8%A7%A3%E5%BA%94%E7%94%A8%E7%AD%BE%E5%90%8D"><span class="nav-text">检查破解应用签名</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AD%BE%E5%90%8D%E6%A0%A1%E9%AA%8C"><span class="nav-text">签名校验</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AD%BE%E5%90%8D%E6%A0%A1%E9%AA%8C%E5%B0%B1%E5%AE%89%E5%85%A8%E4%BA%86%EF%BC%9F"><span class="nav-text">签名校验就安全了？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%B6%E4%BB%96%E5%AE%89%E5%85%A8%E6%8E%AA%E6%96%BD"><span class="nav-text">其他安全措施</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%84%B1%E5%A3%B3"><span class="nav-text">脱壳</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%8D%E7%BC%96%E8%AF%91"><span class="nav-text">反编译</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%8D%E7%BC%96%E8%AF%91%E9%9C%80%E8%A6%81%E7%94%A8%E5%88%B0%E7%9A%84%E5%B7%A5%E5%85%B7"><span class="nav-text">反编译需要用到的工具</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%95dex%E7%9A%84%E5%8F%8D%E7%BC%96%E8%AF%91%E6%AD%A5%E9%AA%A4"><span class="nav-text">单dex的反编译步骤</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%9Adex%E7%9A%84%E5%8F%8D%E7%BC%96%E8%AF%91%E6%AD%A5%E9%AA%A4"><span class="nav-text">多dex的反编译步骤</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%8E%E6%9C%9F-%E5%8F%8D%E7%BC%96%E8%AF%91-Null%E5%A4%A7%E4%BD%AC%E7%9A%84"><span class="nav-text">后期-反编译-Null大佬的</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3%E9%97%AE%E9%A2%98"><span class="nav-text">安全相关问题</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#H5%E6%96%87%E4%BB%B6%E5%8A%A0%E5%9B%BA%E6%A3%80%E6%B5%8B"><span class="nav-text">H5文件加固检测</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RSA%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95%E4%B8%8D%E5%AE%89%E5%85%A8%E4%BD%BF%E7%94%A8%E5%B8%A6%E6%9D%A5%E7%9A%84%E5%AE%89%E5%85%A8%E9%A3%8E%E9%99%A9"><span class="nav-text">RSA加密算法不安全使用带来的安全风险</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%AA%E5%B1%8F%E6%94%BB%E5%87%BB%E9%A3%8E%E9%99%A9"><span class="nav-text">截屏攻击风险</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ZipperDown%E6%BC%8F%E6%B4%9E"><span class="nav-text">ZipperDown漏洞</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%A8%E6%88%B7%E6%95%8F%E6%84%9F%E4%BF%A1%E6%81%AF%E6%98%8E%E6%96%87%E4%BC%A0%E8%BE%93"><span class="nav-text">用户敏感信息明文传输</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Java%E5%B1%82%E4%BB%A3%E7%A0%81%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%E9%A3%8E%E9%99%A9%E9%97%AE%E9%A2%98"><span class="nav-text">Java层代码动态调试风险问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E8%B6%8A%E6%9D%83%E5%A4%87%E4%BB%BD%E9%A3%8E%E9%99%A9"><span class="nav-text">数据越权备份风险</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%97%A5%E5%BF%97%E6%95%B0%E6%8D%AE%E6%B3%84%E9%9C%B2%E9%A3%8E%E9%99%A9"><span class="nav-text">日志数据泄露风险</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E6%B7%B7%E6%B7%86%E7%9B%B8%E5%85%B3%E9%97%AE%E9%A2%98"><span class="nav-text">代码混淆相关问题</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#at-com-netease-nis-sdkwrapper-Utils-rL-Native-method"><span class="nav-text">at com.netease.nis.sdkwrapper.Utils.rL(Native method)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E2%80%9C-keepclassmembers-class-extends-android-app-Activity-public-void-android-view-View-%E2%80%9D-%E6%B7%B7%E6%B7%86%E6%8A%A5%E9%94%99"><span class="nav-text">“-keepclassmembers class * extends android.app.Activity {public void *(android.view.View);}” 混淆报错</span></a></li></ol></li></ol></div>
             
 
           </div>

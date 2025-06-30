@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="private," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Android 面试黑洞——当我按下 Home 键再切回来，会发生什么？很多 Android 工程师在投简历找工作之前，会去补习一下 Activity 的启动模式（launchMode），因为面试的时候经常会考。但真正把它搞懂的人是很少的——包括不少拿它做面试题的面试官。 就像我在视频标题里说的，当用户在使用 App 的时候按下了 Home 键，然后再切回来，或者在多个 App 之间切来切去，Ap">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hencoder当我按下 Home 键再切回来，会发生什么？">
+<meta property="og:url" content="http://shenbh.github.io/posts/9dc190df/index.html">
+<meta property="og:site_name" content="积跬步">
+<meta property="og:description" content="Android 面试黑洞——当我按下 Home 键再切回来，会发生什么？很多 Android 工程师在投简历找工作之前，会去补习一下 Activity 的启动模式（launchMode），因为面试的时候经常会考。但真正把它搞懂的人是很少的——包括不少拿它做面试题的面试官。 就像我在视频标题里说的，当用户在使用 App 的时候按下了 Home 键，然后再切回来，或者在多个 App 之间切来切去，Ap">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-06-18T02:36:13.000Z">
+<meta property="article:modified_time" content="2025-06-18T02:50:29.757Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="private">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/9dc190df/"/>
+
+
+
+
+
+  <title>Hencoder当我按下 Home 键再切回来，会发生什么？ | 积跬步</title><meta name="robots" content="noindex">
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">积跬步</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just do IT Now.</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/9dc190df/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="积跬步">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">Hencoder当我按下 Home 键再切回来，会发生什么？</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-06-18T10:36:13+08:00">
+                2025-06-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android%E6%89%A9%E5%B1%95/" itemprop="url" rel="index">
+                    <span itemprop="name">Android扩展</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Android-面试黑洞——当我按下-Home-键再切回来，会发生什么？"><a href="#Android-面试黑洞——当我按下-Home-键再切回来，会发生什么？" class="headerlink" title="Android 面试黑洞——当我按下 Home 键再切回来，会发生什么？"></a><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/dbUXmkOd_VxmxExBSpkmyw">Android 面试黑洞——当我按下 Home 键再切回来，会发生什么？</a></h1><p>很多 Android 工程师在投简历找工作之前，会去补习一下 Activity 的启动模式（<code>launchMode</code>），因为面试的时候经常会考。但真正把它搞懂的人是很少的——包括不少拿它做面试题的面试官。</p>
+<p>就像我在视频标题里说的，当用户在使用 App 的时候按下了 Home 键，然后再切回来，或者在多个 App 之间切来切去，App 的内容会不会改变、会怎么改变、要怎么让它按你的需求去变或不变，这些问题都需要你对 <code>launchMode</code> 有足够的了解。而且不只是 <code>launchMode</code>，这是一个以 Activity 的回退栈（Back Stack）为中心的大话题。</p>
+<blockquote>
+<p>  插图：</p>
+<ul>
+<li>的 launchMode:<ul>
+<li>Standard </li>
+<li>singleTop</li>
+<li>singleTask</li>
+<li>singleInstance</li>
+</ul>
+</li>
+<li>Intent.FLAG_ACTIVITY_***<ul>
+<li>FLAG_ACTIVITY_NEW_TASK</li>
+<li>FLAG_ACTIVITY_SINGLE_TOP</li>
+<li>FLAG_ACTIVITY_CLEAR_TOP</li>
+<li>FLAG_ACTIVITY_MULTIPLE_TASK</li>
+<li>FLAG_ACTIVITY_NEW_DOCUMENT</li>
+<li>FLAG_ACTIVITY_REORDER_TO_FRONT</li>
+<li>FLAG_ACTIVITY_PREVIOUS_IS_TOP</li>
+<li>FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS</li>
+<li>FLAG_ACTIVITY_RETAIN_IN_RECENTS</li>
+<li>FLAG_ACTIVITY_TASK_ON_HOME</li>
+</ul>
+</li>
+<li>的 android:taskAffinity</li>
+<li>的 android:allowTaskReparenting</li>
+<li>的 android:clearTaskOnLaunch</li>
+<li>Activity 的回退栈（Task）</li>
+<li>Android 的最近任务列表（Recents &#x2F; Overview）切换</li>
+<li>启动器（桌面）的 App 图标点击</li>
+<li>……</li>
+</ul>
+</blockquote>
+<p>你把这个大话题弄明白了，才可以指哪打哪，随心所欲。面试官有时候问一些比较刁钻的 <code>launchMode</code> 的问题，其实也不是为了刁难你，这都是对实际开发有用的，只是它比较难掌握而已。<br>所以今天，我就把 <code>launchMode</code> 以及和它相关的这一大套东西，给大家讲清楚。安全带系好了。  </p>
+<h2 id="视频先行"><a href="#视频先行" class="headerlink" title="视频先行"></a>视频先行</h2><p>视频版本在这里：<a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1CA41177Se/?spm_id_from=333.337.search-card.all.click">视频</a>  </p>
+<p>有条件的话强烈建议观看视频版本，因为本期的文字版可能会比较不适合阅读。  </p>
+<p>下面的文字是本期视频的脚本，为了方便阅读才修改成了文章的格式。所以如果你点开视频，下面的文字就不用看了。</p>
+<h2 id="Task-和回退栈"><a href="#Task-和回退栈" class="headerlink" title="Task 和回退栈"></a>Task 和回退栈</h2><p>大家好，我是扔物线朱凯。</p>
+<p>先问个问题：当我们在 Android 手机里点了最近任务的方块键，我们看到的这是一个个的……什么？</p>
+<p>一个个…… <code>Activity</code>？一个个…… <code>App</code>？我们看到的是一个个……<code>Task</code>，任务。</p>
+<p>当我们的 App 图标在桌面上被点击的时候，App 的默认 Activity——也就是那个配置了 <code>MAIN + LAUNCHER</code> 的 <code>intent-filter</code> 的 <code>Activity</code>——会被启动，并且这个 <code>Activity</code> 会被放进系统刚创建的一个 <code>Task</code> 里。我们通过最近任务键可以在多个 App 之间进行切换，但其实更精确地说，我们是在多个 <code>Task</code> 之间切换。</p>
+<p>每个 <code>Task</code> 都有一个自己的回退栈，它按顺序记录了用户打开的每个 <code>Activity</code>，这样就可以在用户按返回键的时候，按照倒序来依次关闭这些 <code>Activity</code>。当回退栈里最后一个 <code>Activity</code> 被关闭，这个 <code>Task</code> 的生命也就结束了。</p>
+<p>但它并不会在最近任务列表里消失。系统依然会保留这个 <code>Task</code> 的一个残影给用户，目的是让用户可以方便地「切回去」；只是这种时候的所谓「切回去」，其实是对 App 的重新启动，因为原先的那个 <code>Task</code> 已经不存在了。</p>
+<p>所以，在最近任务里看见的 <code>Task</code>，未必是还活着的。</p>
+<h2 id="singleTask"><a href="#singleTask" class="headerlink" title="singleTask"></a>singleTask</h2><p><code>Activity</code> 是一个可以跨进程、跨应用的组件。当你在 A App 里打开 B App 的 <code>Activity</code> 的时候，这个 <code>Activity</code> 会直接被放进 A 的 <code>Task</code> 里，而对于 B 的 <code>Task</code>，是没有任何影响的。</p>
+<p>为什么？为什么这么设计？</p>
+<p>首先我们想一想：我们为什么要打开别的 App 的 <code>Activity</code>？因为它提供了一个通用的功能，对吧？比如通讯录 App 可能会提供一个添加联系人的 <code>Activity</code> 供其他 App 使用。那么这些通用的功能，它的逻辑是和谁相关的？比如我从短信 App 里点击一个电话号码，选择「新建联系人」，然后通讯录 App 提供的添加联系人 <code>Activity</code> 就会被打开，对吧？这个 <code>Activity</code> 它的逻辑是和哪个 App 相关的？和短信相关吗？相关的，因为它是从短信跳过来的嘛，它们是在一整个逻辑链条上的。换句话说，如果我现在按了返回键，我会回到刚才的短信界面。是吧？那它和通讯录相关吗？是不相关的。所谓不相关，就是在这个时候用户如果按下最近任务的方块键，他不应该看到通讯录的 <code>Task</code>；而如果他现在回到桌面，点击通讯录的图标，他看到的也不应该是这个添加联系人的页面，而应该是一个联系人列表，因为用户的这个操作大概率是要查看通讯录；相反，在这个时候他再切回短信 App，他应该回到刚才的添加联系人页面，继续编辑联系人信息。所以对于「添加联系人」这个页面来说，它是和打开它的那个 App 有相关性，而不是和提供它的 App，对吧？更确切地说，也不是和打开它的 App 相关，而是和打开它的 <code>Task</code> 相关。是这回事吧？而这个逻辑，实际上也是 Android 默认的规则。当你在不同的 <code>Task</code> 里打开相同的 <code>Activity</code> 的时候，这个 <code>Activity</code> 会被创建出不同的实例，分别放在每一个 <code>Task</code> 里，互不干扰。这是符合产品逻辑，也是符合用户心理的。</p>
+<p>但是！这只是默认的规则。有的时候我们会需要不同的产品逻辑。比如我在短信里点击的不是电话号码，而是一个邮箱地址，那么我的邮箱 App 提供的编写邮件的 <code>Activity</code> 就会被打开，对吧？这个时候，这个编写邮件的 <code>Activity</code>，它的逻辑是和哪个 App 相关的？首先，依然是和短信 App 相关的，对吧？原因跟刚才一样，它是从短信打开的。那么它和邮箱 App 相关吗？也是相关的。因为按照用户使用邮件的习惯，如果现在按下最近任务键，用户会期望看到邮箱 App 的 <code>Task</code> 出现在短信 <code>Task</code> 的旁边，并且当它点击这个 <code>Task</code>，或者当它切回桌面点击邮箱 App 的图标，他都会期望回到写邮件的界面继续写。编写邮件和添加联系人这两件事并没有本质的不同，只是用户不同的心理预期决定了我们要有不同的产品逻辑。所以如果你们也做通讯录或者邮箱，而且产品逻辑和我说的不一样，没关系，这是产品经理负责的事，我在说的是如果你有怎样的产品逻辑，你应该怎么写。</p>
+<p>那么如果我要做这种逻辑的邮箱，我应该怎么办呢？很简单，只要在 <code>AndroidManifest.xml</code> 里把这个编写邮件的 的 <code>launchMode</code> 设置为 <code>SingleTask</code> 就行了。</p>
+<p><code>SingleTask</code> 可以让 <code>Activity</code> 被别的 App 启动的时候不会进入启动它的 <code>Task</code> 里，而是会在属于它自己的 <code>Task</code> 里创建，放在自己的栈顶，然后把这整个 <code>Task</code> 一起拿过来压在启动它的 <code>Task</code> 上面。这种逻辑可以保证，不管是从哪个 App 启动，被标记为 <code>SingleTask</code> 的 <code>Activity</code> 总是会被放在自己的 <code>Task</code> 里。如果你仔细留意也会发现，这种方式打开的 <code>Activity</code> 的入场动画是应用间切换的动画，而不是普通的 <code>Activity</code> 入场动画。这种不一致并不是 Android 不拘小节不修边幅，相反，这是在刻意地提醒用户：你在进行跨任务操作。这时候用户如果点返回键，界面会显示你的 App 里的上一个 <code>Activity</code>，而不是直接返回到之前的 App。直到用户反复按返回键，把这个 App 所有的 <code>Activity</code> 全都关闭了，上面的 <code>Task</code> 消失，下面的 <code>Task</code> 才会出来，也就是对于我们的例子来说，短信 App 才会露出来，而且这次，又变成了应用间切换的动画——确切地说，是 <code>Task</code> 间切换的动画。</p>
+<p>也就是说，不止 <code>Activity</code> 在 <code>Task</code> 内部可以叠成栈，不同的 <code>Task</code> 之间也可以叠起来。不过有一点：<code>Task</code> 的叠加，只适用于前台 <code>Task</code>，前台叠加的多个 <code>Task</code> 在进入后台的第一时间就会被拆开。前台 <code>Task</code> 进入后台最常见的场景有两种：按 Home 键回到桌面，以及按最近任务键查看最近任务。需要注意的是：前台 <code>Task</code> 是在显示最近任务的时候就已经进入了后台，而不是在你切换到其他应用之后。所以如果用户从短信进入邮箱以后没有按直接返回键，而是先查看一下最近任务再马上按返回键切回去，这个时候虽然表面上看着没变，但实际上前台 <code>Task</code> 已经只剩下了一个。现在如果用户再连续按返回键关掉邮件 App 的 <code>Task</code>，他就不会回到短信了，而是直接回到桌面。</p>
+<p>我觉得这个其实有点反用户直觉的。我只是切出去再切回来，怎么就变了？但是，Android 就是这么工作的。</p>
+<h2 id="allowTaskReparenting"><a href="#allowTaskReparenting" class="headerlink" title="allowTaskReparenting"></a>allowTaskReparenting</h2><p>除了 <code>SingleTask</code>，对于新建邮件这种场景，还有一种解决方案是使用一个叫做 <code>allowTaskReparenting</code> 的属性。<code>Activity</code> 默认情况下只会归属于一个 <code>Task</code>，不会在多个 <code>Task</code> 之间跳来跳去，但你可以通过设置来改变这个逻辑。如果你不是用 <code>SingleTask</code> 来设置编写邮件的 <code>Activity</code>，而是把它的 <code>allowTaskReparenting</code> 属性设置为 true，那么当用户从短信里打开这个 <code>Activity</code> 的时候，它虽然依然会进入短信 App 的 <code>Task</code> 里，但当稍后用户再从桌面点开邮件 App 的时候，原先那个放在短信 <code>Task</code> 里的 <code>Activity</code> 会被挪过来，放进邮件 App 的 <code>Task</code> 里，在回退栈的顶端被显示出来；而这时候你再切回短信，也会发现那个 <code>Activity</code> 已经不见了。这也就是所谓的「<code>Task Reparenting</code>」。你打开我的时候，我在你的 <code>Task</code> 里；稍后我又可以回到我原本所属的 <code>Task</code> 来。</p>
+<p>这跟 <code>SingleTask</code> 比起来，因为 <code>Activity</code> 刚被打开的时候并没有发生 <code>Task</code> 切换，所以也没有 <code>Task</code> 切换的夸张的入场动画，对于用户是无感知的；而且因为只有一个 <code>Task</code>，用户切到后台再切回来的时候也不会像 <code>SingleTask</code> 那样被切断自己的回退路径。</p>
+<p>好用吧？</p>
+<p>不过！很恶心的是，我发现从 Android 9 开始，这个属性失效了！不知道是不是因为这个属性用的人太少了，导致 Android 团队把这个属性改坏了也没发现，就这么发布出来了。（冷笑——摔手机。）而且我还发现，在最新的 Android 11 上，这个属性又被修好了，工作正常了！总之，这个属性的设计是很好的，但它在 Android 9 和 10 的手机上是坏的——我还专门拿我的三星 S20 也测试了一下，确认了三星也没有修复这个问题。但是用户可不会怪手机，更不会怪系统，他们只会怪你的 App 难用。所以这个 <code>allowTaskReparenting</code>，虽然很好用，但如果你要用，请做好测试以及各种心理准备。</p>
+<h2 id="singleInstance"><a href="#singleInstance" class="headerlink" title="singleInstance"></a>singleInstance</h2><p><code>SingleTask</code> 除了保证 <code>Activity</code> 在固定的 <code>Task</code> 里创建，还有一个行为规则：如果启动的时候这个 <code>Task</code> 的栈里已经有了这个 <code>Activity</code>，那么就不再创建新的对象，而是直接复用这个已有的对象；同时，因为 <code>Activity</code> 没有被重建，系统也就不会调用它的 <code>onCreate()</code> 方法，而是调用它的 <code>onNewIntent()</code> 方法，让它可以从 <code>Intent</code> 里解析数据来刷新界面（如果需要的话）；另外在调用 <code>onNewIntent()</code> 之前，如果这个 <code>Activity</code> 的上面压着的有其他 <code>Activity</code>，系统也会把这些 <code>Activity</code> 全部清掉，来确保我们要的 <code>Activity</code> 出现在栈顶。</p>
+<p>那么这样 <code>SingleTask</code> 其实是既保证了「只有一个 <code>Task</code> 里有这个 <code>Activity</code>」，又保证了「这个 <code>Task</code> 里最多只有一个这个 <code>Activity</code>」，所以虽然它名字叫 <code>SingleTask</code>，但它在实质上限制了它所修饰的 <code>Activity</code> 在全局只有一个对象。</p>
+<p>在 <code>SingleTask</code> 之外，Android 还提供了一种更彻底的 <code>launchMode</code> 的选项：<code>SingleInstance</code>。</p>
+<p>刚才我说，<code>SingleTask</code> 其实是个事实上的全局单例，是吧？那这个 <code>SingleInstance</code> 单一实例又是什么意思呢？它的行为逻辑和 <code>SingleTask</code> 基本是一致的，只是它多了个更严格的限制：它要求这个 <code>Activity</code> 所在的 <code>Task</code> 里只有这么一个 <code>Activity</code>——下面没有旧的，上面也不许有新的。</p>
+<p>具体来说，比如我把编写邮件的 <code>Activity</code> 设置成了 <code>SingleInstance</code>，那么当用户在短信 App 里点击了邮件地址之后，邮件 App 不仅会创建这个 <code>Activity</code> 的对象，而且会创建一个单独的 <code>Task</code> 来这个 <code>Activity</code> 放进去，或者如果之前已经创建过这个 <code>Task</code> 和 <code>Activity</code> 了，那就像 <code>SingleTask</code> 一样，直接复用这个 <code>Activity</code>，调用它的 <code>onNewIntent()</code>；另外，这个 <code>Task</code> 也会被拿过来压在短信 <code>Task</code> 的上面，入场动画是切换 <code>Task</code> 的动画。这时候如果用户点击返回，上面的 <code>Task</code> 里因为只有一个 <code>Activity</code>，所以手机会直接回到短信 App，出场动画也是切换 <code>Task</code> 的动画；而如果用户没有直接点击返回，而是先看了一下最近任务又返回来，这时候因为下面的短信的 <code>Task</code> 已经被推到后台，所以用户再点返回的话，就会回到桌面，而不是回到短信 App；而如果用户既没有点击返回也没有切后台，而是在编写邮件的 <code>Activity</code> 里又启动了新的 <code>Activity</code>，那么由于 <code>SingleInstance</code> 的限制，这个新打开的 <code>Activity</code> 并不会进入当前的 <code>Task</code>，而是会被装进另一个 <code>Task</code> 里，然后随着这个 <code>Task</code> 一起被拿过来压在最上面。</p>
+<p>这就是 <code>SingleInstance</code> 和 <code>SingleTask</code> 的区别：<code>SingleTask</code> 强调的只是唯一性：我只会在一个 <code>Task</code> 里出现；而且这个 <code>Task</code> 里也只会有一个我的实例。而 <code>SingleInstance</code> 除了唯一性，还要求独占性：我要独自霸占一个完整的 <code>Task</code>。</p>
+<p>那么在实际的操作中，它们的区别就是：在被启动之后，用户按返回键时，<code>SingleTask</code> 会在自己的 App 里进行回退，而 <code>SingleInstance</code> 会直接回到原先的 App；以及用户稍后从桌面点开 <code>Activity</code> 所在的 App 的时候，<code>SingleTask</code> 的会看到这个 <code>Activity</code> 依然在栈顶，而 <code>SingleInstance</code> 的会看到这个 <code>Activity</code> 已经不见了——它在哪？它并没有被杀死，而是在后台的某个地方默默蹲着，当你再次启动它，它就会再次跑到前台来，并被再得到一次 <code>onNewIntent()</code> 的回调。</p>
+<p>刚才我说，在最近任务里看见的 <code>Task</code> 未必还活着；那么这里就可以再加一句：在最近任务里看不见的 <code>Task</code>，也未必就死了，比如 <code>SingleInstance</code>。</p>
+<h2 id="taskAffinity"><a href="#taskAffinity" class="headerlink" title="taskAffinity"></a>taskAffinity</h2><p>那既然它还活着，为什么会被藏起来呢？因为它们的 <code>taskAffinity</code> 冲突了。</p>
+<p>在 Android 里，一个 App 默认只能有一个 <code>Task</code> 显示在最近任务列表里。但其实用来甄别这份唯一性的并不是 App，而是一个叫做 <code>taskAffinity</code> 的东西。<code>Affinity</code> 就是相似、有关联的的意思，在 Android 里，每个 <code>Activity</code> 都有一个 <code>taskAffinity</code>，它就相当于是对每个 <code>Activity</code> 预先进行的分组。它的值默认取自它所在的 Application 的 <code>taskAffinity</code>，而 Application 的 <code>taskAffinity</code> 默认是 App 的包名。</p>
+<p>另外，每个 <code>Task</code> 也都有它的 <code>taskAffinity</code>，它的值取自栈底 <code>Activity</code> 的 <code>taskAffinity</code>；我们可以通过 <code>AndroidManifest.xml</code> 来定制 <code>taskAffinity</code>，但在默认情况下，一个 App 里所有的 <code>Task</code> 的 <code>taskAffinity</code> 都是一样的，就是这个 App 的包名。当我们启动一个新的 <code>Task</code> 的时候——比如开机后初次点开一个 App——这个 <code>Task</code> 也会得到一个 <code>taskAffinity</code>，它的值就是它所启动的第一个 <code>Activity</code> 的 <code>taskAffinity</code>。当我们继续从已经打开的 <code>Activity</code> 再打开新的 <code>Activity</code> 的时候，<code>taskAffinity</code> 就会被忽略了，新的 <code>Activity</code> 会直接入栈，不管它来自哪；但如果新的 <code>Activity</code> 被配置了 <code>SingleTask</code>，Android 就会去检查新的 <code>Activity</code> 和当前 <code>Task</code> 的 <code>taskAffinity</code> 是不是相同，如果相同就继续入栈，而如果不同，新 <code>Activity</code> 就会进入和它自己的 <code>taskAffinity</code> 相同的 <code>Task</code>，或者创建一个新的 <code>Task</code>。</p>
+<p>所以当你在 App 里启动一个配置了 <code>SingleTask</code> 的 <code>Activity</code>，如果这个 <code>Activity</code> 来自别的 App，就会发生 <code>Task</code> 的切换；而如果这个 <code>Activity</code> 是你自己 App 里的，你会发现它直接进入了当前 <code>Task</code> 的栈顶，因为这种情况下新 <code>Activity</code> 和当前的 <code>Task</code> 的 task<code>Activity</code> 是相同的。而你如果再给这个 <code>Activity</code> 设置一个独立的 <code>taskAffinity</code>，你又会发现，哪怕是同一个 App，这个 <code>Activity</code> 也会被分拆到另一个 <code>Task</code> 里。而且如果这个独立设置的 <code>taskAffinity</code> 恰好和另一个 App 的 <code>taskAffinity</code> 一样，这个 <code>Activity</code> 还会直接进入别人的 <code>Task</code> 去。</p>
+<p>当我们查看最近任务的时候，不同的 <code>Task</code> 会并列展示出来，但有一个前提：它们的 <code>taskAffinity</code> 需要不一样。在 Android 里，同一个 <code>taskAffinity</code> 可以被创建出多个 <code>Task</code>，但它们最多只能有一个显示在最近任务列表。这也就是为什么刚才例子里 <code>SingleInstance</code> 的那个 <code>Activity</code> 会从最近任务里消失了：因为它被另一个相同 <code>taskAffinity</code> 的 <code>Task</code> 抢了排面。</p>
+<p>说到这儿，有一点需要注意，Android 的官方文档在 <code>launchMode</code> 方面的描述有很多的错误和自相矛盾。比如官方文档里说 <code>SingleTask</code> 「只会出现在栈底」，但其实完全没有这回事。我们在官方文档里看到的错误一般是什么呢：错别字，或者有歧义、有误导性的表达。但是这个错误说实话让我有点莫名其妙，就是你根本没法猜出来写文档的人的原本想表达的是什么意思，给我的感觉就跟造谣似的。总之你如果在官方文档里看到一些和你的测试结果不符的描述，以你的测试为准；或者如果你发现它有一些话自相矛盾，你就当它没说。</p>
+<h2 id="singleTop"><a href="#singleTop" class="headerlink" title="singleTop"></a>singleTop</h2><p><code>launchMode</code> 除了刚才讲的默认的——也就是 <code>Standard</code>——和 <code>SingleTask</code> 以及 <code>SingleInstance</code> 之外，还有一种叫做 <code>SingleTop</code>。<code>SingleTop</code> 虽然名字上也带有一个 single，但它的关系和默认的 <code>Standard</code> 其实更近一些。它和默认一样，也是会直接把 <code>Activity</code> 创建之后加入到当前 <code>Task</code> 的栈顶，唯一的区别是：如果栈顶的这个 <code>Activity</code> 恰好就是要启动的 <code>Activity</code>，那就不新建了，而是调用这个栈顶的 <code>Activity</code> 的 <code>onNewIntent()</code>。</p>
+<p>简单说来就是，默认的 <code>Standard</code> 和 <code>SingleTop</code> 是直接摞在当前的 <code>Task</code> 上；而 <code>SingleTask</code> 和 <code>SingleInstance</code> 则是两个「跨 <code>Task</code> 打开 <code>Activity</code>」的规则，虽然也不是一定会跨 <code>Task</code>，但它们的行为规则展现出了很强的跨 App 交互的意图。在实战上，我们会比较多地在 App 内部使用默认和 <code>SingleTop</code>；<code>SingleInstance</code> 会比较多用于那些开放出来给其他 App 一起用的共享 <code>Activity</code>；而 <code>SingleTask</code> 则是个兼容派，内部交互和外部共享都用得着。至于具体用谁，就要根据需求具体分析了。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>讲了这么多，其实一直都在围绕任务启动和任务切换的问题，瞄准的就是更精准可控的界面导航。如果记不全，<code>Task</code> 的工作模型一定要记住，这是最核心最重要的。别的你都可以忘，这个模型一定记清楚了，这能让你站在一个更高的高度去理解 Android 的 <code>Activity</code> 启动和任务切换，对工作会非常有帮助，而且这些内容是你无论在网上现有的博客还是官方文档里都很难看到的。</p>
+<p>至于更多的细节，比如这些启动模式的一些坑，<code>Intent</code> 的 <code>FLAG_ACTIVITY_</code> 打头的 Flag，以及 <code>AndroidManifest.xml</code> 里更多的配置参数，我就不一一细讲了。只要你把我今天说的 <code>Task</code> 的工作模型搞清楚，再把刚才讲的这四种 <code>launchMode</code> 想明白，那些细节很容易就可以掌握。学技术，就是要学到本质，以不变应万变。</p>
+<!-- flag of hidden posts -->
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/private/" rel="tag"># private</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">291</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">21</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">47</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@qq.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Android-%E9%9D%A2%E8%AF%95%E9%BB%91%E6%B4%9E%E2%80%94%E2%80%94%E5%BD%93%E6%88%91%E6%8C%89%E4%B8%8B-Home-%E9%94%AE%E5%86%8D%E5%88%87%E5%9B%9E%E6%9D%A5%EF%BC%8C%E4%BC%9A%E5%8F%91%E7%94%9F%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-text">Android 面试黑洞——当我按下 Home 键再切回来，会发生什么？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%86%E9%A2%91%E5%85%88%E8%A1%8C"><span class="nav-text">视频先行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Task-%E5%92%8C%E5%9B%9E%E9%80%80%E6%A0%88"><span class="nav-text">Task 和回退栈</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#singleTask"><span class="nav-text">singleTask</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#allowTaskReparenting"><span class="nav-text">allowTaskReparenting</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#singleInstance"><span class="nav-text">singleInstance</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#taskAffinity"><span class="nav-text">taskAffinity</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#singleTop"><span class="nav-text">singleTop</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

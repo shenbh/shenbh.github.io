@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="clippings," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Author：杨空明 Date：2018-8-17 一、前言 Android开发者常常面临的一个问题就是防破解、 防二次打包。现如今安全问题越来越重要,越来越多的Androi...">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android应用加固原理">
+<meta property="og:url" content="http://shenbh.github.io/posts/bb32c0e7/index.html">
+<meta property="og:site_name" content="积跬步">
+<meta property="og:description" content="Author：杨空明 Date：2018-8-17 一、前言 Android开发者常常面临的一个问题就是防破解、 防二次打包。现如今安全问题越来越重要,越来越多的Androi...">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://shenbh.github.io/posts/bb32c0e7/2012-2017Android%E5%B9%B3%E5%8F%B0%E6%96%B0%E5%A2%9E%E6%81%B6%E6%84%8F%E8%BD%AF%E4%BB%B6%E6%95%B0%E9%87%8F.webp">
+<meta property="og:image" content="http://shenbh.github.io/posts/bb32c0e7/webp-17496950238132.webp">
+<meta property="og:image" content="http://shenbh.github.io/posts/bb32c0e7/webp-17496950262924.webp">
+<meta property="og:image" content="http://shenbh.github.io/posts/bb32c0e7/PC%20EXE%E6%96%87%E4%BB%B6%E5%8A%A0%E5%A3%B3.webp">
+<meta property="og:image" content="http://shenbh.github.io/posts/bb32c0e7/APK%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84.webp">
+<meta property="og:image" content="http://shenbh.github.io/posts/bb32c0e7/Class%E6%96%87%E4%BB%B6%E5%92%8CDex%E6%96%87%E4%BB%B6.webp">
+<meta property="og:image" content="http://shenbh.github.io/posts/bb32c0e7/dex%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84.webp">
+<meta property="og:image" content="http://shenbh.github.io/posts/bb32c0e7/DEX%E6%96%87%E4%BB%B6%E7%9B%AE%E5%BD%95.webp">
+<meta property="og:image" content="http://shenbh.github.io/posts/bb32c0e7/Android/%E5%90%8E%E6%9C%9F-%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3/apk%E6%96%87%E4%BB%B6%E7%94%9F%E6%88%90%E8%BF%87%E7%A8%8B.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/bb32c0e7/%E5%8A%A0%E5%9B%BA%E5%8E%9F%E7%90%86.webp">
+<meta property="og:image" content="http://shenbh.github.io/posts/bb32c0e7/Dex%E6%96%87%E4%BB%B6%E6%95%B4%E4%BD%93%E5%8A%A0%E5%9B%BA%E5%8E%9F%E7%90%86.webp">
+<meta property="og:image" content="http://shenbh.github.io/posts/bb32c0e7/%E5%8A%A0%E5%AF%86%E9%98%B6%E6%AE%B5.webp">
+<meta property="og:image" content="http://shenbh.github.io/posts/bb32c0e7/%E5%90%88%E6%88%90%E6%96%B0%E7%9A%84dex%E6%96%87%E4%BB%B6.webp">
+<meta property="og:image" content="http://shenbh.github.io/posts/bb32c0e7/%E4%BF%AE%E6%94%B9%E5%8E%9Fapk%E6%96%87%E4%BB%B6%E5%B9%B6%E9%87%8D%E6%89%93%E5%8C%85%E7%AD%BE%E5%90%8D.webp">
+<meta property="og:image" content="http://shenbh.github.io/posts/bb32c0e7/%E8%BF%90%E8%A1%8C%E5%A3%B3%E7%A8%8B%E5%BA%8F%E5%8A%A0%E8%BD%BD%E5%8E%9Fdex%E6%96%87%E4%BB%B6.webp">
+<meta property="og:image" content="http://shenbh.github.io/posts/bb32c0e7/%E5%8A%A0%E5%A3%B3%E7%A8%8B%E5%BA%8F%E9%A1%B9%E7%9B%AE.webp">
+<meta property="og:image" content="http://shenbh.github.io/posts/bb32c0e7/%E5%8A%A0%E5%A3%B3%E7%A8%8B%E5%BA%8F%E9%A1%B9%E7%9B%AE%E6%A0%B8%E5%BF%83%E4%BB%A3%E7%A0%81.webp">
+<meta property="og:image" content="http://shenbh.github.io/posts/bb32c0e7/App%E5%AE%89%E5%85%A8%E6%9C%AA%E6%9D%A5%E5%B1%95%E6%9C%9B.webp">
+<meta property="article:published_time" content="2025-06-12T02:18:33.778Z">
+<meta property="article:modified_time" content="2025-06-12T07:51:27.056Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="clippings">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/bb32c0e7/2012-2017Android%E5%B9%B3%E5%8F%B0%E6%96%B0%E5%A2%9E%E6%81%B6%E6%84%8F%E8%BD%AF%E4%BB%B6%E6%95%B0%E9%87%8F.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/bb32c0e7/"/>
+
+
+
+
+
+  <title>Android应用加固原理 | 积跬步</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">积跬步</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just do IT Now.</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/bb32c0e7/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="积跬步">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">Android应用加固原理</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-06-12T10:18:33+08:00">
+                2025-06-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+              <div class="post-description">
+                  Author：杨空明 Date：2018-8-17 一、前言 Android开发者常常面临的一个问题就是防破解、 防二次打包。现如今安全问题越来越重要,越来越多的Androi...
+              </div>
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>Android开发者常常面临的一个问题就是防破解、 防二次打包。现如今安全问题越来越重要,越来越多的Android开发者也开始寻求安全的保护方案。请看一下下面的几张图片：</p>
+<h3 id="1-1"><a href="#1-1" class="headerlink" title="1.1"></a>1.1</h3><p><img src="/posts/bb32c0e7/2012-2017Android%E5%B9%B3%E5%8F%B0%E6%96%B0%E5%A2%9E%E6%81%B6%E6%84%8F%E8%BD%AF%E4%BB%B6%E6%95%B0%E9%87%8F.webp" alt="2012-2017Android平台新增恶意软件数量"></p>
+<h3 id="1-2"><a href="#1-2" class="headerlink" title="1.2"></a>1.2</h3><p><img src="/posts/bb32c0e7/webp-17496950238132.webp"></p>
+<h3 id="1-3"><a href="#1-3" class="headerlink" title="1.3"></a>1.3</h3><p><img src="/posts/bb32c0e7/webp-17496950262924.webp"></p>
+<h2 id="什么是加壳？"><a href="#什么是加壳？" class="headerlink" title="什么是加壳？"></a>什么是加壳？</h2><p>移动平台攻防技术的发展基本是沿着PC端发展轨迹在进行,从windows平台的加壳脱壳反调试到Andriod的平台apk加固,反调试代码混淆等。<br>加壳是在二进制的程序中植入一段代码，在运行的时候优先取得程序的控制权，做一些额外的工作。大多数病毒就是基于此原理。PC EXE文件加壳的过程如下：<br><img src="/posts/bb32c0e7/PC%20EXE%E6%96%87%E4%BB%B6%E5%8A%A0%E5%A3%B3.webp" alt="PC EXE文件加壳"></p>
+<h2 id="加壳作用和分类"><a href="#加壳作用和分类" class="headerlink" title="加壳作用和分类"></a>加壳作用和分类</h2><p>作用：<br>加壳的程序可以有效阻止对程序的反汇编分析，以达到它不可告人的目的。这种技术也常用来保护软件版权，防止被软件破解。</p>
+<p>分类：<br>从App的加固技术来看:主流分为dex加密和so加密,目前来看保护dex文件更为重要,应为dex反编译后的java代码可读性更强。</p>
+<h2 id="Android-Dex文件加壳原理"><a href="#Android-Dex文件加壳原理" class="headerlink" title="Android Dex文件加壳原理"></a>Android Dex文件加壳原理</h2><h3 id="APK文件结构"><a href="#APK文件结构" class="headerlink" title="APK文件结构"></a>APK文件结构</h3><p><img src="/posts/bb32c0e7/APK%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84.webp" alt="APK文件结构">  </p>
+<p>每个文件及文件夹的作用如下表所示。</p>
+<table>
+<thead>
+<tr>
+<th>文件或目录</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>assets文件夹</td>
+<td>存放资源文件的目录</td>
+</tr>
+<tr>
+<td>lib文件夹</td>
+<td>存放ndk编译出来的so文件</td>
+</tr>
+<tr>
+<td>META-INF文件夹</td>
+<td>1. 该目录下存放的是签名信息，用来保证apk包的完整性和系统的安全性 <br>2. CERT.RS 保存着该应用程序的证书和授权信息 <br>3. CERT.SF 保存着SHA-1信息资源列表 <br>4. MANIFEST.MF 清单信息</td>
+</tr>
+<tr>
+<td>res文件夹</td>
+<td>存放资源文件的目录</td>
+</tr>
+<tr>
+<td>AndroidManifest.xml</td>
+<td>一个清单文件，它描述了应用的名字、版本、权限、注册的服务等信息。</td>
+</tr>
+<tr>
+<td>classes.dex</td>
+<td>java源码编译经过编译后生成的dalvik字节码文件，主要在Dalvik虚拟机上运行的主要代码部分</td>
+</tr>
+<tr>
+<td>resources.arsc</td>
+<td>编译后的二进制资源文件。</td>
+</tr>
+</tbody></table>
+<h3 id="DEX文件格式"><a href="#DEX文件格式" class="headerlink" title="DEX文件格式"></a>DEX文件格式</h3><h4 id="什么是DEX文件？"><a href="#什么是DEX文件？" class="headerlink" title="什么是DEX文件？"></a>什么是DEX文件？</h4><p>他是Android系统的可执行文件，包含应用程序的全部操作指令以及运行时数据<br>由于dalvik是一种针对嵌入式设备而特殊设计的java虚拟机，所以dex文件与标准的class文件在结构设计上有着本质的区别<br>当java程序编译成class后，还需要使用dx工具将所有的class文件整合到一个dex文件，目的是其中各个类能够共享数据，在一定程度上降低了冗余，同时也使文件结构更加紧凑，实验表明，dex文件是传统jar文件大小的50%左右<br><img src="/posts/bb32c0e7/Class%E6%96%87%E4%BB%B6%E5%92%8CDex%E6%96%87%E4%BB%B6.webp" alt="Class文件和Dex文件"></p>
+<h4 id="dex文件结构"><a href="#dex文件结构" class="headerlink" title="dex文件结构"></a>dex文件结构</h4><p>Dex文件整体结构如下：<br><img src="/posts/bb32c0e7/dex%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84.webp" alt="dex文件结构"></p>
+<p>Dex文件整体结构说明：</p>
+<table>
+<thead>
+<tr>
+<th>数据名称</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>dex_header</td>
+<td>dex文件头部记录整个dex文件的相关属性</td>
+</tr>
+<tr>
+<td>string_table</td>
+<td>字符串数据索引，记录了每个字符串在数据区的偏移量</td>
+</tr>
+<tr>
+<td>type_table</td>
+<td>类似数据索引，记录了每个类型的字符串索引</td>
+</tr>
+<tr>
+<td>proto_table</td>
+<td>原型数据索引，记录了方法声明的字符串，返回类型字符串，参数列表</td>
+</tr>
+<tr>
+<td>field_table</td>
+<td>字段数据索引，记录了所属类，类型以及方法名</td>
+</tr>
+<tr>
+<td>method_table</td>
+<td>类方法索引，记录方法所属类名，方法声明以及方法名等信息</td>
+</tr>
+<tr>
+<td>class_def</td>
+<td>类定义数据索引，记录指定类各类信息，包括接口，超类，类数据偏移量</td>
+</tr>
+<tr>
+<td>data_section</td>
+<td>数据区，保存了各个类的真实数据</td>
+</tr>
+</tbody></table>
+<p>下面是DEX文件目录：<br><img src="/posts/bb32c0e7/DEX%E6%96%87%E4%BB%B6%E7%9B%AE%E5%BD%95.webp" alt="DEX文件目录"><br>这里面，有3个成员我们需要特别关注，这在后面加固里会用到，它们分别是checksum、signature和fileSize。</p>
+<ul>
+<li><strong>checksum字段</strong><br>  checksum是校验码字段，占4bytes，主要用来检查从该字段（不包含checksum字段，也就是从12bytes开始算起）开始到文件末尾，这段数据是否完整，也就是完整性校验。它使用alder32算法校验。</li>
+<li><strong>signature字段</strong><br>  signature是SHA-1签名字段，占20bytes，作用跟checksum一样，也是做完整性校验。之所以有两个完整性校验字段，是由于先使用checksum字段校验可以先快速检查出错的dex文件，然后才使用第二个计算量更大的校验码进行计算检查。</li>
+<li><strong>fileSize字段</strong><br>  占4bytes，保存classes.dex文件总长度。</li>
+</ul>
+<p>这3个字段当我们修改dex文件的时候，这3个字段的值是需要更新的，否则在加载到Dalvik虚拟机的时候会报错。</p>
+<p>为什么说我们只需要关注这三个字段呢？</p>
+<p>因为我们需要将一个文件(加密之后的源Apk)写入到Dex中，那么我们肯定需要修改文件校验码(checksum).因为他是检查文件是否有错误。那么signature也是一样，也是唯一识别文件的算法。还有就是需要修改dex文件的大小。</p>
+<p>不过这里还需要一个操作，就是标注一下我们加密的Apk的大小，因为我们在脱壳的时候，需要知道Apk的大小，才能正确的得到Apk。那么这个值放到哪呢？这个值直接放到文件的末尾就可以了。</p>
+<p>所以总结一下我们需要做：修改Dex的三个文件头，将源Apk的大小追加到壳dex的末尾就可以了。</p>
+<p>我们修改之后得到新的Dex文件样式如下：<br>[图片上传失败…(image-831de6-1534489556791)]</p>
+<h3 id="APK打包流程"><a href="#APK打包流程" class="headerlink" title="APK打包流程"></a>APK打包流程</h3><p><img src="/posts/bb32c0e7/Android/%E5%90%8E%E6%9C%9F-%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3/apk%E6%96%87%E4%BB%B6%E7%94%9F%E6%88%90%E8%BF%87%E7%A8%8B.png" alt="apk文件生成过程"></p>
+<p>上图中涉及到的工具及其作用如下：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>功能介绍</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>aapt</td>
+<td>打包资源文件，包括res和assets文件夹下的资源、AndroidManifest.xml文件、Android基础类库</td>
+</tr>
+<tr>
+<td>aidl</td>
+<td>将<code>.aidl</code>接口文件转换成<code>.java</code>文件</td>
+</tr>
+<tr>
+<td>javaComiler</td>
+<td>编译java文件，生成<code>.class</code>字节码文件</td>
+</tr>
+<tr>
+<td>dex</td>
+<td>将所有的第三方libraries和<code>.class</code>文件转换成Dalvik虚拟机支持的<code>.dex</code>文件</td>
+</tr>
+<tr>
+<td>apkbuilder</td>
+<td>打包生成apk文件，但未签名</td>
+</tr>
+<tr>
+<td>jarsigner</td>
+<td>对未签名的apk文件进行签名</td>
+</tr>
+<tr>
+<td>zipalign</td>
+<td>对签名后的apk文件进行对其处理</td>
+</tr>
+</tbody></table>
+<h3 id="加固原理"><a href="#加固原理" class="headerlink" title="加固原理"></a>加固原理</h3><p><img src="/posts/bb32c0e7/%E5%8A%A0%E5%9B%BA%E5%8E%9F%E7%90%86.webp" alt="加固原理"></p>
+<p>Dex文件整体加固原理如下：<br><img src="/posts/bb32c0e7/Dex%E6%96%87%E4%BB%B6%E6%95%B4%E4%BD%93%E5%8A%A0%E5%9B%BA%E5%8E%9F%E7%90%86.webp" alt="Dex文件整体加固原理"></p>
+<p>在该过程中涉及到三个对象，分别如下：</p>
+<ul>
+<li>源程序<br>  源程序也就是我们的要加固的对象，这里面主要修改的是原apk文件中的classes.dex文件和AndroidManifest.xml文件。</li>
+<li>壳程序<br>壳程序主要用于解密经过加密了的dex文件，并加载解密后的原dex文件，并正常启动原程序。</li>
+<li>加密程序<br>  加密程序主要是对原dex文件进行加密，加密算法可以是简单的异或操作、反转、rc4、des、rsa等加密算法。</li>
+</ul>
+<p>该加固过程可以分为如下4个阶段：</p>
+<ol>
+<li>加密阶段</li>
+<li>合成新的dex文件</li>
+<li>修改原apk文件并重打包签名</li>
+<li>运行壳程序加载原dex文件</li>
+</ol>
+<h4 id="加密阶段"><a href="#加密阶段" class="headerlink" title="加密阶段"></a>加密阶段</h4><p>加密阶段主要是讲把原apk文件中提取出来的<code>classes.dex</code>文件通过加密程序进行加密。加密的时候如果使用des对称加密算法，则需要注意处理好密钥的问题。同样的，如果采用非对称加密，也同样存在公钥保存的问题。<br><img src="/posts/bb32c0e7/%E5%8A%A0%E5%AF%86%E9%98%B6%E6%AE%B5.webp" alt="加密阶段"></p>
+<h5 id="合成新的dex文件"><a href="#合成新的dex文件" class="headerlink" title="合成新的dex文件"></a>合成新的dex文件</h5><p>这一阶段主要是讲上一步生成的加密的dex文件和我们的壳dex文件合并，将加密的dex文件追加在壳dex文件后面，并在文件末尾追加加密dex文件的大小数值<br><img src="/posts/bb32c0e7/%E5%90%88%E6%88%90%E6%96%B0%E7%9A%84dex%E6%96%87%E4%BB%B6.webp" alt="合成新的dex文件"><br>在壳程序里面，有个重要的类：ProxyApplication类，该类继承Application类，也是应用程序最先运行的类。所以，我们就是在这个类里面，在原程序运行之前，进行一些解密dex文件和加载原dex文件的操作。</p>
+<h4 id="修改原apk文件并重打包签名"><a href="#修改原apk文件并重打包签名" class="headerlink" title="修改原apk文件并重打包签名"></a>修改原apk文件并重打包签名</h4><p>在这一阶段，我们首先将apk解压，会看到如下图的6个文件和目录。其中，我们需要修改的只有2个文件，分别是classes.dex和AndroidManifest.xml文件，其他文件和文件加都不需要改动。</p>
+<p>首先，我们把解压后apk目录下原来的classes.dex文件替换成我们在0x02上一步合成的新的classes.dex文件。然后，由于我们程序运行的时候，首先加载的其实是壳程序里的ProxyApplication类。所以，我们需要修改<code>AndroidManifest.xml</code>文件，指定application为ProxyApplication，这样才能正常找到识别ProxyApplication类并运行壳程序。<br><img src="/posts/bb32c0e7/%E4%BF%AE%E6%94%B9%E5%8E%9Fapk%E6%96%87%E4%BB%B6%E5%B9%B6%E9%87%8D%E6%89%93%E5%8C%85%E7%AD%BE%E5%90%8D.webp" alt="修改原apk文件并重打包签名"></p>
+<h4 id="运行壳程序加载原dex文件"><a href="#运行壳程序加载原dex文件" class="headerlink" title="运行壳程序加载原dex文件"></a>运行壳程序加载原dex文件</h4><p>Dalvik虚拟机会加载我们经过修改的新的classes.dex文件，并最先运行ProxyApplication类。在这个类里面，有2个关键的方法：attachBaseContext和onCreate方法。ProxyApplication先运行attachBaseContext再运行onCreate方法。</p>
+<p>在attachBaseContext方法里，主要做两个工作：</p>
+<ol>
+<li>读取classes.dex文件末尾记录加密dex文件大小的数值，则加密dex文件在新classes.dex文件中的位置为：<code>len(新classes.dex文件) – len(加密dex文件大小)</code>。然后将加密的dex文件读取出来，加密并保存到资源目录下</li>
+<li>然后使用自定义的DexClassLoader加载解密后的原dex文件</li>
+</ol>
+<p>在onCreate方法中，主要做两个工作：</p>
+<ol>
+<li>通过反射修改ActivityThread类，并将Application指向原dex文件中的Application</li>
+<li>创建原Application对象，并调用原Application的onCreate方法启动原程序<br><img src="/posts/bb32c0e7/%E8%BF%90%E8%A1%8C%E5%A3%B3%E7%A8%8B%E5%BA%8F%E5%8A%A0%E8%BD%BD%E5%8E%9Fdex%E6%96%87%E4%BB%B6.webp" alt="运行壳程序加载原dex文件"></li>
+</ol>
+<h2 id="加壳代码实现"><a href="#加壳代码实现" class="headerlink" title="加壳代码实现"></a>加壳代码实现</h2><h3 id="加壳程序项目："><a href="#加壳程序项目：" class="headerlink" title="加壳程序项目："></a>加壳程序项目：</h3><p><img src="/posts/bb32c0e7/%E5%8A%A0%E5%A3%B3%E7%A8%8B%E5%BA%8F%E9%A1%B9%E7%9B%AE.webp" alt="加壳程序项目"></p>
+<h3 id="核心代码"><a href="#核心代码" class="headerlink" title="核心代码"></a>核心代码</h3><p><img src="/posts/bb32c0e7/%E5%8A%A0%E5%A3%B3%E7%A8%8B%E5%BA%8F%E9%A1%B9%E7%9B%AE%E6%A0%B8%E5%BF%83%E4%BB%A3%E7%A0%81.webp" alt="加壳程序项目核心代码"></p>
+<h2 id="常见加固平台"><a href="#常见加固平台" class="headerlink" title="常见加固平台"></a>常见加固平台</h2><p>梆梆加固，爱加密，360加固，腾讯加固</p>
+<p>市面上常见的加固工具加固之后,他会把你的dex,so 加密存在apk中,然后运行过程会先运行壳的代码,壳的代码再把原来的这个dex、so 解出来加载,不同的厂商有自己的方案,略有差距,但目前多数都是这个思路.</p>
+<h2 id="App加固的利弊"><a href="#App加固的利弊" class="headerlink" title="App加固的利弊"></a>App加固的利弊</h2><p>正面：  </p>
+<ol>
+<li>保护自己核心代码算法,提高破解&#x2F;盗版&#x2F;二次打包的难度</li>
+<li>缓解代码注入&#x2F;动态调试&#x2F;内存注入攻击</li>
+</ol>
+<p>负面：  </p>
+<ol>
+<li>影响兼容性</li>
+<li>影响程序运行效率.</li>
+<li>部分流氓、病毒也会使用加壳技术来保护自己</li>
+<li>部分应用市场会拒绝加壳后的应用上架</li>
+</ol>
+<h2 id="App安全未来展望"><a href="#App安全未来展望" class="headerlink" title="App安全未来展望"></a>App安全未来展望</h2><p><img src="/posts/bb32c0e7/App%E5%AE%89%E5%85%A8%E6%9C%AA%E6%9D%A5%E5%B1%95%E6%9C%9B.webp" alt="App安全未来展望"></p>
+<p>一款app的流水线,从开发到内测到平台到消费者再到破解者再到平台再到消费者，所以每一个环节都不可轻视！！！</p>
+<h2 id="App安全总结"><a href="#App安全总结" class="headerlink" title="App安全总结"></a>App安全总结</h2><table>
+<thead>
+<tr>
+<th>风险名称</th>
+<th>风险</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1.App防止反编译</td>
+<td>被反编译的暴露客户端逻辑，加密算法，密钥，等等</td>
+<td>加固</td>
+</tr>
+<tr>
+<td>2.java层代码源代码反编译风险</td>
+<td>被反编译的暴露客户端逻辑，加密算法，密钥，等等</td>
+<td>加固 ，混淆</td>
+</tr>
+<tr>
+<td>3.so文件破解风险</td>
+<td>导致核心代码泄漏。</td>
+<td>so文件加固</td>
+</tr>
+<tr>
+<td>4.篡改和二次打包风险</td>
+<td>修改文件资源等，二次打包的添加病毒，广告，或者窃取支付密码，拦截短信等</td>
+<td>资源文件混淆和校验签名的hash值</td>
+</tr>
+<tr>
+<td>5.资源文件泄露风险</td>
+<td>获取图片，js文件等文件，通过植入病毒，钓鱼页面获取用户敏感信息</td>
+<td>资源混淆，加固等等</td>
+</tr>
+<tr>
+<td>6.应用签名未交验风险</td>
+<td>反编译或者二次打包，添加病毒代码，恶意代码，上传盗版App</td>
+<td>对App进行签名证书校验</td>
+</tr>
+<tr>
+<td>7.代码为混淆风险</td>
+<td>业务逻辑暴露，加密算法，账号信息等等。</td>
+<td>混淆（中文混淆）</td>
+</tr>
+<tr>
+<td>8.webview明文存储密码风险</td>
+<td>用户使用webview默认存储密码到databases&#x2F;webview.db root的手机可以产看webview数据库，获取用户敏感信息</td>
+<td>关闭wenview存储密码功能</td>
+</tr>
+<tr>
+<td>9.明文数字证书风险</td>
+<td>APK使用的数字证书用来校验服务器的合法性，保证数据的保密性和完成性 明文存储的证书被篡改造成数据被获取等</td>
+<td>客户端校验服务器域名和数字证书等</td>
+</tr>
+<tr>
+<td>10.调试日志函数调用风险</td>
+<td>日志信息里面含有用户敏感信息等</td>
+<td>关闭调试日志函数，删除打印的日志信息</td>
+</tr>
+<tr>
+<td>11.AES&#x2F;DES加密方法不安全使用风险</td>
+<td>在使用AES&#x2F;DES加密使用了ECB或者OFB工作模式，加密数据被选择明文攻击破解等</td>
+<td>使用CBC和CFB工作模式等</td>
+</tr>
+<tr>
+<td>12.RSA加密算法不安全风险</td>
+<td>密数据被选择明文攻击破解和中间人攻击等导致用户敏感信息泄露</td>
+<td>密码不要太短，使用正确的工作模式</td>
+</tr>
+<tr>
+<td>13.密钥硬编码风险</td>
+<td>用户使用加密算法的密钥设置成一个固定值导致密钥泄漏</td>
+<td>动态生成加密密钥或者将密钥进程分段存储等</td>
+</tr>
+<tr>
+<td>14.动态调试攻击风险</td>
+<td>攻击者使用GDB，IDA调试追踪目标程序，获取用户敏感信息等</td>
+<td>在so文件里面实现对调试进程的监听</td>
+</tr>
+<tr>
+<td>15.应用数据任意备份风险</td>
+<td>AndroidMainfest中allowBackup&#x3D;true 攻击者可以使用adb命令对APP应用数据进行备份造成用户数据泄露</td>
+<td>allowBackup&#x3D;false</td>
+</tr>
+<tr>
+<td>16.全局可读写内部文件风险。</td>
+<td>实现不同软件之间数据共享，设置内部文件全局可读写造成其他应用也可以读取或者修改文件等</td>
+<td>（1）.使用MODE_PRIVATE模式创建内部存储文件<br>（2）.加密存储敏感数据3.避免在文件中存储明文和敏感信息</td>
+</tr>
+<tr>
+<td>17.SharedPrefs全局可读写内部文件风险。</td>
+<td>被其他应用读取或者修改文件等</td>
+<td>使用正确的权限</td>
+</tr>
+<tr>
+<td>18.Internal Storage数据全局可读写风险</td>
+<td>当设置MODE_WORLD_READBLE或者设置android:sharedUserId导致敏感信息被其他应用程序读取等</td>
+<td>设置正确的模式等</td>
+</tr>
+<tr>
+<td>19.getDir数据全局可读写风险</td>
+<td>当设置MODE_WORLD_READBLE或者设置android:sharedUserId导致敏感信息被其他应用程序读取等</td>
+<td>设置正确的模式等</td>
+</tr>
+<tr>
+<td>20.java层动态调试风险</td>
+<td>AndroidManifest中调试的标记可以使用jdb进行调试，窃取用户敏感信息。</td>
+<td>android：debuggable&#x3D;“false”</td>
+</tr>
+<tr>
+<td>21.内网测试信息残留风险</td>
+<td>通过测试的Url，测试账号等对正式服务器进行攻击等</td>
+<td>讲测试内网的日志清除，或者测试服务器和生产服务器不要使用同一个</td>
+</tr>
+<tr>
+<td>22.随机数不安全使用风险</td>
+<td>在使用SecureRandom类来生成随机数，其实并不是随机，导致使用的随机数和加密算法被破解。</td>
+<td>（1）不使用setSeed方法<br>（2）使用&#x2F;dev&#x2F;urandom或者&#x2F;dev&#x2F;random来初始化伪随机数生成器</td>
+</tr>
+<tr>
+<td>23.Http传输数据风险</td>
+<td>未加密的数据被第三方获取，造成数据泄露</td>
+<td>使用Hpps</td>
+</tr>
+<tr>
+<td>24.Htpps未校验服务器证书风险，Https未校验主机名风险，Https允许任意主机名风险</td>
+<td>客户端没有对服务器进行身份完整性校验，造成中间人攻击</td>
+<td>（1）.在X509TrustManager中的checkServerTrusted方法对服务器进行校验（2）.判断证书是否过期<br>（3）.使用HostnameVerifier类检查证书中的主机名与使用证书的主机名是否一致</td>
+</tr>
+<tr>
+<td>25.webview绕过证书校验风险</td>
+<td>webview使用https协议加密的url没有校验服务器导致中间人攻击</td>
+<td>校验服务器证书时候正确</td>
+</tr>
+<tr>
+<td>26.界面劫持风险</td>
+<td>用户输入密码的时候被一个假冒的页面遮挡获取用户信息等</td>
+<td>（1）.使用第三方专业防界面劫持SDK<br>（2）.校验当前是否是自己的页面</td>
+</tr>
+<tr>
+<td>27.输入监听风险</td>
+<td>用户输入的信息被监听或者按键位置被监听造成用户信息泄露等</td>
+<td>自定义键盘</td>
+</tr>
+<tr>
+<td>28.截屏攻击风险</td>
+<td>对APP运行中的界面进行截图或者录制来获取用户信息</td>
+<td>添加属性getWindow().setFlags(FLAG_SECURE)不让用户截图和录屏</td>
+</tr>
+<tr>
+<td>29.动态注册Receiver风险</td>
+<td>当动态注册Receiver默认生命周期是可以导出的可以被任意应用访问</td>
+<td>使用带权限检验的registerReceiver API进行动态广播的注册</td>
+</tr>
+<tr>
+<td>30.Content Provider数据泄露风险</td>
+<td>权限设置不当导致用户信息</td>
+<td>正确的使用权限</td>
+</tr>
+<tr>
+<td>31.Service ，Activity，Broadcast,content provider组件导出风险</td>
+<td>Activity被第三方应用访问导致被任意应用恶意调用</td>
+<td>自定义权限</td>
+</tr>
+<tr>
+<td>32.PendingIntent错误使用Intent风险</td>
+<td>使用PendingIntent的时候，如果使用了一个空Intent，会导致恶意用户劫持修改Intent的内容</td>
+<td>禁止使用一个空Intent去构造PendingIntent</td>
+</tr>
+<tr>
+<td>33.Intent组件隐式调用风险</td>
+<td>使用隐式Intent没有对接收端进行限制导致敏感信息被劫持</td>
+<td>1.对接收端进行限制 <br>2.建议使用显示调用方式发送Intent</td>
+</tr>
+<tr>
+<td>34.Intent Scheme URL攻击风险</td>
+<td>webview恶意调用App</td>
+<td>对Intent做安全限制</td>
+</tr>
+<tr>
+<td>35.Fragment注入攻击风险</td>
+<td>出的PreferenceActivity的子类中，没有加入isValidFragment方法，进行fragment名的合法性校验，攻击者可能会绕过限制，访问未授权的界面</td>
+<td>（1）.如果应用的Activity组件不必要导出，或者组件配置了intent filter标签，建议显示设置组件的“android:exported”属性为false<br>（2）.重写isValidFragment方法，验证fragment来源的正确性</td>
+</tr>
+<tr>
+<td>36.webview远程代码执行风险</td>
+<td>风险：WebView.addJavascriptInterface方法注册可供JavaScript调用的Java对象，通过反射调用其他java类等</td>
+<td>建议不使用addJavascriptInterface接口，对于Android API Level为17或者以上的Android系统，Google规定允许被调用的函数，必须在Java的远程方法上面声明一个@JavascriptInterface注解</td>
+</tr>
+<tr>
+<td>37.zip文件解压目录遍历风险</td>
+<td>Java代码在解压ZIP文件时，会使用到ZipEntry类的getName()方法，如果ZIP文件中包含“..&#x2F;”的字符串，该方法返回值里面原样返回，如果没有过滤掉getName()返回值中的“..&#x2F;”字符串，继续解压缩操作，就会在其他目录中创建解压的文件</td>
+<td>（1）. 对重要的ZIP压缩包文件进行数字签名校验，校验通过才进行解压。 （2）. 检查Zip压缩包中使用ZipEntry.getName()获取的文件名中是否包含”..&#x2F;”或者”..”，检查”..&#x2F;”的时候不必进行URI Decode（以防通过URI编码”..%2F”来进行绕过），测试发现ZipEntry.getName()对于Zip包中有“..%2F”的文件路径不会进行处理。</td>
+</tr>
+<tr>
+<td>38.Root设备运行风险</td>
+<td>已经root的手机通过获取应用的敏感信息等</td>
+<td>检测是否是root的手机禁止应用启动</td>
+</tr>
+<tr>
+<td>39.模拟器运行风险</td>
+<td>刷单，模拟虚拟位置等</td>
+<td>禁止在虚拟器上运行</td>
+</tr>
+<tr>
+<td>40.从sdcard加载Dex和so风险</td>
+<td>未对Dex和So文件进行安全，完整性及校验，导致被替换，造成用户敏感信息泄露</td>
+<td>（1）.放在APP的私有目录 <br>（2）.对文件进行完成性校验。</td>
+</tr>
+</tbody></table>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a target="_blank" rel="noopener" href="http://www.360doc.com/content/18/0718/20/11935121_771488141.shtml">手机挖矿</a></li>
+<li><a target="_blank" rel="noopener" href="http://sparkyuan.me/2016/04/01/%E4%BB%8E%E6%BA%90%E7%A0%81%E5%88%B0APK/">从源码到apk</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/f7f0a712ddfe">Dex文件格式详解</a></li>
+<li><a target="_blank" rel="noopener" href="https://bbs.pediy.com/thread-213188.htm">浅谈安卓app加固那点事</a></li>
+<li><a target="_blank" rel="noopener" href="http://blog.csdn.net/androidsecurity/article/details/8678399">Android APK加壳技术方案【1】</a></li>
+<li><a target="_blank" rel="noopener" href="http://blog.csdn.net/androidsecurity/article/details/8809542">Android APK加壳技术方案【2】</a></li>
+<li><a target="_blank" rel="noopener" href="http://blog.csdn.net/walid1992/article/details/51604673">ANDROID原理解密之APK生成过程</a></li>
+<li><a target="_blank" rel="noopener" href="http://blog.csdn.net/jiangwei0910410003/article/details/50443505">Android签名机制之—签名验证过程详解</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/clippings/" rel="tag"># clippings</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/c280d7ef/" rel="next" title="Kotlin 委托 | 菜鸟教程">
+                <i class="fa fa-chevron-left"></i> Kotlin 委托 | 菜鸟教程
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/d5c9cbe7/" rel="prev" title="Uniapp Android 原生插件开发（一）">
+                Uniapp Android 原生插件开发（一） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">291</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">21</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">47</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@qq.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-text">前言</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1"><span class="nav-text">1.1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2"><span class="nav-text">1.2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3"><span class="nav-text">1.3</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E5%8A%A0%E5%A3%B3%EF%BC%9F"><span class="nav-text">什么是加壳？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A0%E5%A3%B3%E4%BD%9C%E7%94%A8%E5%92%8C%E5%88%86%E7%B1%BB"><span class="nav-text">加壳作用和分类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Android-Dex%E6%96%87%E4%BB%B6%E5%8A%A0%E5%A3%B3%E5%8E%9F%E7%90%86"><span class="nav-text">Android Dex文件加壳原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#APK%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84"><span class="nav-text">APK文件结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DEX%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F"><span class="nav-text">DEX文件格式</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFDEX%E6%96%87%E4%BB%B6%EF%BC%9F"><span class="nav-text">什么是DEX文件？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#dex%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84"><span class="nav-text">dex文件结构</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#APK%E6%89%93%E5%8C%85%E6%B5%81%E7%A8%8B"><span class="nav-text">APK打包流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8A%A0%E5%9B%BA%E5%8E%9F%E7%90%86"><span class="nav-text">加固原理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8A%A0%E5%AF%86%E9%98%B6%E6%AE%B5"><span class="nav-text">加密阶段</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%90%88%E6%88%90%E6%96%B0%E7%9A%84dex%E6%96%87%E4%BB%B6"><span class="nav-text">合成新的dex文件</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9%E5%8E%9Fapk%E6%96%87%E4%BB%B6%E5%B9%B6%E9%87%8D%E6%89%93%E5%8C%85%E7%AD%BE%E5%90%8D"><span class="nav-text">修改原apk文件并重打包签名</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C%E5%A3%B3%E7%A8%8B%E5%BA%8F%E5%8A%A0%E8%BD%BD%E5%8E%9Fdex%E6%96%87%E4%BB%B6"><span class="nav-text">运行壳程序加载原dex文件</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A0%E5%A3%B3%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0"><span class="nav-text">加壳代码实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8A%A0%E5%A3%B3%E7%A8%8B%E5%BA%8F%E9%A1%B9%E7%9B%AE%EF%BC%9A"><span class="nav-text">加壳程序项目：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E4%BB%A3%E7%A0%81"><span class="nav-text">核心代码</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%B8%E8%A7%81%E5%8A%A0%E5%9B%BA%E5%B9%B3%E5%8F%B0"><span class="nav-text">常见加固平台</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#App%E5%8A%A0%E5%9B%BA%E7%9A%84%E5%88%A9%E5%BC%8A"><span class="nav-text">App加固的利弊</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#App%E5%AE%89%E5%85%A8%E6%9C%AA%E6%9D%A5%E5%B1%95%E6%9C%9B"><span class="nav-text">App安全未来展望</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#App%E5%AE%89%E5%85%A8%E6%80%BB%E7%BB%93"><span class="nav-text">App安全总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

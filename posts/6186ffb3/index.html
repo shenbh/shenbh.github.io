@@ -1,0 +1,1855 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="private," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="血泪总结！Android传统项目接入Compose的几大深坑与填坑方案升级版本 升级AGP:agp &#x3D; &quot;8.9.0&quot;  升级对应的gradle :gradle-wrapper.properties 12345distributionBase&#x3D;GRADLE_USER_HOMEdistributionPath&#x3D;wrapper&#x2F;distsdistributionUrl&#x3D;https\">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android传统项目接入Compose的几大深坑与填坑方案">
+<meta property="og:url" content="http://shenbh.github.io/posts/6186ffb3/index.html">
+<meta property="og:site_name" content="积跬步">
+<meta property="og:description" content="血泪总结！Android传统项目接入Compose的几大深坑与填坑方案升级版本 升级AGP:agp &#x3D; &quot;8.9.0&quot;  升级对应的gradle :gradle-wrapper.properties 12345distributionBase&#x3D;GRADLE_USER_HOMEdistributionPath&#x3D;wrapper&#x2F;distsdistributionUrl&#x3D;https\">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://shenbh.github.io/posts/6186ffb3/interop-hellos.png">
+<meta property="og:image" content="http://shenbh.github.io/posts/6186ffb3/layout-editor-composable-preview.png">
+<meta property="article:published_time" content="2025-06-20T06:20:20.000Z">
+<meta property="article:modified_time" content="2025-06-23T06:06:01.377Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="private">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/6186ffb3/interop-hellos.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/6186ffb3/"/>
+
+
+
+
+
+  <title>Android传统项目接入Compose的几大深坑与填坑方案 | 积跬步</title><meta name="robots" content="noindex">
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">积跬步</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just do IT Now.</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/6186ffb3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="积跬步">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">Android传统项目接入Compose的几大深坑与填坑方案</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-06-20T14:20:20+08:00">
+                2025-06-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="血泪总结！Android传统项目接入Compose的几大深坑与填坑方案"><a href="#血泪总结！Android传统项目接入Compose的几大深坑与填坑方案" class="headerlink" title="血泪总结！Android传统项目接入Compose的几大深坑与填坑方案"></a><a target="_blank" rel="noopener" href="https://juejin.cn/post/7487894915440394252">血泪总结！Android传统项目接入Compose的几大深坑与填坑方案</a></h1><h2 id="升级版本"><a href="#升级版本" class="headerlink" title="升级版本"></a>升级版本</h2><ul>
+<li><p>升级<code>AGP:agp = &quot;8.9.0&quot;</code></p>
+</li>
+<li><p>升级对应的<code>gradle :gradle-wrapper.properties</code></p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">distributionBase=GRADLE_USER_HOME</span><br><span class="line">distributionPath=<span class="keyword">wrapper</span>/dists</span><br><span class="line">distributionUrl=https\://services.gradle.org/distributions/gradle<span class="number">-8.11</span><span class="number">.1</span>-bin.zip</span><br><span class="line">zipStoreBase=GRADLE_USER_HOME</span><br><span class="line">zipStorePath=<span class="keyword">wrapper</span>/dists</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>升级<code>compileSdkVersion、targetSdkVersion、移除 buildToolsVersion</code></p>
+<ul>
+<li><code> compileSdkVersion</code>改为<code>compileSdk</code>，升级为 <code>    compileSdk= 34</code></li>
+<li><code>targetSdkVersion</code> 升级为 <code> targetSdkVersion = 30</code></li>
+<li><strong>AGP 7.0.0</strong>：<code>buildToolsVersion</code>被正式移除，在此版本及之后，不再需要手动指定<code>buildToolsVersion</code>，AGP会自动选择合适的Build Tools版本进行构建。</li>
+<li><code>compileSdkVersion</code>、<code>targetSdkVersion</code> 为啥版本不一样<ul>
+<li>因为没有那么多精力和时间，适配需要大量的时间和测试， <code>compileSdkVersion</code>升级为34是为了compose，compose的大部分依赖版本支持的是34，没升级最新的35，听说35有很大的变动，后面有时间再适配。</li>
+<li>lintOptions加入<code> error &quot;NewApi&quot;  // 将新API调用标记为错误（而非警告）</code></li>
+<li><code>compileSdkVersion</code> 与 <code>targetSdkVersion</code> 的区别总结</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>配置项</th>
+<th>含义</th>
+<th>影响范围</th>
+<th>注意事项</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>compileSdkVersion</code></td>
+<td>编译时使用的 Android SDK 版本</td>
+<td>编译阶段可用的 API</td>
+<td>- 建议始终使用最新的版本，以访问新功能和优化 - 不会影响运行时行为</td>
+</tr>
+<tr>
+<td><code>targetSdkVersion</code></td>
+<td>应用的目标 Android SDK 版本</td>
+<td>运行时的行为和兼容性模式</td>
+<td>- 应定期更新，确保符合最新系统行为和安全要求 - Google Play 有最低要求</td>
+</tr>
+</tbody></table>
+<h2 id="升级-build-gradle"><a href="#升级-build-gradle" class="headerlink" title="升级 build.gradle"></a>升级 <code>build.gradle</code></h2><ul>
+<li><p>顶部plugin变更 1.alias()里面的写法在后面说明；apply from 放在plugins下面</p>
+</li>
+<li><p>去掉<code>dexOptions</code></p>
+</li>
+<li><p><code>buildFeatures</code>增加<code>compose true</code> 、<code>buildConfig true</code></p>
+<ul>
+<li><p><code>buildConfig true</code>在最新版是默认false的，如果项目用到了<code>BuildConfig</code>要加入这个，否则不需要。</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">buildFeatures &#123;</span><br><span class="line">    dataBinding <span class="literal">true</span></span><br><span class="line">    viewBinding <span class="literal">true</span></span><br><span class="line">    compose <span class="literal">true</span></span><br><span class="line">    buildConfig <span class="literal">true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p>修改 <code>compileOptions</code></p>
+<ul>
+<li>jdk由原来的1.8改为11</li>
+<li><a target="_blank" rel="noopener" href="https://www.oracle.com/java/technologies/downloads/#java11?er=221886">下载jdk</a>,配置JAVA_HOME环境变量【AS》Settings》Build，Execution，Deployment》Build Tools》Gradle》更改Gradle JDK】</li>
+</ul>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 老</span></span><br><span class="line">compileOptions &#123;</span><br><span class="line">    sourceCompatibility = <span class="number">1.8</span></span><br><span class="line">    targetCompatibility = <span class="number">1.8</span></span><br><span class="line">    coreLibraryDesugaringEnabled <span class="literal">true</span></span><br><span class="line">&#125;</span><br><span class="line">kotlinOptions &#123;</span><br><span class="line">    jvmTarget = <span class="string">&#x27;8&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 新</span></span><br><span class="line">compileOptions &#123;</span><br><span class="line">    sourceCompatibility JavaVersion.VERSION_11</span><br><span class="line">    targetCompatibility JavaVersion.VERSION_11</span><br><span class="line">    coreLibraryDesugaringEnabled <span class="literal">true</span></span><br><span class="line">&#125;</span><br><span class="line">kotlinOptions &#123;</span><br><span class="line">    jvmTarget = <span class="string">&#x27;11&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>修改后的 <code>build.gradle</code></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br></pre></td><td class="code"><pre><span class="line">plugins &#123;</span><br><span class="line">    alias(libs.plugins.android.application)</span><br><span class="line">    alias(libs.plugins.kotlin.android)</span><br><span class="line">    alias(libs.plugins.kotlin.compose)</span><br><span class="line">    id <span class="string">&#x27;kotlin-kapt&#x27;</span></span><br><span class="line">    id <span class="string">&#x27;com.kanyun.kace&#x27;</span></span><br><span class="line">    id <span class="string">&#x27;kotlin-parcelize&#x27;</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">apply <span class="attr">from:</span> <span class="string">&#x27;../other.gradle&#x27;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">android &#123;</span><br><span class="line">    compileSdk <span class="number">34</span></span><br><span class="line">    namespace <span class="string">&quot;清单文件里的package包名&quot;</span></span><br><span class="line"></span><br><span class="line">    defaultConfig &#123;</span><br><span class="line">        applicationId <span class="string">&quot;com.xx.xx&quot;</span></span><br><span class="line">        minSdkVersion <span class="number">23</span></span><br><span class="line">        targetSdkVersion <span class="number">30</span></span><br><span class="line">        versionCode <span class="number">1</span></span><br><span class="line">        versionName version</span><br><span class="line"></span><br><span class="line">        vectorDrawables.useSupportLibrary = <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        multiDexEnabled <span class="literal">true</span></span><br><span class="line">        ndk &#123;</span><br><span class="line">            abiFilters <span class="string">&#x27;arm64-v8a&#x27;</span></span><br><span class="line">        &#125;</span><br><span class="line">        lintOptions &#123;</span><br><span class="line">            abortOnError <span class="literal">false</span></span><br><span class="line">            error <span class="string">&quot;NewApi&quot;</span>  <span class="comment">// 将新API调用标记为错误（而非警告）</span></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        sourceSets &#123;</span><br><span class="line">            main &#123;</span><br><span class="line">                jniLibs.srcDirs = [<span class="string">&#x27;libs&#x27;</span>]</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line"></span><br><span class="line">    buildFeatures &#123;</span><br><span class="line">        dataBinding <span class="literal">true</span></span><br><span class="line">        viewBinding <span class="literal">true</span></span><br><span class="line">        compose <span class="literal">true</span></span><br><span class="line">        buildConfig <span class="literal">true</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    compileOptions &#123;</span><br><span class="line">        sourceCompatibility JavaVersion.VERSION_11</span><br><span class="line">        targetCompatibility JavaVersion.VERSION_11</span><br><span class="line">        coreLibraryDesugaringEnabled <span class="literal">true</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    kotlinOptions &#123;</span><br><span class="line">        jvmTarget = <span class="string">&#x27;11&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    kapt &#123;</span><br><span class="line">        generateStubs = <span class="literal">true</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">dependencies &#123;</span><br><span class="line">    implementation fileTree(<span class="attr">dir:</span> <span class="string">&#x27;libs&#x27;</span>, <span class="attr">include:</span> [<span class="string">&#x27;*.aar&#x27;</span>, <span class="string">&#x27;*.jar&#x27;</span>], <span class="attr">exclude:</span> [])</span><br><span class="line">    coreLibraryDesugaring <span class="string">&#x27;com.android.tools:desugar_jdk_libs:2.0.3&#x27;</span></span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">    implementation libs.coil</span><br><span class="line">    implementation platform(libs.androidx.compose.bom)</span><br><span class="line">    androidTestImplementation platform(libs.androidx.compose.bom)</span><br><span class="line">    implementation libs.androidx.activity.compose</span><br><span class="line">    implementation libs.androidx.lifecycle.viewmodel.compose</span><br><span class="line">    implementation libs.androidx.lifecycle.runtime.ktx</span><br><span class="line">    implementation libs.androidx.ui</span><br><span class="line">    implementation libs.androidx.ui.viewbinding</span><br><span class="line">    implementation libs.androidx.ui.util</span><br><span class="line">    implementation libs.androidx.material3</span><br><span class="line">    debugImplementation libs.androidx.ui.tooling</span><br><span class="line">    implementation libs.androidx.ui.tooling.preview</span><br><span class="line">    debugImplementation libs.androidx.ui.test.manifest</span><br><span class="line">    implementation libs.androidx.ui.graphics</span><br><span class="line">    androidTestImplementation libs.androidx.ui.test.junit4</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="升级项目级build-gradle"><a href="#升级项目级build-gradle" class="headerlink" title="升级项目级build.gradle"></a>升级<code>项目级build.gradle</code></h2><ul>
+<li><p><code>buildscript，allprojects</code>变成<code>pluginManagement、dependencyResolutionManagement</code>并放入到<code>setting.gradle</code></p>
+</li>
+<li><p>老的项目【项目级 <code>build.gradle</code> 中】</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Top-level build file where you can add configuration options common to all sub-projects/modules.</span></span><br><span class="line"></span><br><span class="line">buildscript &#123;</span><br><span class="line">    repositories &#123;</span><br><span class="line">        maven &#123; url <span class="string">&#x27;https://maven.aliyun.com/repository/google&#x27;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&#x27;https://maven.aliyun.com/repository/public&#x27;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&#x27;https://maven.aliyun.com/repository/central&#x27;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&#x27;https://maven.aliyun.com/repository/gradle-plugin&#x27;</span> &#125;</span><br><span class="line">        google()</span><br><span class="line">        mavenCentral()</span><br><span class="line">    &#125;</span><br><span class="line">    dependencies &#123;</span><br><span class="line">        classpath <span class="string">&#x27;com.android.tools.build:gradle:5.2.0&#x27;</span></span><br><span class="line">        classpath <span class="string">&quot;org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">allprojects &#123;</span><br><span class="line">    repositories &#123;</span><br><span class="line">        maven &#123; url <span class="string">&#x27;https://maven.aliyun.com/repository/google&#x27;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&#x27;https://maven.aliyun.com/repository/public&#x27;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&#x27;https://maven.aliyun.com/repository/central&#x27;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&#x27;https://maven.aliyun.com/repository/gradle-plugin&#x27;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&#x27;https://dl.google.com/dl/android/maven2/&#x27;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&#x27;https://jitpack.io&#x27;</span> &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>改造后【<code>settings.gradle</code>中】</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">pluginManagement &#123;</span><br><span class="line">    repositories &#123;</span><br><span class="line">        maven &#123; url <span class="string">&quot;https://maven.aliyun.com/repository/google&quot;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&quot;https://maven.aliyun.com/repository/public&quot;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&quot;https://maven.aliyun.com/repository/central&quot;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&quot;https://maven.aliyun.com/repository/gradle-plugin&quot;</span> &#125;</span><br><span class="line">        google()</span><br><span class="line">        mavenCentral()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">dependencyResolutionManagement &#123;</span><br><span class="line">    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)</span><br><span class="line">    repositories &#123;</span><br><span class="line">        maven &#123; url <span class="string">&quot;https://maven.aliyun.com/repository/google&quot;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&quot;https://maven.aliyun.com/repository/public&quot;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&quot;https://maven.aliyun.com/repository/central&quot;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&quot;https://maven.aliyun.com/repository/gradle-plugin&quot;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&quot;https://dl.google.com/dl/android/maven2/&quot;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&quot;https://jitpack.io&quot;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&quot;https://repo1.maven.org/maven2/&quot;</span> &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><code>buildscript</code>里的<code>classpath</code>不支持新的<code>alias</code>插件配置方式，还是要在项目级<code>build.gradle</code>写入</p>
+<p>老的项目级 <code>build.gradle</code></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Top-level build file where you can add configuration options common to all sub-projects/modules.</span></span><br><span class="line"></span><br><span class="line">buildscript &#123;</span><br><span class="line">    repositories &#123;</span><br><span class="line">        maven &#123; url <span class="string">&#x27;https://maven.aliyun.com/repository/google&#x27;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&#x27;https://maven.aliyun.com/repository/public&#x27;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&#x27;https://maven.aliyun.com/repository/central&#x27;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&#x27;https://maven.aliyun.com/repository/gradle-plugin&#x27;</span> &#125;</span><br><span class="line">        google()</span><br><span class="line">        mavenCentral()</span><br><span class="line">    &#125;</span><br><span class="line">    dependencies &#123;</span><br><span class="line">        classpath <span class="string">&#x27;com.android.tools.build:gradle:5.2.0&#x27;</span></span><br><span class="line">        classpath <span class="string">&quot;org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version&quot;</span></span><br><span class="line">        classpath <span class="string">&#x27;com.xxx.xxx:xxx:1.6.0.300&#x27;</span></span><br><span class="line">        classpath <span class="string">&#x27;com.kanyun.kace:kace-gradle-plugin:2.0.0-1.2.0&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>新的，还是要在项目级 <code>build.gradle</code> 中加 <code>classpath </code>【不能在<code>settings.gradle</code>中用】</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Top-level build file where you can add configuration options common to all sub-projects/modules.</span></span><br><span class="line"></span><br><span class="line">buildscript &#123;</span><br><span class="line">    dependencies &#123;</span><br><span class="line">        <span class="comment">//不支持新的alias插件配置方式</span></span><br><span class="line">        classpath <span class="string">&#x27;com.xxx.xxx:xxx:1.6.0.300&#x27;</span></span><br><span class="line">        classpath <span class="string">&#x27;com.kanyun.kace:kace-gradle-plugin:2.0.0-1.2.0&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//支持alias的buildtool、kotlin等放这边</span></span><br><span class="line">plugins&#123;</span><br><span class="line">    alias(libs.plugins.android.application) apply <span class="literal">false</span></span><br><span class="line">    alias(libs.plugins.kotlin.android) apply <span class="literal">false</span></span><br><span class="line">    <span class="comment">//增加compose的</span></span><br><span class="line">    alias(libs.plugins.kotlin.compose) apply <span class="literal">false</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="升级setting-gradle"><a href="#升级setting-gradle" class="headerlink" title="升级setting.gradle"></a>升级<code>setting.gradle</code></h2><ul>
+<li><p>第二步已经说明了，增加了<code>pluginManagement、dependencyResolutionManagement</code></p>
+</li>
+<li><p><code>include</code>变更</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//旧的</span></span><br><span class="line"></span><br><span class="line">include <span class="string">&#x27;:app&#x27;</span>,<span class="string">&#x27;:app1&#x27;</span>,<span class="string">&#x27;:app2&#x27;</span></span><br><span class="line">rootProject.name=<span class="string">&#x27;名字&#x27;</span></span><br><span class="line">include <span class="string">&#x27;:app3&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//新的</span></span><br><span class="line"></span><br><span class="line">include(</span><br><span class="line">	<span class="string">&quot;:app&quot;</span>,</span><br><span class="line">    <span class="string">&quot;:app1&quot;</span>,</span><br><span class="line">    <span class="string">&quot;:app2&quot;</span>,</span><br><span class="line">    <span class="string">&quot;:app3&quot;</span></span><br><span class="line">)</span><br><span class="line">rootProject.name=<span class="string">&#x27;名字&#x27;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>完整的 <code>settings.gradle</code></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">pluginManagement &#123;</span><br><span class="line">    repositories &#123;</span><br><span class="line">        maven &#123; url <span class="string">&quot;https://maven.aliyun.com/repository/google&quot;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&quot;https://maven.aliyun.com/repository/public&quot;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&quot;https://maven.aliyun.com/repository/central&quot;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&quot;https://maven.aliyun.com/repository/gradle-plugin&quot;</span> &#125;</span><br><span class="line">        google()</span><br><span class="line">        mavenCentral()</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">dependencyResolutionManagement &#123;</span><br><span class="line">    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)</span><br><span class="line">    repositories &#123;</span><br><span class="line">        maven &#123; url <span class="string">&quot;https://maven.aliyun.com/repository/google&quot;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&quot;https://maven.aliyun.com/repository/public&quot;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&quot;https://maven.aliyun.com/repository/central&quot;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&quot;https://maven.aliyun.com/repository/gradle-plugin&quot;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&quot;https://dl.google.com/dl/android/maven2/&quot;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&quot;https://jitpack.io&quot;</span> &#125;</span><br><span class="line">        maven &#123; url <span class="string">&quot;https://repo1.maven.org/maven2/&quot;</span> &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">include(</span><br><span class="line">        <span class="string">&quot;:app&quot;</span>,</span><br><span class="line">        <span class="string">&quot;:app1&quot;</span>,</span><br><span class="line">        <span class="string">&quot;:app2&quot;</span>,</span><br><span class="line">        <span class="string">&quot;:app3&quot;</span></span><br><span class="line">)</span><br><span class="line">rootProject.name = <span class="string">&quot;名字&quot;</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="迁移到-Gradle-7-x-or-8-x-使用-Version-Catalogs-管理依赖，gradle引入libs-versio"><a href="#迁移到-Gradle-7-x-or-8-x-使用-Version-Catalogs-管理依赖，gradle引入libs-versio" class="headerlink" title="迁移到 Gradle 7.x or 8.x 使用 Version Catalogs 管理依赖，gradle引入libs.versio"></a>迁移到 Gradle 7.x or 8.x 使用 Version Catalogs 管理依赖，gradle引入<code>libs.versio</code></h2><p>与<code>wrapper</code>文件夹在同级目录</p>
+<ul>
+<li><p><a target="_blank" rel="noopener" href="https://developer.android.google.cn/build/migrate-to-catalogs?hl=zh-cn">官方详细使用步骤,将 build 迁移到版本目录</a></p>
+</li>
+<li><p>在 libs.versions.toml 文件中，添加以下部分：</p>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[versions]</span></span><br><span class="line"></span><br><span class="line"><span class="section">[libraries]</span></span><br><span class="line"></span><br><span class="line"><span class="section">[plugins]</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>这些部分的使用方式如下：</p>
+<ul>
+<li>在 versions 代码块中，定义用于保存依赖项和插件版本的变量。您可以在后续代码块（libraries 和 plugins 代码块）中使用这些变量。</li>
+<li>在 libraries 代码块中，定义依赖项。</li>
+<li>在 plugins 代码块中，定义插件。</li>
+</ul>
+</li>
+</ul>
+<h2 id="引入Compose相关依赖"><a href="#引入Compose相关依赖" class="headerlink" title="引入Compose相关依赖"></a>引入Compose相关依赖</h2><ul>
+<li><p><code>build.gradle</code>引入</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">implementation libs.coil</span><br><span class="line">implementation platform(libs.androidx.compose.bom)</span><br><span class="line">androidTestImplementation platform(libs.androidx.compose.bom)</span><br><span class="line">implementation libs.androidx.activity.compose</span><br><span class="line">implementation libs.androidx.lifecycle.viewmodel.compose</span><br><span class="line">implementation libs.androidx.lifecycle.runtime.ktx</span><br><span class="line">implementation libs.androidx.ui</span><br><span class="line">implementation libs.androidx.ui.viewbinding</span><br><span class="line">implementation libs.androidx.ui.util</span><br><span class="line">implementation libs.androidx.material3</span><br><span class="line">debugImplementation libs.androidx.ui.tooling</span><br><span class="line">implementation libs.androidx.ui.tooling.preview</span><br><span class="line">debugImplementation libs.androidx.ui.test.manifest</span><br><span class="line">implementation libs.androidx.ui.graphics</span><br><span class="line">androidTestImplementation libs.androidx.ui.test.junit4</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><code>libs.versions.toml</code> 文件中</p>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[versions]</span></span><br><span class="line"><span class="attr">agp</span> = <span class="string">&quot;8.9.0&quot;</span></span><br><span class="line"><span class="attr">kotlin</span> = <span class="string">&quot;2.0.10&quot;</span></span><br><span class="line"><span class="attr">composeBom</span> = <span class="string">&quot;2025.01.01&quot;</span></span><br><span class="line"><span class="attr">lifecycleRuntimeKtx</span> = <span class="string">&quot;2.8.3&quot;</span></span><br><span class="line"><span class="attr">activityCompose</span> = <span class="string">&quot;1.8.2&quot;</span></span><br><span class="line"><span class="attr">coil-compose</span> = <span class="string">&quot;2.5.0&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="section">[libraries]</span></span><br><span class="line"><span class="attr">androidx-compose-bom</span> = &#123; group = <span class="string">&quot;androidx.compose&quot;</span>, name = <span class="string">&quot;compose-bom&quot;</span>, version.ref = <span class="string">&quot;composeBom&quot;</span> &#125; <span class="comment"># 统一管理compose相关依赖版本</span></span><br><span class="line"><span class="attr">androidx-activity-compose</span> = &#123; group = <span class="string">&quot;androidx.activity&quot;</span>, name = <span class="string">&quot;activity-compose&quot;</span>, version.ref = <span class="string">&quot;activityCompose&quot;</span> &#125; <span class="comment"># 支持在activity中嵌入compose组件</span></span><br><span class="line"><span class="attr">androidx-lifecycle-viewmodel-compose</span> = &#123; group = <span class="string">&quot;androidx.lifecycle&quot;</span>, name = <span class="string">&quot;lifecycle-viewmodel-compose&quot;</span>, version.ref = <span class="string">&quot;lifecycleRuntimeKtx&quot;</span> &#125; <span class="comment"># 支持viewmodel</span></span><br><span class="line"><span class="attr">androidx-lifecycle-runtime-ktx</span> = &#123; group = <span class="string">&quot;androidx.lifecycle&quot;</span>, name = <span class="string">&quot;lifecycle-runtime-ktx&quot;</span>, version.ref = <span class="string">&quot;lifecycleRuntimeKtx&quot;</span> &#125; <span class="comment"># 组件支持生命周期管理</span></span><br><span class="line"><span class="attr">androidx-ui</span> = &#123; group = <span class="string">&quot;androidx.compose.ui&quot;</span>, name = <span class="string">&quot;ui&quot;</span> &#125;</span><br><span class="line"><span class="attr">androidx-ui-viewbinding</span> = &#123; module = <span class="string">&quot;androidx.compose.ui:ui-viewbinding&quot;</span> &#125;</span><br><span class="line"><span class="attr">androidx-ui-util</span> = &#123; module = <span class="string">&quot;androidx.compose.ui:ui-util&quot;</span> &#125;</span><br><span class="line"><span class="attr">androidx-ui-tooling</span> = &#123; group = <span class="string">&quot;androidx.compose.ui&quot;</span>, name = <span class="string">&quot;ui-tooling&quot;</span> &#125;</span><br><span class="line"><span class="attr">androidx-ui-tooling-preview</span> = &#123; group = <span class="string">&quot;androidx.compose.ui&quot;</span>, name = <span class="string">&quot;ui-tooling-preview&quot;</span> &#125; <span class="comment"># 支持compose组件预览</span></span><br><span class="line"><span class="attr">androidx-ui-graphics</span> = &#123; group = <span class="string">&quot;androidx.compose.ui&quot;</span>, name = <span class="string">&quot;ui-graphics&quot;</span> &#125;</span><br><span class="line"><span class="attr">androidx-ui-test-manifest</span> = &#123; group = <span class="string">&quot;androidx.compose.ui&quot;</span>, name = <span class="string">&quot;ui-test-manifest&quot;</span> &#125;</span><br><span class="line"><span class="attr">androidx-ui-test-junit4</span> = &#123; group = <span class="string">&quot;androidx.compose.ui&quot;</span>, name = <span class="string">&quot;ui-test-junit4&quot;</span> &#125;</span><br><span class="line"><span class="attr">androidx-material3</span> = &#123; group = <span class="string">&quot;androidx.compose.material3&quot;</span>, name = <span class="string">&quot;material3&quot;</span> &#125;</span><br><span class="line"><span class="attr">coil</span> = &#123; group = <span class="string">&quot;io.coil-kt&quot;</span>, name = <span class="string">&quot;coil-compose&quot;</span>, version.ref = <span class="string">&quot;coil-compose&quot;</span> &#125; <span class="comment"># 图片</span></span><br><span class="line"></span><br><span class="line"><span class="section">[plugins]</span></span><br><span class="line"><span class="attr">android-application</span> = &#123; id = <span class="string">&quot;com.android.application&quot;</span>, version.ref = <span class="string">&quot;agp&quot;</span> &#125;</span><br><span class="line"><span class="attr">kotlin-android</span> = &#123; id = <span class="string">&quot;org.jetbrains.kotlin.android&quot;</span>, version.ref = <span class="string">&quot;kotlin&quot;</span> &#125;</span><br><span class="line"><span class="attr">kotlin-compose</span> = &#123; id = <span class="string">&quot;org.jetbrains.kotlin.plugin.compose&quot;</span>, version.ref = <span class="string">&quot;kotlin&quot;</span> &#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="各个版本说明-Gradle、AGP、Kotlin、Compose"><a href="#各个版本说明-Gradle、AGP、Kotlin、Compose" class="headerlink" title="各个版本说明,Gradle、AGP、Kotlin、Compose"></a>各个版本说明,Gradle、AGP、Kotlin、Compose</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://developer.android.google.cn/build/releases/gradle-plugin?hl=zh-cn#updating-gradle">各个 Android Gradle 插件版本所需的 Gradle 版本</a><br><a href="../Gradle/Gradle%E7%AC%94%E8%AE%B0.md#%5Bgradle%E7%9A%84tool%E7%89%88%E6%9C%AC%E4%B8%8Egradle%E7%89%88%E6%9C%AC%E5%AF%B9%E7%85%A7%5D(https%20//developer.android.google.cn/studio/releases/gradle-plugin.html%20updating-gradle)">gradle的tool版本与gradle版本对照</a></li>
+<li><a target="_blank" rel="noopener" href="https://kotlinlang.org/docs/gradle-configure-project.html#apply-the-plugin">Kotlin Gradle 插件 (KGP) 与可用 Gradle 版本的兼容性</a></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>KGP version KGP 版本</th>
+<th>Gradle min and max versions Gradle 最小版本和最高版本</th>
+<th>AGP min and max versions AGP 最小和最大版本</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>2.1.20</td>
+<td>7.6.3–8.12.1</td>
+<td>7.3.1–8.7.2</td>
+</tr>
+<tr>
+<td>2.1.0–2.1.10</td>
+<td>7.6.3–8.10*</td>
+<td>7.3.1–8.7.2</td>
+</tr>
+<tr>
+<td>2.0.20–2.0.21</td>
+<td>6.8.3–8.8*</td>
+<td>7.1.3–8.5</td>
+</tr>
+<tr>
+<td>2.0.0</td>
+<td>6.8.3–8.5</td>
+<td>7.1.3–8.3.1</td>
+</tr>
+<tr>
+<td>1.9.20–1.9.25</td>
+<td>6.8.3–8.1.1</td>
+<td>4.2.2–8.1.0</td>
+</tr>
+<tr>
+<td>1.9.0–1.9.10</td>
+<td>6.8.3–7.6.0</td>
+<td>4.2.2–7.4.0</td>
+</tr>
+<tr>
+<td>1.8.20–1.8.22</td>
+<td>6.8.3–7.6.0</td>
+<td>4.1.3–7.4.0</td>
+</tr>
+<tr>
+<td>1.8.0–1.8.11</td>
+<td>6.8.3–7.3.3</td>
+<td>4.1.3–7.2.1</td>
+</tr>
+<tr>
+<td>1.7.20–1.7.22</td>
+<td>6.7.1–7.1.1</td>
+<td>3.6.4–7.0.4</td>
+</tr>
+<tr>
+<td>1.7.0–1.7.10</td>
+<td>6.7.1–7.0.2</td>
+<td>3.4.3–7.0.2</td>
+</tr>
+<tr>
+<td>1.6.20–1.6.21</td>
+<td>6.1.1–7.0.2</td>
+<td>3.4.3–7.0.2</td>
+</tr>
+</tbody></table>
+<p>​    &gt; *Kotlin 2.0.20–2.0.21 and Kotlin 2.1.0–2.1.10 are fully compatible with Gradle up to 8.6. Gradle versions 8.7–8.10 are also supported, with only one exception: If you use the Kotlin Multiplatform Gradle plugin, you may see deprecation warnings in your multiplatform projects calling the <code>withJava()</code> function in the JVM target. For more information, see <a target="_blank" rel="noopener" href="https://www.jetbrains.com/help/kotlin-multiplatform-dev/multiplatform-compatibility-guide.html#java-source-sets-created-by-default">Java source sets created by default</a>.</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://developer.android.google.cn/jetpack/androidx/releases/compose-kotlin?hl=zh-cn#pre-release_kotlin_compatibility">Compose 与 Kotlin 的兼容性对应关系</a></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="left">Compose Compiler 版本</th>
+<th align="left">兼容的 Kotlin 版本</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">使用 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/develop/ui/compose/compiler?hl=zh-cn">Compose 编译器 Gradle 插件</a>启用 Compose。</td>
+<td align="left">2.0.0+</td>
+</tr>
+<tr>
+<td align="left">1.5.15</td>
+<td align="left">1.9.25</td>
+</tr>
+<tr>
+<td align="left">1.5.14</td>
+<td align="left">1.9.24</td>
+</tr>
+<tr>
+<td align="left">1.5.13</td>
+<td align="left">1.9.23</td>
+</tr>
+<tr>
+<td align="left">1.5.12</td>
+<td align="left">1.9.23</td>
+</tr>
+<tr>
+<td align="left">1.5.11</td>
+<td align="left">1.9.23</td>
+</tr>
+<tr>
+<td align="left">1.5.10</td>
+<td align="left">1.9.22</td>
+</tr>
+<tr>
+<td align="left">1.5.9</td>
+<td align="left">1.9.22</td>
+</tr>
+<tr>
+<td align="left">1.5.8</td>
+<td align="left">1.9.22</td>
+</tr>
+<tr>
+<td align="left">1.5.7</td>
+<td align="left">1.9.21</td>
+</tr>
+<tr>
+<td align="left">1.5.6</td>
+<td align="left">1.9.21</td>
+</tr>
+<tr>
+<td align="left">1.5.5</td>
+<td align="left">1.9.20</td>
+</tr>
+<tr>
+<td align="left">1.5.4</td>
+<td align="left">1.9.20</td>
+</tr>
+<tr>
+<td align="left">1.5.3</td>
+<td align="left">1.9.10</td>
+</tr>
+<tr>
+<td align="left">1.5.2</td>
+<td align="left">1.9.0</td>
+</tr>
+<tr>
+<td align="left">1.5.1</td>
+<td align="left">1.9.0</td>
+</tr>
+<tr>
+<td align="left">1.5.0</td>
+<td align="left">1.9.0</td>
+</tr>
+<tr>
+<td align="left">1.4.8</td>
+<td align="left">1.8.22</td>
+</tr>
+<tr>
+<td align="left">1.4.7</td>
+<td align="left">1.8.21</td>
+</tr>
+<tr>
+<td align="left">1.4.6</td>
+<td align="left">1.8.20</td>
+</tr>
+<tr>
+<td align="left">1.4.5</td>
+<td align="left">1.8.20</td>
+</tr>
+<tr>
+<td align="left">1.4.4</td>
+<td align="left">1.8.10</td>
+</tr>
+<tr>
+<td align="left">1.4.3</td>
+<td align="left">1.8.10</td>
+</tr>
+<tr>
+<td align="left">1.4.2</td>
+<td align="left">1.8.10</td>
+</tr>
+<tr>
+<td align="left">1.4.1</td>
+<td align="left">1.8.0</td>
+</tr>
+<tr>
+<td align="left">1.4.0</td>
+<td align="left">1.8.0</td>
+</tr>
+<tr>
+<td align="left">1.4.0-alpha02</td>
+<td align="left">1.7.21</td>
+</tr>
+<tr>
+<td align="left">1.4.0-alpha01</td>
+<td align="left">1.7.20</td>
+</tr>
+<tr>
+<td align="left">1.3.2</td>
+<td align="left">1.7.20</td>
+</tr>
+<tr>
+<td align="left">1.3.1</td>
+<td align="left">1.7.10</td>
+</tr>
+<tr>
+<td align="left">1.3.0</td>
+<td align="left">1.7.10</td>
+</tr>
+<tr>
+<td align="left">1.3.0-rc02</td>
+<td align="left">1.7.10</td>
+</tr>
+<tr>
+<td align="left">1.3.0-rc01</td>
+<td align="left">1.7.10</td>
+</tr>
+<tr>
+<td align="left">1.3.0-beta01</td>
+<td align="left">1.7.10</td>
+</tr>
+<tr>
+<td align="left">1.2.0</td>
+<td align="left">1.7.0</td>
+</tr>
+<tr>
+<td align="left">1.2.0-rc02</td>
+<td align="left">1.6.21</td>
+</tr>
+<tr>
+<td align="left">1.2.0-rc01</td>
+<td align="left">1.6.21</td>
+</tr>
+<tr>
+<td align="left">1.2.0-beta03</td>
+<td align="left">1.6.21</td>
+</tr>
+<tr>
+<td align="left">1.2.0-beta02</td>
+<td align="left">1.6.21</td>
+</tr>
+<tr>
+<td align="left">1.2.0-beta01</td>
+<td align="left">1.6.21</td>
+</tr>
+<tr>
+<td align="left">1.2.0-alpha08</td>
+<td align="left">1.6.20</td>
+</tr>
+<tr>
+<td align="left">1.2.0-alpha07</td>
+<td align="left">1.6.10</td>
+</tr>
+<tr>
+<td align="left">1.2.0-alpha06</td>
+<td align="left">1.6.10</td>
+</tr>
+<tr>
+<td align="left">1.2.0-alpha05</td>
+<td align="left">1.6.10</td>
+</tr>
+<tr>
+<td align="left">1.2.0-alpha04</td>
+<td align="left">1.6.10</td>
+</tr>
+<tr>
+<td align="left">1.2.0-alpha03</td>
+<td align="left">1.6.10</td>
+</tr>
+<tr>
+<td align="left">1.2.0-alpha02</td>
+<td align="left">1.6.10</td>
+</tr>
+<tr>
+<td align="left">1.2.0-alpha01</td>
+<td align="left">1.6.10</td>
+</tr>
+<tr>
+<td align="left">1.1.1</td>
+<td align="left">1.6.10</td>
+</tr>
+<tr>
+<td align="left">1.1.0</td>
+<td align="left">1.6.10</td>
+</tr>
+<tr>
+<td align="left">1.1.0-rc03</td>
+<td align="left">1.6.10</td>
+</tr>
+<tr>
+<td align="left">1.1.0-rc02</td>
+<td align="left">1.6.10</td>
+</tr>
+<tr>
+<td align="left">1.1.0-rc01</td>
+<td align="left">1.6.0</td>
+</tr>
+<tr>
+<td align="left">1.1.0-beta04</td>
+<td align="left">1.6.0</td>
+</tr>
+<tr>
+<td align="left">1.1.0-beta03</td>
+<td align="left">1.5.31</td>
+</tr>
+<tr>
+<td align="left">1.1.0-beta02</td>
+<td align="left">1.5.31</td>
+</tr>
+<tr>
+<td align="left">1.1.0-beta01</td>
+<td align="left">1.5.31</td>
+</tr>
+<tr>
+<td align="left">1.1.0-alpha06</td>
+<td align="left">1.5.31</td>
+</tr>
+<tr>
+<td align="left">1.1.0-alpha05</td>
+<td align="left">1.5.31</td>
+</tr>
+<tr>
+<td align="left">1.0.5</td>
+<td align="left">1.5.31</td>
+</tr>
+<tr>
+<td align="left">1.0.4</td>
+<td align="left">1.5.31</td>
+</tr>
+<tr>
+<td align="left">1.1.0-alpha04</td>
+<td align="left">1.5.30</td>
+</tr>
+<tr>
+<td align="left">1.1.0-alpha03</td>
+<td align="left">1.5.30</td>
+</tr>
+<tr>
+<td align="left">1.0.3</td>
+<td align="left">1.5.30</td>
+</tr>
+<tr>
+<td align="left">1.1.0-alpha02</td>
+<td align="left">1.5.21</td>
+</tr>
+<tr>
+<td align="left">1.1.0-alpha01</td>
+<td align="left">1.5.21</td>
+</tr>
+<tr>
+<td align="left">1.0.2</td>
+<td align="left">1.5.21</td>
+</tr>
+<tr>
+<td align="left">1.0.1</td>
+<td align="left">1.5.21</td>
+</tr>
+<tr>
+<td align="left">1.0.0</td>
+<td align="left">1.5.10</td>
+</tr>
+<tr>
+<td align="left">1.0.0-rc02</td>
+<td align="left">1.5.10</td>
+</tr>
+<tr>
+<td align="left">1.0.0-rc01</td>
+<td align="left">1.5.10</td>
+</tr>
+</tbody></table>
+<h2 id="遇到的问题"><a href="#遇到的问题" class="headerlink" title="遇到的问题"></a>遇到的问题</h2><ul>
+<li><p>删除清单文件里的pacgage,添加 namespace,AGP8以上强制</p>
+<ul>
+<li><p><a target="_blank" rel="noopener" href="https://developer.android.google.cn/build/configure-app-module?hl=zh-cn#set-namespace">官方文档</a></p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">报错 Namespace <span class="keyword">not</span> specified. Specify a namespace <span class="keyword">in</span> the modul<span class="string">e&#x27;s build file: build.gradle. See https://d.android.com/r/tools/upgrade-assistant/set-namespace for information about setting the namespace.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">If you&#x27;</span>ve specified the package <span class="keyword">attribute</span> <span class="keyword">in</span> the source AndroidManifest.xml, you can use the AGP Upgrade Assistant <span class="keyword">to</span> migrate <span class="keyword">to</span> the namespace <span class="keyword">value</span> <span class="keyword">in</span> the build file. Refer <span class="keyword">to</span> https://d.android.com/r/tools/upgrade-assistant/agp-upgrade-assistant <span class="keyword">for</span> general information about <span class="keyword">using</span> the AGP Upgrade Assistant.</span><br><span class="line">Affected Modules: xxx</span><br><span class="line">&gt;&gt; Ask Gemini</span><br><span class="line"></span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p>升级AGP8+ BuildConfig 找不到符号</p>
+<figure class="highlight asciidoc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">:3:</span> 错误: 找不到符号</span><br><span class="line">import com.xxxe.lib.BuildConfig;</span><br><span class="line"><span class="code">                           ^</span></span><br><span class="line"><span class="code">  符号:   类 BuildConfig</span></span><br><span class="line"><span class="code">  位置: 程序包 com.xxx.lib</span></span><br><span class="line">Ask Gemini</span><br><span class="line"><span class="comment">// 添加  buildConfig true</span></span><br><span class="line">buildFeatures &#123;</span><br><span class="line"><span class="code">  buildConfig true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>移除  <strong>kotlin-android-extensions</strong><br>报错：The ‘kotlin-android-extensions’ Gradle plugin is no longer supported. Please use this migration guide (<a href="https://link.juejin.cn/?target=https://goo.gle/kotlin-android-extensions-deprecation">goo.gle&#x2F;kotlin-andr…</a>) to start working with View Binding (<a target="_blank" rel="noopener" href="https://developer.android.google.cn/topic/libraries/view-binding?hl=zh-cn">developer.android.com&#x2F;topic&#x2F;libra…</a>) and the ‘kotlin-parcelize’ plugin. 在更高版本中，这个已经被移除了，如果项目中有大量使用的情况下<br>推荐使用这个依赖 <a target="_blank" rel="noopener" href="https://github.com/kanyun-inc/Kace">com.kanyun.kace:kace-gradle-plugin</a></p>
+</li>
+</ul>
+<h2 id="相关知识点"><a href="#相关知识点" class="headerlink" title="相关知识点"></a>相关知识点</h2><h3 id="在-View-中使用-Compose"><a href="#在-View-中使用-Compose" class="headerlink" title="在 View 中使用 Compose"></a><a target="_blank" rel="noopener" href="https://developer.android.google.cn/develop/ui/compose/migrate/interoperability-apis/compose-in-views?hl=zh-cn">在 View 中使用 Compose</a></h3><p>您可以将基于 Compose 的界面添加到采用基于 View 的设计的现有应用中。<br>如需创建完全基于 Compose 的新屏幕，请让 activity 调用 <code>setContent()</code> 方法，并传递您想要使用的任何可组合函数。  </p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//InteroperabilityAPIsSnippets.kt</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExampleActivity</span> : <span class="type">ComponentActivity</span></span>() &#123;</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onCreate</span><span class="params">(savedInstanceState: <span class="type">Bundle</span>?)</span></span> &#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState)</span><br><span class="line"></span><br><span class="line">        setContent &#123; <span class="comment">// In here, we can call composables!</span></span><br><span class="line">            MaterialTheme &#123;</span><br><span class="line">                Greeting(name = <span class="string">&quot;compose&quot;</span>)</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Composable</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">Greeting</span><span class="params">(name: <span class="type">String</span>)</span></span> &#123;</span><br><span class="line">    Text(text = <span class="string">&quot;Hello <span class="variable">$name</span>!&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这段代码看起来就和只含 Compose 元素的应用中的代码一样。   </p>
+<blockquote>
+<p>[!注意]<br>如需使用 <code>ComponentActivity.setContent</code> 方法，请将 <code>androidx.activity:activity-compose:$latestVersion</code> 依赖项添加到 <code>build.gradle</code> 文件中。<br>如需了解最新版本，请参阅 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/jetpack/androidx/releases/activity?hl=zh-cn">activity 版本页面</a>。</p>
+</blockquote>
+<h4 id="ComposeView-ViewCompositionStrategy"><a href="#ComposeView-ViewCompositionStrategy" class="headerlink" title="ComposeView:ViewCompositionStrategy"></a>ComposeView:ViewCompositionStrategy</h4><p><a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/kotlin/androidx/compose/ui/platform/ViewCompositionStrategy?hl=zh-cn"><code>ViewCompositionStrategy</code></a> 用于定义应何时处置组合。默认值 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/kotlin/androidx/compose/ui/platform/ViewCompositionStrategy?hl=zh-cn#Default()"><code>ViewCompositionStrategy.Default</code></a> 会在底层 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/kotlin/androidx/compose/ui/platform/ComposeView?hl=zh-cn"><code>ComposeView</code></a> 与窗口分离时处理组合，除非它是池容器（例如 <code>RecyclerView</code>）的一部分。在仅使用 Compose 的<strong>单 activity</strong> 应用中，您需要这种默认行为，但如果您要在代码库中<strong>逐步添加</strong> Compose，这种行为在某些情况下可能会导致<strong>状态丢失</strong>。<br>如需更改 <code>ViewCompositionStrategy</code>，请调用 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/kotlin/androidx/compose/ui/platform/AbstractComposeView?hl=zh-cn#setViewCompositionStrategy(androidx.compose.ui.platform.ViewCompositionStrategy)"><code>setViewCompositionStrategy()</code></a> 方法并提供其他策略。<br>下表总结了您可以使用 <code>ViewCompositionStrategy</code> 的不同场景：</p>
+<table>
+<thead>
+<tr>
+<th align="left"><code>ViewCompositionStrategy</code></th>
+<th align="left">说明和互操作性场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/kotlin/androidx/compose/ui/platform/ViewCompositionStrategy.DisposeOnDetachedFromWindow?hl=zh-cn"><code>DisposeOnDetachedFromWindow</code></a></td>
+<td align="left">当底层 <code>ComposeView</code> 与窗口分离时，系统会处置组合。已被 <code>DisposeOnDetachedFromWindowOrReleasedFromPool</code> 取代。  <br>Interop 场景：  <br>- <code>ComposeView</code>无论是在 View 层次结构中的唯一元素，还是在混合 View&#x2F;Compose 屏幕（而非 Fragment）的上下文中。</td>
+</tr>
+<tr>
+<td align="left"><a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/kotlin/androidx/compose/ui/platform/ViewCompositionStrategy.DisposeOnDetachedFromWindowOrReleasedFromPool?hl=zh-cn"><code>DisposeOnDetachedFromWindowOrReleasedFromPool</code></a>（<strong>默认</strong>）</td>
+<td align="left">与 <code>DisposeOnDetachedFromWindow</code> 类似，当组合不在池化容器（例如 <code>RecyclerView</code>）中时。如果它位于池化容器中，则会在池化容器本身从窗口分离时或项被舍弃时（即池已满时）进行处置。  <br>Interop 场景：  <br>- <code>ComposeView</code>无论它是 View 层次结构中的唯一元素，还是在混合 View&#x2F;Compose 屏幕（而非 Fragment）的上下文中。 <br>- <code>ComposeView</code> 作为池化容器（例如 <code>RecyclerView</code>）中的项。</td>
+</tr>
+<tr>
+<td align="left"><a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/kotlin/androidx/compose/ui/platform/ViewCompositionStrategy.DisposeOnLifecycleDestroyed?hl=zh-cn"><code>DisposeOnLifecycleDestroyed</code></a></td>
+<td align="left">提供的 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/androidx/lifecycle/Lifecycle?hl=zh-cn"><code>Lifecycle</code></a> 被销毁时，系统会处理组合。  <br>Interop 场景：  <br>- Fragment 视图中的 <code>ComposeView</code>。</td>
+</tr>
+<tr>
+<td align="left"><a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/kotlin/androidx/compose/ui/platform/ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed?hl=zh-cn"><code>DisposeOnViewTreeLifecycleDestroyed</code></a></td>
+<td align="left">当视图附加到的下一个窗口的 <code>ViewTreeLifecycleOwner.get</code> 返回的 <code>LifecycleOwner</code> 拥有的 <code>Lifecycle</code> 被销毁时，系统会处置组合。  <br>Interop 场景：   <br>- Fragment 的 View 中的 <code>ComposeView</code>。 <br>- 在生命周期尚未知晓的 View 中使用 <code>ComposeView</code>。</td>
+</tr>
+</tbody></table>
+<h4 id="Fragment-中的-ComposeView"><a href="#Fragment-中的-ComposeView" class="headerlink" title="Fragment 中的 ComposeView"></a>Fragment 中的 <code>ComposeView</code></h4><p>如果您要将 Compose 界面内容并入 fragment 或现有 View 布局，请使用 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/kotlin/androidx/compose/ui/platform/ComposeView?hl=zh-cn"><code>ComposeView</code></a> 并调用其 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/kotlin/androidx/compose/ui/platform/ComposeView?hl=zh-cn#setContent(kotlin.Function0)"><code>setContent()</code></a> 方法。<code>ComposeView</code> 是一个 Android <a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/android/view/View?hl=zh-cn"><code>View</code></a>。<br>您可以将 <code>ComposeView</code> 放在 XML 布局中，就像放置其他任何 <code>View</code> 一样：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">//migration_strategy_existing_screens.xml</span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">LinearLayout</span> <span class="attr">xmlns:android</span>=<span class="string">&quot;http://schemas.android.com/apk/res/android&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:orientation</span>=<span class="string">&quot;vertical&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_width</span>=<span class="string">&quot;match_parent&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_height</span>=<span class="string">&quot;match_parent&quot;</span>&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;<span class="name">TextView</span></span></span><br><span class="line"><span class="tag">      <span class="attr">android:id</span>=<span class="string">&quot;@+id/text&quot;</span></span></span><br><span class="line"><span class="tag">      <span class="attr">android:layout_width</span>=<span class="string">&quot;wrap_content&quot;</span></span></span><br><span class="line"><span class="tag">      <span class="attr">android:layout_height</span>=<span class="string">&quot;wrap_content&quot;</span> /&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;<span class="name">androidx.compose.ui.platform.ComposeView</span></span></span><br><span class="line"><span class="tag">      <span class="attr">android:id</span>=<span class="string">&quot;@+id/compose_view&quot;</span></span></span><br><span class="line"><span class="tag">      <span class="attr">android:layout_width</span>=<span class="string">&quot;match_parent&quot;</span></span></span><br><span class="line"><span class="tag">      <span class="attr">android:layout_height</span>=<span class="string">&quot;match_parent&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">LinearLayout</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>在 Kotlin 源代码中，通过 XML 中定义的<a target="_blank" rel="noopener" href="https://developer.android.google.cn/guide/topics/resources/layout-resource?hl=zh-cn">布局资源</a>使布局膨胀。然后，使用 XML ID 获取 <code>ComposeView</code>，设置最适合宿主 <code>View</code> 的组合策略，并调用 <code>setContent()</code> 以使用 Compose。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//InteroperabilityAPIsSnippets.kt</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExampleFragmentXml</span> : <span class="type">Fragment</span></span>() &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onCreateView</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">        inflater: <span class="type">LayoutInflater</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">        container: <span class="type">ViewGroup</span>?,</span></span></span><br><span class="line"><span class="params"><span class="function">        savedInstanceState: <span class="type">Bundle</span>?</span></span></span><br><span class="line"><span class="params"><span class="function">    )</span></span>: View &#123;</span><br><span class="line">        <span class="keyword">val</span> view = inflater.inflate(R.layout.fragment_example, container, <span class="literal">false</span>)</span><br><span class="line">        <span class="keyword">val</span> composeView = view.findViewById&lt;ComposeView&gt;(R.id.compose_view)</span><br><span class="line">        composeView.apply &#123;</span><br><span class="line">            <span class="comment">// Dispose of the Composition when the view&#x27;s LifecycleOwner</span></span><br><span class="line">            <span class="comment">// is destroyed</span></span><br><span class="line">            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)</span><br><span class="line">            setContent &#123;</span><br><span class="line">                <span class="comment">// In Compose world</span></span><br><span class="line">                MaterialTheme &#123;</span><br><span class="line">                    Text(<span class="string">&quot;Hello Compose!&quot;</span>)</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> view</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>或者，您也可以使用<strong>视图绑定</strong>来获取对 <code>ComposeView</code> 的引用，方法是引用 XML 布局文件生成的绑定类：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//InteroperabilityAPIsSnippets.kt</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExampleFragment</span> : <span class="type">Fragment</span></span>() &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">var</span> _binding: FragmentExampleBinding? = <span class="literal">null</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// This property is only valid between onCreateView and onDestroyView.</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">val</span> binding <span class="keyword">get</span>() = _binding!!</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onCreateView</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">        inflater: <span class="type">LayoutInflater</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">        container: <span class="type">ViewGroup</span>?,</span></span></span><br><span class="line"><span class="params"><span class="function">        savedInstanceState: <span class="type">Bundle</span>?</span></span></span><br><span class="line"><span class="params"><span class="function">    )</span></span>: View &#123;</span><br><span class="line">        _binding = FragmentExampleBinding.inflate(inflater, container, <span class="literal">false</span>)</span><br><span class="line">        <span class="keyword">val</span> view = binding.root</span><br><span class="line">        binding.composeView.apply &#123;</span><br><span class="line">            <span class="comment">// Dispose of the Composition when the view&#x27;s LifecycleOwner</span></span><br><span class="line">            <span class="comment">// is destroyed</span></span><br><span class="line">            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)</span><br><span class="line">            setContent &#123;</span><br><span class="line">                <span class="comment">// In Compose world</span></span><br><span class="line">                MaterialTheme &#123;</span><br><span class="line">                    Text(<span class="string">&quot;Hello Compose!&quot;</span>)</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> view</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onDestroyView</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="keyword">super</span>.onDestroyView()</span><br><span class="line">        _binding = <span class="literal">null</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/posts/6186ffb3/interop-hellos.png" alt="两个略有不同的文本元素，一个在另一个之上"><br><strong>图 1.</strong> 此图显示了在 View 界面层次结构中添加 Compose 元素的代码的输出。“Hello Android!”文本由 <code>TextView</code> 微件显示。“Hello Compose!”文本由 Compose 文本元素显示。</p>
+<p>如果整个屏幕是使用 Compose 构建的，您还可以直接在 fragment 中添加 <code>ComposeView</code>，这样可让您完全避免使用 XML 布局文件。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//InteroperabilityAPIsSnippets.kt</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExampleFragmentNoXml</span> : <span class="type">Fragment</span></span>() &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onCreateView</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">        inflater: <span class="type">LayoutInflater</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">        container: <span class="type">ViewGroup</span>?,</span></span></span><br><span class="line"><span class="params"><span class="function">        savedInstanceState: <span class="type">Bundle</span>?</span></span></span><br><span class="line"><span class="params"><span class="function">    )</span></span>: View &#123;</span><br><span class="line">        <span class="keyword">return</span> ComposeView(requireContext()).apply &#123;</span><br><span class="line">            <span class="comment">// Dispose of the Composition when the view&#x27;s LifecycleOwner</span></span><br><span class="line">            <span class="comment">// is destroyed</span></span><br><span class="line">            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)</span><br><span class="line">            setContent &#123;</span><br><span class="line">                MaterialTheme &#123;</span><br><span class="line">                    <span class="comment">// In Compose world</span></span><br><span class="line">                    Text(<span class="string">&quot;Hello Compose!&quot;</span>)</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="同一布局中的多个-ComposeView-实例"><a href="#同一布局中的多个-ComposeView-实例" class="headerlink" title="同一布局中的多个 ComposeView 实例"></a>同一布局中的多个 <code>ComposeView</code> 实例</h4><p>如果同一布局中存在多个 <code>ComposeView</code> 元素，每个元素必须具有<strong>唯一的 ID</strong> 才能使 <code>savedInstanceState</code> 发挥作用。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//InteroperabilityAPIsSnippets.kt</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExampleFragmentMultipleComposeView</span> : <span class="type">Fragment</span></span>() &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onCreateView</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">        inflater: <span class="type">LayoutInflater</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">        container: <span class="type">ViewGroup</span>?,</span></span></span><br><span class="line"><span class="params"><span class="function">        savedInstanceState: <span class="type">Bundle</span>?</span></span></span><br><span class="line"><span class="params"><span class="function">    )</span></span>: View = LinearLayout(requireContext()).apply &#123;</span><br><span class="line">        addView(</span><br><span class="line">            ComposeView(requireContext()).apply &#123;</span><br><span class="line">                setViewCompositionStrategy(</span><br><span class="line">                    ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed</span><br><span class="line">                )</span><br><span class="line">                id = R.id.compose_view_x</span><br><span class="line">                <span class="comment">// ...</span></span><br><span class="line">            &#125;</span><br><span class="line">        )</span><br><span class="line">        addView(TextView(requireContext()))</span><br><span class="line">        addView(</span><br><span class="line">            ComposeView(requireContext()).apply &#123;</span><br><span class="line">                setViewCompositionStrategy(</span><br><span class="line">                    ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed</span><br><span class="line">                )</span><br><span class="line">                id = R.id.compose_view_y</span><br><span class="line">                <span class="comment">// ...</span></span><br><span class="line">            &#125;</span><br><span class="line">        )</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p><code>ComposeView</code> ID 在 <code>res/values/ids.xml</code> 文件中进行定义：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">//ids.xml</span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">resources</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">item</span> <span class="attr">name</span>=<span class="string">&quot;compose_view_x&quot;</span> <span class="attr">type</span>=<span class="string">&quot;id&quot;</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">item</span> <span class="attr">name</span>=<span class="string">&quot;compose_view_y&quot;</span> <span class="attr">type</span>=<span class="string">&quot;id&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">resources</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="在布局编辑器中预览可组合项"><a href="#在布局编辑器中预览可组合项" class="headerlink" title="在布局编辑器中预览可组合项"></a>在布局编辑器中预览可组合项</h4><p>您还可以在布局编辑器中预览包含 <code>ComposeView</code> 的 XML 布局的可组合项。这样，您就可以在混合使用 View 和 Compose 的布局中查看可组合项的外观。<br>假设您想在布局编辑器中显示以下可组合项。请注意，带有 <code>@Preview</code> 注解的可组合项是适合在布局编辑器中预览的理想对象。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//InteroperabilityAPIsSnippets.kt</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@Preview</span></span><br><span class="line"><span class="meta">@Composable</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">GreetingPreview</span><span class="params">()</span></span> &#123;</span><br><span class="line">    Greeting(name = <span class="string">&quot;Android&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如需显示此可组合项，请使用 <code>tools:composableName</code>  tools 属性，并将其值设置为要在布局中预览的可组合项的<strong>完全限定名称</strong>。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">//interop_layout_preview_composable.xml</span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">LinearLayout</span> <span class="attr">xmlns:android</span>=<span class="string">&quot;http://schemas.android.com/apk/res/android&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:tools</span>=<span class="string">&quot;http://schemas.android.com/tools&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:orientation</span>=<span class="string">&quot;vertical&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_width</span>=<span class="string">&quot;match_parent&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_height</span>=<span class="string">&quot;match_parent&quot;</span>&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;<span class="name">androidx.compose.ui.platform.ComposeView</span></span></span><br><span class="line"><span class="tag">      <span class="attr">android:id</span>=<span class="string">&quot;@+id/my_compose_view&quot;</span></span></span><br><span class="line"><span class="tag">      <span class="attr">tools:composableName</span>=<span class="string">&quot;com.example.compose.snippets.interop.InteroperabilityAPIsSnippetsKt.GreetingPreview&quot;</span></span></span><br><span class="line"><span class="tag">      <span class="attr">android:layout_height</span>=<span class="string">&quot;match_parent&quot;</span></span></span><br><span class="line"><span class="tag">      <span class="attr">android:layout_width</span>=<span class="string">&quot;match_parent&quot;</span>/&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">LinearLayout</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/posts/6186ffb3/layout-editor-composable-preview.png" alt="布局编辑器中显示的可组合项"></p>
+<h4 id="后续步骤"><a href="#后续步骤" class="headerlink" title="后续步骤"></a>后续步骤</h4><p>现在，您已经了解了在 View 中使用 Compose 的互操作性 API，接下来不妨了解如何<a href="#%5B%E5%9C%A8%20Compose%20%E4%B8%AD%E4%BD%BF%E7%94%A8%20View%5D(https%20//developer.android.google.cn/develop/ui/compose/migrate/interoperability-apis/views-in-compose?hl=zh-cn)">在 Compose 中使用 View</a>。</p>
+<h3 id="在-Compose-中使用-View"><a href="#在-Compose-中使用-View" class="headerlink" title="在 Compose 中使用 View"></a><a target="_blank" rel="noopener" href="https://developer.android.google.cn/develop/ui/compose/migrate/interoperability-apis/views-in-compose?hl=zh-cn">在 Compose 中使用 View</a></h3><p>您可以在 Compose 界面中添加 Android View 层次结构。如果您要使用 Compose 中尚未提供的界面元素（如 <a target="_blank" rel="noopener" href="https://developers.google.cn/android/reference/com/google/android/gms/ads/AdView?hl=zh-cn"><code>AdView</code></a>），此方法特别有用。此方法还可让您重复使用您可能已设计的自定义视图。</p>
+<p>如需添加视图元素或层次结构，请使用 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/kotlin/androidx/compose/ui/viewinterop/package-summary?hl=zh-cn#AndroidView(kotlin.Function1,androidx.compose.ui.Modifier,kotlin.Function1)"><code>AndroidView</code> </a>可组合项。系统会向 <code>AndroidView</code> 传递一个返回 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/android/view/View?hl=zh-cn"><code>View</code></a> 的 lambda。<code>AndroidView</code> 还提供了在视图膨胀时被调用的 <code>update</code> 回调。每当在该回调中读取的 <code>State</code> 发生变化时，<code>AndroidView</code> 都会重组。与许多其他内置可组合项一样，<code>AndroidView</code> 接受 <code>Modifier</code> 参数，该参数可用于设置它在父级可组合项中的位置等用途。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//InteroperabilityAPIsSnippets.kt</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@Composable</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">CustomView</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> selectedItem <span class="keyword">by</span> remember &#123; mutableStateOf(<span class="number">0</span>) &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Adds view to Compose</span></span><br><span class="line">    AndroidView(</span><br><span class="line">        modifier = Modifier.fillMaxSize(), <span class="comment">// Occupy the max size in the Compose UI tree</span></span><br><span class="line">        factory = &#123; context -&gt;</span><br><span class="line">            <span class="comment">// Creates view</span></span><br><span class="line">            MyView(context).apply &#123;</span><br><span class="line">                <span class="comment">// Sets up listeners for View -&gt; Compose communication</span></span><br><span class="line">                setOnClickListener &#123;</span><br><span class="line">                    selectedItem = <span class="number">1</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;,</span><br><span class="line">        update = &#123; view -&gt;</span><br><span class="line">            <span class="comment">// View&#x27;s been inflated or state read in this block has been updated</span></span><br><span class="line">            <span class="comment">// Add logic here if necessary</span></span><br><span class="line"></span><br><span class="line">            <span class="comment">// As selectedItem is read here, AndroidView will recompose</span></span><br><span class="line">            <span class="comment">// whenever the state changes</span></span><br><span class="line">            <span class="comment">// Example of Compose -&gt; View communication</span></span><br><span class="line">            view.selectedItem = selectedItem</span><br><span class="line">        &#125;</span><br><span class="line">    )</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Composable</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">ContentExample</span><span class="params">()</span></span> &#123;</span><br><span class="line">    Column(Modifier.fillMaxSize()) &#123;</span><br><span class="line">        Text(<span class="string">&quot;Look at this CustomView!&quot;</span>)</span><br><span class="line">        CustomView()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>[!注意]<br>最好在 <code>AndroidView</code> <code>factory</code> lambda 中构建一个 View，而不是使用 <code>remember</code> 在 <code>AndroidView</code> 之外保存对 View 的直接引用。</p>
+</blockquote>
+<h4 id="使用视图绑定的-AndroidView"><a href="#使用视图绑定的-AndroidView" class="headerlink" title="使用视图绑定的 AndroidView"></a>使用视图绑定的 <code>AndroidView</code></h4><p>如需嵌入 XML 布局，请使用 <code>androidx.compose.ui:ui-viewbinding</code> 库提供的 [<code>AndroidViewBinding</code>](<a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/kotlin/androidx/compose/ui/viewinterop/package-summary?hl=zh-cn#AndroidViewBinding">https://developer.android.google.cn/reference/kotlin/androidx/compose/ui/viewinterop/package-summary?hl=zh-cn#AndroidViewBinding</a>(kotlin.Function3, androidx.compose.ui.Modifier, kotlin.Function1)) API。为此，您的项目必须启用<a target="_blank" rel="noopener" href="https://developer.android.google.cn/topic/libraries/view-binding?hl=zh-cn#setup">视图绑定</a>。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//InteroperabilityAPIsSnippets.kt</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@Composable</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">AndroidViewBindingExample</span><span class="params">()</span></span> &#123;</span><br><span class="line">    AndroidViewBinding(ExampleLayoutBinding::inflate) &#123;</span><br><span class="line">        exampleView.setBackgroundColor(Color.GRAY)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="延迟列表中的-AndroidView"><a href="#延迟列表中的-AndroidView" class="headerlink" title="延迟列表中的 AndroidView"></a>延迟列表中的 <code>AndroidView</code></h4><p>如果您在延迟列表（<code>LazyColumn</code>、<code>LazyRow</code>、<code>Pager</code> 等）中使用 <code>AndroidView</code>，请考虑使用版本 <code>1.4.0-rc01</code> 中引入的 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/kotlin/androidx/compose/ui/viewinterop/package-summary?hl=zh-cn#AndroidView(kotlin.Function1,kotlin.Function1,androidx.compose.ui.Modifier,kotlin.Function1,kotlin.Function1)"><code>AndroidView</code></a> 重载。借助此重载，当包含的组合被重复使用时，Compose 可以重复使用底层 <code>View</code> 实例，就像延迟列表一样。<br><code>AndroidView</code> 的此重载会添加 2 个额外的参数：  </p>
+<ul>
+<li><code>onReset</code> - 调用的回调，用于指示 <code>View</code> 即将被<strong>重复使用</strong>。此值必须<strong>不为 null</strong>，才能实现 View 重用。</li>
+<li><code>onRelease</code>（可选）- 调用的回调，用于指示 <code>View</code> 已退出组合，且不会再次重复使用。</li>
+</ul>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//InteroperabilityAPIsSnippets.kt</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@OptIn(ExperimentalComposeUiApi::class)</span></span><br><span class="line"><span class="meta">@Composable</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">AndroidViewInLazyList</span><span class="params">()</span></span> &#123;</span><br><span class="line">    LazyColumn &#123;</span><br><span class="line">        items(<span class="number">100</span>) &#123; index -&gt;</span><br><span class="line">            AndroidView(</span><br><span class="line">                modifier = Modifier.fillMaxSize(), <span class="comment">// Occupy the max size in the Compose UI tree</span></span><br><span class="line">                factory = &#123; context -&gt;</span><br><span class="line">                    MyView(context)</span><br><span class="line">                &#125;,</span><br><span class="line">                update = &#123; view -&gt;</span><br><span class="line">                    view.selectedItem = index</span><br><span class="line">                &#125;,</span><br><span class="line">                onReset = &#123; view -&gt;</span><br><span class="line">                    view.clear()</span><br><span class="line">                &#125;</span><br><span class="line">            )</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h4 id="Compose-中的-fragment"><a href="#Compose-中的-fragment" class="headerlink" title="Compose 中的 fragment"></a>Compose 中的 fragment</h4><p>使用 <code>AndroidViewBinding</code> 可组合项在 Compose 中添加 <code>Fragment</code>。<code>AndroidViewBinding</code> 包含特定于 fragment 的处理方式，例如当可组合项退出组合时移除 fragment。<br>为此，请将包含 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/androidx/fragment/app/FragmentContainerView?hl=zh-cn"><code>FragmentContainerView</code></a> 作为您 <code>Fragment</code> 容器的 XML 膨胀。</p>
+<p>例如，如果您已定义 <code>my_fragment_layout.xml</code>，那么在将 <code>android:name</code> XML 属性替换为 <code>Fragment</code> 的类名称时，您可以使用如下代码：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">//my_fragment_layout.xml</span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">androidx.fragment.app.FragmentContainerView</span> <span class="attr">xmlns:android</span>=<span class="string">&quot;http://schemas.android.com/apk/res/android&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:id</span>=<span class="string">&quot;@+id/fragment_container_view&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_width</span>=<span class="string">&quot;match_parent&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_height</span>=<span class="string">&quot;match_parent&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:name</span>=<span class="string">&quot;com.example.compose.snippets.interop.MyFragment&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>在 Compose 中膨胀此 fragment，如下所示：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//InteroperabilityAPIsSnippets.kt</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@Composable</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">FragmentInComposeExample</span><span class="params">()</span></span> &#123;</span><br><span class="line">    AndroidViewBinding(MyFragmentLayoutBinding::inflate) &#123;</span><br><span class="line">        <span class="keyword">val</span> myFragment = fragmentContainerView.getFragment&lt;MyFragment&gt;()</span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果您需要在同一布局中使用多个 fragment，请确保您已为每个 <code>FragmentContainerView</code> 定义<strong>唯一 ID</strong>。</p>
+<h4 id="从-Compose-调用-Android-框架"><a href="#从-Compose-调用-Android-框架" class="headerlink" title="从 Compose 调用 Android 框架"></a>从 Compose 调用 Android 框架</h4><p>Compose 在 Android 框架类中运行。例如，它托管在 Android View 类（如 <code>Activity</code> 或 <code>Fragment</code>）上，并且可能会使用 Android 框架类（如 <code>Context</code>、系统资源、<code>Service</code> 或 <code>BroadcastReceiver</code>）。<br>如需详细了解系统资源，请参阅 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/develop/ui/compose/resources?hl=zh-cn">Compose 中的资源</a>。</p>
+<h5 id="CompositionLocal"><a href="#CompositionLocal" class="headerlink" title="CompositionLocal"></a>CompositionLocal</h5><p><a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/kotlin/androidx/compose/runtime/CompositionLocal?hl=zh-cn"><code>CompositionLocal</code></a> 类允许通过可组合函数<strong>隐式传递数据</strong>。它们通常在界面树的某个节点具有一个值。该值可供其可组合项的<strong>后代</strong>使用，而无需在可组合函数中将 <code>CompositionLocal</code> 声明为参数。  </p>
+<p><code>CompositionLocal</code> 用于为 Compose 中的 Android 框架类型（例如 <code>Context</code>、<code>Configuration</code> 或 <code>View</code>）传播值，其中 Compose 代码与相应的 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/kotlin/androidx/compose/ui/platform/package-summary?hl=zh-cn#LocalContext()"><code>LocalContext</code></a>、<a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/kotlin/androidx/compose/ui/platform/package-summary?hl=zh-cn#LocalConfiguration()"><code>LocalConfiguration</code></a> 或 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/kotlin/androidx/compose/ui/platform/package-summary?hl=zh-cn#LocalView()"><code>LocalView</code></a> 一起托管。请注意，<code>CompositionLocal</code> 类的前缀是 <code>Local</code>，以便于 IDE 中的自动补全功能更轻松地检测到这些类。  </p>
+<p><code>CompositionLocal</code> 的当前值可通过它的 <code>current</code> 属性进行访问。例如，以下代码通过向 <code>Toast.makeToast</code> 方法提供 <code>LocalContext.current</code> 来显示消息框消息。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//InteroperabilityAPIsSnippets.kt</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@Composable</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">ToastGreetingButton</span><span class="params">(greeting: <span class="type">String</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">val</span> context = LocalContext.current</span><br><span class="line">    Button(onClick = &#123;</span><br><span class="line">        Toast.makeText(context, greeting, Toast.LENGTH_SHORT).show()</span><br><span class="line">    &#125;) &#123;</span><br><span class="line">        Text(<span class="string">&quot;Greet&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如需查看更完整的示例，请参阅本文档末尾的<a href="#%E6%A1%88%E4%BE%8B%E7%A0%94%E7%A9%B6%EF%BC%9ABroadcastReceiver">案例研究：BroadcastReceiver</a> 部分。</p>
+<h4 id="其他交互"><a href="#其他交互" class="headerlink" title="其他交互"></a>其他交互</h4><p>如果没有为您需要的交互定义实用程序，最佳实践是遵循常规 Compose 准则，即<strong>数据向下流动</strong>而<strong>事件向上流动</strong>（<a target="_blank" rel="noopener" href="https://developer.android.google.cn/develop/ui/compose/mental-model?hl=zh-cn">Compose 编程思想</a>一文对此进行了更为详细的说明）。例如，以下可组合函数会启动一个不同的 activity：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//InteroperabilityAPIsSnippets.kt</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">OtherInteractionsActivity</span> : <span class="type">ComponentActivity</span></span>() &#123;</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onCreate</span><span class="params">(savedInstanceState: <span class="type">Bundle</span>?)</span></span> &#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState)</span><br><span class="line">        <span class="comment">// get data from savedInstanceState</span></span><br><span class="line">        setContent &#123;</span><br><span class="line">            MaterialTheme &#123;</span><br><span class="line">                ExampleComposable(<span class="keyword">data</span>, onButtonClick = &#123;</span><br><span class="line">                    startActivity(Intent(<span class="keyword">this</span>, MyActivity::<span class="keyword">class</span>.java))</span><br><span class="line">                &#125;)</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Composable</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">ExampleComposable</span><span class="params">(<span class="keyword">data</span>: <span class="type">DataExample</span>, onButtonClick: () -&gt; <span class="type">Unit</span>)</span></span> &#123;</span><br><span class="line">    Button(onClick = onButtonClick) &#123;</span><br><span class="line">        Text(<span class="keyword">data</span>.title)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="案例研究：BroadcastReceiver"><a href="#案例研究：BroadcastReceiver" class="headerlink" title="案例研究：BroadcastReceiver"></a>案例研究：BroadcastReceiver</h4><p>举一个更实际的例子，您可能想要迁移一些功能或在 Compose 中实现一些功能，以及展示 <code>CompositionLocal</code> 和<a target="_blank" rel="noopener" href="https://developer.android.google.cn/develop/ui/compose/side-effects?hl=zh-cn">附带效应</a>，在这种情况下，需要通过可组合函数注册 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/guide/components/broadcasts?hl=zh-cn"><code>BroadcastReceiver</code></a>。</p>
+<p>该解决方案利用 <code>LocalContext</code> 来使用当前上下文以及 <code>rememberUpdatedState</code> 和 <code>DisposableEffect</code> 附带效应。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//InteroperabilityAPIsSnippets.kt</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@Composable</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">SystemBroadcastReceiver</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    systemAction: <span class="type">String</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">    onSystemEvent: (<span class="type">intent</span>: <span class="type">Intent</span>?) -&gt; <span class="type">Unit</span></span></span></span><br><span class="line"><span class="params"><span class="function">)</span></span> &#123;</span><br><span class="line">    <span class="comment">// Grab the current context in this part of the UI tree</span></span><br><span class="line">    <span class="keyword">val</span> context = LocalContext.current</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Safely use the latest onSystemEvent lambda passed to the function</span></span><br><span class="line">    <span class="keyword">val</span> currentOnSystemEvent <span class="keyword">by</span> rememberUpdatedState(onSystemEvent)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// If either context or systemAction changes, unregister and register again</span></span><br><span class="line">    DisposableEffect(context, systemAction) &#123;</span><br><span class="line">        <span class="keyword">val</span> intentFilter = IntentFilter(systemAction)</span><br><span class="line">        <span class="keyword">val</span> broadcast = <span class="keyword">object</span> : BroadcastReceiver() &#123;</span><br><span class="line">            <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onReceive</span><span class="params">(context: <span class="type">Context</span>?, intent: <span class="type">Intent</span>?)</span></span> &#123;</span><br><span class="line">                currentOnSystemEvent(intent)</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        context.registerReceiver(broadcast, intentFilter)</span><br><span class="line"></span><br><span class="line">        <span class="comment">// When the effect leaves the Composition, remove the callback</span></span><br><span class="line">        onDispose &#123;</span><br><span class="line">            context.unregisterReceiver(broadcast)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Composable</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">HomeScreen</span><span class="params">()</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    SystemBroadcastReceiver(Intent.ACTION_BATTERY_CHANGED) &#123; batteryStatus -&gt;</span><br><span class="line">        <span class="keyword">val</span> isCharging = <span class="comment">/* Get from batteryStatus ... */</span> <span class="literal">true</span></span><br><span class="line">        <span class="comment">/* Do something if the device is charging */</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Rest of the HomeScreen */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h4 id="后续步骤-1"><a href="#后续步骤-1" class="headerlink" title="后续步骤"></a>后续步骤</h4><p>现在，您已经了解在 View 中使用 Compose 以及在 Compose 中使用 View 时的互操作性 API。如需了解更多内容，可以浏览<a href="#%E5%85%B6%E4%BB%96%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9">其他注意事项</a>页面。</p>
+<h3 id="其他注意事项"><a href="#其他注意事项" class="headerlink" title="其他注意事项"></a>其他注意事项</h3><p>虽然从 View 迁移到 Compose 仅与界面相关，但若要执行安全的增量迁移，需要考虑的因素有很多。本页介绍了将基于 View 的应用迁移到 Compose 时的一些注意事项。</p>
+<h4 id="迁移应用主题"><a href="#迁移应用主题" class="headerlink" title="迁移应用主题"></a>迁移应用主题</h4><p>推荐使用 Material Design 设计系统来为 Android 应用设置主题。</p>
+<p>对于基于 View 的应用，可以使用三个 Material 版本：</p>
+<ul>
+<li>使用 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/jetpack/androidx/releases/appcompat?hl=zh-cn">AppCompat</a> 库（即 <code>Theme.AppCompat.*</code>）的 Material Design 1</li>
+<li>使用 <a target="_blank" rel="noopener" href="https://github.com/material-components/material-components-android">MDC-Android</a> 库（即 <code>Theme.MaterialComponents.*</code>）的 Material Design 2</li>
+<li>使用 <a target="_blank" rel="noopener" href="https://github.com/material-components/material-components-android">MDC-Android</a> 库（即 <code>Theme.Material3.*</code>）的 Material Design 3</li>
+</ul>
+<p>对于 Compose 应用，可以使用两个 Material 版本：</p>
+<ul>
+<li>使用 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/jetpack/androidx/releases/compose-material?hl=zh-cn">Compose Material</a> 库（即 <code>androidx.compose.material.MaterialTheme</code>）的 Material Design 2</li>
+<li>使用 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/jetpack/androidx/releases/compose-material3?hl=zh-cn">Compose Material 3</a> 库（即 <code>androidx.compose.material3.MaterialTheme</code>）的 Material Design 3</li>
+</ul>
+<p>如果应用的设计系统符合要求，建议您使用最新版本 (Material 3)。View 和 Compose 都有相应的迁移指南：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://material.io/blog/migrate-android-material-components">在 View 中从 Material 1 迁移到 Material 2</a></li>
+<li><a target="_blank" rel="noopener" href="https://material.io/blog/migrating-material-3">在 View 中从 Material 2 迁移到 Material 3</a></li>
+<li><a target="_blank" rel="noopener" href="https://developer.android.google.cn/develop/ui/compose/designsystems/material2-material3?hl=zh-cn">在 Compose 中从 Material 2 迁移到 Material 3</a></li>
+</ul>
+<p>在 Compose 中创建新屏幕时，无论您使用的是哪个版本的 Material Design，都请确保先应用 <code>MaterialTheme</code>，然后再应用任何从 Compose Material 库发出界面的可组合项。Material 组件（<code>Button</code>、<code>Text</code> 等）依赖于现有的 <code>MaterialTheme</code>，如果没有 MaterialTheme，这些组件的行为将处于未定义状态。</p>
+<p>所有 <a target="_blank" rel="noopener" href="https://github.com/android/compose-samples">Jetpack Compose 示例</a>都使用基于 <code>MaterialTheme</code> 构建的自定义 Compose 主题。</p>
+<p>如需了解详情，请参阅 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/develop/ui/compose/designsystems?hl=zh-cn">Compose 中的设计系统</a>和<a target="_blank" rel="noopener" href="https://developer.android.google.cn/develop/ui/compose/designsystems/views-to-compose?hl=zh-cn">将 XML 主题迁移到 Compose</a>。</p>
+<h4 id="导航"><a href="#导航" class="headerlink" title="导航"></a>导航</h4><p>如果您在应用中使用了 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/guide/navigation/get-started?hl=zh-cn">Navigation 组件</a>，请参阅<a target="_blank" rel="noopener" href="https://developer.android.google.cn/develop/ui/compose/navigation?hl=zh-cn#interoperability">使用 Compose 进行导航 - 互操作性</a>和<a target="_blank" rel="noopener" href="https://developer.android.google.cn/develop/ui/compose/migrate/migration-scenarios/navigation?hl=zh-cn">将 Jetpack Navigation 迁移到 Navigation Compose</a>，了解详情。</p>
+<h4 id="测试混合-Compose-x2F-View-界面"><a href="#测试混合-Compose-x2F-View-界面" class="headerlink" title="测试混合 Compose&#x2F;View 界面"></a>测试混合 Compose&#x2F;View 界面</h4><p>将应用的某些部分迁移到 Compose 后，若要确保您没有破坏任何内容，测试至关重要。<br>当 activity 或 fragment 使用 Compose 时，您需要使用 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/kotlin/androidx/compose/ui/test/junit4/package-summary?hl=zh-cn#createAndroidComposeRule()"><code>createAndroidComposeRule</code></a>，而不是 <code>ActivityScenarioRule</code>。<code>createAndroidComposeRule</code> 会将 <code>ActivityScenarioRule</code> 与 <code>ComposeTestRule</code> 集成，让您可以同时测试 Compose 和 View 代码。</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/android/snippets/blob/a37e65129e087db5aeea808411ed1d2653a22b69/compose/snippets/src/androidTest/java/com/example/compose/snippets/interop/AddingComposeToYourAppSnippets.kt#L29-L41">AddingComposeToYourAppSnippets.kt</a></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyActivityTest</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Rule</span></span><br><span class="line">    <span class="meta">@JvmField</span></span><br><span class="line">    <span class="keyword">val</span> composeTestRule = createAndroidComposeRule&lt;MyActivity&gt;()</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">testGreeting</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="keyword">val</span> greeting = InstrumentationRegistry.getInstrumentation()</span><br><span class="line">            .targetContext.resources.getString(R.string.greeting)</span><br><span class="line"></span><br><span class="line">        composeTestRule.onNodeWithText(greeting).assertIsDisplayed()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如需详细了解测试，请参阅<a target="_blank" rel="noopener" href="https://developer.android.google.cn/develop/ui/compose/testing?hl=zh-cn">测试 Compose 布局</a>。如需了解与界面测试框架的互操作性，请参阅<a target="_blank" rel="noopener" href="https://developer.android.google.cn/develop/ui/compose/testing?hl=zh-cn#espresso-interop">与 Espresso 的互操作性</a>和<a target="_blank" rel="noopener" href="https://developer.android.google.cn/develop/ui/compose/testing?hl=zh-cn#uiautomator-interop">与 UiAutomator 的互操作性</a>。</p>
+<h4 id="将-Compose-与您现有的应用架构集成"><a href="#将-Compose-与您现有的应用架构集成" class="headerlink" title="将 Compose 与您现有的应用架构集成"></a>将 Compose 与您现有的应用架构集成</h4><p><a target="_blank" rel="noopener" href="https://developer.android.google.cn/develop/ui/compose/architecture?hl=zh-cn#udf">单向数据流</a> (UDF) 架构模式可与 Compose 无缝协作。如果应用改用其他类型的架构模式，例如 Model View Presenter (MVP)，我们建议您在采用 Compose 之前或期间将界面中的相应部分迁移到 UDF。</p>
+<h5 id="在-Compose-中使用-ViewModel"><a href="#在-Compose-中使用-ViewModel" class="headerlink" title="在 Compose 中使用 ViewModel"></a>在 Compose 中使用 <code>ViewModel</code></h5><p>如果您使用 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/topic/libraries/architecture/viewmodel?hl=zh-cn">Architecture Components <code>ViewModel</code></a> 库，可以通过调用 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/kotlin/androidx/lifecycle/viewmodel/compose/package-summary?hl=zh-cn#viewmodel"><code>viewModel()</code></a> 函数，从任意可组合项访问 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/androidx/lifecycle/ViewModel?hl=zh-cn"><code>ViewModel</code></a>，如 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/develop/ui/compose/libraries?hl=zh-cn">Compose 和其他库</a>中所述。</p>
+<blockquote>
+<p>[!注意]<br>考虑到该函数的<a target="_blank" rel="noopener" href="https://developer.android.google.cn/topic/libraries/architecture/viewmodel?hl=zh-cn#lifecycle">生命周期和作用域</a>，您应该在屏幕级可组合项中访问并调用 <code>ViewModel</code> 实例，也就是接近于从 activity、fragment 或导航图的目的地调用的根级可组合项。切勿将 <code>ViewModel</code> 实例传递给其他可组合项。请仅传递它们需要的数据以及将所需逻辑作为参数来执行的函数。</p>
+</blockquote>
+<p>采用 Compose 时，请务必注意在不同的可组合项中使用相同的 <code>ViewModel</code> 类型，因为 <code>ViewModel</code> 元素遵循视图生命周期作用域。如果使用 Navigation 库，作用域是主机 activity、fragment 或导航图。</p>
+<blockquote>
+<p>[!注意]<br>除非可组合项是导航图中的目标位置或者 activity 或 fragment 实例不同，否则 <code>ViewModel</code> 类型的相同实例会在所有可组合项中使用。</p>
+</blockquote>
+<p>例如，如果可组合项托管在 activity 中，<code>viewModel()</code> 始终返回相同实例，该实例只有在 activity 完成时才被清除。在以下示例中，系统会向同一用户（“user1”）显示两次问候语，因为主机 activity 中所有可组合项都重复使用了相同的 <code>GreetingViewModel</code> 实例。其他可组合项重复使用了创建的第一个 <code>ViewModel</code> 实例。</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/android/snippets/blob/a37e65129e087db5aeea808411ed1d2653a22b69/compose/snippets/src/main/java/com/example/compose/snippets/interop/ComposeExistingArchSnippets.kt#L49-L85">ComposeExistingArchSnippets.kt</a></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">GreetingActivity</span> : <span class="type">ComponentActivity</span></span>() &#123;</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onCreate</span><span class="params">(savedInstanceState: <span class="type">Bundle</span>?)</span></span> &#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState)</span><br><span class="line"></span><br><span class="line">        setContent &#123;</span><br><span class="line">            MaterialTheme &#123;</span><br><span class="line">                Column &#123;</span><br><span class="line">                    GreetingScreen(<span class="string">&quot;user1&quot;</span>)</span><br><span class="line">                    GreetingScreen(<span class="string">&quot;user2&quot;</span>)</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Composable</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">GreetingScreen</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    userId: <span class="type">String</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">    viewModel: <span class="type">GreetingViewModel</span> = viewModel(  </span></span></span><br><span class="line"><span class="params"><span class="function">        factory = GreetingViewModelFactory(userId)</span></span>  </span><br><span class="line">    )</span><br><span class="line">) &#123;</span><br><span class="line">    <span class="keyword">val</span> messageUser <span class="keyword">by</span> viewModel.message.observeAsState(<span class="string">&quot;&quot;</span>)</span><br><span class="line">    Text(messageUser)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">GreetingViewModel</span></span>(<span class="keyword">private</span> <span class="keyword">val</span> userId: String) : ViewModel() &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">val</span> _message = MutableLiveData(<span class="string">&quot;Hi <span class="variable">$userId</span>&quot;</span>)</span><br><span class="line">    <span class="keyword">val</span> message: LiveData&lt;String&gt; = _message</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">GreetingViewModelFactory</span></span>(<span class="keyword">private</span> <span class="keyword">val</span> userId: String) : ViewModelProvider.Factory &#123;</span><br><span class="line">    <span class="meta">@Suppress(<span class="string">&quot;UNCHECKED_CAST&quot;</span>)</span></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;T : ViewModel&gt;</span> <span class="title">create</span><span class="params">(modelClass: <span class="type">Class</span>&lt;<span class="type">T</span>&gt;)</span></span>: T &#123;</span><br><span class="line">        <span class="keyword">return</span> GreetingViewModel(userId) <span class="keyword">as</span> T</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>由于导航图还限定了 <code>ViewModel</code> 元素的作用域，因此作为导航图中某个目标位置的可组合项具有不同的 <code>ViewModel</code> 实例。在这种情况下，<code>ViewModel</code> 的作用域是目标位置的生命周期，它会在从返回堆栈中移除目标位置时被清除。在以下示例中，当用户转到“个人资料”屏幕时，系统会创建新的 <code>GreetingViewModel</code> 实例。</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/android/snippets/blob/a37e65129e087db5aeea808411ed1d2653a22b69/compose/snippets/src/main/java/com/example/compose/snippets/interop/ComposeExistingArchSnippets.kt#L89-L97">ComposeExistingArchSnippets.kt</a></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Composable</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">MyApp</span><span class="params">()</span></span> &#123;</span><br><span class="line">    NavHost(rememberNavController(), startDestination = <span class="string">&quot;profile/&#123;userId&#125;&quot;</span>) &#123;</span><br><span class="line">        <span class="comment">/* ... */</span></span><br><span class="line">        composable(<span class="string">&quot;profile/&#123;userId&#125;&quot;</span>) &#123; backStackEntry -&gt;</span><br><span class="line">            GreetingScreen(backStackEntry.arguments?.getString(<span class="string">&quot;userId&quot;</span>) ?: <span class="string">&quot;&quot;</span>)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h5 id="状态可信来源"><a href="#状态可信来源" class="headerlink" title="状态可信来源"></a>状态可信来源</h5><p>当您在界面的某个部分采用 Compose 时，Compose 和 View 系统代码可能需要共享数据。如有可能，我们建议您将相应共享状态封装在另一个遵循两个平台所用的 UDF 最佳实践的类中，例如，封装在会公开共享数据流以发出数据更新的 <code>ViewModel</code> 中。</p>
+<p>但是，如果要共享的数据会发生变化或与界面元素密切相关，这种方式就不可行。在这种情况下，必须有一个系统是可信来源，同时该系统需要与另一系统共享所有数据更新。一般来说，可信来源应由更靠近界面层次结构根目录的任一元素拥有。</p>
+<h5 id="将-Compose-视为可信来源"><a href="#将-Compose-视为可信来源" class="headerlink" title="将 Compose 视为可信来源"></a>将 Compose 视为可信来源</h5><p>使用 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/kotlin/androidx/compose/runtime/package-summary?hl=zh-cn#SideEffect(kotlin.Function0)"><code>SideEffect</code></a> 可组合项向非 Compose 代码发布 Compose 状态。在这种情况下，可信来源会保留在发送状态更新的可组合项中。</p>
+<p>例如，您的分析库可能允许您通过将自定义元数据（在此示例中为“用户属性”）附加到所有后续分析事件，来细分用户群体。如需将当前用户的用户类型传递给您的分析库，请使用 <code>SideEffect</code> 更新其值。</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/android/snippets/blob/a37e65129e087db5aeea808411ed1d2653a22b69/compose/snippets/src/main/java/com/example/compose/snippets/interop/MigrationOtherConsiderationsSnippets.kt#L49-L62">MigrationOtherConsiderationsSnippets.kt</a></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Composable</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">rememberFirebaseAnalytics</span><span class="params">(user: <span class="type">User</span>)</span></span>: FirebaseAnalytics &#123;</span><br><span class="line">    <span class="keyword">val</span> analytics: FirebaseAnalytics = remember &#123;</span><br><span class="line">        FirebaseAnalytics()</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// On every successful composition, update FirebaseAnalytics with</span></span><br><span class="line">    <span class="comment">// the userType from the current User, ensuring that future analytics</span></span><br><span class="line">    <span class="comment">// events have this metadata attached</span></span><br><span class="line">    SideEffect &#123;</span><br><span class="line">        analytics.setUserProperty(<span class="string">&quot;userType&quot;</span>, user.userType)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> analytics</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如需了解详情，请参阅 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/develop/ui/compose/side-effects?hl=zh-cn">Compose 中的附带效应</a>。</p>
+<h5 id="将-View-系统视为可信来源"><a href="#将-View-系统视为可信来源" class="headerlink" title="将 View 系统视为可信来源"></a>将 View 系统视为可信来源</h5><p>如果 View 系统拥有状态并将其与 Compose 共享，我们建议您将相应状态封装在 <code>mutableStateOf</code> 对象中，以保证 Compose 的线程安全。如果您使用此方式，可组合函数将会有所简化，因为它们不再拥有可信来源，但 View 系统需要更新可变状态以及使用相应状态的视图。</p>
+<p>在以下示例中，<code>CustomViewGroup</code> 包含 <code>TextView</code> 以及内含 <code>TextField</code> 可组合项的 <code>ComposeView</code>。<code>TextView</code> 需要显示用户在 <code>TextField</code> 中输入的内容。</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/android/snippets/blob/a37e65129e087db5aeea808411ed1d2653a22b69/compose/snippets/src/main/java/com/example/compose/snippets/interop/ComposeExistingArchSnippets.kt#L101-L134">ComposeExistingArchSnippets.kt</a></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">CustomViewGroup</span> <span class="meta">@JvmOverloads</span> <span class="keyword">constructor</span></span>(</span><br><span class="line">    context: Context,</span><br><span class="line">    attrs: AttributeSet? = <span class="literal">null</span>,</span><br><span class="line">    defStyle: <span class="built_in">Int</span> = <span class="number">0</span></span><br><span class="line">) : LinearLayout(context, attrs, defStyle) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Source of truth in the View system as mutableStateOf</span></span><br><span class="line">    <span class="comment">// to make it thread-safe for Compose</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">var</span> text <span class="keyword">by</span> mutableStateOf(<span class="string">&quot;&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">val</span> textView: TextView</span><br><span class="line"></span><br><span class="line">    <span class="keyword">init</span> &#123;</span><br><span class="line">        orientation = VERTICAL</span><br><span class="line"></span><br><span class="line">        textView = TextView(context)</span><br><span class="line">        <span class="keyword">val</span> composeView = ComposeView(context).apply &#123;</span><br><span class="line">            setContent &#123;</span><br><span class="line">                MaterialTheme &#123;</span><br><span class="line">                    TextField(value = text, onValueChange = &#123; updateState(it) &#125;)</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        addView(textView)</span><br><span class="line">        addView(composeView)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Update both the source of truth and the TextView</span></span><br><span class="line">    <span class="keyword">private</span> <span class="function"><span class="keyword">fun</span> <span class="title">updateState</span><span class="params">(newValue: <span class="type">String</span>)</span></span> &#123;</span><br><span class="line">        text = newValue</span><br><span class="line">        textView.text = newValue</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h4 id="迁移共享界面"><a href="#迁移共享界面" class="headerlink" title="迁移共享界面"></a>迁移共享界面</h4><p>如果您要逐步迁移到 Compose，可能需要在 Compose 和 View 系统中都使用共享界面元素。例如，如果您的应用具有自定义 <code>CallToActionButton</code> 组件，您可能需要在 Compose 和基于 View 的屏幕中都使用它。</p>
+<p>在 Compose 中，共享界面元素成为可在整个应用中重复使用的可组合项，无论元素是采用 XML 进行的样式设计还是一个自定义视图。例如，您将为自定义号召性用语 <code>Button</code> 组件创建 <code>CallToActionButton</code> 可组合项。</p>
+<p>如需在基于 View 的屏幕中使用可组合项，请创建一个从 <code>AbstractComposeView</code> 扩展的自定义视图封装容器。在该容器被替换的 <code>Content</code> 可组合项中，将您创建的可组合项封装在 Compose 主题中，如下例所示：</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/android/snippets/blob/a37e65129e087db5aeea808411ed1d2653a22b69/compose/snippets/src/main/java/com/example/compose/snippets/interop/ComposeExistingUISnippets.kt#L37-L74">ComposeExistingUISnippets.kt</a></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Composable</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">CallToActionButton</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    text: <span class="type">String</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">    onClick: () -&gt; <span class="type">Unit</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">    modifier: <span class="type">Modifier</span> = Modifier,</span></span></span><br><span class="line"><span class="params"><span class="function">)</span></span> &#123;</span><br><span class="line">    Button(</span><br><span class="line">        colors = ButtonDefaults.buttonColors(</span><br><span class="line">            containerColor = MaterialTheme.colorScheme.secondary</span><br><span class="line">        ),</span><br><span class="line">        onClick = onClick,</span><br><span class="line">        modifier = modifier,</span><br><span class="line">    ) &#123;</span><br><span class="line">        Text(text)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">CallToActionViewButton</span> <span class="meta">@JvmOverloads</span> <span class="keyword">constructor</span></span>(</span><br><span class="line">    context: Context,</span><br><span class="line">    attrs: AttributeSet? = <span class="literal">null</span>,</span><br><span class="line">    defStyle: <span class="built_in">Int</span> = <span class="number">0</span></span><br><span class="line">) : AbstractComposeView(context, attrs, defStyle) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> text <span class="keyword">by</span> mutableStateOf(<span class="string">&quot;&quot;</span>)</span><br><span class="line">    <span class="keyword">var</span> onClick <span class="keyword">by</span> mutableStateOf(&#123;&#125;)</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Composable</span></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">Content</span><span class="params">()</span></span> &#123;</span><br><span class="line">        YourAppTheme &#123;</span><br><span class="line">            CallToActionButton(text, onClick)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>请注意，可组合项参数在自定义视图中会成为可变变量。这会使自定义 <code>CallToActionViewButton</code> 视图变得可膨胀且可以使用，像传统视图一样。请参阅下面的使用<a target="_blank" rel="noopener" href="https://developer.android.google.cn/topic/libraries/view-binding?hl=zh-cn">视图绑定</a>功能时的示例：</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/android/snippets/blob/a37e65129e087db5aeea808411ed1d2653a22b69/compose/snippets/src/main/java/com/example/compose/snippets/interop/ComposeExistingUISnippets.kt#L78-L92">ComposeExistingUISnippets.kt</a></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ViewBindingActivity</span> : <span class="type">ComponentActivity</span></span>() &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">lateinit</span> <span class="keyword">var</span> binding: ActivityExampleBinding</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onCreate</span><span class="params">(savedInstanceState: <span class="type">Bundle</span>?)</span></span> &#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState)</span><br><span class="line">        binding = ActivityExampleBinding.inflate(layoutInflater)</span><br><span class="line">        setContentView(binding.root)</span><br><span class="line"></span><br><span class="line">        binding.callToAction.apply &#123;</span><br><span class="line">            text = getString(R.string.greeting)</span><br><span class="line">            onClick = &#123; <span class="comment">/* Do something */</span> &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果自定义组件包含可变状态，请参阅<a href="#%E7%8A%B6%E6%80%81%E5%8F%AF%E4%BF%A1%E6%9D%A5%E6%BA%90">状态可信来源</a>部分。</p>
+<h4 id="优先考虑将状态与呈现分开"><a href="#优先考虑将状态与呈现分开" class="headerlink" title="优先考虑将状态与呈现分开"></a>优先考虑将状态与呈现分开</h4><p>过去，<code>View</code> 是有状态的。<code>View</code> 管理的字段用于描述要显示的_内容_以及显示_方式_。将 <code>View</code> 转换为 Compose 时，需要将正在渲染的数据隔离开以实现单向数据流，<a target="_blank" rel="noopener" href="https://developer.android.google.cn/develop/ui/compose/state?hl=zh-cn#state-hoisting">状态提升</a>中对此进行了详细说明。</p>
+<p>例如，<code>View</code> 具有 <code>visibility</code> 属性，用于描述该 View 是可见、不可见还是已消失。这是 <code>View</code> 固有的属性。虽然其他代码可能会改变 <code>View</code> 的可见性，但只有 <code>View</code> 本身知道它当前的真实可见性。用于确保 <code>View</code> 可见的逻辑很容易出错，并且通常与 <code>View</code> 本身相关联。</p>
+<p>相比之下，Compose 通过使用 Kotlin 中的条件逻辑，可以轻松显示完全不同的可组合项：</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/android/snippets/blob/a37e65129e087db5aeea808411ed1d2653a22b69/compose/snippets/src/main/java/com/example/compose/snippets/interop/MigrationOtherConsiderationsSnippets.kt#L106-L115">MigrationOtherConsiderationsSnippets.kt</a></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Composable</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">MyComposable</span><span class="params">(showCautionIcon: <span class="type">Boolean</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (showCautionIcon) &#123;</span><br><span class="line">        CautionIcon(<span class="comment">/* ... */</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>根据设计，<code>CautionIcon</code> 不需要知道或关心其显示的原因，也没有 <code>visibility</code> 的概念：它要么在组合中，要么不在。</p>
+<p>通过将状态管理与内容呈现逻辑完全分开，您能够以状态转换的形式更自由地更改将内容显示到界面的方式。能够在需要时提升状态还会提高可组合项的可重用性，因为状态所有权更灵活。</p>
+<h4 id="提升封装组件和可重用组件"><a href="#提升封装组件和可重用组件" class="headerlink" title="提升封装组件和可重用组件"></a>提升封装组件和可重用组件</h4><p><code>View</code> 元素通常对自己所处位置有所感知：在 <code>Activity</code>、<code>Dialog</code>、<code>Fragment</code> 内或另一个 <code>View</code> 层次结构中的某个位置。由于 <code>View</code> 通常是从静态布局文件膨胀而来，因此其整体结构往往非常严格。这会使耦合更紧密，并且使 <code>View</code> 更难以更改或重复使用。</p>
+<p>例如，自定义 <code>View</code> 可能假定它具有某种类型的子视图（具有特定 ID），并直接根据某项操作更改其属性。这使得这些 <code>View</code> 元素紧密耦合在一起：如果自定义 <code>View</code> 找不到子级，则可能会发生崩溃或损坏；而如果没有自定义 <code>View</code> 父级，子级可能会无法重复使用。</p>
+<p>这在具有可重用可组合项的 Compose 中则不是什么问题。父级可以轻松指定状态和回调，因此您可以编写可重用可组合项，而不必知道它们具体将被用在哪里。</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/android/snippets/blob/a37e65129e087db5aeea808411ed1d2653a22b69/compose/snippets/src/main/java/com/example/compose/snippets/interop/MigrationOtherConsiderationsSnippets.kt#L119-L136">MigrationOtherConsiderationsSnippets.kt</a></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Composable</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">AScreen</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> isEnabled <span class="keyword">by</span> rememberSaveable &#123; mutableStateOf(<span class="literal">false</span>) &#125;</span><br><span class="line"></span><br><span class="line">    Column &#123;</span><br><span class="line">        ImageWithEnabledOverlay(isEnabled)</span><br><span class="line">        ControlPanelWithToggle(</span><br><span class="line">            isEnabled = isEnabled,</span><br><span class="line">            onEnabledChanged = &#123; isEnabled = it &#125;</span><br><span class="line">        )</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>在上面的示例中，所有三个部分封装程度更高，但耦合程度更低：</p>
+<ul>
+<li><code>ImageWithEnabledOverlay</code> 只需知道当前的 <code>isEnabled</code> 状态，而不需知道 <code>ControlPanelWithToggle</code> 的存在，甚至不需要知道如何控制它。</li>
+<li><code>ControlPanelWithToggle</code> 不知道 <code>ImageWithEnabledOverlay</code> 的存在。<code>isEnabled</code> 可能以零种、一种或多种方式显示，而 <code>ControlPanelWithToggle</code> 无需更改。</li>
+<li>对父级而言，<code>ImageWithEnabledOverlay</code> 或 <code>ControlPanelWithToggle</code> 的嵌套深度无关紧要。这些子项的目的可能是为变化添加动画效果、换出内容或将内容传递给其他子项。</li>
+</ul>
+<p>此模式称为“控制反转”，<a target="_blank" rel="noopener" href="https://developer.android.google.cn/develop/ui/compose/compositionlocal?hl=zh-cn#inversion-of-control"><code>CompositionLocal</code> 文档</a>中对此做了更详细的介绍。</p>
+<h4 id="处理屏幕尺寸的变化"><a href="#处理屏幕尺寸的变化" class="headerlink" title="处理屏幕尺寸的变化"></a>处理屏幕尺寸的变化</h4><p>针对不同尺寸的窗口提供不同的资源是创建自适应 <code>View</code> 布局的主要方式之一。虽然在确定屏幕级别的布局时仍可选择使用限定资源，但 Compose 可让您使用常规条件逻辑完全在代码中更改布局，从而更轻松地实现此目的。如需了解详情，请参阅<a target="_blank" rel="noopener" href="https://developer.android.google.cn/develop/ui/compose/layouts/adaptive/use-window-size-classes?hl=zh-cn">使用窗口大小类别</a>。</p>
+<p>此外，如需了解 Compose 提供了哪些技术来构建自适应界面，请参阅<a target="_blank" rel="noopener" href="https://developer.android.google.cn/develop/ui/compose/layouts/adaptive/support-different-display-sizes?hl=zh-cn">支持不同的显示屏尺寸</a>。</p>
+<h4 id="使用-View-实现嵌套滚动"><a href="#使用-View-实现嵌套滚动" class="headerlink" title="使用 View 实现嵌套滚动"></a>使用 View 实现嵌套滚动</h4><p>如需详细了解如何在可滚动的 View 元素与可滚动的可组合项之间实现嵌套滚动互操作（相互嵌套），请仔细阅读<a target="_blank" rel="noopener" href="https://developer.android.google.cn/develop/ui/compose/touch-input/pointer-input/scroll?hl=zh-cn#nested-scrolling-interop">嵌套滚动互操作性</a>。</p>
+<h4 id="RecyclerView-中的-Compose"><a href="#RecyclerView-中的-Compose" class="headerlink" title="RecyclerView 中的 Compose"></a><code>RecyclerView</code> 中的 Compose</h4><p>自 <code>RecyclerView</code> 版本 1.3.0-alpha02 发布以来，<code>RecyclerView</code> 中的可组合项性能一直非常出色。请确保您使用的 <code>RecyclerView</code> 版本不低于 1.3.0-alpha02，以便切实感受这些好处。</p>
+<h4 id="WindowInsets-与-View-的互操作性"><a href="#WindowInsets-与-View-的互操作性" class="headerlink" title="WindowInsets 与 View 的互操作性"></a><code>WindowInsets</code> 与 View 的互操作性</h4><p>如果您的屏幕在同一层次结构中同时包含 View 和 Compose 代码，您可能需要替换默认的内边距。在这种情况下，您需要明确说明哪个视图应使用内边距，哪个视图应忽略内边距。</p>
+<p>例如，如果最外层布局是 Android View 布局，您应使用 View 系统中的内边距，并忽略 Compose 中的内边距。或者，如果最外层布局是可组合项，您应在 Compose 中使用内边距，并相应地为 <code>AndroidView</code> 可组合项添加内边距。</p>
+<p>默认情况下，每个 <code>ComposeView</code> 都会在 <code>WindowInsetsCompat</code> 级别的使用情况中消耗所有内嵌。如需更改此默认行为，请将 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/reference/kotlin/androidx/compose/ui/platform/ComposeView?hl=zh-cn#(androidx.compose.ui.platform.ComposeView).consumeWindowInsets()"><code>ComposeView.consumeWindowInsets</code></a> 设置为 <code>false</code>。</p>
+<p>如需了解详情，请参阅 <a target="_blank" rel="noopener" href="https://developer.android.google.cn/develop/ui/compose/layouts/insets?hl=zh-cn">Compose 中的 <code>WindowInsets</code></a> 文档。</p>
+<!-- flag of hidden posts -->
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/private/" rel="tag"># private</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">291</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">21</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">47</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@qq.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A1%80%E6%B3%AA%E6%80%BB%E7%BB%93%EF%BC%81Android%E4%BC%A0%E7%BB%9F%E9%A1%B9%E7%9B%AE%E6%8E%A5%E5%85%A5Compose%E7%9A%84%E5%87%A0%E5%A4%A7%E6%B7%B1%E5%9D%91%E4%B8%8E%E5%A1%AB%E5%9D%91%E6%96%B9%E6%A1%88"><span class="nav-text">血泪总结！Android传统项目接入Compose的几大深坑与填坑方案</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%87%E7%BA%A7%E7%89%88%E6%9C%AC"><span class="nav-text">升级版本</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%87%E7%BA%A7-build-gradle"><span class="nav-text">升级 build.gradle</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%87%E7%BA%A7%E9%A1%B9%E7%9B%AE%E7%BA%A7build-gradle"><span class="nav-text">升级项目级build.gradle</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%87%E7%BA%A7setting-gradle"><span class="nav-text">升级setting.gradle</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%81%E7%A7%BB%E5%88%B0-Gradle-7-x-or-8-x-%E4%BD%BF%E7%94%A8-Version-Catalogs-%E7%AE%A1%E7%90%86%E4%BE%9D%E8%B5%96%EF%BC%8Cgradle%E5%BC%95%E5%85%A5libs-versio"><span class="nav-text">迁移到 Gradle 7.x or 8.x 使用 Version Catalogs 管理依赖，gradle引入libs.versio</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%95%E5%85%A5Compose%E7%9B%B8%E5%85%B3%E4%BE%9D%E8%B5%96"><span class="nav-text">引入Compose相关依赖</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%84%E4%B8%AA%E7%89%88%E6%9C%AC%E8%AF%B4%E6%98%8E-Gradle%E3%80%81AGP%E3%80%81Kotlin%E3%80%81Compose"><span class="nav-text">各个版本说明,Gradle、AGP、Kotlin、Compose</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-text">遇到的问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%B8%E5%85%B3%E7%9F%A5%E8%AF%86%E7%82%B9"><span class="nav-text">相关知识点</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9C%A8-View-%E4%B8%AD%E4%BD%BF%E7%94%A8-Compose"><span class="nav-text">在 View 中使用 Compose</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#ComposeView-ViewCompositionStrategy"><span class="nav-text">ComposeView:ViewCompositionStrategy</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Fragment-%E4%B8%AD%E7%9A%84-ComposeView"><span class="nav-text">Fragment 中的 ComposeView</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%8C%E4%B8%80%E5%B8%83%E5%B1%80%E4%B8%AD%E7%9A%84%E5%A4%9A%E4%B8%AA-ComposeView-%E5%AE%9E%E4%BE%8B"><span class="nav-text">同一布局中的多个 ComposeView 实例</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9C%A8%E5%B8%83%E5%B1%80%E7%BC%96%E8%BE%91%E5%99%A8%E4%B8%AD%E9%A2%84%E8%A7%88%E5%8F%AF%E7%BB%84%E5%90%88%E9%A1%B9"><span class="nav-text">在布局编辑器中预览可组合项</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%8E%E7%BB%AD%E6%AD%A5%E9%AA%A4"><span class="nav-text">后续步骤</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9C%A8-Compose-%E4%B8%AD%E4%BD%BF%E7%94%A8-View"><span class="nav-text">在 Compose 中使用 View</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E8%A7%86%E5%9B%BE%E7%BB%91%E5%AE%9A%E7%9A%84-AndroidView"><span class="nav-text">使用视图绑定的 AndroidView</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BB%B6%E8%BF%9F%E5%88%97%E8%A1%A8%E4%B8%AD%E7%9A%84-AndroidView"><span class="nav-text">延迟列表中的 AndroidView</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Compose-%E4%B8%AD%E7%9A%84-fragment"><span class="nav-text">Compose 中的 fragment</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%8E-Compose-%E8%B0%83%E7%94%A8-Android-%E6%A1%86%E6%9E%B6"><span class="nav-text">从 Compose 调用 Android 框架</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#CompositionLocal"><span class="nav-text">CompositionLocal</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%B6%E4%BB%96%E4%BA%A4%E4%BA%92"><span class="nav-text">其他交互</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%A1%88%E4%BE%8B%E7%A0%94%E7%A9%B6%EF%BC%9ABroadcastReceiver"><span class="nav-text">案例研究：BroadcastReceiver</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%8E%E7%BB%AD%E6%AD%A5%E9%AA%A4-1"><span class="nav-text">后续步骤</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B6%E4%BB%96%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9"><span class="nav-text">其他注意事项</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BF%81%E7%A7%BB%E5%BA%94%E7%94%A8%E4%B8%BB%E9%A2%98"><span class="nav-text">迁移应用主题</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AF%BC%E8%88%AA"><span class="nav-text">导航</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95%E6%B7%B7%E5%90%88-Compose-x2F-View-%E7%95%8C%E9%9D%A2"><span class="nav-text">测试混合 Compose&#x2F;View 界面</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B0%86-Compose-%E4%B8%8E%E6%82%A8%E7%8E%B0%E6%9C%89%E7%9A%84%E5%BA%94%E7%94%A8%E6%9E%B6%E6%9E%84%E9%9B%86%E6%88%90"><span class="nav-text">将 Compose 与您现有的应用架构集成</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%9C%A8-Compose-%E4%B8%AD%E4%BD%BF%E7%94%A8-ViewModel"><span class="nav-text">在 Compose 中使用 ViewModel</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%8A%B6%E6%80%81%E5%8F%AF%E4%BF%A1%E6%9D%A5%E6%BA%90"><span class="nav-text">状态可信来源</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%B0%86-Compose-%E8%A7%86%E4%B8%BA%E5%8F%AF%E4%BF%A1%E6%9D%A5%E6%BA%90"><span class="nav-text">将 Compose 视为可信来源</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%B0%86-View-%E7%B3%BB%E7%BB%9F%E8%A7%86%E4%B8%BA%E5%8F%AF%E4%BF%A1%E6%9D%A5%E6%BA%90"><span class="nav-text">将 View 系统视为可信来源</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BF%81%E7%A7%BB%E5%85%B1%E4%BA%AB%E7%95%8C%E9%9D%A2"><span class="nav-text">迁移共享界面</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BC%98%E5%85%88%E8%80%83%E8%99%91%E5%B0%86%E7%8A%B6%E6%80%81%E4%B8%8E%E5%91%88%E7%8E%B0%E5%88%86%E5%BC%80"><span class="nav-text">优先考虑将状态与呈现分开</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8F%90%E5%8D%87%E5%B0%81%E8%A3%85%E7%BB%84%E4%BB%B6%E5%92%8C%E5%8F%AF%E9%87%8D%E7%94%A8%E7%BB%84%E4%BB%B6"><span class="nav-text">提升封装组件和可重用组件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A4%84%E7%90%86%E5%B1%8F%E5%B9%95%E5%B0%BA%E5%AF%B8%E7%9A%84%E5%8F%98%E5%8C%96"><span class="nav-text">处理屏幕尺寸的变化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-View-%E5%AE%9E%E7%8E%B0%E5%B5%8C%E5%A5%97%E6%BB%9A%E5%8A%A8"><span class="nav-text">使用 View 实现嵌套滚动</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#RecyclerView-%E4%B8%AD%E7%9A%84-Compose"><span class="nav-text">RecyclerView 中的 Compose</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#WindowInsets-%E4%B8%8E-View-%E7%9A%84%E4%BA%92%E6%93%8D%E4%BD%9C%E6%80%A7"><span class="nav-text">WindowInsets 与 View 的互操作性</span></a></li></ol></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

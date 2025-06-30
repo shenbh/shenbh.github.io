@@ -110,7 +110,7 @@
 <meta property="og:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171438358.png">
 <meta property="og:image" content="http://shenbh.github.io/posts/13223ae/image-20240409171447345.png">
 <meta property="article:published_time" content="2021-11-29T02:31:58.000Z">
-<meta property="article:modified_time" content="2025-04-24T02:11:55.097Z">
+<meta property="article:modified_time" content="2025-06-30T06:04:50.483Z">
 <meta property="article:author" content="阿炳">
 <meta property="article:tag" content="安卓优化">
 <meta name="twitter:card" content="summary">
@@ -462,10 +462,10 @@
 <p>在消息调度时序图上进一步对比分析，发现两次 ANRCase，<strong>主线程当前正在执行消息的 Cpu Time 时长却发生了变化，即从 100ms 增加 450ms</strong>。那么这个数据是否置信吗？</p>
 <p>结合这两次 ANR，分别分析一下 ANR Trace 主线程 utm+stm 的耗时(见上图 2 次 Trace 堆栈)：</p>
 <p><strong>发生第一次 ANR 时线程状态及 utm,stm 耗时：</strong></p>
-<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"> <span class="attribute">state</span>=S schedstat=( 2442286229 338070603 5221 ) <span class="attribute">utm</span>=187 <span class="attribute">stm</span>=57 <span class="attribute">core</span>=5 <span class="attribute">HZ</span>=100</span><br><span class="line">复制代码</span><br></pre></td></tr></table></figure>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">state</span>=S schedstat=( 2442286229 338070603 5221 ) <span class="attribute">utm</span>=187 <span class="attribute">stm</span>=57 <span class="attribute">core</span>=5 <span class="attribute">HZ</span>=100</span><br></pre></td></tr></table></figure>
 
 <p><strong>发生第二次 ANR 时线程状态及 utm,stm 耗时：</strong></p>
-<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">| <span class="attribute">state</span>=S schedstat=( 2796231342 442294098 6270 ) <span class="attribute">utm</span>=202 <span class="attribute">stm</span>=77 <span class="attribute">core</span>=5 <span class="attribute">HZ</span>=100</span><br><span class="line">复制代码</span><br></pre></td></tr></table></figure>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">| <span class="attribute">state</span>=S schedstat=( 2796231342 442294098 6270 ) <span class="attribute">utm</span>=202 <span class="attribute">stm</span>=77 <span class="attribute">core</span>=5 <span class="attribute">HZ</span>=100</span><br></pre></td></tr></table></figure>
 
 <p><strong>用第二次发生 ANR 时的 utm+stm 减去第一次 ANR 时的 utm+stm，即 202+77-(187+57)&#x3D;35ms。这个值对应的是 cpu 时间片，utm,stm 单位换算成时间单位为 1 比 10ms，即 35*10&#x3D;350ms。这个值恰好等于 Raset 监控工具统计到的两次 Cputime 差值：450ms-100ms&#x3D;350ms。</strong></p>
 <p>说明在此期间消息队列增加了多个消息，因为每次增加一个消息，主线程都会从 epollwait 场景唤醒，然后回到 java 环境对消息队列进行遍历，判断是否有异步消息，如果没有找到，则再次进入 epollwait 状态，如此反复，从而导致了上述现象！</p>
@@ -473,10 +473,10 @@
 <h3 id="定位及修复："><a href="#定位及修复：" class="headerlink" title="定位及修复："></a>定位及修复：</h3><p>在定位到原因之后，接下来就是找到问题并解决问题，具体什么样的改动会引起这里问题了，通过分析我们知道既然是 Barrier 消息同步的问题，那么我们可以在设置 barrier 和移除 barrier 的过程加入监控，判断哪里设置了 barrier 消息，但是没有同步移除。通过 Java hook 代理了 MessageQueue 的 <code>postSyncBarrier</code> 和 <code>removeSyncBarrier</code> 接口，进行 Barrier 消息同步监测，遗憾的是线下并没有复现。</p>
 <p>因此只能再次回到代码层面，对相关改动进行分析，最终在一笔需求提交中发现了线索。</p>
 <p><strong>逻辑调整前：</strong> 先移除将要强制调度的并设置了异步属性的消息，再强制调度该消息，以保证该消息不受 barrier 消息之前的消息 block，进而提高响应能力。</p>
-<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (hasMsg) &#123;</span><br><span class="line">    ......</span><br><span class="line">    handler.remove<span class="constructor">Callbacks(<span class="params">message</span>.<span class="params">getCallback</span>()</span>); <span class="comment">//先移除</span></span><br><span class="line">    handler.dispatch<span class="constructor">Message(<span class="params">cloneMsg</span>)</span>; <span class="comment">//再强制调度该消息</span></span><br><span class="line">    ......</span><br><span class="line">&#125;</span><br><span class="line">复制代码</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (hasMsg) &#123;</span><br><span class="line">    ......</span><br><span class="line">    handler.removeCallbacks(message.getCallback()); <span class="comment">//先移除</span></span><br><span class="line">    handler.dispatchMessage(cloneMsg); <span class="comment">//再强制调度该消息</span></span><br><span class="line">    ......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p><strong>逻辑调整后：</strong> 先强制调度该消息，然后再将该消息从队列中移除。</p>
-<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">    ......</span><br><span class="line">        handler.dispatch<span class="constructor">Message(<span class="params">newMessage</span>)</span>; <span class="comment">//先强制调度</span></span><br><span class="line">       handler.remove<span class="constructor">Callbacks(<span class="params">message</span>.<span class="params">getCallback</span>()</span>);  <span class="comment">//从队列中移除消息</span></span><br><span class="line">    ......</span><br><span class="line">    &#125;</span><br><span class="line">复制代码</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">    ......</span><br><span class="line">    handler.dispatchMessage(newMessage); <span class="comment">//先强制调度</span></span><br><span class="line">    handler.removeCallbacks(message.getCallback());  <span class="comment">//从队列中移除消息</span></span><br><span class="line">    ......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p><strong>但是时序调整后存在一定隐患，即在强制调用 DoFrame 消息期间，业务可能会再次触发 UI 刷新逻辑，产生 barrier 消息并发出 vsync 请求，如果系统及时响应 vsync，并产生 DoFrame 消息，那么调用 <code>removeCallbacks</code> 接口会一次性清除消息队列中所有的 DoFrame 消息，即：移除了消息队列之前的 DoFrame 消息和下次待调度的 DoFrame 消息，但是与下次 DoFrame 消息同步的 barrier 消息并没有被移除。</strong></p>
 <p>那么为什么会移除多个消息呢？这就要从<code>handler.removeCallbacks</code> 的实现说起了。</p>
@@ -618,7 +618,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">281</span>
+                  <span class="site-state-item-count">291</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -640,7 +640,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">44</span>
+                  <span class="site-state-item-count">47</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>

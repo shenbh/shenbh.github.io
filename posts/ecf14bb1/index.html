@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="clippings," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="文章浏览阅读2.6k次，点赞27次，收藏23次。与其他混合平台相比， Flutter 性能够快吗？答案是肯定的，但是出于这种考虑，让我们来看看一些令人惊叹的性能和优化实践。_flutter layoutbuilder性能">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Flutter——17 个提高性能的最佳实践">
+<meta property="og:url" content="http://shenbh.github.io/posts/ecf14bb1/index.html">
+<meta property="og:site_name" content="积跬步">
+<meta property="og:description" content="文章浏览阅读2.6k次，点赞27次，收藏23次。与其他混合平台相比， Flutter 性能够快吗？答案是肯定的，但是出于这种考虑，让我们来看看一些令人惊叹的性能和优化实践。_flutter layoutbuilder性能">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-06-27T06:27:04.339Z">
+<meta property="article:modified_time" content="2025-06-27T06:28:52.015Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="clippings">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/ecf14bb1/"/>
+
+
+
+
+
+  <title>Flutter——17 个提高性能的最佳实践 | 积跬步</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">积跬步</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just do IT Now.</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/ecf14bb1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="积跬步">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">Flutter——17 个提高性能的最佳实践</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-06-27T14:27:04+08:00">
+                2025-06-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+              <div class="post-description">
+                  文章浏览阅读2.6k次，点赞27次，收藏23次。与其他混合平台相比， Flutter 性能够快吗？答案是肯定的，但是出于这种考虑，让我们来看看一些令人惊叹的性能和优化实践。_flutter layoutbuilder性能
+              </div>
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="原文"><a href="#原文" class="headerlink" title="原文"></a>原文</h2><blockquote>
+<p><a target="_blank" rel="noopener" href="https://inficial.medium.com/flutter-best-practices-for-improve-performance-7e21e14efebb">https://inficial.medium.com/flutter-best-practices-for-improve-performance-7e21e14efebb</a></p>
+</blockquote>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://api.flutter.dev/flutter/widgets/ListView/itemExtent.html">https://api.flutter.dev/flutter/widgets/ListView/itemExtent.html</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.codemagic.io/how-to-improve-the-performance-of-your-flutter-app./#dont-split-your-widgets-into-methods">https://blog.codemagic.io/how-to-improve-the-performance-of-your-flutter-app./#dont-split-your-widgets-into-methods</a></li>
+<li><a target="_blank" rel="noopener" href="https://pub.dev/packages/nil">https://pub.dev/packages/nil</a></li>
+<li><a target="_blank" rel="noopener" href="https://medium.com/flutter-community/flutter-memory-optimization-series-8c4a73f3ea81">https://medium.com/flutter-community/flutter-memory-optimization-series-8c4a73f3ea81</a></li>
+<li><a target="_blank" rel="noopener" href="https://dart.dev/guides/language/effective-dart/style">https://dart.dev/guides/language/effective-dart/style</a></li>
+<li><a target="_blank" rel="noopener" href="https://dart-lang.github.io/linter/lints/index.html">https://dart-lang.github.io/linter/lints/index.html</a></li>
+<li><a target="_blank" rel="noopener" href="https://itnext.io/comparing-darts-loops-which-is-the-fastest-731a03ad42a2">https://itnext.io/comparing-darts-loops-which-is-the-fastest-731a03ad42a2</a></li>
+<li><a target="_blank" rel="noopener" href="https://iisprey.medium.com/get-rid-of-all-kind-of-boilerplate-code-with-flutter-hooks-2e17eea06ca0">https://iisprey.medium.com/get-rid-of-all-kind-of-boilerplate-code-with-flutter-hooks-2e17eea06ca0</a></li>
+</ul>
+<h2 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h2><h3 id="1-使用-Widgets-代替函数"><a href="#1-使用-Widgets-代替函数" class="headerlink" title="1. 使用 Widgets 代替函数"></a>1. 使用 Widgets 代替函数</h3><p><strong>不要这样用它</strong></p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Widget _buildFooterWidget() &#123;</span><br><span class="line">  <span class="keyword">return</span> Padding(</span><br><span class="line">            padding: <span class="keyword">const</span> EdgeInsets.all(<span class="number">8.0</span>),</span><br><span class="line">            child: Text(<span class="string">&#x27;This is the footer &#x27;</span>),</span><br><span class="line">         );</span><br><span class="line">&#125;.</span><br></pre></td></tr></table></figure>
+
+<p><strong>像这样用它</strong></p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">FooterWidget</span> <span class="keyword">extends</span> <span class="title">StatelessWidget</span> </span>&#123;</span><br><span class="line">  </span><br><span class="line"></span><br><span class="line">   Widget build(BuildContext context) &#123;</span><br><span class="line">  <span class="keyword">return</span> Padding(</span><br><span class="line">            padding: <span class="keyword">const</span> EdgeInsets.all(<span class="number">8.0</span>),</span><br><span class="line">            child: Text(<span class="string">&#x27;This is the footer &#x27;</span>),</span><br><span class="line">         );</span><br><span class="line">      &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>原因：</strong><br>如果一个函数可以做同样的事情， Flutter 就不会有 StatelessWidget。</p>
+<p>类似地，它主要是针对公共 widgets 的，这些 widgets 可以重复使用。私人函数只能使用一次并不重要ーー尽管意识到这种行为仍然是好的。</p>
+<p>使用函数而不是类之间有一个重要的区别，那就是: 框架不知道函数，但是可以看到类。</p>
+<p><strong>考虑下面的“ widget”函数:</strong></p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Widget functionWidget(&#123; Widget child&#125;) &#123;</span><br><span class="line">    <span class="keyword">return</span> Container(child: child);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>这样使用:</strong></p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">functionWidget(</span><br><span class="line">    child : functionWidget()</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p><strong>而且它是等价的:</strong></p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ClassWidget</span> <span class="keyword">extends</span> <span class="title">StatelessWidget</span> </span>&#123;</span><br><span class="line"><span class="keyword">final</span> Widget child;</span><br><span class="line"><span class="keyword">const</span> ClassWidget(&#123;Key key, <span class="keyword">this</span>.child&#125;) : <span class="keyword">super</span>(key: key); </span><br><span class="line"> Widget build(BuildContext context) &#123;</span><br><span class="line">      <span class="keyword">return</span> Container(</span><br><span class="line">               child: child,</span><br><span class="line">              );</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样使用:</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">new</span> ClassWidget(</span><br><span class="line">  child : <span class="keyword">new</span> ClassWidget(),</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>在纸面上，两者似乎做了同样的事情: 创建 2 个容器，一个嵌套在另一个中。但现实情况略有不同。</p>
+<p>对于函数，生成的 widgets 树如下所示:</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Container</span><br><span class="line">  Container</span><br></pre></td></tr></table></figure>
+
+<p>对于类，widgets 树是:</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ClassWidget</span><br><span class="line">  Container</span><br><span class="line">    ClassWidget</span><br><span class="line">      Container</span><br></pre></td></tr></table></figure>
+
+<p>这一点很重要，因为它改变了框架在更新 widgets 时的行为。</p>
+<p>为什么这很重要</p>
+<p>通过使用函数将 widgets 树拆分为多个 widgets，您将自己暴露在 bug 之中，并错过了一些 <a target="_blank" rel="noopener" href="https://so.csdn.net/so/search?q=%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96&spm=1001.2101.3001.7020">性能优化</a> 。</p>
+<p>不能保证使用函数会出现 bug，但是使用类可以保证不会遇到这些问题。<br>the issues:</p>
+<p>下面是一些在 Dartpad 上的交互式例子，你可以自己跑步来更好地理解这些问题:</p>
+<p><a target="_blank" rel="noopener" href="https://dartpad.dev/1870e726d7e04699bc8f9d78ba71da35">https://dartpad.dev/1870e726d7e04699bc8f9d78ba71da35</a> 这个例子展示了如何通过分割你的应用程序的功能，你可能会不小心破坏诸如 AnimatedSwitcher 之类的东西<br><a target="_blank" rel="noopener" href="https://dartpad.dev/a869b21a2ebd2466b876a5997c9cf3f1">https://dartpad.dev/a869b21a2ebd2466b876a5997c9cf3f1</a><br>这个例子展示了类如何允许更细粒度地重新构建 widgets 树，从而提高性能<br><a target="_blank" rel="noopener" href="https://dartpad.dev/06842ae9e4b82fad917acb88da108eee">https://dartpad.dev/06842ae9e4b82fad917acb88da108eee</a><br>这个例子展示了在使用 InheritedWidgets (比如主题或提供程序)时，如何通过使用函数使自己暴露在错误使用 BuildContext 和错误面前<br>总的来说，由于这些原因，在类上使用函数来重用 widgets 被认为是一种不好的做法。你可以，但它可能会在未来咬你。</p>
+<p>避免重复重建所有 widgets<br>而且，添加 const 是个好主意。<br>ListView 长列表的用户项目范围。<br>指定 itemExtent 比让子滚动机制确定其范围更有效，因为滚动机制可以利用子滚动机制的预先知识来节省工作，例如当 <a target="_blank" rel="noopener" href="https://so.csdn.net/so/search?q=%E6%BB%9A%E5%8A%A8%E4%BD%8D%E7%BD%AE&spm=1001.2101.3001.7020">滚动位置</a> 发生剧烈变化时。</p>
+<p>避免在 animatedBuilder 中重建不必要的 widgets<br>不要这样用它</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">body: AnimatedBuilder(</span><br><span class="line">    animation: _controller,</span><br><span class="line">    builder: (_, child) =&gt; Transform(</span><br><span class="line">        alignment: Alignment.center,</span><br><span class="line">        transform: Matrix4.identity()</span><br><span class="line">          ..setEntry(<span class="number">3</span>, <span class="number">2</span>, <span class="number">0.001</span>)</span><br><span class="line">          ..rotateY(<span class="number">360</span> * _controller.value * (pi / <span class="number">180.0</span>)),</span><br><span class="line">        child: CounterWidget(</span><br><span class="line">                 counter: counter,</span><br><span class="line">               ),),</span><br><span class="line">),</span><br></pre></td></tr></table></figure>
+
+<p>这将在出现动画时重新构建 CounterWidget widgets。如果您将 log 放入 counterWidget 的 build 方法，那么您可以看到每次出现动画时它都会打印一个日志。</p>
+<p>像这样使用它。</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">body: AnimatedBuilder(</span><br><span class="line">   animation: _controller,</span><br><span class="line">   child : CounterWidget(</span><br><span class="line">       counter: counter,</span><br><span class="line">    ),</span><br><span class="line">    builder: (_, child) =&gt; Transform(</span><br><span class="line">        alignment: Alignment.center,</span><br><span class="line">        transform: Matrix4.identity()</span><br><span class="line">          ..setEntry(<span class="number">3</span>, <span class="number">2</span>, <span class="number">0.001</span>)</span><br><span class="line">          ..rotateY(<span class="number">360</span> * _controller.value * (pi / <span class="number">180.0</span>)),</span><br><span class="line">        child: child),</span><br><span class="line">),</span><br></pre></td></tr></table></figure>
+
+<p>我们使用 AnimatedBuilder 提供的子属性，它允许我们缓存 widgets 以在动画中重用它们。我们这样做是因为这个 widgets 不会改变，它唯一要做的就是旋转，但是为此，我们有了 Transform widgets。</p>
+<p>查看更多信息:</p>
+<p><a target="_blank" rel="noopener" href="https://blog.codemagic.io/how-to-improve-the-performance-of-your-flutter-app./#dont-split-your-widgets-into-methods">https://blog.codemagic.io/how-to-improve-the-performance-of-your-flutter-app./#dont-split-your-widgets-into-methods</a></p>
+<h3 id="2-尽可能使用-const"><a href="#2-尽可能使用-const" class="headerlink" title="2. 尽可能使用 const"></a>2. 尽可能使用 const</h3><figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">CustomWidget</span> <span class="keyword">extends</span> <span class="title">StatelessWidget</span> </span>&#123;</span><br><span class="line">   <span class="keyword">const</span> CustomWidget(); </span><br><span class="line">  Widget build(BuildContext context) &#123;</span><br><span class="line">    ...</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在构建 widgets 时，或者使用 flutter widgets 时。这有助于 flutter 只重建应该更新的 widgets。当 setState 调用时，widgets 不会更改。它将阻止 widgets 重新构建。<br>您可以节省 CPU 周期，并将它们与 const 构造函数一起使用。</p>
+<h3 id="3-用-nil-代替-const-Container"><a href="#3-用-nil-代替-const-Container" class="headerlink" title="3. 用 nil 代替 const Container ()"></a>3. 用 nil 代替 const Container ()</h3><figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// good</span></span><br><span class="line">text != <span class="keyword">null</span> ? Text(text) : <span class="keyword">const</span> Container()</span><br><span class="line"><span class="comment">// Better</span></span><br><span class="line">text != <span class="keyword">null</span> ? Text(text) : <span class="keyword">const</span> SizedBox()</span><br><span class="line"><span class="comment">// BEST</span></span><br><span class="line">text != <span class="keyword">null</span> ? Text(text) : nil</span><br><span class="line">or</span><br><span class="line"><span class="keyword">if</span> (text != <span class="keyword">null</span>) Text(text)</span><br></pre></td></tr></table></figure>
+
+<p>当您不想显示任何内容时，在 widgets 树中添加一个简单的 widgets，对性能的影响最小。</p>
+<p><a target="_blank" rel="noopener" href="https://pub.dev/packages/nil">https://pub.dev/packages/nil</a></p>
+<h3 id="4-用-keys-提高-Flutter-性能"><a href="#4-用-keys-提高-Flutter-性能" class="headerlink" title="4. 用 keys 提高 Flutter 性能"></a>4. 用 keys 提高 Flutter 性能</h3><figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// FROM</span></span><br><span class="line"><span class="keyword">return</span> value</span><br><span class="line">   ? <span class="keyword">const</span> SizedBox()</span><br><span class="line">   : <span class="keyword">const</span> Placeholder(),</span><br><span class="line"><span class="comment">// TO</span></span><br><span class="line"><span class="keyword">return</span> value</span><br><span class="line">   ? <span class="keyword">const</span> SizedBox(key: ValueKey(<span class="string">&#x27;SizedBox&#x27;</span>))</span><br><span class="line">   : <span class="keyword">const</span> Placeholder(key: ValueKey(<span class="string">&#x27;Placeholder&#x27;</span>)),</span><br><span class="line"></span><br><span class="line">----------------------------------------------</span><br><span class="line"></span><br><span class="line"><span class="comment">// FROM</span></span><br><span class="line"><span class="keyword">final</span> inner = SizedBox();</span><br><span class="line"><span class="keyword">return</span> value ? SizedBox(child: inner) : inner,</span><br><span class="line"><span class="comment">// TO</span></span><br><span class="line"><span class="keyword">final</span> global = GlobalKey();</span><br><span class="line"><span class="keyword">final</span> inner = SizedBox(key: global);</span><br><span class="line"><span class="keyword">return</span> value ? SizedBox(child: inner) : inner,</span><br></pre></td></tr></table></figure>
+
+<p>通过使用键的颤动更好地识别 widgets，这提供了更好的性能。</p>
+<h3 id="5-使用图像-ListView-时优化内存"><a href="#5-使用图像-ListView-时优化内存" class="headerlink" title="5. 使用图像 ListView 时优化内存"></a>5. 使用图像 ListView 时优化内存</h3><figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ListView.builder(</span><br><span class="line">  ...</span><br><span class="line">   addAutomaticKeepAlives: <span class="keyword">false</span> (<span class="keyword">true</span> by <span class="keyword">default</span>)</span><br><span class="line">   addRepaintBoundaries: <span class="keyword">false</span> (<span class="keyword">true</span> by <span class="keyword">default</span>)</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<p>ListView 无法杀死它的子节点，因为它们在屏幕上不可见。如果儿童有高分辨率的图像，会消耗大量的内存。</p>
+<p>做这些选项错误，可能导致使用更多的 GPU 和 CPU 工作，但它可以解决我们的内存问题，您将得到一个非常高性能的看法没有明显的问题。</p>
+<p>Flutter 记忆优化系列</p>
+<p>几乎在 Flutter 的任何东西都是默认优化和增强的，正如你可能已经知道的那样，感谢 Flutter 团队在…</p>
+<p><a target="_blank" rel="noopener" href="https://medium.com/flutter-community/flutter-memory-optimization-series-8c4a73f3ea81">https://medium.com/flutter-community/flutter-memory-optimization-series-8c4a73f3ea81</a></p>
+<h3 id="6-遵循-Dart-风格"><a href="#6-遵循-Dart-风格" class="headerlink" title="6. 遵循 Dart 风格"></a>6. 遵循 Dart 风格</h3><p><strong>Identifiers:: 标识符有三种风格</strong></p>
+<ul>
+<li>UpperCamelCase 名称将每个单词的首字母大写，包括第一个单词。 lowerCamelCase</li>
+<li>每个单词的第一个字母都大写，除了第一个字母总是小写，即使它是首字母缩略词</li>
+<li>lowercase*with_underscores<br>  名称只使用小写字母，即使对于首字母缩写也是如此，而使用 _ 的单词也是如此。</li>
+</ul>
+<p><strong>使用 UpperCamelCase 命名类型</strong></p>
+<p>类、枚举类型、 typedef 和类型参数应该大写每个单词(包括第一个单词)的第一个字母，并且不使用分隔符。</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">good</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">SliderMenu</span> </span>&#123; ... &#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HttpRequest</span> </span>&#123; ... &#125;</span><br><span class="line"><span class="keyword">typedef</span> Predicate&lt;T&gt; = <span class="built_in">bool</span> <span class="built_in">Function</span>(T value);</span><br><span class="line"><span class="keyword">const</span> foo = Foo();</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span> </span>&#123; ... &#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>使用以下命名库、包、目录和源文件</strong></p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Good</span><br><span class="line"><span class="keyword">library</span> peg_parser.source_scanner;</span><br><span class="line"><span class="keyword">import</span> <span class="string">&#x27;file_system.dart&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> <span class="string">&#x27;slider_menu.dart&#x27;</span>;</span><br><span class="line"></span><br><span class="line">Bad</span><br><span class="line"><span class="keyword">library</span> pegparser.SourceScanner;</span><br><span class="line"><span class="keyword">import</span> <span class="string">&#x27;file-system.dart&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> <span class="string">&#x27;SliderMenu.dart&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>要了解更多样式，请查看 Dart 样式:</p>
+<p>好的代码的一个惊人的重要部分是好的风格。一致的命名、排序和格式有助于代码…</p>
+<p><a target="_blank" rel="noopener" href="https://dart.dev/guides/language/effective-dart/style">https://dart.dev/guides/language/effective-dart/style</a></p>
+<p>要了解更多规则，请查看 Dart 连接器:</p>
+<p><a target="_blank" rel="noopener" href="https://dart-lang.github.io/linter/lints/index.html">https://dart-lang.github.io/linter/lints/index.html</a></p>
+<h3 id="7-只在需要的时候使用-MediaQuery-x2F-LayoutBuilder"><a href="#7-只在需要的时候使用-MediaQuery-x2F-LayoutBuilder" class="headerlink" title="7. 只在需要的时候使用 MediaQuery&#x2F;LayoutBuilder"></a>7. 只在需要的时候使用 MediaQuery&#x2F;LayoutBuilder</h3><h3 id="8-使用-async-x2F-await-代替-then-函数"><a href="#8-使用-async-x2F-await-代替-then-函数" class="headerlink" title="8. 使用 async&#x2F;await 代替 then 函数"></a>8. 使用 async&#x2F;await 代替 then 函数</h3><h3 id="9-有效使用操作符"><a href="#9-有效使用操作符" class="headerlink" title="9. 有效使用操作符"></a>9. 有效使用操作符</h3><figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> car = van == <span class="keyword">null</span> ? bus : audi;         <span class="comment">// Old pattern</span></span><br><span class="line"><span class="keyword">var</span> car = audi ?? bus;                      <span class="comment">// New pattern</span></span><br><span class="line"><span class="keyword">var</span> car = van == <span class="keyword">null</span> ? <span class="keyword">null</span> : audi.bus;    <span class="comment">// Old pattern</span></span><br><span class="line"><span class="keyword">var</span> car = audi?.bus;                        <span class="comment">// New pattern</span></span><br><span class="line">(item <span class="keyword">as</span> Car).name = <span class="string">&#x27;Mustang&#x27;</span>;         <span class="comment">// Old pattern</span></span><br><span class="line"><span class="keyword">if</span> (item <span class="keyword">is</span> Car) item.name = <span class="string">&#x27;Mustang&#x27;</span>; <span class="comment">// New pattern</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="10-利用字符串模板内插"><a href="#10-利用字符串模板内插" class="headerlink" title="10. 利用字符串模板内插"></a>10. 利用字符串模板内插</h3><figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Inappropriate</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> discountText = <span class="string">&#x27;Hello, &#x27;</span> + name + <span class="string">&#x27;! You have won a brand new &#x27;</span> + brand.name + <span class="string">&#x27;voucher! Please enter your email to redeem. The offer expires within &#x27;</span> + timeRemaining.toString() <span class="string">&#x27; minutes.&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Appropriate</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> discountText = <span class="string">&#x27;Hello, <span class="subst">$name</span>! You have won a brand new <span class="subst">$&#123;brand.name&#125;</span> voucher! Please enter your email to redeem. The offer expires within <span class="subst">$&#123;timeRemaining&#125;</span> minutes.&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="11-使用-for-x2F-while-代替-foreach-x2F-map"><a href="#11-使用-for-x2F-while-代替-foreach-x2F-map" class="headerlink" title="11. 使用 for&#x2F;while 代替 foreach&#x2F;map"></a>11. 使用 for&#x2F;while 代替 foreach&#x2F;map</h3><p>您可以在本文中检查循环的比较</p>
+<p>比较 Dart 的线圈ーー哪一个最快？</p>
+<p>编写 Flutter apps 的语言 Dart 有许多不同的循环，它们可以循环遍历列表或运行一些…<br><a target="_blank" rel="noopener" href="https://itnext.io/comparing-darts-loops-which-is-the-fastest-731a03ad42a2">https://itnext.io/comparing-darts-loops-which-is-the-fastest-731a03ad42a2</a><br>![在这里插入图片描述](Flutter——17 个提高性能的最佳实践&#x2F;3c7d14168cf248e992b77952bb867d71.png)</p>
+<h3 id="12-精确显示你的图片和图标"><a href="#12-精确显示你的图片和图标" class="headerlink" title="12. 精确显示你的图片和图标"></a>12. 精确显示你的图片和图标</h3><figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">precacheImage(AssetImage(imagePath), context);For SVGs</span><br><span class="line">you need flutter_svg package.precachePicture(</span><br><span class="line">  ExactAssetPicture(</span><br><span class="line">    SvgPicture.svgStringDecoderBuilder,iconPath),context,</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<p>![在这里插入图片描述](Flutter——17 个提高性能的最佳实践&#x2F;99e8683611b948aab33b49bbbd17141c.gif#pic_center)</p>
+<h3 id="13-使用-SKSL-Warmup"><a href="#13-使用-SKSL-Warmup" class="headerlink" title="13. 使用 SKSL Warmup"></a>13. 使用 SKSL Warmup</h3><figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">flutter run --profile --cache-sksl --purge-persistent-cache</span><br><span class="line">flutter build apk --cache-sksl --purge-persistent-cache</span><br></pre></td></tr></table></figure>
+
+<p>如果一个应用程序在第一次运行时有简洁的动画，之后对于同样的动画变得流畅，那么这很可能是由于着色器编译的延迟。</p>
+<h3 id="14-考虑使用-RepaintBoundary-widgets"><a href="#14-考虑使用-RepaintBoundary-widgets" class="headerlink" title="14. 考虑使用 RepaintBoundary widgets"></a>14. 考虑使用 RepaintBoundary widgets</h3><p>Flutter widgets 与渲染对象相关联。渲染对象有一个名为 paint 的方法，用于执行绘制。但是，即使关联的 widgets 实例不变，也可以调用 paint 方法。这是因为如果其中一个被标记为脏的话，Flutter 可能会对同一层中的其他渲染对象执行重新绘制。当渲染对象需要通过 RenderObject.markneedspaint 重新绘制时，它会告诉它最近的祖先重新绘制。祖先对其祖先执行相同的操作，可能直到根 RenderObject 为止。当一个渲染对象的 paint 方法被触发时，它在同一层中的所有子渲染对象都将被重新绘制。</p>
+<p>在某些情况下，当需要重新绘制渲染对象时，同一层中的其他渲染对象不需要重新绘制，因为它们呈现的内容保持不变。换句话说，如果我们只能重新绘制某些渲染对象会更好。使用 RepaintBoundary 对于限制 markneedspain 在渲染树上的传播和 paintChild 在渲染树上的传播非常有用。RepaintBoundary 可以将祖先呈现对象与后代呈现对象解耦。因此，只能重新绘制内容发生变化的子树。使用 RepaintBoundary 可以显著提高应用程序的性能，特别是如果不需要重新绘制的子树需要大量的重新绘制工作时。</p>
+<h3 id="15-如果可能的话，使用命名构造器"><a href="#15-如果可能的话，使用命名构造器" class="headerlink" title="15. 如果可能的话，使用命名构造器"></a>15. 如果可能的话，使用命名构造器</h3><figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 例如</span></span><br><span class="line">Listview → Listview.builder</span><br></pre></td></tr></table></figure>
+
+<h3 id="16-适当处理数据"><a href="#16-适当处理数据" class="headerlink" title="16. 适当处理数据"></a>16. 适当处理数据</h3><p>不必要的内存使用会在应用程序内悄悄地杀死数据，所以不要忘记处理你的数据</p>
+<p>有些软件包为它们的类提供自动释放支持</p>
+<ul>
+<li>Riverpod</li>
+<li>GetX</li>
+<li>get_it</li>
+<li>flutter_hooks</li>
+</ul>
+<p>如果你不知道什么是 Flutter 挂钩和如何使用它</p>
+<p>用 Flutter 钩子去除各种样板代码</p>
+<p>您不认为，现在是时候关闭 StatefulWidget 并使用 flutter hook 删除样板代码了吗</p>
+<p><a target="_blank" rel="noopener" href="https://iisprey.medium.com/get-rid-of-all-kind-of-boilerplate-code-with-flutter-hooks-2e17eea06ca0">https://iisprey.medium.com/get-rid-of-all-kind-of-boilerplate-code-with-flutter-hooks-2e17eea06ca0</a><br>![在这里插入图片描述](Flutter——17 个提高性能的最佳实践&#x2F;753b81f421a84234ae6d9220bbb1d7bd.png)<br>将 cacheHeight 和 cacheWidth 设置为图像</p>
+<p>您可以通过这种方式减少内存使用</p>
+<h3 id="17-不要在-List-Map-中使用引用"><a href="#17-不要在-List-Map-中使用引用" class="headerlink" title="17. 不要在 List Map 中使用引用"></a>17. 不要在 List Map 中使用引用</h3><p><strong>不要这样使用</strong></p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">List</span> a = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>];</span><br><span class="line"><span class="built_in">List</span> b;</span><br><span class="line">b = a;</span><br><span class="line">a.remove(<span class="number">1</span>);</span><br><span class="line"><span class="built_in">print</span>(a);  <span class="comment">// [2,3,4]</span></span><br><span class="line"><span class="built_in">print</span>(b);  <span class="comment">// [2,3,4]</span></span><br></pre></td></tr></table></figure>
+
+<p>由于这个原因，每当您尝试调用列表 a 的任何方法时，都会自动调用列表 b。</p>
+<p>比如 a.remove (some); 也会从列表 b 中删除该项;</p>
+<p><strong>像这样使用它</strong></p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">List</span> a = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>];</span><br><span class="line"><span class="built_in">List</span> b;</span><br><span class="line">b = jsonDecode(jsonEncode(a));</span><br><span class="line">a.remove(<span class="number">1</span>);</span><br><span class="line"><span class="built_in">print</span>(a);  <span class="comment">// [2,3,4]</span></span><br><span class="line"><span class="built_in">print</span>(b);  <span class="comment">// [1,2,3,4]</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>end</strong><br>我希望这给你一些见解，以改善您的 Flutter 应用程序的性能。快乐的编码！</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/clippings/" rel="tag"># clippings</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/b68e75d5/" rel="next" title="Flutter——Dart 语言的7个常用优雅特点">
+                <i class="fa fa-chevron-left"></i> Flutter——Dart 语言的7个常用优雅特点
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">291</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">21</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">47</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@qq.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8E%9F%E6%96%87"><span class="nav-text">原文</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-text">参考</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%AD%A3%E6%96%87"><span class="nav-text">正文</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E4%BD%BF%E7%94%A8-Widgets-%E4%BB%A3%E6%9B%BF%E5%87%BD%E6%95%B0"><span class="nav-text">1. 使用 Widgets 代替函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%B0%BD%E5%8F%AF%E8%83%BD%E4%BD%BF%E7%94%A8-const"><span class="nav-text">2. 尽可能使用 const</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E7%94%A8-nil-%E4%BB%A3%E6%9B%BF-const-Container"><span class="nav-text">3. 用 nil 代替 const Container ()</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E7%94%A8-keys-%E6%8F%90%E9%AB%98-Flutter-%E6%80%A7%E8%83%BD"><span class="nav-text">4. 用 keys 提高 Flutter 性能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-%E4%BD%BF%E7%94%A8%E5%9B%BE%E5%83%8F-ListView-%E6%97%B6%E4%BC%98%E5%8C%96%E5%86%85%E5%AD%98"><span class="nav-text">5. 使用图像 ListView 时优化内存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-%E9%81%B5%E5%BE%AA-Dart-%E9%A3%8E%E6%A0%BC"><span class="nav-text">6. 遵循 Dart 风格</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-%E5%8F%AA%E5%9C%A8%E9%9C%80%E8%A6%81%E7%9A%84%E6%97%B6%E5%80%99%E4%BD%BF%E7%94%A8-MediaQuery-x2F-LayoutBuilder"><span class="nav-text">7. 只在需要的时候使用 MediaQuery&#x2F;LayoutBuilder</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-%E4%BD%BF%E7%94%A8-async-x2F-await-%E4%BB%A3%E6%9B%BF-then-%E5%87%BD%E6%95%B0"><span class="nav-text">8. 使用 async&#x2F;await 代替 then 函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-%E6%9C%89%E6%95%88%E4%BD%BF%E7%94%A8%E6%93%8D%E4%BD%9C%E7%AC%A6"><span class="nav-text">9. 有效使用操作符</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#10-%E5%88%A9%E7%94%A8%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%A8%A1%E6%9D%BF%E5%86%85%E6%8F%92"><span class="nav-text">10. 利用字符串模板内插</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#11-%E4%BD%BF%E7%94%A8-for-x2F-while-%E4%BB%A3%E6%9B%BF-foreach-x2F-map"><span class="nav-text">11. 使用 for&#x2F;while 代替 foreach&#x2F;map</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#12-%E7%B2%BE%E7%A1%AE%E6%98%BE%E7%A4%BA%E4%BD%A0%E7%9A%84%E5%9B%BE%E7%89%87%E5%92%8C%E5%9B%BE%E6%A0%87"><span class="nav-text">12. 精确显示你的图片和图标</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#13-%E4%BD%BF%E7%94%A8-SKSL-Warmup"><span class="nav-text">13. 使用 SKSL Warmup</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#14-%E8%80%83%E8%99%91%E4%BD%BF%E7%94%A8-RepaintBoundary-widgets"><span class="nav-text">14. 考虑使用 RepaintBoundary widgets</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#15-%E5%A6%82%E6%9E%9C%E5%8F%AF%E8%83%BD%E7%9A%84%E8%AF%9D%EF%BC%8C%E4%BD%BF%E7%94%A8%E5%91%BD%E5%90%8D%E6%9E%84%E9%80%A0%E5%99%A8"><span class="nav-text">15. 如果可能的话，使用命名构造器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#16-%E9%80%82%E5%BD%93%E5%A4%84%E7%90%86%E6%95%B0%E6%8D%AE"><span class="nav-text">16. 适当处理数据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#17-%E4%B8%8D%E8%A6%81%E5%9C%A8-List-Map-%E4%B8%AD%E4%BD%BF%E7%94%A8%E5%BC%95%E7%94%A8"><span class="nav-text">17. 不要在 List Map 中使用引用</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>
