@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="clippings," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="概述Android基于Linux内核，它将开源代码和闭源第三方应用程序结合在一起。Android的开源部分称为Android开源项目（Android Open Source Project，AOSP）,它是完全开放的，任何人都可以免费使用和修改。 如同传统的Linux系统一样，Android的第一个用户空间进程是init，它是所有其他进程的根。与Android相关的内容可以看这里。 Linux扩展">
+<meta property="og:type" content="article">
+<meta property="og:title" content="操作系统-Android">
+<meta property="og:url" content="http://shenbh.github.io/posts/53f492dd/index.html">
+<meta property="og:site_name" content="积跬步">
+<meta property="og:description" content="概述Android基于Linux内核，它将开源代码和闭源第三方应用程序结合在一起。Android的开源部分称为Android开源项目（Android Open Source Project，AOSP）,它是完全开放的，任何人都可以免费使用和修改。 如同传统的Linux系统一样，Android的第一个用户空间进程是init，它是所有其他进程的根。与Android相关的内容可以看这里。 Linux扩展">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://shenbh.github.io/posts/53f492dd/Binder%E6%9C%BA%E5%88%B6.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/53f492dd/%E5%9F%BA%E6%9C%AC%E7%9A%84Binder-IPC%E4%BA%8B%E5%8A%A1.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/53f492dd/Binder%E8%B7%A8%E8%BF%9B%E7%A8%8B%E5%AF%B9%E8%B1%A1%E6%98%A0%E5%B0%84.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/53f492dd/%E5%9C%A8%E8%BF%9B%E7%A8%8B%E4%B8%AD%E4%BC%A0%E8%BE%93Binder%E5%AF%B9%E8%B1%A1.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/53f492dd/Binder%E7%94%A8%E6%88%B7%E7%A9%BA%E9%97%B4API.jpg">
+<meta property="article:published_time" content="2025-07-03T07:20:29.118Z">
+<meta property="article:modified_time" content="2025-07-03T09:35:16.570Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="clippings">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/53f492dd/Binder%E6%9C%BA%E5%88%B6.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/53f492dd/"/>
+
+
+
+
+
+  <title>操作系统-Android | 积跬步</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">积跬步</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just do IT Now.</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/53f492dd/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="积跬步">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">操作系统-Android</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-07-03T15:20:29+08:00">
+                2025-07-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+              <div class="post-description">
+                  概述Android基于Linux内核，它将开源代码和闭源第三方应用程序结合在一起。Android的开源部分称为Android开源项目（Android Open Source Project，AOSP）,它是完全开放的，任何人都可以免费使用和修改。 如同传统的Linux系统一样，Android的第一个用户空间进程是init，它是所有其他进程的根。与Android相关的内容可以看这里。 Linux扩展
+              </div>
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>Android基于Linux内核，它将开源代码和闭源第三方应用程序结合在一起。Android的开源部分称为Android开源项目（Android Open Source Project，AOSP）,它是完全开放的，任何人都可以免费使用和修改。</p>
+<p>如同传统的Linux系统一样，Android的第一个用户空间进程是init，它是所有其他进程的根。与Android相关的内容可以看。</p>
+<h2 id="Linux扩展"><a href="#Linux扩展" class="headerlink" title="Linux扩展"></a>Linux扩展</h2><h3 id="唤醒锁"><a href="#唤醒锁" class="headerlink" title="唤醒锁"></a>唤醒锁</h3><p>移动设备上的电源管理不同于传统的计算机系统，所以，为了管理系统如何进入睡眠，Android为Linux添加了一个新的功能，称为唤醒锁（wake lock），也称为悬停阻止器（suspend blocker）。</p>
+<p>在传统的计算机系统上，系统可以处于两种电源状态之一：运行并且准备好处理用户输人：或者深度睡眠，并且如果没有诸如按下电源键一类的外部中断就不能继续执行。在运行的时候，次要的硬件设备可以按需要通电或者断电，但是CPU本身以及核心硬件部件必须保持通电状态以处理到来的网络通信以及其他类似的事件。进人低能耗睡眠状态是发生得比较少的事情：或者通过用户明确地让系统睡眠，或者由于比较长的时间间隔没有用户活动，从而系统自身进入睡眠。从这样的睡眠状态醒来需要来自外部源的硬件中断，例如按下键盘上的一个按键，在此刻设备将醒来并且点亮屏幕。</p>
+<p>移动设备的用户具有不同的期望。尽管用户可以关闭屏幕，在这样的情况下看起来好像是让设备睡眠了，但是传统的睡眠状态实际上并不是用户想得到的。当设备的屏幕关闭之时，设备仍然需要工作：它需要能够接听电话呼叫，接收并处理到来的聊天消息数据，以及许多其他事情。对于移动设备，关干打开和关闭设备屏幕的期望同样比传统的计算机具有更髙的要求。在这类典型的移动应用中，恢复设备直到它能够使用的任何延迟都会对用户体验造成严重的负面影响。</p>
+<p>给定了这样的需求，一种解决方案或许仅仅是当设备的屏幕关闭之时不让CPU睡眠，这样它就总是准备好再次重新打开。归根到底，内核了解什么时候线程无需工作调度，并且Linux（以及大多数操作系统）将会自动地让CPU空闲，在这样的情况下使用较低的电能。</p>
+<p>然而，空闲的CPU与真正的睡眠是不同的。</p>
+<p>1）在许多芯片组上，空闲状态使用的电能比真正的睡眠状态要多得多。<br>2）空闲的CPU可以在任何时刻唤醒，只要某些工作赶巧变得可用，即使该工作是不重要的。<br>3）只是让CPU空闲并不意味着可以关闭其他硬件，而这样的硬件在真正的睡眠中是不需要的。</p>
+<p>Android上的唤醒锁允许系统进入深度睡眠模式，而不必与一个明确的用户活动（例如关闭屏幕）绑在一起。具有唤醒锁的系统的默认状态是睡眠状态。当设备在运行时，为了保持它不回到睡眠，则需要持有一个唤醒锁。</p>
+<p>当屏幕打开时，系统总是持有一个唤醒锁，这样就阻止了设备进入睡眠，所以它将保持运行。</p>
+<p>然而，在屏幕关闭时，系统本身一般并不持有唤醒锁，所以只有在某些其他实体持有唤醒锁的条件下才能保持系统不进入睡眠。当没有唤醒锁被持有时，系统进入睡眠，并且只能由干硬件中断才能将其从睡眠中唤醒。</p>
+<p>一旦系统已经进入睡眠，硬件中断可以将其再次唤醒，如同在传统操作系统中那样。这样的中断源有基于时间的鳖报、来自蜂窝无线电的事件（例如呼入的呼叫）、到来的网络通信以及按下特定的硬件按钮（例如电源按钮）。针对这些事件的中断处理程序要求对标准Linux做出一个改变：在处理完中断之后，它们需要获得一个初始的唤醒锁从而使系统保持运行。</p>
+<p>中断处理程序获得的唤醒锁必须持有足够长的时间，以便能够沿着栈向上将控制传递给内核中的驱动程序，由其继续对事件进行处理。然后，内核驱动程序负责获得自己的唤醒锁，在此之后，中断唤醒锁可以安全地得到释放而不存在系统进入睡眠的风险。</p>
+<p>如果在这之后驱动程序将该事件向上传送到用户空间，则需要类似的握手。驱动程序必须确保继续持有唤醒锁直到它将事件传递给等待的用户进程，并且要确保存在使用户进程获得自己的唤醒锁的条件。这一流程可能还会在用户空间的子系统之间继续，只要某个实体持有唤醒锁，我们就继续执行想要的处理以便响应事件。然而，一旦没有唤醒锁被持有，整个系统将返回睡眠并且所有进程停止。</p>
+<h3 id="内存不足杀手"><a href="#内存不足杀手" class="headerlink" title="内存不足杀手"></a>内存不足杀手</h3><p>Linux中的“内存不足杀手”（out-of-memory Killer）试图在内存极低时进行恢复，在现代操作系统上内存不足的情况是模糊的事情。由于有分页和交换，应用程序本身很难看到内存不足的错误。然而，内核仍然可能进入这样一种情形，当需要的时候找不到可用的RAM页面，不但对新的分配会这样，而且在换入或者分页入某些正在使用的地址范围时也可能如此。</p>
+<p>在这样的低内存情形中，标准的Linux内存不足杀手是最后的应急手段，它试图找到RAM，使得内核能够继续处理它正在做的事情。做法是为每个进程分配一个“坏度” (badness)水平，并且简单地杀死最坏的进程。进程的坏度基于进程正在使用的RAM数量、它已经运行了多长时间以及其他因素，目标是杀死大量但愿不太重要的进程。</p>
+<p>Android为内存不足杀手施加了特别的压力。它没有交换空间，所以它处于内存不足情形会更为常见：除非通过放弃从最近使用的存储器映射的干净的RAM页面，否则没有办法缓解内存压力。即便如此，Android还是使用标准Linux的配置，过度提交(over-commit)内存，也就是说，允许在RAM中分配地址空间而无需保证有可用的RAM对其提供后备。过度提交对于优化内存使用是一个极其重要的工具，这是因为mmap大文件(例如可执行文件)是很常见的，此处你只需要将该文件中全部数据的一小部分装入RAM。</p>
+<p>考虑到这样的情形，常备的Linux内存不足杀手工作得不太好，因为它更多地被预定为最后的应急手段，并且很难正确地识别合理的进程来杀死。事实上，正如我们在后面要讨论的，Android广泛地依赖定期运行内存不足杀手以收割(reap)进程，并且对于选择哪个进程的问题做出好的选择。</p>
+<p>为解决这一问题，Android为内核引入了自己的内存不足杀手，具有不同的语义和设计目标。Android的内存不足杀手运行得更加积极进取：只要RAM变“低”则运行。低的RAM是由一个可调整的参数标识的，该参数指示在内核中有多少空闲的和缓存的RAM是可接受的。当系统变得低于这个极限时，内存不足杀手便运行以便从别处释放RAM。目标是确保系统绝不会进入坏的分页状态，当前台应用程序竞争RAM时坏的分页状态会对用户体验造成负面影响，因为页面不断地换入换出会导致应用程序的执行变得非常缓慢。</p>
+<p>与试图猜测哪个进程应该被杀死不同，Android的内存不足杀手非常严格地依赖由用户空间提供给它的信息。传统的Linux内存不足杀手具有每个进程的oom_adj参数，通过修改进程的总体坏度得分，该参数可用来指导选择最佳的进程并将其杀死。Android的内存不足杀手使用这个相同的参数，但是具有严格的顺序：具有较髙oom.adj的进程总是在那些具有较低oom_adj的进程之前被杀死。</p>
+<h2 id="Binder"><a href="#Binder" class="headerlink" title="Binder"></a>Binder</h2><h3 id="概述-1"><a href="#概述-1" class="headerlink" title="概述"></a>概述</h3><p>Binder机制如下图：</p>
+<p><img src="/posts/53f492dd/Binder%E6%9C%BA%E5%88%B6.jpg" alt="Binder机制"></p>
+<p>在栈的最底层是一个内核模块，实现了实际的跨进程交互，并且通过内核的ioctl函数将其展露（ioctl是一个通用的内核调用，用来发送定制的命令给内核驱动程序和模块。）在内核模块之上，是一个基本的面向对象的用户空间API，允许应用程序通过IBinder和Binder类创建并且与IPC端点进行交互。在顶部是一个基于接口的编程模型，应用程序在其中声明它们的IPC接口，并且不再需要关心IPC在底层是如何发生的细节问题。</p>
+<h3 id="Binder内核模块"><a href="#Binder内核模块" class="headerlink" title="Binder内核模块"></a>Binder内核模块</h3><p>Binder没有使用像管道这样的现有Linux IPC设施，Binder IPC模型与传统的Linux机制差别之大，使得它无法纯粹在用户空间及Linux机制之上来实现。此外，Android不支持大部分System V原语（信号量、共享内存段、消息队列）进行跨进程的交互，因为它们不能提供健壮的语义以清除来自有问题的或恶意的应用程序的资源。</p>
+<p>Binder使用的基本IPC模型是远程过程调用（Remote Procedure Call, RPC）。也就是说，发送的进程向内核提交一个完整的IPC操作，该操作在接收的进程中被执行，当接收者执行时，发送者可以有选择地设定它们不阻塞，从而继续执行，与接收者并行。因此，Binder IPC是基于消息的，类似System V消息队列，而不是基于流的（如Linux管道）。Binder中的消息称为事务（transaction），在更高层可以被看作跨进程的函数调用。</p>
+<p>用户空间提交给内核的每个事务是一个完整的操作：它标识操作的目标和发送者的标识符，以及交付的完整数据。内核决定适当的进程来接收该事务，将其交付给进程中等待的线程。</p>
+<p>下图显示了事务的基本流程。发送的进程中任何线程都可能创建标识其目标的事务，并且将该事务提交给内核。内核制作事务的副本，将发送者的标识符添加到其中。内核确定由哪个进程负责事务的目标，并且唤醒接收事务的进程中的一个线程。一旦接收的进程执行起来，它要确定适当的事务目标并且交付。</p>
+<p><img src="/posts/53f492dd/%E5%9F%BA%E6%9C%AC%E7%9A%84Binder-IPC%E4%BA%8B%E5%8A%A1.jpg" alt="基本的Binder-IPC事务"></p>
+<p>发送给内核的事务标识了一个目标对象，然而，内核必须确定接收进程。为实现这一点，内核跟踪每个进程中可用的对象，并将它们映射到其他进程，如下图所示。我们在这里看到的对象只是该进程地址空间中的地址。内核只是跟踪这些对象地址，并没有附着在它们之上的意义；它们可以是C数据结构的地址或者位于该进程地址空间中的任何其他东西。</p>
+<p><img src="/posts/53f492dd/Binder%E8%B7%A8%E8%BF%9B%E7%A8%8B%E5%AF%B9%E8%B1%A1%E6%98%A0%E5%B0%84.jpg" alt="Binder跨进程对象映射"></p>
+<p>远程进程中对干对象的引用由一个整数句柄（handle）来标识，这很像是Linux的文件描述符。</p>
+<p><img src="/posts/53f492dd/%E5%9C%A8%E8%BF%9B%E7%A8%8B%E4%B8%AD%E4%BC%A0%E8%BE%93Binder%E5%AF%B9%E8%B1%A1.jpg" alt="在进程中传输Binder对象"></p>
+<p>上图中的主要步骤如下：</p>
+<p>1）进程1创建一个初始的事务结构，其中包含对象lb的本地地址。<br>2）进程1提交事务到内核。<br>3）内核査看事务中的数据，找到地址对象lb，并且创建一个针对它的新条目，因为它以前并不知道该地址。<br>4）内核利用事务的目标句柄2来确定它意在进程2中的对象2。<br>5）内核现在将事务头重写，使其适合进程2,改变其目标为地址对象2a。<br>6）内核同样为目标进程重写事务数据；此处它发现对象lb还不被进程2所知，所以为它创建一个新的句柄3。<br>7）重写的事务被交付给进程2来执行。<br>8）—旦接收到事务，进程会发现新的句柄3，并将其添加到可用句柄表中。</p>
+<p>如果事务内部的一个对象已经由接收进程知晓，则流程是类似的，差别在于现在内核只需要重写事务，使得事务包含此前已分配的句柄或者接收进程的本地对象指针。这意味着，发送相同的对象到一个进程很多次，总是会得到相同的标识，这与Linux文件描述符不同，在Linux中打开相同的文件多次，每次会分配不同的文件描述符。当对象在进程之间传递时，Binder IPC系统将维护唯一的对象标识。</p>
+<p>Binder体系结构本质上为Linux引入了一个基于能力的安全模型。每一个Binder对象是一个能力。发送一个对象到另一个进程就是将能力授予该进程。于是，接收进程可以使用对象提供的一切功能。进程可以送出一个对象到另一个进程，然后从任何进程接收一个对象，并且识别接收到的对象是否正是它最初送出的那个对象。</p>
+<h3 id="Binder用户空间API"><a href="#Binder用户空间API" class="headerlink" title="Binder用户空间API"></a>Binder用户空间API</h3><p>大多数用户空间代码不直接与Binder内核模块交互，存在一个用户空间的面向对象的库，它提供了更加简单的API。这些用户空间API的第一层相当直接地映射到之前讨论过的内核概念，采用如下三个类的形式。</p>
+<p>1）IBinder是Binder对象的抽象接口。其关键方法是transact，它将一个事务提交给对象。接收事务的实现可能是本地进程中的一个对象，或者是另一个进程中的对象；如果它在另一个进程中，则将会通过如前面讨论的Binder内核模块交付给它。<br>2）Binder是一个具体的Binder对象。实现一个Binder子类将给你一个可以从其他进程调用的类。其关键方法是onTransact，它接收发送给它的一个事务。Binder子类的主要责任是查看它接收的事务数据，并且执行适当的操作。<br>3）Parcel是一个容器，用于读和写Binder事务中的数据。</p>
+<p><img src="/posts/53f492dd/Binder%E7%94%A8%E6%88%B7%E7%A9%BA%E9%97%B4API.jpg" alt="Binder用户空间API"></p>
+<p>从上图可以看到Binderlb和Binder2a是具体Binder子类的实例。为了执行一个IPC，进程现在要创建一个包含期望数据的Parcel，并且通过BinderProxy将其发送。只要一个新的句柄出现在进程之中，此类就将被创建，因此提供了IBinder的实现，它的transact方法将为调用创建适当的事务并将其提交到内核。因此，我们在前面讨论过的内核事务结构在用户空间API中拆开了：目标由BinderProxy代表，并且其数据保存在一个Parcel之中：事务如我们前面看过的那样流过内核，一旦出现在接收进程的用户空间中，它的目标将用来确定适当的接收Binder对象，而一个Parcel将从其数据构造出来并且交付给对象的onTransact方法。</p>
+<h3 id="Binder接口和AIDL"><a href="#Binder接口和AIDL" class="headerlink" title="Binder接口和AIDL"></a>Binder接口和AIDL</h3><p>这一层主要的部分是一个命令行工具，称为AIDL(Android Interface Definition Language, Android接口定义语言)。该工具是一个接口编译器，它以接口的抽象描述为输入，生成定义接口所必需的源代码，并且实现适当的编组和解组代码，这样的代码是进行远程调用所需要的。</p>
+<h2 id="安全性"><a href="#安全性" class="headerlink" title="安全性"></a>安全性</h2><p>Android的应用程序安全性围绕着UID展开。在Linux中，每个进程在运行时拥有一个独特的UID，Android使用UID来识别与保护安全屏障。进程进行交互的唯一手段是利用跨进程通信（IPC）机制，携带足以使它识别调用者的信息。binder IPC在毎个跨进程的事务中明确包含了这些信息，确保IPC的接收者能简单地请求调用者的UID。</p>
+<p>Android为系统底层预先定义了一系列标准UID，但大多数应用程序是在其第一次运行或安装时，从“应用程序UID”范围中获得动态分配的UID的。下表是一些常用的UID：</p>
+<table>
+<thead>
+<tr>
+<th>UID值</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>根</td>
+</tr>
+<tr>
+<td>1000</td>
+<td>核心系统（system server进程）</td>
+</tr>
+<tr>
+<td>1001</td>
+<td>电话服务</td>
+</tr>
+<tr>
+<td>1013</td>
+<td>底层媒体进程</td>
+</tr>
+<tr>
+<td>2000</td>
+<td>命令行界面访问</td>
+</tr>
+<tr>
+<td>10000-19999</td>
+<td>动态分配应用程序U1D</td>
+</tr>
+<tr>
+<td>100000</td>
+<td>多用户由此开始</td>
+</tr>
+</tbody></table>
+<p>当一个应用程序首次被分配一个UID时，随之将创造一个新的存储目录，用来存储这个UID拥有的文件。应用程序可以自由访问该目录中它的私有文件，但不能访问其他应用程序的文件。反过来，其他应用程序也不能访问它的文件。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/clippings/" rel="tag"># clippings</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/7283e136/" rel="next" title="操作系统-Linux">
+                <i class="fa fa-chevron-left"></i> 操作系统-Linux
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/d386e64e/" rel="prev" title="Android-Application">
+                Android-Application <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">439</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">47</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@qq.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux%E6%89%A9%E5%B1%95"><span class="nav-text">Linux扩展</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%94%A4%E9%86%92%E9%94%81"><span class="nav-text">唤醒锁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E4%B8%8D%E8%B6%B3%E6%9D%80%E6%89%8B"><span class="nav-text">内存不足杀手</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Binder"><span class="nav-text">Binder</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0-1"><span class="nav-text">概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Binder%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97"><span class="nav-text">Binder内核模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Binder%E7%94%A8%E6%88%B7%E7%A9%BA%E9%97%B4API"><span class="nav-text">Binder用户空间API</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Binder%E6%8E%A5%E5%8F%A3%E5%92%8CAIDL"><span class="nav-text">Binder接口和AIDL</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E5%85%A8%E6%80%A7"><span class="nav-text">安全性</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

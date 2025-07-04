@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="clippings," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="概述AccessibilityService用于提供辅助功能服务，其在后台运行，并在触发AccessibilityEvents时由系统接收回调。此类事件表示用户界面中的某些状态转换，例如，焦点更改，按钮被单击等。此类服务可以可选地请求查询活动窗口内容的功能。 AccessibilityServiceInfo描述一个AccessibilityService，系统根据封装在此类中的信息将Accessi">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android-AccessibilityService">
+<meta property="og:url" content="http://shenbh.github.io/posts/78628c76/index.html">
+<meta property="og:site_name" content="积跬步">
+<meta property="og:description" content="概述AccessibilityService用于提供辅助功能服务，其在后台运行，并在触发AccessibilityEvents时由系统接收回调。此类事件表示用户界面中的某些状态转换，例如，焦点更改，按钮被单击等。此类服务可以可选地请求查询活动窗口内容的功能。 AccessibilityServiceInfo描述一个AccessibilityService，系统根据封装在此类中的信息将Accessi">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://shenbh.github.io/posts/78628c76/AccessibilityService%E7%B1%BB%E5%9B%BE.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/78628c76/AccessibilityInteractionClient%E6%B5%81%E7%A8%8B%E5%9B%BE.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/78628c76/AccessibilityService%E6%B5%81%E7%A8%8B%E5%9B%BE.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/78628c76/AccessibilityService%E5%A4%96%E9%83%A8%E6%B5%81%E7%A8%8B%E5%9B%BE.jpg">
+<meta property="article:published_time" content="2025-07-03T07:41:44.308Z">
+<meta property="article:modified_time" content="2025-07-03T09:04:30.676Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="clippings">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/78628c76/AccessibilityService%E7%B1%BB%E5%9B%BE.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/78628c76/"/>
+
+
+
+
+
+  <title>Android-AccessibilityService | 积跬步</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">积跬步</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just do IT Now.</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/78628c76/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="积跬步">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">Android-AccessibilityService</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-07-03T15:41:44+08:00">
+                2025-07-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+              <div class="post-description">
+                  概述AccessibilityService用于提供辅助功能服务，其在后台运行，并在触发AccessibilityEvents时由系统接收回调。此类事件表示用户界面中的某些状态转换，例如，焦点更改，按钮被单击等。此类服务可以可选地请求查询活动窗口内容的功能。 AccessibilityServiceInfo描述一个AccessibilityService，系统根据封装在此类中的信息将Accessi
+              </div>
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>AccessibilityService用于提供辅助功能服务，其在后台运行，并在触发AccessibilityEvents时由系统接收回调。此类事件表示用户界面中的某些状态转换，例如，焦点更改，按钮被单击等。此类服务可以可选地请求查询活动窗口内容的功能。</p>
+<p>AccessibilityServiceInfo描述一个AccessibilityService，系统根据封装在此类中的信息将AccessibilityEvent通知给AccessibilityService。</p>
+<p>AccessibilityService的生命周期仅由系统管理，并遵循Service的生命周期，用户只能通过在设备设置中显式打开服务来触发启动无障碍服务。系统绑定到服务后，它将调用AccessibilityService#onServiceConnected()。当用户在设备设置中将其关闭或调用AccessibilityService#disableSelf()时，AccessibilityService即会停止。</p>
+<p>每个AccessibilityService在都是由AccessibilityManagerService注册的，当用户开启辅助服务后，系统会发送广播到AccessibilityManagerService，AccessibilityManagerService会注册AccessibilityService。当受到监控的App某个View发生了改变时，其内部会调用AccessibilityManager来发送Event。</p>
+<h2 id="声明"><a href="#声明" class="headerlink" title="声明"></a>声明</h2><p>在Manifest文件中配置：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">service</span> <span class="attr">android:name</span>=<span class="string">&quot;.MyAccessibilityService&quot;</span></span></span><br><span class="line"><span class="tag"></span></span><br><span class="line"><span class="tag">        <span class="attr">android:permission</span>=<span class="string">&quot;android.permission.BIND_ACCESSIBILITY_SERVICE&quot;</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">intent-filter</span>&gt;</span></span><br><span class="line"></span><br><span class="line">        <span class="tag">&lt;<span class="name">action</span> <span class="attr">android:name</span>=<span class="string">&quot;android.accessibilityservice.AccessibilityService&quot;</span> /&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;/<span class="name">intent-filter</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">service</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h2><p>可以将AccessibilityService配置为接收特定类型的事件，仅侦听特定的程序包，在给定的时间范围内仅从每种类型获取事件一次，检索Window内容，指定设置Activity等。有两种配置的方法：</p>
+<ol>
+<li>在Manifest中配置： <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">service</span> <span class="attr">android:name</span>=<span class="string">&quot;.MyAccessibilityService&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">intent-filter</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">action</span> <span class="attr">android:name</span>=<span class="string">&quot;android.accessibilityservice.AccessibilityService&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">intent-filter</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">meta-data</span> <span class="attr">android:name</span>=<span class="string">&quot;android.accessibilityservice&quot;</span> <span class="attr">android:resource</span>=<span class="string">&quot;@xml/accessibilityservice&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">service</span>&gt;</span></span><br></pre></td></tr></table></figure>
+ 在res目录下新建xml目录，配置accessibilityservice.xml如下： <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">accessibility-service</span> <span class="attr">xmlns:android</span>=<span class="string">&quot;http://schemas.android.com/apk/res/android&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:accessibilityEventTypes</span>=<span class="string">&quot;typeAllMask&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:accessibilityFeedbackType</span>=<span class="string">&quot;feedbackGeneric&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:accessibilityFlags</span>=<span class="string">&quot;flagDefault|flagRetrieveInteractiveWindows|flagIncludeNotImportantViews|flagReportViewIds|flagRequestTouchExplorationMode&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:canRetrieveWindowContent</span>=<span class="string">&quot;true&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:description</span>=<span class="string">&quot;@string/description&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:notificationTimeout</span>=<span class="string">&quot;100&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:packageNames</span>=<span class="string">&quot;com.tencent.mm,com.eg.android.AlipayGphone&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+ 与配置相关的可以参考官网： <a target="_blank" rel="noopener" href="https://developer.android.com/reference/android/R.styleable.html#AccessibilityService">AccessibilityService</a></li>
+<li>调用AccessibilityService#setServiceInfo(AccessibilityServiceInfo)进行配置，该方法任意时候都可以调用，用来动态改变该Service的配置。此方法仅允许设置动态可配置属性：<ul>
+<li>AccessibilityServiceInfo#eventTypes</li>
+<li>AccessibilityServiceInfo#feedbackType</li>
+<li>AccessibilityServiceInfo#flags</li>
+<li>AccessibilityServiceInfo#notificationTimeout</li>
+<li>AccessibilityServiceInfo#packageNames</li>
+</ul>
+</li>
+</ol>
+<h2 id="Service-Meta-Data"><a href="#Service-Meta-Data" class="headerlink" title="Service Meta Data"></a>Service Meta Data</h2><table>
+<thead>
+<tr>
+<th>属性</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>android:description</td>
+<td>Descriptive text for the associated data</td>
+</tr>
+<tr>
+<td>android:summary</td>
+<td>The summary for the item</td>
+</tr>
+<tr>
+<td>android:settingsActivity</td>
+<td>Activity的Component name，允许用户修改此Service的设置</td>
+</tr>
+<tr>
+<td>android:accessibilityEventTypes</td>
+<td>监视的动作，见 <a target="_blank" rel="noopener" href="https://developer.android.com/reference/android/view/accessibility/AccessibilityEvent.html">AccessibilityEvent</a></td>
+</tr>
+<tr>
+<td>android:packageNames</td>
+<td>监控的软件包名，使用逗号隔开</td>
+</tr>
+<tr>
+<td>android:accessibilityFeedbackType</td>
+<td>提供反馈类型，语音震动等等，见 <a target="_blank" rel="noopener" href="https://developer.android.com/reference/android/accessibilityservice/AccessibilityServiceInfo.html">AccessibilityServiceInfo</a></td>
+</tr>
+<tr>
+<td>android:notificationTimeout</td>
+<td>两次相同类型的事件之间的间隔（以毫秒为单位）</td>
+</tr>
+<tr>
+<td>android:accessibilityFlags</td>
+<td>监视的view的状态，见 <a target="_blank" rel="noopener" href="https://developer.android.com/reference/android/accessibilityservice/AccessibilityServiceInfo.html">AccessibilityServiceInfo</a></td>
+</tr>
+<tr>
+<td>android:canRetrieveWindowContent</td>
+<td>是否要能够检索活动窗口的内容，此设置不能在运行时改变</td>
+</tr>
+<tr>
+<td>android:canRequestTouchExplorationMode</td>
+<td>请求触摸模式的属性，在这种模式下，可以通过手势浏览UI</td>
+</tr>
+<tr>
+<td>android:canRequestEnhancedWebAccessibility</td>
+<td>请求增强的Web可访问性增强功能的属性</td>
+</tr>
+<tr>
+<td>android:canRequestFilterKeyEvents</td>
+<td>请求过滤关键事件的属性</td>
+</tr>
+<tr>
+<td>android:canControlMagnification</td>
+<td>控制显示倍率的属性</td>
+</tr>
+<tr>
+<td>android:canPerformGestures</td>
+<td>能否执行手势的属性</td>
+</tr>
+<tr>
+<td>android:canRequestFingerprintGestures</td>
+<td>能否从指纹传感器捕获手势的属性</td>
+</tr>
+<tr>
+<td>android:nonInteractiveUiTimeout</td>
+<td>AccessibilityManager.getRecommendedTimeoutMillis(int，int)中使用的建议超时（以毫秒为单位），为不包含交互式控件的UI返回合适的值</td>
+</tr>
+<tr>
+<td>android:interactiveUiTimeout</td>
+<td>AccessibilityManager.getRecommendedTimeoutMillis(int，int)中使用的建议超时（以毫秒为单位），为交互式控件的UI返回合适的值</td>
+</tr>
+</tbody></table>
+<h2 id="Event-types"><a href="#Event-types" class="headerlink" title="Event types"></a>Event types</h2><ul>
+<li>AccessibilityEvent#TYPES_ALL_MASK</li>
+<li>AccessibilityEvent#TYPE_VIEW_CLICKED</li>
+<li>AccessibilityEvent#TYPE_VIEW_LONG_CLICKED</li>
+<li>AccessibilityEvent#TYPE_VIEW_FOCUSED</li>
+<li>AccessibilityEvent#TYPE_VIEW_SELECTED</li>
+<li>AccessibilityEvent#TYPE_VIEW_TEXT_CHANGED</li>
+<li>AccessibilityEvent#TYPE_WINDOW_STATE_CHANGED</li>
+<li>AccessibilityEvent#TYPE_NOTIFICATION_STATE_CHANGED</li>
+<li>AccessibilityEvent#TYPE_TOUCH_EXPLORATION_GESTURE_START</li>
+<li>AccessibilityEvent#TYPE_TOUCH_EXPLORATION_GESTURE_END</li>
+<li>AccessibilityEvent#TYPE_VIEW_HOVER_ENTER</li>
+<li>AccessibilityEvent#TYPE_VIEW_HOVER_EXIT</li>
+<li>AccessibilityEvent#TYPE_VIEW_SCROLLED</li>
+<li>AccessibilityEvent#TYPE_VIEW_TEXT_SELECTION_CHANGED</li>
+<li>AccessibilityEvent#TYPE_WINDOW_CONTENT_CHANGED</li>
+<li>AccessibilityEvent#TYPE_ANNOUNCEMENT</li>
+<li>AccessibilityEvent#TYPE_GESTURE_DETECTION_START</li>
+<li>AccessibilityEvent#TYPE_GESTURE_DETECTION_END</li>
+<li>AccessibilityEvent#TYPE_TOUCH_INTERACTION_START</li>
+<li>AccessibilityEvent#TYPE_TOUCH_INTERACTION_END</li>
+<li>AccessibilityEvent#TYPE_VIEW_ACCESSIBILITY_FOCUSED</li>
+<li>AccessibilityEvent#TYPE_WINDOWS_CHANGED</li>
+<li>AccessibilityEvent#TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED</li>
+</ul>
+<h2 id="Feedback-types"><a href="#Feedback-types" class="headerlink" title="Feedback types"></a>Feedback types</h2><ul>
+<li>AccessibilityServiceInfo#FEEDBACK_ALL_MASK</li>
+<li>AccessibilityServiceInfo#FEEDBACK_AUDIBLE：表示可听（非语音）反馈</li>
+<li>AccessibilityServiceInfo#FEEDBACK_HAPTIC：表示触觉反馈</li>
+<li>AccessibilityServiceInfo#FEEDBACK_SPOKEN：表示语音反馈</li>
+<li>AccessibilityServiceInfo#FEEDBACK_VISUAL：表示视觉反馈</li>
+<li>AccessibilityServiceInfo#FEEDBACK_GENERIC：表示一般反馈</li>
+<li>AccessibilityServiceInfo#FEEDBACK_BRAILLE：表示盲文反馈</li>
+</ul>
+<h2 id="Flags"><a href="#Flags" class="headerlink" title="Flags"></a>Flags</h2><ul>
+<li>AccessibilityServiceInfo#FLAG_ENABLE_ACCESSIBILITY_VOLUME：此标志请求由AudioManager.STREAM_ACCESSIBILITY控制系统范围内所有具有AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY的音频轨道。</li>
+<li>AccessibilityServiceInfo#FLAG_INCLUDE_NOT_IMPORTANT_VIEWS：如果设置了此标志，通过View#IMPORTANT_FOR_ACCESSIBILITY_NO或View#IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS标记为对accessibility不重要的View，以及通过View#IMPORTANT_FOR_ACCESSIBILITY_AUTO标记为对accessibility潜在重要的View，在查询窗口内容时被报告，并且AccessibilityService也将从中接收事件。对于Android 4.1（API级别16）或更高版本的AccessibilityService，必须显式设置相关标志。</li>
+<li>AccessibilityServiceInfo#FLAG_REPORT_VIEW_IDS：该标志请求AccessibilityService获得的包含源视图ID的AccessibilityNodeInfos。ID格式为 <code>&quot;package:id/name&quot;</code> 的标准资源名称，默认情况下未设置此标志。</li>
+<li>AccessibilityServiceInfo#FLAG_REQUEST_ACCESSIBILITY_BUTTON：系统的导航区域中将显示一个辅助功能按钮。</li>
+<li>AccessibilityServiceInfo#FLAG_REQUEST_FILTER_KEY_EVENTS：该标志要求系统过滤关键事件。</li>
+<li>AccessibilityServiceInfo#FLAG_REQUEST_FINGERPRINT_GESTURES：将所有指纹手势发送到AccessibilityService。想要设置此标志的服务必须声明具有检索窗口内容的功能，在meta-data中配置R.attr.canRequestFingerprintGestures，见 <a target="_blank" rel="noopener" href="https://developer.android.com/reference/android/accessibilityservice/AccessibilityService.html#SERVICE_META_DATA">SERVICE_META_DATA</a> 。</li>
+<li>AccessibilityServiceInfo#FLAG_REQUEST_SHORTCUT_WARNING_DIALOG_SPOKEN_FEEDBACK。</li>
+<li>AccessibilityServiceInfo#FLAG_REQUEST_TOUCH_EXPLORATION_MODE：该标志请求系统进入触摸浏览模式，系统将检测在触摸屏上执行的某些手势并通知此Service。在Android 4.3以上的设备必须声明canRequestTouchExplorationMode，见 <a target="_blank" rel="noopener" href="https://developer.android.com/reference/android/accessibilityservice/AccessibilityService.html#SERVICE_META_DATA">SERVICE_META_DATA</a> 。</li>
+<li>AccessibilityServiceInfo#FLAG_RETRIEVE_INTERACTIVE_WINDOWS：访问所有交互式窗口的内容。如果未设置此标志，服务将不会收到AccessibilityEvent.TYPE_WINDOWS_CHANGED事件，调用AccessibilityServiceAccessibilityService#getWindows()将返回一个空列表，而AccessibilityNodeInfo#getWindow()将返回null。必须声明canRetrieveWindowContent，见 <a target="_blank" rel="noopener" href="https://developer.android.com/reference/android/accessibilityservice/AccessibilityService.html#SERVICE_META_DATA">SERVICE_META_DATA</a> 。</li>
+</ul>
+<h2 id="AccessibilityService"><a href="#AccessibilityService" class="headerlink" title="AccessibilityService"></a>AccessibilityService</h2><h3 id="disableSelf"><a href="#disableSelf" class="headerlink" title="disableSelf"></a>disableSelf</h3><ul>
+<li><code>public final void disableSelf()</code></li>
+<li>关闭AccessibilityService服务。</li>
+</ul>
+<h3 id="findFocus"><a href="#findFocus" class="headerlink" title="findFocus"></a>findFocus</h3><ul>
+<li><code>public AccessibilityNodeInfo findFocus(int focus)</code></li>
+<li>查找具有指定焦点类型的视图。</li>
+<li>focus取值：AccessibilityNodeInfo#FOCUS_INPUT&#x2F;AccessibilityNodeInfo#FOCUS_ACCESSIBILITY。</li>
+</ul>
+<h3 id="getAccessibilityButtonController"><a href="#getAccessibilityButtonController" class="headerlink" title="getAccessibilityButtonController"></a>getAccessibilityButtonController</h3><ul>
+<li><code>public final AccessibilityButtonController getAccessibilityButtonController()</code></li>
+<li>返回系统导航区域中的辅助功能按钮的控制器。</li>
+<li>见 <a target="_blank" rel="noopener" href="https://developer.android.com/reference/android/accessibilityservice/AccessibilityButtonController.html">AccessibilityButtonController</a></li>
+</ul>
+<h3 id="getFingerprintGestureController"><a href="#getFingerprintGestureController" class="headerlink" title="getFingerprintGestureController"></a>getFingerprintGestureController</h3><ul>
+<li><code>public final FingerprintGestureController getFingerprintGestureController()</code></li>
+<li>获取指纹手势的控制器。</li>
+<li>见 <a target="_blank" rel="noopener" href="https://developer.android.com/reference/android/accessibilityservice/FingerprintGestureController.html">FingerprintGestureController</a></li>
+</ul>
+<h3 id="getServiceInfo"><a href="#getServiceInfo" class="headerlink" title="getServiceInfo"></a>getServiceInfo</h3><ul>
+<li><code>public final AccessibilityServiceInfo getServiceInfo()</code></li>
+</ul>
+<h3 id="getRootInActiveWindow"><a href="#getRootInActiveWindow" class="headerlink" title="getRootInActiveWindow"></a>getRootInActiveWindow</h3><ul>
+<li><code>public AccessibilityNodeInfo getRootInActiveWindow()</code></li>
+<li>获取当前活动窗口中的根节点。</li>
+</ul>
+<h2 id="AccessibilityNodeInfo"><a href="#AccessibilityNodeInfo" class="headerlink" title="AccessibilityNodeInfo"></a>AccessibilityNodeInfo</h2><h3 id="概述-1"><a href="#概述-1" class="headerlink" title="概述"></a>概述</h3><p>此类表示Window Content中的一个Node。</p>
+<h3 id="addAction"><a href="#addAction" class="headerlink" title="addAction"></a>addAction</h3><ul>
+<li><code>public void addAction(AccessibilityNodeInfo.AccessibilityAction action)</code></li>
+<li>添加可以在节点上执行的操作。</li>
+<li>见 <a target="_blank" rel="noopener" href="https://developer.android.com/reference/android/view/accessibility/AccessibilityNodeInfo.AccessibilityAction.html">AccessibilityAction</a></li>
+</ul>
+<h3 id="performAction"><a href="#performAction" class="headerlink" title="performAction"></a>performAction</h3><ul>
+<li><code>public boolean performAction(int action)</code></li>
+<li><code>public boolean performAction(int action, Bundle arguments)</code></li>
+</ul>
+<h3 id="findAccessibilityNodeInfosByText"><a href="#findAccessibilityNodeInfosByText" class="headerlink" title="findAccessibilityNodeInfosByText"></a>findAccessibilityNodeInfosByText</h3><ul>
+<li><code>public List&lt;AccessibilityNodeInfo&gt; findAccessibilityNodeInfosByText(String text)</code></li>
+<li>客户有责任调用AccessibilityNodeInfo#recycle()来回收接收到的信息，以避免创建多个实例。</li>
+<li>这里的text不单单是TextView的Text，还包括一些组件的ContentDescription。</li>
+</ul>
+<h3 id="findAccessibilityNodeInfosByViewId"><a href="#findAccessibilityNodeInfosByViewId" class="headerlink" title="findAccessibilityNodeInfosByViewId"></a>findAccessibilityNodeInfosByViewId</h3><ul>
+<li><code>public List&lt;AccessibilityNodeInfo&gt; findAccessibilityNodeInfosByViewId(String viewId)</code></li>
+<li>客户有责任调用AccessibilityNodeInfo#recycle()来回收接收到的信息，以避免创建多个实例。</li>
+<li>组件的id获取可以通过Android Studio内置的工具Layout Inspector查看。</li>
+<li>viewId：pkg:id&#x2F;name，例如 <code>com.miui.securitycenter:id/am_detail_perm</code> 。</li>
+</ul>
+<h2 id="AccessibilityEvent"><a href="#AccessibilityEvent" class="headerlink" title="AccessibilityEvent"></a>AccessibilityEvent</h2><h3 id="概述-2"><a href="#概述-2" class="headerlink" title="概述"></a>概述</h3><p>继承自AccessibilityRecord，表示当用户界面中发生了关注事件时系统发送的事件。</p>
+<h3 id="obtain"><a href="#obtain" class="headerlink" title="obtain"></a>obtain</h3><ul>
+<li><code>public static AccessibilityEvent obtain()</code></li>
+<li><code>public static AccessibilityEvent obtain(int eventType)</code></li>
+<li><code>public static AccessibilityEvent obtain(AccessibilityEvent event)</code></li>
+<li>返回一个缓存的实例（如果有）或实例化一个新实例。</li>
+</ul>
+<h3 id="recycle"><a href="#recycle" class="headerlink" title="recycle"></a>recycle</h3><ul>
+<li><code>public void recycle()</code></li>
+</ul>
+<h2 id="AccessibilityRecord"><a href="#AccessibilityRecord" class="headerlink" title="AccessibilityRecord"></a>AccessibilityRecord</h2><h3 id="概述-3"><a href="#概述-3" class="headerlink" title="概述"></a>概述</h3><p>表示AccessibilityEvent中的一条记录，并包含有关其Source View的状态更改的信息。</p>
+<h2 id="原理解析"><a href="#原理解析" class="headerlink" title="原理解析"></a>原理解析</h2><h3 id="概述-4"><a href="#概述-4" class="headerlink" title="概述"></a>概述</h3><p>AccessibilityService相关类图如下：</p>
+<p><img src="/posts/78628c76/AccessibilityService%E7%B1%BB%E5%9B%BE.jpg" alt="AccessibilityService类图"></p>
+<h3 id="AccessibilityService-1"><a href="#AccessibilityService-1" class="headerlink" title="AccessibilityService"></a>AccessibilityService</h3><p>在AccessibilityService的onBind方法中返回了一个IAccessibilityServiceClientWrapper对象。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> IBinder <span class="title function_">onBind</span><span class="params">(Intent intent)</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">IAccessibilityServiceClientWrapper</span>(<span class="built_in">this</span>, getMainLooper(), <span class="keyword">new</span> <span class="title class_">Callbacks</span>() &#123;</span><br><span class="line"></span><br><span class="line">        </span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onServiceConnected</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">            AccessibilityService.<span class="built_in">this</span>.dispatchServiceConnected();</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        </span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onInterrupt</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">            AccessibilityService.<span class="built_in">this</span>.onInterrupt();</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        </span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onAccessibilityEvent</span><span class="params">(AccessibilityEvent event)</span> &#123;</span><br><span class="line"></span><br><span class="line">            AccessibilityService.<span class="built_in">this</span>.onAccessibilityEvent(event);</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        </span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">init</span><span class="params">(<span class="type">int</span> connectionId, IBinder windowToken)</span> &#123;</span><br><span class="line"></span><br><span class="line">            mConnectionId = connectionId;</span><br><span class="line"></span><br><span class="line">            mWindowToken = windowToken;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// The client may have already obtained the window manager, so</span></span><br><span class="line"></span><br><span class="line">            <span class="comment">// update the default token on whatever manager we gave them.</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">final</span> <span class="type">WindowManagerImpl</span> <span class="variable">wm</span> <span class="operator">=</span> (WindowManagerImpl) getSystemService(WINDOW_SERVICE);</span><br><span class="line"></span><br><span class="line">            wm.setDefaultToken(windowToken);</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Callbacks"><a href="#Callbacks" class="headerlink" title="Callbacks"></a>Callbacks</h3><p>该接口定义的方法与IAccessibilityServiceClient中是对应的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">Callbacks</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">onAccessibilityEvent</span><span class="params">(AccessibilityEvent event)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">onInterrupt</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">onServiceConnected</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">init</span><span class="params">(<span class="type">int</span> connectionId, IBinder windowToken)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="type">boolean</span> <span class="title function_">onGesture</span><span class="params">(<span class="type">int</span> gestureId)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="type">boolean</span> <span class="title function_">onKeyEvent</span><span class="params">(KeyEvent event)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">onMagnificationChanged</span><span class="params">( Region region,</span></span><br><span class="line"><span class="params"></span></span><br><span class="line"><span class="params">            <span class="type">float</span> scale, <span class="type">float</span> centerX, <span class="type">float</span> centerY)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">onSoftKeyboardShowModeChanged</span><span class="params">(<span class="type">int</span> showMode)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">onPerformGestureResult</span><span class="params">(<span class="type">int</span> sequence, <span class="type">boolean</span> completedSuccessfully)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">onFingerprintCapturingGesturesChanged</span><span class="params">(<span class="type">boolean</span> active)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">onFingerprintGesture</span><span class="params">(<span class="type">int</span> gesture)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">onAccessibilityButtonClicked</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">onAccessibilityButtonAvailabilityChanged</span><span class="params">(<span class="type">boolean</span> available)</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="IAccessibilityServiceClient"><a href="#IAccessibilityServiceClient" class="headerlink" title="IAccessibilityServiceClient"></a>IAccessibilityServiceClient</h3><p>IAccessibilityServiceClient是一个aidl接口，其方法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">oneway <span class="keyword">interface</span> <span class="title class_">IAccessibilityServiceClient</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">init</span><span class="params">(in IAccessibilityServiceConnection connection, <span class="type">int</span> connectionId, IBinder windowToken)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">onAccessibilityEvent</span><span class="params">(in AccessibilityEvent event, in <span class="type">boolean</span> serviceWantsEvent)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">onInterrupt</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">onGesture</span><span class="params">(<span class="type">int</span> gesture)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">clearAccessibilityCache</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">onKeyEvent</span><span class="params">(in KeyEvent event, <span class="type">int</span> sequence)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">onMagnificationChanged</span><span class="params">(<span class="type">int</span> displayId, in Region region, <span class="type">float</span> scale, <span class="type">float</span> centerX, <span class="type">float</span> centerY)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">onSoftKeyboardShowModeChanged</span><span class="params">(<span class="type">int</span> showMode)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">onPerformGestureResult</span><span class="params">(<span class="type">int</span> sequence, <span class="type">boolean</span> completedSuccessfully)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">onFingerprintCapturingGesturesChanged</span><span class="params">(<span class="type">boolean</span> capturing)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">onFingerprintGesture</span><span class="params">(<span class="type">int</span> gesture)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">onAccessibilityButtonClicked</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">onAccessibilityButtonAvailabilityChanged</span><span class="params">(<span class="type">boolean</span> available)</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="IAccessibilityServiceClientWrapper"><a href="#IAccessibilityServiceClientWrapper" class="headerlink" title="IAccessibilityServiceClientWrapper"></a>IAccessibilityServiceClientWrapper</h3><p>IAccessibilityServiceClientWrapper继承自IAccessibilityServiceClient.Stub，且实现了HandlerCaller.Callback接口，很显然与Binder IPC相关。其代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// IAccessibilityServiceClientWrapper</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">IAccessibilityServiceClientWrapper</span> <span class="keyword">extends</span> <span class="title class_">IAccessibilityServiceClient</span>.Stub <span class="keyword">implements</span> <span class="title class_">HandlerCaller</span>.Callback &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">IAccessibilityServiceClientWrapper</span><span class="params">(Context context, Looper looper,</span></span><br><span class="line"><span class="params"></span></span><br><span class="line"><span class="params">            Callbacks callback)</span> &#123;</span><br><span class="line"></span><br><span class="line">        mCallback = callback;</span><br><span class="line"></span><br><span class="line">        mCaller = <span class="keyword">new</span> <span class="title class_">HandlerCaller</span>(context, looper, <span class="built_in">this</span>, <span class="literal">true</span> <span class="comment">/*asyncHandler*/</span>);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">init</span><span class="params">(IAccessibilityServiceConnection connection, <span class="type">int</span> connectionId,</span></span><br><span class="line"><span class="params"></span></span><br><span class="line"><span class="params">            IBinder windowToken)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="type">Message</span> <span class="variable">message</span> <span class="operator">=</span> mCaller.obtainMessageIOO(DO_INIT, connectionId,</span><br><span class="line"></span><br><span class="line">                connection, windowToken);</span><br><span class="line"></span><br><span class="line">        mCaller.sendMessage(message);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onInterrupt</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="type">Message</span> <span class="variable">message</span> <span class="operator">=</span> mCaller.obtainMessage(DO_ON_INTERRUPT);</span><br><span class="line"></span><br><span class="line">        mCaller.sendMessage(message);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onAccessibilityEvent</span><span class="params">(AccessibilityEvent event, <span class="type">boolean</span> serviceWantsEvent)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="type">Message</span> <span class="variable">message</span> <span class="operator">=</span> mCaller.obtainMessageBO(</span><br><span class="line"></span><br><span class="line">                DO_ON_ACCESSIBILITY_EVENT, serviceWantsEvent, event);</span><br><span class="line"></span><br><span class="line">        mCaller.sendMessage(message);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">executeMessage</span><span class="params">(Message message)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">switch</span> (message.what) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> DO_ON_ACCESSIBILITY_EVENT: &#123;</span><br><span class="line"></span><br><span class="line">                <span class="type">AccessibilityEvent</span> <span class="variable">event</span> <span class="operator">=</span> (AccessibilityEvent) message.obj;</span><br><span class="line"></span><br><span class="line">                <span class="type">boolean</span> <span class="variable">serviceWantsEvent</span> <span class="operator">=</span> message.arg1 != <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (event != <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">                    <span class="comment">// Send the event to AccessibilityCache via AccessibilityInteractionClient</span></span><br><span class="line"></span><br><span class="line">                    AccessibilityInteractionClient.getInstance().onAccessibilityEvent(event);</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (serviceWantsEvent</span><br><span class="line"></span><br><span class="line">                            &amp;&amp; (mConnectionId != AccessibilityInteractionClient.NO_ID)) &#123;</span><br><span class="line"></span><br><span class="line">                        <span class="comment">// Send the event to AccessibilityService</span></span><br><span class="line"></span><br><span class="line">                        mCallback.onAccessibilityEvent(event);</span><br><span class="line"></span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="comment">// Make sure the event is recycled.</span></span><br><span class="line"></span><br><span class="line">                    <span class="keyword">try</span> &#123;</span><br><span class="line"></span><br><span class="line">                        event.recycle();</span><br><span class="line"></span><br><span class="line">                    &#125; <span class="keyword">catch</span> (IllegalStateException ise) &#123;</span><br><span class="line"></span><br><span class="line">                        <span class="comment">/* ignore - best effort */</span></span><br><span class="line"></span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">            &#125; <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> DO_ON_INTERRUPT: &#123;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (mConnectionId != AccessibilityInteractionClient.NO_ID) &#123;</span><br><span class="line"></span><br><span class="line">                    mCallback.onInterrupt();</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">            &#125; <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> DO_INIT: &#123;</span><br><span class="line"></span><br><span class="line">                mConnectionId = message.arg1;</span><br><span class="line"></span><br><span class="line">                <span class="type">SomeArgs</span> <span class="variable">args</span> <span class="operator">=</span> (SomeArgs) message.obj;</span><br><span class="line"></span><br><span class="line">                <span class="type">IAccessibilityServiceConnection</span> <span class="variable">connection</span> <span class="operator">=</span></span><br><span class="line"></span><br><span class="line">                        (IAccessibilityServiceConnection) args.arg1;</span><br><span class="line"></span><br><span class="line">                <span class="type">IBinder</span> <span class="variable">windowToken</span> <span class="operator">=</span> (IBinder) args.arg2;</span><br><span class="line"></span><br><span class="line">                args.recycle();</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (connection != <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">                    AccessibilityInteractionClient.getInstance().addConnection(mConnectionId,</span><br><span class="line"></span><br><span class="line">                            connection);</span><br><span class="line"></span><br><span class="line">                    mCallback.init(mConnectionId, windowToken);</span><br><span class="line"></span><br><span class="line">                    mCallback.onServiceConnected();</span><br><span class="line"></span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">                    AccessibilityInteractionClient.getInstance().removeConnection(</span><br><span class="line"></span><br><span class="line">                            mConnectionId);</span><br><span class="line"></span><br><span class="line">                    mConnectionId = AccessibilityInteractionClient.NO_ID;</span><br><span class="line"></span><br><span class="line">                    AccessibilityInteractionClient.getInstance().clearCache();</span><br><span class="line"></span><br><span class="line">                    mCallback.init(AccessibilityInteractionClient.NO_ID, <span class="literal">null</span>);</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">            &#125; <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// HandlerCaller.Callback</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">Callback</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">executeMessage</span><span class="params">(Message msg)</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>AccessibilityService用来进程跨进程通信，最终执行findAccessibilityNodeInfosByXXX和performAction的是AccessibilityInteractionClient。</p>
+<p>其执行流程总结如下：</p>
+<ol>
+<li>AccessibilityInteractionClient没做什么操作，直接通过Binder调用了AccessibilityManagerService对应的方法。</li>
+<li>AccessibilityManagerService最终还是通过Binder调用了ViewRootImpl对应的方法。</li>
+<li>ViewRootImpl仅作为Binder中的服务端接收调用，真正的操作交给AccessibilityInteractionController来做。</li>
+<li>AccessibilityInteractionController对应的方法被调用之后，并没有直接进行操作，而是通过Handler做了一次转发，以便从Binder线程转到UI线程。</li>
+<li>以performAction(ACTION_CLICK)点击事件为例，最终调用的实际是View的mOnClickListener。</li>
+<li>以findAccessibilityNodeInfosByText为例，最终调用的实际是View的findViewsWithText方法，其方法内部实际对比的值是mContentDescription。需要特别说明的是TextView重写了该方法，其内部实际对比的值是mText。</li>
+</ol>
+<p><img src="/posts/78628c76/AccessibilityInteractionClient%E6%B5%81%E7%A8%8B%E5%9B%BE.jpg" alt="AccessibilityInteractionClient流程图"></p>
+<h3 id="流程总结"><a href="#流程总结" class="headerlink" title="流程总结"></a>流程总结</h3><p>当View发生改变时，会发出一个AccessibilityEvent出来，这个Event会通过Binder驱动发送给IAccessibilityServiceClientWrapper，调用他的 <code>onAccessibilityEvent(AccessibilityEvent)</code> 方法，这个方法通过Handler发送了一个Message给自己，目的是为了从Binder线程转回主线程。然后调用了 <code>mCallback.onAccessibilityEvent(event)</code> ，间接的调用了 <code>AccessibilityService.this.onAccessibilityEvent(event)</code> ，即我们自己实现的方法。</p>
+<p><img src="/posts/78628c76/AccessibilityService%E6%B5%81%E7%A8%8B%E5%9B%BE.jpg" alt="AccessibilityService流程图"></p>
+<p>其外部调用的流程如下：</p>
+<ol>
+<li>用户在设置页面启动了某个辅助模式服务；</li>
+<li>系统发送了一条广播到AccessibilityManagerService，收到广播后，AccessibilityManagerService绑定了我们写的AccessibilityService，就这样调用了onBind方法。AIDL的Server端准备好了，AccessibilityManagerService是一个系统服务，由SystemService启动。</li>
+<li>受到监控的App某个View发生了改变，其内部都会调用AccessibilityManager来发送event，其具体发送的对象是ViewRootImpl类来做的。</li>
+<li>发出event后会通过Binder驱动调用到AccessibilityService，最终调用了我们复写的onAccessibilityEvent方法。</li>
+<li>每一个View在AccessibilityService中都会被映射为一个AccessibilityNodeInfo对象，我们通过这个对象去查找具体View、触发事件，其本质是调用了AccessibilityInteractionClient类的对应方法。</li>
+<li>AccessibilityInteractionClient是一个可以执行accessibility交互的单例对象，它查询远程视图层次结构，查看视图的快照，以及来自这些层次结构的请求，以便在视图上执行某些操作。</li>
+<li>如果利用AccessibilityInteractionClient操作正在被监控的App，比如点击按钮，那么View发生变化，又发送出一个Event，这样便形成一个循环。</li>
+</ol>
+<p><img src="/posts/78628c76/AccessibilityService%E5%A4%96%E9%83%A8%E6%B5%81%E7%A8%8B%E5%9B%BE.jpg" alt="AccessibilityService外部流程图"></p>
+<h2 id="防御措施"><a href="#防御措施" class="headerlink" title="防御措施"></a>防御措施</h2><h3 id="检测辅助模式的开启"><a href="#检测辅助模式的开启" class="headerlink" title="检测辅助模式的开启"></a>检测辅助模式的开启</h3><p>可以通过AccessibilityManagerService提供的方法获取所有的辅助模式应用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">AccessibilityManagerService</span> <span class="keyword">extends</span> <span class="title class_">IAccessibilityManager</span>.Stub &#123;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> List&lt;AccessibilityServiceInfo&gt; <span class="title function_">getInstalledAccessibilityServiceList</span><span class="params">(<span class="type">int</span> userId)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>AccessibilityManagerService是com.android.server.accessibility包下的类，没有办法直接使用，可以通过AccessibilityManager来间接的操作AccessibilityManagerService，其内部利用Binder间接的调用了AccessibilityManagerService。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment"> * 取得正在监控目标包名的AccessibilityService</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> List&lt;AccessibilityServiceInfo&gt; <span class="title function_">getInstalledAccessibilityServiceList</span><span class="params">(String targetPackage)</span> &#123;</span><br><span class="line"></span><br><span class="line">    List&lt;AccessibilityServiceInfo&gt; result = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="type">AccessibilityManager</span> <span class="variable">accessibilityManager</span> <span class="operator">=</span> (AccessibilityManager) getApplicationContext().getSystemService(Context.ACCESSIBILITY_SERVICE);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (accessibilityManager == <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    List&lt;AccessibilityServiceInfo&gt; infoList = accessibilityManager.getInstalledAccessibilityServiceList();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (infoList == <span class="literal">null</span> || infoList.size() == <span class="number">0</span>) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (AccessibilityServiceInfo info : infoList) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (info.packageNames == <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">            result.add(info);</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">for</span> (String packageName : info.packageNames) &#123;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (targetPackage.equals(packageName)) &#123;</span><br><span class="line"></span><br><span class="line">                    result.add(info);</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当info.packageNames为null时，表示监控所有包名。外挂有可能蒙混其中，但如果一刀切，也有可能误杀正常软件。</p>
+<h3 id="Event干扰"><a href="#Event干扰" class="headerlink" title="Event干扰"></a>Event干扰</h3><p>随机发送外挂感兴趣的Event出来，干扰其允许。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">textView.sendAccessibilityEvent(AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED);</span><br></pre></td></tr></table></figure>
+
+<h3 id="屏蔽AccessibilityServices文案检查"><a href="#屏蔽AccessibilityServices文案检查" class="headerlink" title="屏蔽AccessibilityServices文案检查"></a>屏蔽AccessibilityServices文案检查</h3><p>在了解AccessibilityServices源码之后，我们知道其内部核心原理就是调用TextView的findViewsWithText方法，因此可以复写这个方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DefensiveTextView</span> <span class="keyword">extends</span> <span class="title class_">android</span>.support.v7.widget.AppCompatTextView &#123;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">findViewsWithText</span><span class="params">(ArrayList&lt;View&gt; outViews, CharSequence searched, <span class="type">int</span> flags)</span> &#123;</span><br><span class="line"></span><br><span class="line">        outViews.remove(<span class="built_in">this</span>);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="屏蔽AccessibilityServices点击事件"><a href="#屏蔽AccessibilityServices点击事件" class="headerlink" title="屏蔽AccessibilityServices点击事件"></a>屏蔽AccessibilityServices点击事件</h3><p>像上面一样，通过源码了解原理之后，我们知道AccessibilityServices执行点击事件最终在调用View的mOnClickListener。因此可以利用onTouch代替onClick。</p>
+<h2 id="使用实例"><a href="#使用实例" class="headerlink" title="使用实例"></a>使用实例</h2><h3 id="开启辅助权限"><a href="#开启辅助权限" class="headerlink" title="开启辅助权限"></a>开启辅助权限</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">AccessibilityHelper</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="type">boolean</span> <span class="title function_">hasAccessibility</span><span class="params">(Context context, Class serviceClass)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (context == <span class="literal">null</span> || serviceClass == <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="type">int</span> <span class="variable">ok</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line"></span><br><span class="line">            ok = Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.ACCESSIBILITY_ENABLED);</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">catch</span> (Settings.SettingNotFoundException e) &#123;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        TextUtils.<span class="type">SimpleStringSplitter</span> <span class="variable">ms</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TextUtils</span>.SimpleStringSplitter(<span class="string">&#x27;:&#x27;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (ok == <span class="number">1</span>) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="type">String</span> <span class="variable">settingValue</span> <span class="operator">=</span> Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (settingValue != <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">                ms.setString(settingValue);</span><br><span class="line"></span><br><span class="line">                <span class="keyword">while</span> (ms.hasNext()) &#123;</span><br><span class="line"></span><br><span class="line">                    <span class="type">String</span> <span class="variable">accessibilityService</span> <span class="operator">=</span> ms.next();</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (accessibilityService.contains(serviceClass.getSimpleName())) &#123;</span><br><span class="line"></span><br><span class="line">                        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">openAccessibility</span><span class="params">(Context context, Class service)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (context == <span class="literal">null</span> || service == <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (hasAccessibility(context, service)) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="type">Intent</span> <span class="variable">intent</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Intent</span>(Settings.ACTION_ACCESSIBILITY_SETTINGS);</span><br><span class="line"></span><br><span class="line">        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);</span><br><span class="line"></span><br><span class="line">        context.startActivity(intent);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="实现AccessibilityService"><a href="#实现AccessibilityService" class="headerlink" title="实现AccessibilityService"></a>实现AccessibilityService</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CallAccessibilityService</span> <span class="keyword">extends</span> <span class="title class_">AccessibilityService</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">TAG</span> <span class="operator">=</span> <span class="string">&quot;CallAccessibility&quot;</span>;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onAccessibilityEvent</span><span class="params">(AccessibilityEvent event)</span> &#123;</span><br><span class="line"></span><br><span class="line">        Log.d(TAG, <span class="string">&quot;onAccessibilityEvent: &quot;</span> + event.toString());</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (event.getEventType() == AccessibilityEvent.TYPE_VIEW_CLICKED) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="type">AccessibilityNodeInfo</span> <span class="variable">nodeInfo</span> <span class="operator">=</span> getRootInActiveWindow();</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (nodeInfo != <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">                List&lt;AccessibilityNodeInfo&gt; infos = nodeInfo.findAccessibilityNodeInfosByText(<span class="string">&quot;选择来电秀视频&quot;</span>);</span><br><span class="line"></span><br><span class="line">                <span class="keyword">for</span> (AccessibilityNodeInfo info : infos) &#123;</span><br><span class="line"></span><br><span class="line">                    info.performAction(AccessibilityNodeInfo.ACTION_CLICK);</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onInterrupt</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">        Log.d(TAG, <span class="string">&quot;onInterrupt&quot;</span>);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="声明AccessibilityService"><a href="#声明AccessibilityService" class="headerlink" title="声明AccessibilityService"></a>声明AccessibilityService</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">service</span></span></span><br><span class="line"><span class="tag"></span></span><br><span class="line"><span class="tag">    <span class="attr">android:name</span>=<span class="string">&quot;.accessibility.CallAccessibilityService&quot;</span></span></span><br><span class="line"><span class="tag"></span></span><br><span class="line"><span class="tag">    <span class="attr">android:enabled</span>=<span class="string">&quot;true&quot;</span></span></span><br><span class="line"><span class="tag"></span></span><br><span class="line"><span class="tag">    <span class="attr">android:exported</span>=<span class="string">&quot;true&quot;</span></span></span><br><span class="line"><span class="tag"></span></span><br><span class="line"><span class="tag">    <span class="attr">android:label</span>=<span class="string">&quot;@string/app_name&quot;</span></span></span><br><span class="line"><span class="tag"></span></span><br><span class="line"><span class="tag">    <span class="attr">android:permission</span>=<span class="string">&quot;android.permission.BIND_ACCESSIBILITY_SERVICE&quot;</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">intent-filter</span>&gt;</span></span><br><span class="line"></span><br><span class="line">        <span class="tag">&lt;<span class="name">action</span> <span class="attr">android:name</span>=<span class="string">&quot;android.accessibilityservice.AccessibilityService&quot;</span> /&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;/<span class="name">intent-filter</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">meta-data</span></span></span><br><span class="line"><span class="tag"></span></span><br><span class="line"><span class="tag">        <span class="attr">android:name</span>=<span class="string">&quot;android.accessibilityservice&quot;</span></span></span><br><span class="line"><span class="tag"></span></span><br><span class="line"><span class="tag">        <span class="attr">android:resource</span>=<span class="string">&quot;@xml/accessibility&quot;</span> /&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">service</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="配置-1"><a href="#配置-1" class="headerlink" title="配置"></a>配置</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">accessibility-service</span> <span class="attr">xmlns:android</span>=<span class="string">&quot;http://schemas.android.com/apk/res/android&quot;</span></span></span><br><span class="line"><span class="tag"></span></span><br><span class="line"><span class="tag">    <span class="attr">android:accessibilityEventTypes</span>=<span class="string">&quot;typeViewClicked&quot;</span></span></span><br><span class="line"><span class="tag"></span></span><br><span class="line"><span class="tag">    <span class="attr">android:accessibilityFeedbackType</span>=<span class="string">&quot;feedbackGeneric&quot;</span></span></span><br><span class="line"><span class="tag"></span></span><br><span class="line"><span class="tag">    <span class="attr">android:accessibilityFlags</span>=<span class="string">&quot;flagDefault|flagRetrieveInteractiveWindows|flagIncludeNotImportantViews|flagReportViewIds|flagRequestTouchExplorationMode&quot;</span></span></span><br><span class="line"><span class="tag"></span></span><br><span class="line"><span class="tag">    <span class="attr">android:canRetrieveWindowContent</span>=<span class="string">&quot;true&quot;</span></span></span><br><span class="line"><span class="tag"></span></span><br><span class="line"><span class="tag">    <span class="attr">android:description</span>=<span class="string">&quot;@string/description&quot;</span></span></span><br><span class="line"><span class="tag"></span></span><br><span class="line"><span class="tag">    <span class="attr">android:notificationTimeout</span>=<span class="string">&quot;100&quot;</span></span></span><br><span class="line"><span class="tag"></span></span><br><span class="line"><span class="tag">    <span class="attr">android:packageNames</span>=<span class="string">&quot;com.hearing.calltest&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/clippings/" rel="tag"># clippings</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/cded5a3d/" rel="next" title="Android开发踩坑合集">
+                <i class="fa fa-chevron-left"></i> Android开发踩坑合集
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/56f43373/" rel="prev" title="Android插件化及热修复">
+                Android插件化及热修复 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">439</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">47</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@qq.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A3%B0%E6%98%8E"><span class="nav-text">声明</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE"><span class="nav-text">配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Service-Meta-Data"><span class="nav-text">Service Meta Data</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Event-types"><span class="nav-text">Event types</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Feedback-types"><span class="nav-text">Feedback types</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Flags"><span class="nav-text">Flags</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AccessibilityService"><span class="nav-text">AccessibilityService</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#disableSelf"><span class="nav-text">disableSelf</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#findFocus"><span class="nav-text">findFocus</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#getAccessibilityButtonController"><span class="nav-text">getAccessibilityButtonController</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#getFingerprintGestureController"><span class="nav-text">getFingerprintGestureController</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#getServiceInfo"><span class="nav-text">getServiceInfo</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#getRootInActiveWindow"><span class="nav-text">getRootInActiveWindow</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AccessibilityNodeInfo"><span class="nav-text">AccessibilityNodeInfo</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0-1"><span class="nav-text">概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#addAction"><span class="nav-text">addAction</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#performAction"><span class="nav-text">performAction</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#findAccessibilityNodeInfosByText"><span class="nav-text">findAccessibilityNodeInfosByText</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#findAccessibilityNodeInfosByViewId"><span class="nav-text">findAccessibilityNodeInfosByViewId</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AccessibilityEvent"><span class="nav-text">AccessibilityEvent</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0-2"><span class="nav-text">概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#obtain"><span class="nav-text">obtain</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#recycle"><span class="nav-text">recycle</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AccessibilityRecord"><span class="nav-text">AccessibilityRecord</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0-3"><span class="nav-text">概述</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90"><span class="nav-text">原理解析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0-4"><span class="nav-text">概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AccessibilityService-1"><span class="nav-text">AccessibilityService</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Callbacks"><span class="nav-text">Callbacks</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IAccessibilityServiceClient"><span class="nav-text">IAccessibilityServiceClient</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IAccessibilityServiceClientWrapper"><span class="nav-text">IAccessibilityServiceClientWrapper</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B5%81%E7%A8%8B%E6%80%BB%E7%BB%93"><span class="nav-text">流程总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%98%B2%E5%BE%A1%E6%8E%AA%E6%96%BD"><span class="nav-text">防御措施</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A3%80%E6%B5%8B%E8%BE%85%E5%8A%A9%E6%A8%A1%E5%BC%8F%E7%9A%84%E5%BC%80%E5%90%AF"><span class="nav-text">检测辅助模式的开启</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Event%E5%B9%B2%E6%89%B0"><span class="nav-text">Event干扰</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B1%8F%E8%94%BDAccessibilityServices%E6%96%87%E6%A1%88%E6%A3%80%E6%9F%A5"><span class="nav-text">屏蔽AccessibilityServices文案检查</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B1%8F%E8%94%BDAccessibilityServices%E7%82%B9%E5%87%BB%E4%BA%8B%E4%BB%B6"><span class="nav-text">屏蔽AccessibilityServices点击事件</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%AE%9E%E4%BE%8B"><span class="nav-text">使用实例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%80%E5%90%AF%E8%BE%85%E5%8A%A9%E6%9D%83%E9%99%90"><span class="nav-text">开启辅助权限</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0AccessibilityService"><span class="nav-text">实现AccessibilityService</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A3%B0%E6%98%8EAccessibilityService"><span class="nav-text">声明AccessibilityService</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-1"><span class="nav-text">配置</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

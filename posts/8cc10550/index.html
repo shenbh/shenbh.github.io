@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="clippings," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="概述RecyclerView 作为替代 ListView 的组件，得益于 RecyclerView 的灵活性和可定制程度高的特性，除此之外 RecyclerView 的预取机制以及缓存机制也是一大亮点。相关类：  LayoutManager: 布局管理器，用来决定 View 如何填充 RecyclerView, 接管 RecyclerView 的 Measure, Layout, Draw 过程。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android-RecyclerView笔记">
+<meta property="og:url" content="http://shenbh.github.io/posts/8cc10550/index.html">
+<meta property="og:site_name" content="积跬步">
+<meta property="og:description" content="概述RecyclerView 作为替代 ListView 的组件，得益于 RecyclerView 的灵活性和可定制程度高的特性，除此之外 RecyclerView 的预取机制以及缓存机制也是一大亮点。相关类：  LayoutManager: 布局管理器，用来决定 View 如何填充 RecyclerView, 接管 RecyclerView 的 Measure, Layout, Draw 过程。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://shenbh.github.io/posts/8cc10550/cacheViews%E6%9C%AA%E6%BB%A1.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/8cc10550/cacheViews%E5%B7%B2%E6%BB%A1.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/8cc10550/%E8%BF%9B%E5%B1%8F%E5%B9%95%E6%97%B6%E5%80%99%E7%9A%84%E6%83%85%E5%86%B5.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/8cc10550/%E5%B1%8F%E5%B9%95%E5%BE%80%E4%B8%8B%E6%8B%89%E8%BF%9B%E5%85%A5%E5%B1%8F%E5%B9%95%E7%9A%84%E6%83%85%E5%86%B5.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/8cc10550/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96.jpg">
+<meta property="article:published_time" content="2025-07-03T08:47:22.366Z">
+<meta property="article:modified_time" content="2025-07-03T09:10:55.912Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="clippings">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/8cc10550/cacheViews%E6%9C%AA%E6%BB%A1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/8cc10550/"/>
+
+
+
+
+
+  <title>Android-RecyclerView笔记 | 积跬步</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">积跬步</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just do IT Now.</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/8cc10550/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="积跬步">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">Android-RecyclerView笔记</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-07-03T16:47:22+08:00">
+                2025-07-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+              <div class="post-description">
+                  概述RecyclerView 作为替代 ListView 的组件，得益于 RecyclerView 的灵活性和可定制程度高的特性，除此之外 RecyclerView 的预取机制以及缓存机制也是一大亮点。相关类：  LayoutManager: 布局管理器，用来决定 View 如何填充 RecyclerView, 接管 RecyclerView 的 Measure, Layout, Draw 过程。
+              </div>
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>RecyclerView 作为替代 ListView 的组件，得益于 RecyclerView 的灵活性和可定制程度高的特性，除此之外 RecyclerView 的预取机制以及缓存机制也是一大亮点。相关类：</p>
+<ul>
+<li>LayoutManager: 布局管理器，用来决定 View 如何填充 RecyclerView, 接管 RecyclerView 的 Measure, Layout, Draw 过程。</li>
+<li>RecyclerView.Adapter: 负责提供 View 所需要的数据集以及管理 View 的创建和数据绑定。</li>
+<li>ViewHolder: View 持有者，负责 View 的初始化。</li>
+<li>Recycler: 缓存逻辑。</li>
+</ul>
+<p>首先看一下 RecyclerView 的基础使用：</p>
+<p><strong>1. 依赖: androidx.recyclerview:recyclerview:1.1.0</strong></p>
+<p><strong>2. 设置LayoutManager</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mRecyclerView = findViewById(R.id.recycle_view);</span><br><span class="line"></span><br><span class="line"><span class="type">LinearLayoutManager</span> <span class="variable">layoutManager</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">LinearLayoutManager</span>(<span class="built_in">this</span>)</span><br><span class="line"></span><br><span class="line">layoutManager.setOrientation(LinearLayoutManager.VERTICAL);</span><br><span class="line"></span><br><span class="line">mRecyclerView.setLayoutManager(layoutManager);</span><br></pre></td></tr></table></figure>
+
+<p><strong>3. 自定义Adapter</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line">mRecyclerView.setAdapter(adapter);</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MyAdapter</span> <span class="keyword">extends</span> <span class="title class_">RecyclerView</span>.Adapter&lt;MyAdapter.ViewHolder&gt;&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> String[] datas = <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">MyAdapter</span><span class="params">(String[] datas)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">this</span>.datas = datas;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> ViewHolder <span class="title function_">onCreateViewHolder</span><span class="params">(ViewGroup parent, <span class="type">int</span> viewType)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="type">View</span> <span class="variable">view</span> <span class="operator">=</span> LayoutInflater.from(parent.getContext()).inflate(R.layout.item, parent, <span class="literal">false</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">ViewHolder</span>(view);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onBindViewHolder</span><span class="params">(ViewHolder holder, <span class="type">int</span> position)</span> &#123;</span><br><span class="line"></span><br><span class="line">        holder.mTextView.setText(datas[position]);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">getItemCount</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> datas.length;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">ViewHolder</span> <span class="keyword">extends</span> <span class="title class_">RecyclerView</span>.ViewHolder &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> TextView mTextView;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> <span class="title function_">ViewHolder</span><span class="params">(View view)</span>&#123;</span><br><span class="line"></span><br><span class="line">            <span class="built_in">super</span>(view);</span><br><span class="line"></span><br><span class="line">            mTextView = (TextView) view.findViewById(R.id.text);</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>4. ItemDecoration</strong></p>
+<p>RecyclerView 可以通过 addItemDecoration() 设置分割线，可以通过继承 RecyclerView.ItemDecoration 类自定义分割线。</p>
+<p><strong>5. ItemAnimator</strong></p>
+<p>RecyclerView 可以通过 <code>setItemAnimator(ItemAnimator animator)</code> 来设置添加和移除时的动画效果，需要注意更新数据集时要用 notifyItemInserted 与 notifyItemRemoved, 不能使用 notifyDataSetChanged, 否则没有动画效果。</p>
+<h2 id="缓存工作流程"><a href="#缓存工作流程" class="headerlink" title="缓存工作流程"></a>缓存工作流程</h2><ul>
+<li>列表首次填充时，它会创建并在列表的任意一侧绑定一些视图持有者。例如，如果视图显示的是列表位置 0 到 9，则 RecyclerView 会创建并绑定这些视图持有者，还可能创建并绑定位置 10 的视图持有者。这样，如果用户滚动列表，则下一个元素可随时显示出来。</li>
+<li>当用户滚动列表时，RecyclerView 会根据需要创建新的视图持有者。它还会保存已在屏幕外滚动的视图持有者，以便重复使用。如果用户切换滚动方向，则之前在屏幕外滚动的视图持有者可以立即恢复。另一方面，如果用户继续沿同一方向滚动，屏幕外停留时间最长的视图持有者可以重新绑定到新数据。无需创建视图持有者，也不需要扩充其视图；应用只更新视图的内容以匹配其绑定到的新项。</li>
+</ul>
+<h2 id="缓存原理"><a href="#缓存原理" class="headerlink" title="缓存原理"></a>缓存原理</h2><h3 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h3><p>在 RecyclerView.Recycler 类中定义了缓存相关的数据结构：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">Recycler</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Scrap缓存</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">final</span> ArrayList&lt;ViewHolder&gt; mAttachedScrap = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    ArrayList&lt;ViewHolder&gt; mChangedScrap = <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Cache缓存</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">final</span> ArrayList&lt;ViewHolder&gt; mCachedViews = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;ViewHolder&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 缓存池</span></span><br><span class="line"></span><br><span class="line">    RecycledViewPool mRecyclerPool;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 自定义缓存</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> ViewCacheExtension mViewCacheExtension;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里大概可以分为 4 种类别：</p>
+<ul>
+<li>Scrap 缓存：对应当前已加载的视图，也就是屏幕中的视图；</li>
+<li>Cache 缓存：刚刚移出屏幕的Item，默认大小是2个，缓存中的Item匹配后可以直接展示，主要用于解决RecyclerView滑动抖动时的情况，还有用于保存Prefetch的ViewHoder。根据FIFO原则先把老的数据放入下一级缓存中(如RecycledViewPool)，然后添加新数据；</li>
+<li>ViewCacheExtension 缓存：用来给开发者自定义的缓存，通过type和position来查找缓存，开发者可通过实现 getViewForPositionAndType 方法来自定义；</li>
+<li>RecycledViewPool 缓存：默认的缓存数量是5个，优先级没有Cache缓存高，同时缓存中的Item需要再次调用onBindViewHolder()方法；</li>
+</ul>
+<h3 id="入缓存"><a href="#入缓存" class="headerlink" title="入缓存"></a>入缓存</h3><p>缓存机制是从滑动开始的，在滑动的时候会触发 View 的绘制流程。RecyclerView 的绘制是委托给 LayoutManager 的，在 LinearLayoutManager 中，可以找到相关的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onLayoutChildren</span><span class="params">(RecyclerView.Recycler recycler, RecyclerView.State state)</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 处理 Scrap 缓存以及 detach 的 ViewHolder</span></span><br><span class="line"></span><br><span class="line">    detachAndScrapAttachedViews(recycler);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 暂时 detach 并 scrap(废弃) 所有当前 attached 的子 View, View 将被废弃到给定的 Recycler 中</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Recycler 可能更喜欢在其他先前回收的 view 之前重用 scrap views</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">detachAndScrapAttachedViews</span><span class="params">( Recycler recycler)</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">final</span> <span class="type">int</span> <span class="variable">childCount</span> <span class="operator">=</span> getChildCount();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> childCount - <span class="number">1</span>; i &gt;= <span class="number">0</span>; i--) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">final</span> <span class="type">View</span> <span class="variable">v</span> <span class="operator">=</span> getChildAt(i);</span><br><span class="line"></span><br><span class="line">        scrapOrRecycleView(recycler, i, v);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">scrapOrRecycleView</span><span class="params">(Recycler recycler, <span class="type">int</span> index, View view)</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">final</span> <span class="type">ViewHolder</span> <span class="variable">viewHolder</span> <span class="operator">=</span> getChildViewHolderInt(view);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (viewHolder.isInvalid() &amp;&amp; !viewHolder.isRemoved() &amp;&amp; !mRecyclerView.mAdapter.hasStableIds()) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 处理屏幕外的item</span></span><br><span class="line"></span><br><span class="line">        removeViewAt(index);</span><br><span class="line"></span><br><span class="line">        recycler.recycleViewHolderInternal(viewHolder);</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 处理在屏幕中的item</span></span><br><span class="line"></span><br><span class="line">        detachViewAt(index);</span><br><span class="line"></span><br><span class="line">        recycler.scrapView(view);</span><br><span class="line"></span><br><span class="line">        mRecyclerView.mViewInfoStore.onViewDetached(viewHolder);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在 scrapOrRecycleView() 方法中有两个逻辑分支，分别处理在屏幕中的 Item 以及需要回收的 Item, 先看如何处理屏幕中的Item:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Mark an attached view as scrap.</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> <span class="title function_">scrapView</span><span class="params">(View view)</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">final</span> <span class="type">ViewHolder</span> <span class="variable">holder</span> <span class="operator">=</span> getChildViewHolderInt(view);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (holder.hasAnyOfTheFlags(ViewHolder.FLAG_REMOVED | ViewHolder.FLAG_INVALID)</span><br><span class="line"></span><br><span class="line">            || !holder.isUpdated() || canReuseUpdatedViewHolder(holder)) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 没有更新 或者 可以被复用(传入了payload)</span></span><br><span class="line"></span><br><span class="line">        holder.setScrapContainer(<span class="built_in">this</span>, <span class="literal">false</span>);</span><br><span class="line"></span><br><span class="line">        mAttachedScrap.add(holder);</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 需要更新 放到 mChangedScrap 中</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (mChangedScrap == <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">            mChangedScrap = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;ViewHolder&gt;();</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        holder.setScrapContainer(<span class="built_in">this</span>, <span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">        mChangedScrap.add(holder);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里主要处理的就是将ViewHolder加入Scrap缓存中。 <strong>上面canReuseUpdatedViewHolder方法中，如果在局部更新方法里传入的 payload 不为空，则返回true</strong> 接下来分析需要回收的情况：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">recycleViewHolderInternal</span><span class="params">(ViewHolder holder)</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (forceRecycle || holder.isRecyclable()) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (mViewCacheMax &gt; <span class="number">0</span> &amp;&amp; !holder.hasAnyOfTheFlags(ViewHolder.FLAG_INVALID</span><br><span class="line"></span><br><span class="line">                | ViewHolder.FLAG_REMOVED | ViewHolder.FLAG_UPDATE | ViewHolder.FLAG_ADAPTER_POSITION_UNKNOWN)) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// Retire(退役) oldest cached view</span></span><br><span class="line"></span><br><span class="line">            <span class="type">int</span> <span class="variable">cachedViewSize</span> <span class="operator">=</span> mCachedViews.size();</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (cachedViewSize &gt;= mViewCacheMax &amp;&amp; cachedViewSize &gt; <span class="number">0</span>) &#123;</span><br><span class="line"></span><br><span class="line">                recycleCachedViewAt(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">                cachedViewSize--;</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="type">int</span> <span class="variable">targetCacheIndex</span> <span class="operator">=</span> cachedViewSize;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">            mCachedViews.add(targetCacheIndex, holder);</span><br><span class="line"></span><br><span class="line">            cached = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (!cached) &#123;</span><br><span class="line"></span><br><span class="line">            addViewHolderToRecycledViewPool(holder, <span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">            recycled = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>recycleViewHolderInternal() 方法中主要是对 Cache 缓存和 RecycledViewPool 缓存进行处理。判断依据主要是根据 ViewHolde 的标志位进行判断：</p>
+<ul>
+<li>对于 Cache 缓存：缓存池满了以后就移出第1个然后加入新的缓存数据。</li>
+<li>对于 RecycledViewPool 缓存：主要根据ViewHolder的标志位进行判断（比如ViewHolder有FLAG_REMOVED标志）就会加入到RecycledViewPool缓存。</li>
+</ul>
+<h3 id="使用缓存"><a href="#使用缓存" class="headerlink" title="使用缓存"></a>使用缓存</h3><p>上面主要分析了 RecyclerView 中缓存数据的来源，接下来继续分析如何使用缓存。按照之前的思路，在 LayoutManager 执行 onLayoutChildren() 方法时会获取新的 Item, 此时就会触发 RecyclerView 的缓存机制：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onLayoutChildren</span><span class="params">(RecyclerView.Recycler recycler, RecyclerView.State state)</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 处理 Scrap 缓存以及 detach 的 ViewHolder</span></span><br><span class="line"></span><br><span class="line">    detachAndScrapAttachedViews(recycler);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    fill(recycler, mLayoutState, state, <span class="literal">false</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">fill</span><span class="params">(RecyclerView.Recycler recycler, LayoutState layoutState, RecyclerView.State state, <span class="type">boolean</span> stopOnFocusable)</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> ((layoutState.mInfinite || remainingSpace &gt; <span class="number">0</span>) &amp;&amp; layoutState.hasMore(state)) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">        layoutChunk(recycler, state, layoutState, layoutChunkResult);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> <span class="title function_">layoutChunk</span><span class="params">(RecyclerView.Recycler recycler, RecyclerView.State state, LayoutState layoutState, LayoutChunkResult result)</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">View</span> <span class="variable">view</span> <span class="operator">=</span> layoutState.next(recycler);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">View <span class="title function_">next</span><span class="params">(RecyclerView.Recycler recycler)</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (mScrapList != <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> nextViewFromScrapList();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">final</span> <span class="type">View</span> <span class="variable">view</span> <span class="operator">=</span> recycler.getViewForPosition(mCurrentPosition);</span><br><span class="line"></span><br><span class="line">    mCurrentPosition += mItemDirection;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> view;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到 LayoutManager 是通过 fill() 方法来填充布局的，在这个过程中最终会通过 Recycler 的 getViewForPosition() 方法获取到需要添加的View。接下来就从 Recycler 中进行分析，而 Recycler.getViewForPosition() 最终会调用到 Recycler.tryGetViewHolderForPositionByDeadline() 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br></pre></td><td class="code"><pre><span class="line">ViewHolder <span class="title function_">tryGetViewHolderForPositionByDeadline</span><span class="params">(<span class="type">int</span> position, <span class="type">boolean</span> dryRun, <span class="type">long</span> deadlineNs)</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">boolean</span> <span class="variable">fromScrapOrHiddenOrCache</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="type">ViewHolder</span> <span class="variable">holder</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 0) If there is a changed scrap, try to find from there</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (mState.isPreLayout()) &#123;</span><br><span class="line"></span><br><span class="line">        holder = getChangedScrapViewForPosition(position);</span><br><span class="line"></span><br><span class="line">        fromScrapOrHiddenOrCache = holder != <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 1) Find by position from scrap/hidden list/cache</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (holder == <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 1) 获取ViewHolder(从Scrap或者Cache中)</span></span><br><span class="line"></span><br><span class="line">        holder = getScrapOrHiddenOrCachedHolderForPosition(position, dryRun);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (holder == <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">final</span> <span class="type">int</span> <span class="variable">offsetPosition</span> <span class="operator">=</span> mAdapterHelper.findPositionOffset(position);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">final</span> <span class="type">int</span> <span class="variable">type</span> <span class="operator">=</span> mAdapter.getItemViewType(offsetPosition);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 2) Find from scrap/cache via stable ids, if exists</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (mAdapter.hasStableIds()) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 2) 获取ViewHolder(从Scrap或者Cache中)</span></span><br><span class="line"></span><br><span class="line">            holder = getScrapOrCachedViewForId(mAdapter.getItemId(offsetPosition), type, dryRun);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (holder == <span class="literal">null</span> &amp;&amp; mViewCacheExtension != <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 3) 获取ViewHolder(从ViewCacheExtension中)</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">final</span> <span class="type">View</span> <span class="variable">view</span> <span class="operator">=</span> mViewCacheExtension.getViewForPositionAndType(<span class="built_in">this</span>, position, type);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (holder == <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 4) 获取ViewHolder(从RecycledViewPool中)</span></span><br><span class="line"></span><br><span class="line">            holder = getRecycledViewPool().getRecycledView(type);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (holder == <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 5) 新建ViewHolder</span></span><br><span class="line"></span><br><span class="line">            holder = mAdapter.createViewHolder(RecyclerView.<span class="built_in">this</span>, type);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> holder;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从上面代码中可以看到获取 ViewHolder 的过程总共有5步：</p>
+<ul>
+<li>一级缓存：从 Scrap 或者 Cache 中返回布局和内容都有效的ViewHolder，按照position或者id进行匹配，命中一级缓存无需onCreateViewHolder和onBindViewHolder；</li>
+<li>二级缓存：从 ViewCacheExtension 缓存中取，也就是用户自定义的那部分缓存；</li>
+<li>三级缓存：返回布局有效，内容无效的ViewHolder。在 RecycledViewPool 中获取，这里是通过 ViewType 来查找 ViewHolder 的，如果 ViewType 匹配就会返回 ViewHolder，这个时候会再次执行 onBindViewHolder() 方法；</li>
+<li>如果上面的缓存中都没有则新建 ViewHolder, 会执行 createViewHolder 方法。</li>
+</ul>
+<h2 id="View复用错乱"><a href="#View复用错乱" class="headerlink" title="View复用错乱"></a>View复用错乱</h2><p>RecyclerView 复用错乱的原因是取了之前的 View 来放到新 item 上，之前 View 的状态一直保留着，所以就出现错乱了。根据数据的来源可分为两种情况：</p>
+<p><strong>同步数据源</strong></p>
+<p>保证在 onBindViewHolder 方法调用的时候，根据给定位置的 item 的状态给 View 赋值。</p>
+<p><strong>异步数据源</strong></p>
+<p>当数据来源于网络时，举个例子：假设 item 中有一个 ImageView, 每次调用 onBindViewHolder 的时候都给 ImageView 一个 url, 然后等待服务器的结果，加载图片。此时若滑动屏幕，使得这个 item 不可见了，新的可见的 item 复用了它，这样当网络请求结束后，展示的图片就是之前的了。</p>
+<p>解决方法：可以在 onBindViewHolder 中对每个 item 设置一个 tag, 其值为 url, 当网络请求返回的时候，比较一下 url 是不是跟 tag 对应，对应上了才显示图片。或者 item 不可见了就取消服务器的请求，新的 item 再发起新的请求。</p>
+<h2 id="实例解析"><a href="#实例解析" class="headerlink" title="实例解析"></a>实例解析</h2><p><strong>出屏幕时候的情况-mCacheViews未满</strong></p>
+<p><img src="/posts/8cc10550/cacheViews%E6%9C%AA%E6%BB%A1.jpg" alt="cacheViews未满"></p>
+<ol>
+<li>当ViewHolder（position&#x3D;0，type&#x3D;1）出屏幕的时候，由于mCacheViews是空的，那么就直接放在mCacheViews里面（从0-N是由老到新）。此时ViewHolder在mCacheViews里面布局和内容都是有效的，因此可以直接复用。</li>
+<li>ViewHolder（position&#x3D;1，type&#x3D;2）同步骤1。</li>
+</ol>
+<p><strong>出屏幕时候的情况-mCacheViews已经满</strong></p>
+<p><img src="/posts/8cc10550/cacheViews%E5%B7%B2%E6%BB%A1.jpg" alt="cacheViews已满"></p>
+<ol>
+<li>当ViewHolder（position&#x3D;2，type&#x3D;1）出屏幕的时候由于一级缓存mCacheViews已经满了，因此然后移除mCacheViews里面最老的ViewHolder(position&#x3D;0,type&#x3D;1)到RecyclePool中，然后将ViewHolder（position&#x3D;2，type&#x3D;1）存入mCacheViews。此时被移除到RecyclePool的ViewHolder的内容会被标记为无效，当其复用的时候需要再次通过Adapter.bindViewHolder来绑定内容。</li>
+<li>ViewHolder（position&#x3D;3，type&#x3D;3）同步骤3。</li>
+</ol>
+<p><strong>进屏幕时候的情况</strong></p>
+<p><img src="/posts/8cc10550/%E8%BF%9B%E5%B1%8F%E5%B9%95%E6%97%B6%E5%80%99%E7%9A%84%E6%83%85%E5%86%B5.jpg" alt="进屏幕时候的情况"></p>
+<ol>
+<li>当ViewHolder（position&#x3D;3，type&#x3D;3）进入屏幕绘制的时候，由于Recycler的mCacheViews里面找不到position匹配的View，同时RecyclerPool里面找不到type匹配的View，因此，其只能通过adapter.createViewHolder来创建ViewHolder，然后通过adapter.bindViewHolder来绑定内容。</li>
+<li>当ViewHolder（position&#x3D;11，type&#x3D;1）进入屏幕的时候，发现RecyclerPool里面能找到type&#x3D;1的缓存，因此直接从RecyclerPool里面取来使用。由于内容是无效的，因此还需要调用bindViewHolder来绑定布局。同时ViewHolder（position&#x3D;4，type&#x3D;3）需要出屏幕，会经历步骤3回收的过程。</li>
+<li>ViewHolder（position&#x3D;12，type&#x3D;3）同步骤6。</li>
+</ol>
+<p><strong>屏幕往下拉ViewHoder（position&#x3D;1）进入屏幕的情况</strong></p>
+<p><img src="/posts/8cc10550/%E5%B1%8F%E5%B9%95%E5%BE%80%E4%B8%8B%E6%8B%89%E8%BF%9B%E5%85%A5%E5%B1%8F%E5%B9%95%E7%9A%84%E6%83%85%E5%86%B5.jpg" alt="屏幕往下拉进入屏幕的情况"></p>
+<ol>
+<li>由于mCacheView里面的有position&#x3D;1的ViewHolder与之匹配，直接返回。由于内容是有效的，因此无需再次绑定内容。</li>
+<li>ViewHolder（position&#x3D;0）同步骤8。</li>
+</ol>
+<h2 id="局部更新"><a href="#局部更新" class="headerlink" title="局部更新"></a>局部更新</h2><p>在 RecyclerView 中有一系列局部更新的方法，这些方法带有默认的动画效果，具体效果是 DefaultItemAnimator 来控制和处理，就是因为动画效果，让开发时会出现一些意料之外的状况。</p>
+<p>假设一个场景：上传照片，每个 ViewHolder 带有一张图片，然后上面有一个进度条，进度根据上传进度实时返回。如果使用 notifyItemChange() 来更新进度的话，会有两个问题：第一，发现每刷新一次，整个布局都会闪动一下。第二，进度的数值怎么传递才好呢？在 ViewHolder 的 Bean 对象中添加一个 progress 临时字段？另外，如果我们多次调用 notifyItemChange() 方法，条目会刷新多次吗？以及 notifyItemChange() 和 真正的局部刷新 同一个位置，ViewHolder 是同一个对象吗？</p>
+<p><code>Adapter.notifyItemRangeChanged</code> 方法会调用到 requestLayout() 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">notifyItemRangeChanged</span><span class="params">(<span class="type">int</span> positionStart, <span class="type">int</span> itemCount,  Object payload)</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> mObservers.size() - <span class="number">1</span>; i &gt;= <span class="number">0</span>; i--) &#123;</span><br><span class="line"></span><br><span class="line">        mObservers.get(i).onItemRangeChanged(positionStart, itemCount, payload);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// RecyclerViewDataObserver</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onItemRangeChanged</span><span class="params">(<span class="type">int</span> positionStart, <span class="type">int</span> itemCount, Object payload)</span> &#123;</span><br><span class="line"></span><br><span class="line">    assertNotInLayoutOrScroll(<span class="literal">null</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (mAdapterHelper.onItemRangeChanged(positionStart, itemCount, payload)) &#123;</span><br><span class="line"></span><br><span class="line">        triggerUpdateProcessor();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> <span class="title function_">triggerUpdateProcessor</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (POST_UPDATES_ON_ANIMATION &amp;&amp; mHasFixedSize &amp;&amp; mIsAttached) &#123;</span><br><span class="line"></span><br><span class="line">        ViewCompat.postOnAnimation(RecyclerView.<span class="built_in">this</span>, mUpdateChildViewsRunnable);</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">        mAdapterUpdateDuringMeasure = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">        requestLayout();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里当 mAdapterHelper.onItemRangeChanged 返回 true 才会接着往下走：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">boolean</span> <span class="title function_">onItemRangeChanged</span><span class="params">(<span class="type">int</span> positionStart, <span class="type">int</span> itemCount, Object payload)</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (itemCount &lt; <span class="number">1</span>) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    mPendingUpdates.add(obtainUpdateOp(UpdateOp.UPDATE, positionStart, itemCount, payload));</span><br><span class="line"></span><br><span class="line">    mExistingUpdateTypes |= UpdateOp.UPDATE;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> mPendingUpdates.size() == <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>payload 参数在这里被包装为对象，放入 mPendingUpdates 这个集合中。 <strong>因此可以证明即使调用 notify 多次，其实只有会触发一次requestLayout</strong> 。</p>
+<p>接着看 RecyclerView.onLayout 方法，它直接调用了 dispatchLayout 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">dispatchLayout</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">    mState.mIsMeasuring = <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (mState.mLayoutStep == State.STEP_START) &#123;</span><br><span class="line"></span><br><span class="line">        dispatchLayoutStep1();</span><br><span class="line"></span><br><span class="line">        mLayout.setExactMeasureSpecsFrom(<span class="built_in">this</span>);</span><br><span class="line"></span><br><span class="line">        dispatchLayoutStep2();</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (mAdapterHelper.hasUpdates() || mLayout.getWidth() != getWidth() || mLayout.getHeight() != getHeight()) &#123;</span><br><span class="line"></span><br><span class="line">        mLayout.setExactMeasureSpecsFrom(<span class="built_in">this</span>);</span><br><span class="line"></span><br><span class="line">        dispatchLayoutStep2();</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// always make sure we sync them (to ensure mode is exact)</span></span><br><span class="line"></span><br><span class="line">        mLayout.setExactMeasureSpecsFrom(<span class="built_in">this</span>);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    dispatchLayoutStep3();</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里涉及到三个方法，直接说结论：</p>
+<ul>
+<li>dispatchLayoutStep1: 在这里会执行上面介绍过的缓存机制。</li>
+<li>dispatchLayoutStep2: 此时将 mInPreLayout 置为 false, 然后执行 LayoutManager 的 onLayoutChildren() 方法，所以不会执行 tryGetViewHolderForPositionByDeadline 中的第 0 步，不会从 mChangedScrap 中查找 ViewHolder。由于如果 <strong>不需要更新或在局部更新方法里传入的 payload 不为空则 ViewHolder 会加到 mAttachedScrap 中，需要更新的且未传入 payload 则会放到 mChangedScrap 中</strong> ，所以如果没传入 payload 则旧的 ViewHolder 无法被复用，它会从下面步骤中获取 ViewHolder 返回，刷新时它使用的不是同一个 ViewHolder；如果传入了 payload 则会复用。</li>
+<li>dispatchLayoutStep3: 保存 View 信息，执行动画。如果 position 处的 oldHolder 和 newHolder 不同，则会执行相关动画效果(闪烁现象)。</li>
+</ul>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>总结来说 RecyclerView 的缓存都是发生在 Layout 过程中，在这里对缓存的数据进行管理，包括缓存的增加、删除、查找等行为。</p>
+<p>RecyclerView性能优化方向总结：</p>
+<p><img src="/posts/8cc10550/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96.jpg" alt="性能优化"></p>
+<p>一个 RecyclerView 的 item 往往由许多控件组成，当需要更新 item 中的某个状态时，如果调用 notifyItemChanged(int position) 则 item 中的每个控件都需要重新布局显示，无形中加大了内存和性能的损耗。其实就是使用了一个与之前不一样的 ViewHolder 对象。最常见的坑就是点击 item 的一个按钮，却引起同 item 的 ImageView 图片闪烁一下，可以使用 payload 参数(用来传递状态等)解决这个问题，此时更新时会复用之前的 ViewHolder 对象。</p>
+<p>而如果需要更新整个 item 则可以不传 payload 参数。另外，多次调用 notifyItemChange() 方法，不会刷新多次，而是会合并。</p>
+<p>如果调用了 notifyDataSetChanged 方法，即使数据源没有变化，默认只会有两个 item 重新走 onBindViewHolder 流程(mCachedViews)，其余 item 会走 onCreateViewHolder 和 onBindViewHolder 流程。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/clippings/" rel="tag"># clippings</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/f569f2ee/" rel="next" title="Android-Arouter源码解析">
+                <i class="fa fa-chevron-left"></i> Android-Arouter源码解析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/536bc395/" rel="prev" title="Android自定义View">
+                Android自定义View <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">439</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">47</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@qq.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%93%E5%AD%98%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B"><span class="nav-text">缓存工作流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%93%E5%AD%98%E5%8E%9F%E7%90%86"><span class="nav-text">缓存原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-text">数据结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%A5%E7%BC%93%E5%AD%98"><span class="nav-text">入缓存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E7%BC%93%E5%AD%98"><span class="nav-text">使用缓存</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#View%E5%A4%8D%E7%94%A8%E9%94%99%E4%B9%B1"><span class="nav-text">View复用错乱</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E4%BE%8B%E8%A7%A3%E6%9E%90"><span class="nav-text">实例解析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B1%80%E9%83%A8%E6%9B%B4%E6%96%B0"><span class="nav-text">局部更新</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

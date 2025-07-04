@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="clippings," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="概述Binder驱动的源码在Android的内核模块，Aosp源码中不包含这部分代码，可以在这里下载内核相关的源码：Kernel。Binder驱动相关的源码不大看得懂，对Linux内核了解不多，因此这篇文章借鉴了网上相关的一些解析。 Binder驱动是Android专用的，但底层的驱动架构与Linux驱动一样。binder驱动以misc设备进行注册，作为虚拟字符设备，没有直接操作硬件，只有对设备内">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android-Binder原理一-Driver">
+<meta property="og:url" content="http://shenbh.github.io/posts/95160a35/index.html">
+<meta property="og:site_name" content="积跬步">
+<meta property="og:description" content="概述Binder驱动的源码在Android的内核模块，Aosp源码中不包含这部分代码，可以在这里下载内核相关的源码：Kernel。Binder驱动相关的源码不大看得懂，对Linux内核了解不多，因此这篇文章借鉴了网上相关的一些解析。 Binder驱动是Android专用的，但底层的驱动架构与Linux驱动一样。binder驱动以misc设备进行注册，作为虚拟字符设备，没有直接操作硬件，只有对设备内">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://shenbh.github.io/posts/95160a35/binder_transaction_ipc.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/95160a35/binder_protocol.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/95160a35/protocol_transaction.jpg">
+<meta property="og:image" content="http://shenbh.github.io/posts/95160a35/binder_memory_map.jpg">
+<meta property="article:published_time" content="2025-07-03T08:02:47.924Z">
+<meta property="article:modified_time" content="2025-07-03T09:06:58.319Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="clippings">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/95160a35/binder_transaction_ipc.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/95160a35/"/>
+
+
+
+
+
+  <title>Android-Binder原理一-Driver | 积跬步</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">积跬步</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just do IT Now.</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/95160a35/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="积跬步">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">Android-Binder原理一-Driver</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-07-03T16:02:47+08:00">
+                2025-07-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+              <div class="post-description">
+                  概述Binder驱动的源码在Android的内核模块，Aosp源码中不包含这部分代码，可以在这里下载内核相关的源码：Kernel。Binder驱动相关的源码不大看得懂，对Linux内核了解不多，因此这篇文章借鉴了网上相关的一些解析。 Binder驱动是Android专用的，但底层的驱动架构与Linux驱动一样。binder驱动以misc设备进行注册，作为虚拟字符设备，没有直接操作硬件，只有对设备内
+              </div>
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>Binder驱动的源码在Android的内核模块，Aosp源码中不包含这部分代码，可以在这里下载内核相关的源码： <a target="_blank" rel="noopener" href="https://android.googlesource.com/kernel/common/">Kernel</a> 。Binder驱动相关的源码不大看得懂，对Linux内核了解不多，因此这篇文章借鉴了网上相关的一些解析。</p>
+<p>Binder驱动是Android专用的，但底层的驱动架构与Linux驱动一样。binder驱动以misc设备进行注册，作为虚拟字符设备，没有直接操作硬件，只有对设备内存的处理。主要是驱动设备的初始化(binder_init)，打开 (binder_open)，映射(binder_mmap)，数据操作(binder_ioctl)。</p>
+<p>用户态的程序调用Kernel层驱动需要陷入内核态，进行系统调用(syscall)。比如说当用户空间调用open()方法时，通过它传入的参数： <code>/dev/binder</code> ，然后经过系统调用，便调用binder驱动的binder_open()方法。</p>
+<h2 id="用户-x2F-内核态数据拷贝"><a href="#用户-x2F-内核态数据拷贝" class="headerlink" title="用户&#x2F;内核态数据拷贝"></a>用户&#x2F;内核态数据拷贝</h2><p>get_user，put_user，copy_from_user和copy_to_user函数都是Linux提供的用于传递内核与用户空间数据的函数。</p>
+<ul>
+<li>put_user与copy_to_user都是从内核空间到用户空间拷贝数据</li>
+<li>get_user与copy_from_user都是从用户空间到内核空间拷贝数据</li>
+<li>put_user与get_user只能拷贝简单类型的数据，比如char型、int型等</li>
+<li>copy_from_user与copy_to_user可以拷贝多个数据</li>
+</ul>
+<p>函数参数如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// x: Value to copy to user space.</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// ptr: Destination address, in user space.</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">put_user</span>(x, ptr);</span><br><span class="line"></span><br><span class="line"><span class="comment">// x: Variable to store result.</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// ptr: Source address, in user space.</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">get_user</span>(x, ptr);</span><br><span class="line"></span><br><span class="line"><span class="comment">// to: Destination address, in user space.</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// from: Source address, in kernel space.</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// n: Number of bytes to copy.</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">unsigned</span> <span class="type">long</span> <span class="title">copy_to_user</span><span class="params">(<span class="type">void</span> __user * to, <span class="type">const</span> <span class="type">void</span> * from, <span class="type">unsigned</span> <span class="type">long</span> n)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// to: Destination address, in kernel space.</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// from: Source address, in user space.</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// n: Number of bytes to copy.</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">unsigned</span> <span class="type">long</span> <span class="title">copy_from_user</span><span class="params">(<span class="type">void</span> * to, <span class="type">const</span> <span class="type">void</span> __user * from, <span class="type">unsigned</span> <span class="type">long</span> n)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<h2 id="binder-init"><a href="#binder-init" class="headerlink" title="binder_init"></a>binder_init</h2><p>binder_init函数的主要工作是为了注册misc设备，源码位于： <code>/kernel/drivers/android/binder.c</code> 。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">static</span> <span class="type">int</span> __init <span class="title">binder_init</span><span class="params">(<span class="type">void</span>)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> ret;</span><br><span class="line"></span><br><span class="line">    <span class="type">char</span> *device_name, *device_tmp;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">binder_device</span> *device;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">hlist_node</span> *tmp;</span><br><span class="line"></span><br><span class="line">    <span class="type">char</span> *device_names = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// debugfs文件系统相关</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!<span class="built_in">IS_ENABLED</span>(CONFIG_ANDROID_BINDERFS) &amp;&amp;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">strcmp</span>(binder_devices_param, <span class="string">&quot;&quot;</span>) != <span class="number">0</span>) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 分配device_names</span></span><br><span class="line"></span><br><span class="line">        device_names = <span class="built_in">kstrdup</span>(binder_devices_param, GFP_KERNEL);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (!device_names) &#123;</span><br><span class="line"></span><br><span class="line">            ret = -ENOMEM;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">goto</span> err_alloc_device_names_failed;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        device_tmp = device_names;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span> ((device_name = <span class="built_in">strsep</span>(&amp;device_tmp, <span class="string">&quot;,&quot;</span>))) &#123;</span><br><span class="line"></span><br><span class="line">            ret = <span class="built_in">init_binder_device</span>(device_name);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (ret)</span><br><span class="line"></span><br><span class="line">                <span class="keyword">goto</span> err_init_binder_device_failed;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ret = <span class="built_in">init_binderfs</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ret) <span class="keyword">goto</span> err_init_binder_device_failed;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// goto ...</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">static</span> <span class="type">int</span> __init <span class="title">init_binder_device</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *name)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> ret;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">binder_device</span> *binder_device;</span><br><span class="line"></span><br><span class="line">    binder_device = <span class="built_in">kzalloc</span>(<span class="built_in">sizeof</span>(*binder_device), GFP_KERNEL);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!binder_device) <span class="keyword">return</span> -ENOMEM;</span><br><span class="line"></span><br><span class="line">    binder_device-&gt;miscdev.fops = &amp;binder_fops;</span><br><span class="line"></span><br><span class="line">    binder_device-&gt;miscdev.minor = MISC_DYNAMIC_MINOR;</span><br><span class="line"></span><br><span class="line">    binder_device-&gt;miscdev.name = name;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">refcount_set</span>(&amp;binder_device-&gt;ref, <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">    binder_device-&gt;context.binder_context_mgr_uid = INVALID_UID;</span><br><span class="line"></span><br><span class="line">    binder_device-&gt;context.name = name;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">mutex_init</span>(&amp;binder_device-&gt;context.context_mgr_node_lock);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 注册misc设备</span></span><br><span class="line"></span><br><span class="line">    ret = <span class="built_in">misc_register</span>(&amp;binder_device-&gt;miscdev);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">kfree</span>(binder_device);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> ret;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">hlist_add_head</span>(&amp;binder_device-&gt;hlist, &amp;binder_devices);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">binder_device</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">hlist_node</span> hlist;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">miscdevice</span> miscdev;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">binder_context</span> context;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">inode</span> *binderfs_inode;</span><br><span class="line"></span><br><span class="line">    <span class="type">refcount_t</span> ref;</span><br><span class="line"></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h2 id="binder-open"><a href="#binder-open" class="headerlink" title="binder_open"></a>binder_open</h2><p>binder_open函数创建了binder_proc对象，并把当前进程等信息保存到binder_proc对象，然后将其加入到全局链表binder_procs。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">static</span> <span class="type">int</span> <span class="title">binder_open</span><span class="params">(<span class="keyword">struct</span> inode *nodp, <span class="keyword">struct</span> file *filp)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">binder_proc</span> *proc; <span class="comment">// binder进程</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">binder_device</span> *binder_dev;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">binderfs_info</span> *info;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">dentry</span> *binder_binderfs_dir_entry_proc = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 为binder_proc结构体分配kernel内存空间</span></span><br><span class="line"></span><br><span class="line">    proc = <span class="built_in">kzalloc</span>(<span class="built_in">sizeof</span>(*proc), GFP_KERNEL);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (proc == <span class="literal">NULL</span>) <span class="keyword">return</span> -ENOMEM;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">get_task_struct</span>(current-&gt;group_leader);</span><br><span class="line"></span><br><span class="line">    proc-&gt;tsk = current-&gt;group_leader; <span class="comment">// 将当前线程的task保存到binder进程的tsk</span></span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="comment">// 将binder_proc保存到文件指针filp中</span></span><br><span class="line"></span><br><span class="line">    filp-&gt;private_data = proc;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="comment">// 将proc_node节点添加到binder_procs队列</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">mutex_lock</span>(&amp;binder_procs_lock);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">hlist_add_head</span>(&amp;proc-&gt;proc_node, &amp;binder_procs);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">mutex_unlock</span>(&amp;binder_procs_lock);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="binder-mmap"><a href="#binder-mmap" class="headerlink" title="binder_mmap"></a>binder_mmap</h2><p>binder_mmap函数的主要功能：首先在内核虚拟地址空间申请一块与用户虚拟内存相同大小的内存；然后再申请1个page大小的物理内存，再将同一块物理内存分别映射到内核虚拟地址空间和用户虚拟内存空间，从而实现了用户空间的Buffer和内核空间的Buffer同步操作的功能。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">static</span> <span class="type">int</span> <span class="title">binder_mmap</span><span class="params">(<span class="keyword">struct</span> file *filp, <span class="keyword">struct</span> vm_area_struct *vma)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> ret;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 从filp中取出binder_proc</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">binder_proc</span> *proc = filp-&gt;private_data;</span><br><span class="line"></span><br><span class="line">    <span class="type">const</span> <span class="type">char</span> *failure_string;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (proc-&gt;tsk != current-&gt;group_leader) <span class="keyword">return</span> -EINVAL;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ((vma-&gt;vm_end - vma-&gt;vm_start) &gt; SZ_4M)</span><br><span class="line"></span><br><span class="line">        vma-&gt;vm_end = vma-&gt;vm_start + SZ_4M; <span class="comment">// 保证映射内存大小不超过4M</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (vma-&gt;vm_flags &amp; FORBIDDEN_MMAP_FLAGS) &#123;</span><br><span class="line"></span><br><span class="line">        ret = -EPERM;</span><br><span class="line"></span><br><span class="line">        failure_string = <span class="string">&quot;bad vm_flags&quot;</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">goto</span> err_bad_arg;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    vma-&gt;vm_private_data = proc;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 分配内存，看不懂</span></span><br><span class="line"></span><br><span class="line">    ret = <span class="built_in">binder_alloc_mmap_handler</span>(&amp;proc-&gt;alloc, vma);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ret) <span class="keyword">return</span> ret;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">mutex_lock</span>(&amp;proc-&gt;files_lock);</span><br><span class="line"></span><br><span class="line">    proc-&gt;files = <span class="built_in">get_files_struct</span>(current);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">mutex_unlock</span>(&amp;proc-&gt;files_lock);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">err_bad_arg:</span><br><span class="line"></span><br><span class="line">    <span class="built_in">pr_err</span>(<span class="string">&quot;%s: %d %lx-%lx %s failed %d\n&quot;</span>, __func__, proc-&gt;pid, vma-&gt;vm_start, vma-&gt;vm_end, failure_string, ret);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="binder-ioctl"><a href="#binder-ioctl" class="headerlink" title="binder_ioctl"></a>binder_ioctl</h2><h3 id="binder-ioctl-1"><a href="#binder-ioctl-1" class="headerlink" title="binder_ioctl"></a>binder_ioctl</h3><p>binder_ioctl函数负责在两个进程间收发IPC数据和IPC reply数据。该函数的参数为一个文件指针filp，以及一个命令和参数，用来表示不同的操作。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">static</span> <span class="type">long</span> <span class="title">binder_ioctl</span><span class="params">(<span class="keyword">struct</span> file *filp, <span class="type">unsigned</span> <span class="type">int</span> cmd, <span class="type">unsigned</span> <span class="type">long</span> arg)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> ret;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">binder_proc</span> *proc = filp-&gt;private_data;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">binder_thread</span> *thread;</span><br><span class="line"></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span> size = _IOC_SIZE(cmd);</span><br><span class="line"></span><br><span class="line">    <span class="type">void</span> __user *ubuf = (<span class="type">void</span> __user *)arg;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 进入休眠状态，直到中断唤醒</span></span><br><span class="line"></span><br><span class="line">    ret = <span class="built_in">wait_event_interruptible</span>(binder_user_error_wait, binder_stop_on_user_error &lt; <span class="number">2</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ret) <span class="keyword">goto</span> err_unlocked;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 从binder_proc中查找binder_thread，如果当前线程已经加入到proc的线程队列则直接返回，</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果不存在则创建binder_thread，并将当前线程添加到当前的proc</span></span><br><span class="line"></span><br><span class="line">    thread = <span class="built_in">binder_get_thread</span>(proc);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (thread == <span class="literal">NULL</span>) &#123;</span><br><span class="line"></span><br><span class="line">        ret = -ENOMEM;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">goto</span> err;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">switch</span> (cmd) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line"></span><br><span class="line">            ret = -EINVAL;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">goto</span> err;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ret = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">err:</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (thread) thread-&gt;looper_need_return = <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">wait_event_interruptible</span>(binder_user_error_wait, binder_stop_on_user_error &lt; <span class="number">2</span>);</span><br><span class="line"></span><br><span class="line">err_unlocked:</span><br><span class="line"></span><br><span class="line">    <span class="built_in">trace_binder_ioctl_done</span>(ret);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>下面列举几个常用的命令。</p>
+<h3 id="BINDER-WRITE-READ"><a href="#BINDER-WRITE-READ" class="headerlink" title="BINDER_WRITE_READ"></a>BINDER_WRITE_READ</h3><p>BINDER_WRITE_READ命令用来进行Binder读写交互，流程如下：</p>
+<ul>
+<li>首先，把用户空间数据ubuf拷贝到内核空间bwr；</li>
+<li>当bwr写缓存有数据，则执行binder_thread_write；当写失败则将bwr数据写回用户空间并退出；</li>
+<li>当bwr读缓存有数据，则执行binder_thread_read；当读失败则再将bwr数据写回用户空间并退出；</li>
+<li>最后，把内核数据bwr拷贝到用户空间ubuf。</li>
+</ul>
+<p>源码如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> BINDER_WRITE_READ:</span><br><span class="line"></span><br><span class="line">    ret = <span class="built_in">binder_ioctl_write_read</span>(filp, cmd, arg, thread);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ret) <span class="keyword">goto</span> err;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">static</span> <span class="type">int</span> <span class="title">binder_ioctl_write_read</span><span class="params">(<span class="keyword">struct</span> file *filp,</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">                <span class="type">unsigned</span> <span class="type">int</span> cmd, <span class="type">unsigned</span> <span class="type">long</span> arg,</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">                <span class="keyword">struct</span> binder_thread *thread)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> ret = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">binder_proc</span> *proc = filp-&gt;private_data;</span><br><span class="line"></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span> size = _IOC_SIZE(cmd);</span><br><span class="line"></span><br><span class="line">    <span class="type">void</span> __user *ubuf = (<span class="type">void</span> __user *)arg;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">binder_write_read</span> bwr;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (size != <span class="built_in">sizeof</span>(<span class="keyword">struct</span> binder_write_read)) &#123;</span><br><span class="line"></span><br><span class="line">        ret = -EINVAL;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">goto</span> out;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 把用户空间数据ubuf拷贝到bwr</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">copy_from_user</span>(&amp;bwr, ubuf, <span class="built_in">sizeof</span>(bwr))) &#123;</span><br><span class="line"></span><br><span class="line">        ret = -EFAULT;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">goto</span> out;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 当写缓存中有数据，则执行binder写操作</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (bwr.write_size &gt; <span class="number">0</span>) &#123;</span><br><span class="line"></span><br><span class="line">        ret = <span class="built_in">binder_thread_write</span>(proc, thread,</span><br><span class="line"></span><br><span class="line">                      bwr.write_buffer,</span><br><span class="line"></span><br><span class="line">                      bwr.write_size,</span><br><span class="line"></span><br><span class="line">                      &amp;bwr.write_consumed);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 当写失败，再将bwr数据写回用户空间，并返回</span></span><br><span class="line"></span><br><span class="line">            bwr.read_consumed = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (<span class="built_in">copy_to_user</span>(ubuf, &amp;bwr, <span class="built_in">sizeof</span>(bwr))) ret = -EFAULT;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">goto</span> out;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 当读缓存中有数据，则执行binder读操作</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (bwr.read_size &gt; <span class="number">0</span>) &#123;</span><br><span class="line"></span><br><span class="line">        ret = <span class="built_in">binder_thread_read</span>(proc, thread, bwr.read_buffer,</span><br><span class="line"></span><br><span class="line">                     bwr.read_size,</span><br><span class="line"></span><br><span class="line">                     &amp;bwr.read_consumed,</span><br><span class="line"></span><br><span class="line">                     filp-&gt;f_flags &amp; O_NONBLOCK);</span><br><span class="line"></span><br><span class="line">        <span class="built_in">trace_binder_read_done</span>(ret);</span><br><span class="line"></span><br><span class="line">        <span class="built_in">binder_inner_proc_lock</span>(proc);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (!<span class="built_in">binder_worklist_empty_ilocked</span>(&amp;proc-&gt;todo))</span><br><span class="line"></span><br><span class="line">            <span class="built_in">binder_wakeup_proc_ilocked</span>(proc); <span class="comment">// 唤醒等待状态的线程</span></span><br><span class="line"></span><br><span class="line">        <span class="built_in">binder_inner_proc_unlock</span>(proc);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 当读失败，再将bwr数据写回用户空间，并返回</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (<span class="built_in">copy_to_user</span>(ubuf, &amp;bwr, <span class="built_in">sizeof</span>(bwr)))</span><br><span class="line"></span><br><span class="line">                ret = -EFAULT;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">goto</span> out;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 将内核数据bwr拷贝到用户空间ubuf</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">copy_to_user</span>(ubuf, &amp;bwr, <span class="built_in">sizeof</span>(bwr))) &#123;</span><br><span class="line"></span><br><span class="line">        ret = -EFAULT;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">goto</span> out;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">out:</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>binder_thread_write和binder_thread_read函数放到下面单独讲解。</p>
+<h3 id="BINDER-SET-CONTEXT-MGR"><a href="#BINDER-SET-CONTEXT-MGR" class="headerlink" title="BINDER_SET_CONTEXT_MGR"></a>BINDER_SET_CONTEXT_MGR</h3><p>BINDER_SET_CONTEXT_MGR命令是操作servicemanager进程成为上下文管理者，BINDER_SET_CONTEXT_MGR_EXT命令携带有额外参数。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> BINDER_SET_CONTEXT_MGR_EXT: &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">flat_binder_object</span> fbo;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">copy_from_user</span>(&amp;fbo, ubuf, <span class="built_in">sizeof</span>(fbo))) &#123;</span><br><span class="line"></span><br><span class="line">        ret = -EINVAL;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">goto</span> err;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ret = <span class="built_in">binder_ioctl_set_ctx_mgr</span>(filp, &amp;fbo);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ret) <span class="keyword">goto</span> err;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">case</span> BINDER_SET_CONTEXT_MGR:</span><br><span class="line"></span><br><span class="line">    ret = <span class="built_in">binder_ioctl_set_ctx_mgr</span>(filp, <span class="literal">NULL</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ret)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">goto</span> err;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">static</span> <span class="type">int</span> <span class="title">binder_ioctl_set_ctx_mgr</span><span class="params">(<span class="keyword">struct</span> file *filp,</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">                    <span class="keyword">struct</span> flat_binder_object *fbo)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> ret = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">binder_proc</span> *proc = filp-&gt;private_data;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">binder_context</span> *context = proc-&gt;context;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">binder_node</span> *new_node;</span><br><span class="line"></span><br><span class="line">    <span class="type">kuid_t</span> curr_euid = <span class="built_in">current_euid</span>();</span><br><span class="line"></span><br><span class="line">    <span class="built_in">mutex_lock</span>(&amp;context-&gt;context_mgr_node_lock);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (context-&gt;binder_context_mgr_node) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 保证只创建一次mgr_node对象</span></span><br><span class="line"></span><br><span class="line">        <span class="built_in">pr_err</span>(<span class="string">&quot;BINDER_SET_CONTEXT_MGR already set\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">        ret = -EBUSY;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">goto</span> out;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ret = <span class="built_in">security_binder_set_context_mgr</span>(proc-&gt;tsk);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ret &lt; <span class="number">0</span>) <span class="keyword">goto</span> out;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 设置当前线程euid作为ServiceManager的uid</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">uid_valid</span>(context-&gt;binder_context_mgr_uid)) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (!<span class="built_in">uid_eq</span>(context-&gt;binder_context_mgr_uid, curr_euid)) &#123;</span><br><span class="line"></span><br><span class="line">            ret = -EPERM;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">goto</span> out;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">        context-&gt;binder_context_mgr_uid = curr_euid;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 创建ServiceManager实体</span></span><br><span class="line"></span><br><span class="line">    new_node = <span class="built_in">binder_new_node</span>(proc, fbo);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!new_node) &#123;</span><br><span class="line"></span><br><span class="line">        ret = -ENOMEM;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">goto</span> out;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">binder_node_lock</span>(new_node);</span><br><span class="line"></span><br><span class="line">    new_node-&gt;local_weak_refs++;</span><br><span class="line"></span><br><span class="line">    new_node-&gt;local_strong_refs++;</span><br><span class="line"></span><br><span class="line">    new_node-&gt;has_strong_ref = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    new_node-&gt;has_weak_ref = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    context-&gt;binder_context_mgr_node = new_node;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">binder_node_unlock</span>(new_node);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">binder_put_node</span>(new_node);</span><br><span class="line"></span><br><span class="line">out:</span><br><span class="line"></span><br><span class="line">    <span class="built_in">mutex_unlock</span>(&amp;context-&gt;context_mgr_node_lock);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="keyword">struct</span> <span class="title class_">binder_node</span> *<span class="built_in">binder_new_node</span>(<span class="keyword">struct</span> binder_proc *proc,</span><br><span class="line"></span><br><span class="line">                       <span class="keyword">struct</span> flat_binder_object *fp)</span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">binder_node</span> *node;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 分配内存</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">binder_node</span> *new_node = <span class="built_in">kzalloc</span>(<span class="built_in">sizeof</span>(*node), GFP_KERNEL);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!new_node) <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">binder_inner_proc_lock</span>(proc);</span><br><span class="line"></span><br><span class="line">    node = <span class="built_in">binder_init_node_ilocked</span>(proc, new_node, fp);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">binder_inner_proc_unlock</span>(proc);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (node != new_node)</span><br><span class="line"></span><br><span class="line">        <span class="comment">// The node was already added by another thread</span></span><br><span class="line"></span><br><span class="line">        <span class="built_in">kfree</span>(new_node);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> node;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面函数在Binder驱动层创建了binder_node结构体对象，并将当前binder_proc加入到binder_node的node-&gt;proc。</p>
+<h3 id="BINDER-SET-MAX-THREADS"><a href="#BINDER-SET-MAX-THREADS" class="headerlink" title="BINDER_SET_MAX_THREADS"></a>BINDER_SET_MAX_THREADS</h3><p>BINDER_SET_MAX_THREADS命令设置proc的最大线程数。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> BINDER_SET_MAX_THREADS: &#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> max_threads;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 将参数从用户空间拷贝到内核空间</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">copy_from_user</span>(&amp;max_threads, ubuf,</span><br><span class="line"></span><br><span class="line">                <span class="built_in">sizeof</span>(max_threads))) &#123;</span><br><span class="line"></span><br><span class="line">        ret = -EINVAL;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">goto</span> err;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">binder_inner_proc_lock</span>(proc);</span><br><span class="line"></span><br><span class="line">    proc-&gt;max_threads = max_threads;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">binder_inner_proc_unlock</span>(proc);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="BINDER-VERSION"><a href="#BINDER-VERSION" class="headerlink" title="BINDER_VERSION"></a>BINDER_VERSION</h3><p>BINDER_VERSION命令用来获取binder的版本信息。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> BINDER_VERSION: &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">binder_version</span> __user *ver = ubuf;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (size != <span class="built_in">sizeof</span>(<span class="keyword">struct</span> binder_version)) &#123;</span><br><span class="line"></span><br><span class="line">        ret = -EINVAL;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">goto</span> err;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 将版本信息放入用户空间的ver结构体对象中</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">put_user</span>(BINDER_CURRENT_PROTOCOL_VERSION, &amp;ver-&gt;protocol_version)) &#123;</span><br><span class="line"></span><br><span class="line">        ret = -EINVAL;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">goto</span> err;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Binder通信协议"><a href="#Binder通信协议" class="headerlink" title="Binder通信协议"></a>Binder通信协议</h2><h3 id="通信模型"><a href="#通信模型" class="headerlink" title="通信模型"></a>通信模型</h3><p>列举一次完整的Binder通信过程(图片网上抄来)：</p>
+<p><img src="/posts/95160a35/binder_transaction_ipc.jpg" alt="binder_transaction_ipc"></p>
+<p>在4.x内核上看到源码里是BC_TRANSACTION_SG而不是BC_TRANSACTION。Binder协议包含在IPC数据中，分为两类:</p>
+<ul>
+<li>BINDER_COMMAND_PROTOCOL：binder请求码，以 <code>BC_</code> 开头，简称BC码，用于从IPC层传递到Binder Driver层；</li>
+<li>BINDER_RETURN_PROTOCOL：binder响应码，以 <code>BR_</code> 开头，简称BR码，用于从Binder Driver层传递到IPC层。</li>
+</ul>
+<p>Binder IPC通信至少是两个进程的交互：</p>
+<ul>
+<li>Client进程执行Binder驱动的binder_thread_write方法，根据BC码，生成相应的BINDER_WORK码；</li>
+<li>Server进程执行Binder驱动的binder_thread_read方法，根据BINDER_WORK码，生成BR码，发送到用户空间处理。</li>
+</ul>
+<p>通信过程如下：</p>
+<p><img src="/posts/95160a35/binder_protocol.jpg" alt="binder_protocol"></p>
+<p>协议转换图如下：</p>
+<p><img src="/posts/95160a35/protocol_transaction.jpg" alt="protocol_transaction"></p>
+<h3 id="binder-thread-write"><a href="#binder-thread-write" class="headerlink" title="binder_thread_write"></a>binder_thread_write</h3><p>请求处理过程是通过binder_thread_write()方法，该方法用于处理Binder协议中的请求码。当binder_buffer存在数据，binder线程的写操作循环执行。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">static</span> <span class="type">int</span> <span class="title">binder_thread_write</span><span class="params">(<span class="keyword">struct</span> binder_proc *proc,</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">            <span class="keyword">struct</span> binder_thread *thread,</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">            <span class="type">binder_uintptr_t</span> binder_buffer, <span class="type">size_t</span> size,</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">            <span class="type">binder_size_t</span> *consumed)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">uint32_t</span> cmd;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">binder_context</span> *context = proc-&gt;context;</span><br><span class="line"></span><br><span class="line">    <span class="type">void</span> __user *buffer = (<span class="type">void</span> __user *)(<span class="type">uintptr_t</span>)binder_buffer;</span><br><span class="line"></span><br><span class="line">    <span class="type">void</span> __user *ptr = buffer + *consumed;</span><br><span class="line"></span><br><span class="line">    <span class="type">void</span> __user *end = buffer + size;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (ptr &lt; end &amp;&amp; thread-&gt;return_error.cmd == BR_OK) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="type">int</span> ret;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 获取IPC数据中的Binder协议(BC码)</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">get_user</span>(cmd, (<span class="type">uint32_t</span> __user *)ptr)) <span class="keyword">return</span> -EFAULT;</span><br><span class="line"></span><br><span class="line">        ptr += <span class="built_in">sizeof</span>(<span class="type">uint32_t</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">switch</span> (cmd) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BC_INCREFS:    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BC_ACQUIRE:    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BC_RELEASE:    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BC_DECREFS:    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BC_INCREFS_DONE:   <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BC_ACQUIRE_DONE:   <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BC_ATTEMPT_ACQUIRE:<span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BC_ACQUIRE_RESULT: <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BC_FREE_BUFFER:    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BC_TRANSACTION_SG:</span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BC_REPLY_SG: &#123;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">struct</span> <span class="title class_">binder_transaction_data_sg</span> tr;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (<span class="built_in">copy_from_user</span>(&amp;tr, ptr, <span class="built_in">sizeof</span>(tr))) <span class="keyword">return</span> -EFAULT;</span><br><span class="line"></span><br><span class="line">                ptr += <span class="built_in">sizeof</span>(tr);</span><br><span class="line"></span><br><span class="line">                <span class="built_in">binder_transaction</span>(proc, thread, &amp;tr.transaction_data, cmd == BC_REPLY_SG, tr.buffers_size);</span><br><span class="line"></span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BC_TRANSACTION:</span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BC_REPLY: &#123;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">struct</span> <span class="title class_">binder_transaction_data</span> tr;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (<span class="built_in">copy_from_user</span>(&amp;tr, ptr, <span class="built_in">sizeof</span>(tr))) <span class="keyword">return</span> -EFAULT;</span><br><span class="line"></span><br><span class="line">                ptr += <span class="built_in">sizeof</span>(tr);</span><br><span class="line"></span><br><span class="line">                <span class="built_in">binder_transaction</span>(proc, thread, &amp;tr, cmd == BC_REPLY, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BC_REGISTER_LOOPER: <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BC_ENTER_LOOPER:</span><br><span class="line"></span><br><span class="line">                thread-&gt;looper |= BINDER_LOOPER_STATE_ENTERED;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BC_EXIT_LOOPER:</span><br><span class="line"></span><br><span class="line">                thread-&gt;looper |= BINDER_LOOPER_STATE_EXITED;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BC_REQUEST_DEATH_NOTIFICATION: <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BC_CLEAR_DEATH_NOTIFICATION:   <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BC_DEAD_BINDER_DONE:           <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        *consumed = ptr - buffer;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对于请求码为BC_TRANSACTION&#x2F;BC_REPLY&#x2F;BC_TRANSACTION_SG&#x2F;BC_REPLY_SG时，会执行binder_transaction()方法，这是最为频繁的操作。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">static</span> <span class="type">void</span> <span class="title">binder_transaction</span><span class="params">(<span class="keyword">struct</span> binder_proc *proc,</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">                <span class="keyword">struct</span> binder_thread *thread,</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">                <span class="keyword">struct</span> binder_transaction_data *tr, <span class="type">int</span> reply,</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">                <span class="type">binder_size_t</span> extra_buffers_size)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> ret;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">binder_transaction</span> *t;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">binder_work</span> *w;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">binder_work</span> *tcomplete;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">binder_proc</span> *target_proc = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">binder_thread</span> *target_thread = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">binder_node</span> *target_node = <span class="literal">NULL</span>; <span class="comment">// 目标binder节点</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (buffer_offset = off_start_offset; buffer_offset &lt; off_end_offset;</span><br><span class="line"></span><br><span class="line">        buffer_offset += <span class="built_in">sizeof</span>(<span class="type">binder_size_t</span>)) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">binder_object_header</span> *hdr;</span><br><span class="line"></span><br><span class="line">        <span class="type">size_t</span> object_size;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">binder_object</span> object;</span><br><span class="line"></span><br><span class="line">        <span class="type">binder_size_t</span> object_offset;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">binder_alloc_copy_from_buffer</span>(&amp;target_proc-&gt;alloc,</span><br><span class="line"></span><br><span class="line">                        &amp;object_offset,</span><br><span class="line"></span><br><span class="line">                        t-&gt;buffer,</span><br><span class="line"></span><br><span class="line">                        buffer_offset,</span><br><span class="line"></span><br><span class="line">                        <span class="built_in">sizeof</span>(object_offset));</span><br><span class="line"></span><br><span class="line">        object_size = <span class="built_in">binder_get_object</span>(target_proc, t-&gt;buffer, object_offset, &amp;object);</span><br><span class="line"></span><br><span class="line">        hdr = &amp;object.hdr;</span><br><span class="line"></span><br><span class="line">        off_min = object_offset + object_size;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">switch</span> (hdr-&gt;type) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BINDER_TYPE_BINDER:</span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BINDER_TYPE_WEAK_BINDER:</span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BINDER_TYPE_HANDLE:</span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BINDER_TYPE_WEAK_HANDLE:</span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BINDER_TYPE_FD:</span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BINDER_TYPE_FDA:</span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BINDER_TYPE_PTR:</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    tcomplete-&gt;type = BINDER_WORK_TRANSACTION_COMPLETE;</span><br><span class="line"></span><br><span class="line">    t-&gt;work.type = BINDER_WORK_TRANSACTION;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 向当前线程的todo队列添加BINDER_WORK_TRANSACTION_COMPLETE事务</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">binder_enqueue_thread_work</span>(thread, tcomplete);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 向目标线程的todo队列添加BINDER_WORK_TRANSACTION事务</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">binder_enqueue_thread_work_ilocked</span>(target_thread, &amp;t-&gt;work);</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">static</span> <span class="type">void</span> <span class="title">binder_enqueue_thread_work</span><span class="params">(<span class="keyword">struct</span> binder_thread *thread,</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">            <span class="keyword">struct</span> binder_work *work)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">binder_inner_proc_lock</span>(thread-&gt;proc);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">binder_enqueue_thread_work_ilocked</span>(thread, work);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">binder_inner_proc_unlock</span>(thread-&gt;proc);</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 往线程的todo队列添加work</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">static</span> <span class="type">void</span> <span class="title">binder_enqueue_thread_work_ilocked</span><span class="params">(<span class="keyword">struct</span> binder_thread *thread,</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">                <span class="keyword">struct</span> binder_work *work)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">binder_enqueue_work_ilocked</span>(work, &amp;thread-&gt;todo);</span><br><span class="line"></span><br><span class="line">    thread-&gt;process_todo = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">static</span> <span class="type">void</span> <span class="title">binder_enqueue_work_ilocked</span><span class="params">(<span class="keyword">struct</span> binder_work *work,</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">            <span class="keyword">struct</span> list_head *target_list)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">list_add_tail</span>(&amp;work-&gt;entry, target_list);</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="binder-thread-read"><a href="#binder-thread-read" class="headerlink" title="binder_thread_read"></a>binder_thread_read</h3><p>响应处理过程是通过binder_thread_read()方法，该方法根据不同的binder_work-&gt;type以及不同状态，生成相应的响应码。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">static</span> <span class="type">int</span> <span class="title">binder_thread_read</span><span class="params">(<span class="keyword">struct</span> binder_proc *proc,</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">                <span class="keyword">struct</span> binder_thread *thread,</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">                <span class="type">binder_uintptr_t</span> binder_buffer, <span class="type">size_t</span> size,</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">                <span class="type">binder_size_t</span> *consumed, <span class="type">int</span> non_block)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">void</span> __user *buffer = (<span class="type">void</span> __user *)(<span class="type">uintptr_t</span>)binder_buffer;</span><br><span class="line"></span><br><span class="line">    <span class="type">void</span> __user *ptr = buffer + *consumed;</span><br><span class="line"></span><br><span class="line">    <span class="type">void</span> __user *end = buffer + size;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> ret = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> wait_for_proc_work;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (*consumed == <span class="number">0</span>) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">put_user</span>(BR_NOOP, (<span class="type">uint32_t</span> __user *)ptr)) <span class="keyword">return</span> -EFAULT;</span><br><span class="line"></span><br><span class="line">        ptr += <span class="built_in">sizeof</span>(<span class="type">uint32_t</span>);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">retry:</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="type">uint32_t</span> cmd;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">binder_transaction_data_secctx</span> tr;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">binder_transaction_data</span> *trd = &amp;tr.transaction_data;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">binder_work</span> *w = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">list_head</span> *list = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">binder_transaction</span> *t = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">binder_thread</span> *t_from;</span><br><span class="line"></span><br><span class="line">        <span class="type">size_t</span> trsize = <span class="built_in">sizeof</span>(*trd);</span><br><span class="line"></span><br><span class="line">        <span class="built_in">binder_inner_proc_lock</span>(proc);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (!<span class="built_in">binder_worklist_empty_ilocked</span>(&amp;thread-&gt;todo))</span><br><span class="line"></span><br><span class="line">            list = &amp;thread-&gt;todo;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (!<span class="built_in">binder_worklist_empty_ilocked</span>(&amp;proc-&gt;todo) &amp;&amp;</span><br><span class="line"></span><br><span class="line">                wait_for_proc_work)</span><br><span class="line"></span><br><span class="line">            list = &amp;proc-&gt;todo;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">            <span class="built_in">binder_inner_proc_unlock</span>(proc);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 当&amp;thread-&gt;todo和&amp;proc-&gt;todo都为空时</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (ptr - buffer == <span class="number">4</span> &amp;&amp; !thread-&gt;looper_need_return)</span><br><span class="line"></span><br><span class="line">                <span class="keyword">goto</span> retry;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        w = <span class="built_in">binder_dequeue_work_head_ilocked</span>(list); <span class="comment">// 从todo队列中取出头节点</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">switch</span> (w-&gt;type) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BINDER_WORK_TRANSACTION: <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BINDER_WORK_RETURN_ERROR: <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BINDER_WORK_TRANSACTION_COMPLETE:</span><br><span class="line"></span><br><span class="line">                cmd = BR_TRANSACTION_COMPLETE;</span><br><span class="line"></span><br><span class="line">                ptr += <span class="built_in">sizeof</span>(<span class="type">uint32_t</span>);</span><br><span class="line"></span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BINDER_WORK_NODE: <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BINDER_WORK_DEAD_BINDER: <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BINDER_WORK_DEAD_BINDER_AND_CLEAR: <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> BINDER_WORK_CLEAR_DEATH_NOTIFICATION: <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (t-&gt;buffer-&gt;target_node) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">            cmd = BR_TRANSACTION;</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">            cmd = BR_REPLY;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">done:</span><br><span class="line"></span><br><span class="line">    *consumed = ptr - buffer;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">binder_inner_proc_lock</span>(proc);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 当满足请求线程加已准备线程数等于0，已启动线程数小于最大线程数(15)，</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 且looper状态为已注册或已进入时创建新的线程。</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (proc-&gt;requested_threads == <span class="number">0</span> &amp;&amp;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">list_empty</span>(&amp;thread-&gt;proc-&gt;waiting_threads) &amp;&amp;</span><br><span class="line"></span><br><span class="line">        proc-&gt;requested_threads_started &lt; proc-&gt;max_threads &amp;&amp;</span><br><span class="line"></span><br><span class="line">        (thread-&gt;looper &amp; (BINDER_LOOPER_STATE_REGISTERED |</span><br><span class="line"></span><br><span class="line">        BINDER_LOOPER_STATE_ENTERED)) <span class="comment">/* the user-space code fails to */</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">/*spawn a new thread if we leave this out */</span>) &#123;</span><br><span class="line"></span><br><span class="line">        proc-&gt;requested_threads++;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">binder_inner_proc_unlock</span>(proc);</span><br><span class="line"></span><br><span class="line">        <span class="built_in">binder_debug</span>(BINDER_DEBUG_THREADS,</span><br><span class="line"></span><br><span class="line">                <span class="string">&quot;%d:%d BR_SPAWN_LOOPER\n&quot;</span>,</span><br><span class="line"></span><br><span class="line">                proc-&gt;pid, thread-&gt;pid);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">put_user</span>(BR_SPAWN_LOOPER, (<span class="type">uint32_t</span> __user *)buffer))</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> -EFAULT;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">binder_stat_br</span>(proc, thread, BR_SPAWN_LOOPER);</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">else</span></span><br><span class="line"></span><br><span class="line">        <span class="built_in">binder_inner_proc_unlock</span>(proc);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>处理响应码的过程是在用户态处理，即用户空间的IPCThreadState::waitForResponse()以及ServiceManager中的binder_parse方法中会处理Binder协议中的响应码。</p>
+<h2 id="Binder内存机制"><a href="#Binder内存机制" class="headerlink" title="Binder内存机制"></a>Binder内存机制</h2><p>Binder进程间通信效率高的最主要原因是Binder的内存机制：虚拟进程地址空间(用户空间)和虚拟内核地址空间(内核空间)都映射到同一块物理内存空间。当Client端与Server端发送数据时，Client（作为数据发送端）先从自己的进程空间把IPC通信数据copy_from_user拷贝到内核空间，而Server端（作为数据接收端）与内核共享数据，不再需要拷贝数据，而是通过内存地址空间的偏移量，即可获悉内存地址，整个过程只发生一次内存拷贝。</p>
+<p>而一般IPC的做法，需要Client端进程空间拷贝到内核空间，再由内核空间拷贝到Server进程空间，会发生两次拷贝。</p>
+<p>对于进程和内核虚拟地址映射到同一个物理内存的操作是发生在数据接收端，而数据发送端还是需要将用户态的数据复制到内核态。</p>
+<p>见图解： <a target="_blank" rel="noopener" href="https://ljd1996.github.io/2019/12/02/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/#%E6%80%BB%E7%BB%93">操作系统-进程与线程</a> 。</p>
+<p>Binder中的 <code>一次拷贝</code> 指的是ipc数据只进行了一次拷贝，但是封装了数据的结构(binder_write_read)存在多次拷贝。bwr.write_buffer是要写入的数据的首地址(用户空间)。数据的大致结构：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">binder_write_read &#123;</span><br><span class="line"></span><br><span class="line">    write_buffer = &amp;(cmd + binder_transaction_data + ...)</span><br><span class="line"></span><br><span class="line">    write_size = <span class="built_in">sizeof</span>(cmd) + <span class="built_in">sizeof</span>(binder_transaction_data) + ...</span><br><span class="line"></span><br><span class="line">    write_consumed = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">binder_transaction_data &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    data_size = data.<span class="built_in">ipcDataSize</span>();</span><br><span class="line"></span><br><span class="line">    data.ptr.buffer = data.<span class="built_in">ipcData</span>(); <span class="comment">// data里的数据就是一次拷贝的数据。</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/posts/95160a35/binder_memory_map.jpg" alt="binder_memory_map"></p>
+<h2 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h2><table>
+<thead>
+<tr>
+<th>结构体</th>
+<th>名称</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>binder_proc</td>
+<td>binder进程</td>
+<td>每个进程调用open()打开binder驱动都会创建该结构体，用于管理IPC所需的各种信息</td>
+</tr>
+<tr>
+<td>binder_thread</td>
+<td>binder线程</td>
+<td>对应于上层的binder线程</td>
+</tr>
+<tr>
+<td>binder_node</td>
+<td>binder实体</td>
+<td>对应于BBinder对象，记录BBinder的进程、指针、引用计数等</td>
+</tr>
+<tr>
+<td>binder_ref</td>
+<td>binder引用</td>
+<td>对应于BpBinder对象，记录BpBinder的引用计数、死亡通知、BBinder指针等</td>
+</tr>
+<tr>
+<td>binder_ref_death</td>
+<td>binder死亡引用</td>
+<td>记录binder死亡的引用信息</td>
+</tr>
+<tr>
+<td>binder_write_read</td>
+<td>binder读写</td>
+<td>记录buffer中读和写的数据信息</td>
+</tr>
+<tr>
+<td>binder_transaction_data</td>
+<td>binder事务数据</td>
+<td>记录传输数据内容，比如发送方pid&#x2F;uid，RPC数据</td>
+</tr>
+<tr>
+<td>flat_binder_object</td>
+<td>binder扁平对象</td>
+<td>Binder对象在两个进程间传递的扁平结构</td>
+</tr>
+<tr>
+<td>binder_buffer</td>
+<td>binder内存</td>
+<td>调用mmap()创建用于Binder传输数据的缓存区</td>
+</tr>
+<tr>
+<td>binder_transaction</td>
+<td>binder事务</td>
+<td>记录传输事务的发送方和接收方线程、进程等</td>
+</tr>
+<tr>
+<td>binder_work</td>
+<td>binder工作</td>
+<td>记录binder工作类型</td>
+</tr>
+</tbody></table>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
+<li>binder_init：初始化字符设备；</li>
+<li>binder_open：打开Binder驱动设备，获取驱动的文件描述符，过程需要持有同步锁；</li>
+<li>binder_mmap：在内核分配一块内存，该过程需要持有同步锁；</li>
+<li>binder_ioctl：执行相应的ioctl操作，该过程需要持有同步锁；</li>
+</ul>
+<p>参考： <a target="_blank" rel="noopener" href="http://gityuan.com/2015/11/01/binder-driver/">binder-driver</a> 。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/clippings/" rel="tag"># clippings</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/ebd3a5bf/" rel="next" title="Android-Service原理">
+                <i class="fa fa-chevron-left"></i> Android-Service原理
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/95f07333/" rel="prev" title="Android-Binder原理二-ServiceManager">
+                Android-Binder原理二-ServiceManager <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">439</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">47</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@qq.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%A8%E6%88%B7-x2F-%E5%86%85%E6%A0%B8%E6%80%81%E6%95%B0%E6%8D%AE%E6%8B%B7%E8%B4%9D"><span class="nav-text">用户&#x2F;内核态数据拷贝</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#binder-init"><span class="nav-text">binder_init</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#binder-open"><span class="nav-text">binder_open</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#binder-mmap"><span class="nav-text">binder_mmap</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#binder-ioctl"><span class="nav-text">binder_ioctl</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#binder-ioctl-1"><span class="nav-text">binder_ioctl</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#BINDER-WRITE-READ"><span class="nav-text">BINDER_WRITE_READ</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#BINDER-SET-CONTEXT-MGR"><span class="nav-text">BINDER_SET_CONTEXT_MGR</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#BINDER-SET-MAX-THREADS"><span class="nav-text">BINDER_SET_MAX_THREADS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#BINDER-VERSION"><span class="nav-text">BINDER_VERSION</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Binder%E9%80%9A%E4%BF%A1%E5%8D%8F%E8%AE%AE"><span class="nav-text">Binder通信协议</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%9A%E4%BF%A1%E6%A8%A1%E5%9E%8B"><span class="nav-text">通信模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#binder-thread-write"><span class="nav-text">binder_thread_write</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#binder-thread-read"><span class="nav-text">binder_thread_read</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Binder%E5%86%85%E5%AD%98%E6%9C%BA%E5%88%B6"><span class="nav-text">Binder内存机制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-text">数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

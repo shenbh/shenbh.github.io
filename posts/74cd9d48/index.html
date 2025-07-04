@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="clippings," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="概述Android 内存优化是性能优化中最重要的一个优化点之一，在进行内存优化之前，需要对 Android 和 Java 的内存分配和管理机制有一定的理解，这样在平时的工作中才能时刻注意到内存优化这个点，内存优化涉及到开发中的方方面面，如避免内存泄漏，合理使用数据结构，合理使用 Bitmap 位图等等，本文只列举出部分优化场景。关于分析内存的工具可以参考 Android性能优化之工具篇。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android性能优化之内存优化">
+<meta property="og:url" content="http://shenbh.github.io/posts/74cd9d48/index.html">
+<meta property="og:site_name" content="积跬步">
+<meta property="og:description" content="概述Android 内存优化是性能优化中最重要的一个优化点之一，在进行内存优化之前，需要对 Android 和 Java 的内存分配和管理机制有一定的理解，这样在平时的工作中才能时刻注意到内存优化这个点，内存优化涉及到开发中的方方面面，如避免内存泄漏，合理使用数据结构，合理使用 Bitmap 位图等等，本文只列举出部分优化场景。关于分析内存的工具可以参考 Android性能优化之工具篇。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-07-03T08:42:58.720Z">
+<meta property="article:modified_time" content="2025-07-03T08:43:35.737Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="clippings">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/74cd9d48/"/>
+
+
+
+
+
+  <title>Android性能优化之内存优化 | 积跬步</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">积跬步</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just do IT Now.</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/74cd9d48/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="积跬步">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">Android性能优化之内存优化</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-07-03T16:42:58+08:00">
+                2025-07-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+              <div class="post-description">
+                  概述Android 内存优化是性能优化中最重要的一个优化点之一，在进行内存优化之前，需要对 Android 和 Java 的内存分配和管理机制有一定的理解，这样在平时的工作中才能时刻注意到内存优化这个点，内存优化涉及到开发中的方方面面，如避免内存泄漏，合理使用数据结构，合理使用 Bitmap 位图等等，本文只列举出部分优化场景。关于分析内存的工具可以参考 Android性能优化之工具篇。
+              </div>
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>Android 内存优化是性能优化中最重要的一个优化点之一，在进行内存优化之前，需要对 Android 和 Java 的内存分配和管理机制有一定的理解，这样在平时的工作中才能时刻注意到内存优化这个点，内存优化涉及到开发中的方方面面，如避免内存泄漏，合理使用数据结构，合理使用 Bitmap 位图等等，本文只列举出部分优化场景。关于分析内存的工具可以参考 <a target="_blank" rel="noopener" href="https://ljd1996.github.io/2020/11/26/Android%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E4%B9%8B%E5%B7%A5%E5%85%B7%E7%AF%87/">Android性能优化之工具篇</a> 。</p>
+<h2 id="内存泄漏"><a href="#内存泄漏" class="headerlink" title="内存泄漏"></a>内存泄漏</h2><p><strong>内存泄漏定义</strong></p>
+<p>内存泄漏：当某个对象不再需要使用时，应该完整地执行其最后的生命周期，但由于某些原因，对象虽然已经不再使用，但是在内存中并没有结束其生命周期。</p>
+<p><strong>避免内存泄漏</strong></p>
+<ul>
+<li>资源型对象使用完毕要关闭，如 Cursor 等</li>
+<li>注册对象需要解注册，如广播等</li>
+<li>类的静态变量尽量不要持有大数据对象</li>
+<li>容器中的对象未清理</li>
+<li>WebView 新版本基本不会内存泄漏了，参考 <a target="_blank" rel="noopener" href="https://ljd1996.github.io/2020/12/01/Android-WebView%E7%AC%94%E8%AE%B0/#%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F">Android-WebView内存泄漏</a></li>
+<li>非业务需要尽量避免把 Activity 等组件的 Context 上下文作为参数传递，如传给单例等(使用弱引用)</li>
+<li>非静态内部类和匿名内部类会持有外部 Activity 等的引用(使用静态内部类或独立类)</li>
+<li><code>handler.postDelayed()</code> 问题：1. 如果开启的线程需要传入参数，则可以使用弱引用；2. 销毁时记得清除队列 – <code>removeCallbacksAndMessages()</code></li>
+</ul>
+<h2 id="内存抖动"><a href="#内存抖动" class="headerlink" title="内存抖动"></a>内存抖动</h2><p>内存抖动一般指的是在很短的时间内发生了多次的内存分配与释放，系统在垃圾回收上花费过多的时间和性能。内存抖动可以说明在给定时间内出现的已分配临时对象的数量过多，从而迫使垃圾回收事件发生。</p>
+<h2 id="内存优化整理"><a href="#内存优化整理" class="headerlink" title="内存优化整理"></a>内存优化整理</h2><ul>
+<li>尽量少用 <code>+</code> 来拼接字符串</li>
+<li>能使用基础类型的(int)避免使用装箱类型(Integer)</li>
+<li>内存复用：对象池等</li>
+<li>使用合适的数据结构: HashMap vs ArrayMap vs SparseArray 等</li>
+<li>使用 Dagger 2 实现依赖注入</li>
+<li>谨慎使用外部库</li>
+<li>针对序列化数据使用精简版 Protobuf，它是 Google 设计的一种无关乎语言和平台，并且可扩展的机制，用于对结构化数据进行序列化。该机制与 XML 类似，但更小、更快也更简单。</li>
+<li>枚举会比静态常量多占用内存，也可以使用注解替代枚举：  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span>  Status &#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">STATUS_1</span> <span class="operator">=</span> <span class="number">1</span>;</span><br><span class="line">    <span class="type">int</span> <span class="variable">STATUS_2</span> <span class="operator">=</span> <span class="number">2</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="Bitmap"><a href="#Bitmap" class="headerlink" title="Bitmap"></a>Bitmap</h2><h3 id="概述-1"><a href="#概述-1" class="headerlink" title="概述"></a>概述</h3><p>Android 中的图片是以 Bitmap 形式存在的，Bitmap 所占用内存的多少对性能的影响很重要。如果直接加载一张 Bitmap，那其所占的内存公式是：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Memory = width * height * 一个像素点占用的字节数</span><br></pre></td></tr></table></figure>
+
+<p>而如果从资源目录中加载，同一张图片放进不同的目录里会被压缩，见如下代码：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// frameworks/base/core/jni/android/graphics/BitmapFactory.cpp</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">static</span> jobject <span class="title">doDecode</span><span class="params">(...)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (options != <span class="literal">NULL</span>) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (env-&gt;<span class="built_in">GetBooleanField</span>(options, gOptions_scaledFieldID)) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="type">const</span> <span class="type">int</span> density = env-&gt;<span class="built_in">GetIntField</span>(options, gOptions_densityFieldID);</span><br><span class="line"></span><br><span class="line">            <span class="type">const</span> <span class="type">int</span> targetDensity = env-&gt;<span class="built_in">GetIntField</span>(options, gOptions_targetDensityFieldID);</span><br><span class="line"></span><br><span class="line">            <span class="type">const</span> <span class="type">int</span> screenDensity = env-&gt;<span class="built_in">GetIntField</span>(options, gOptions_screenDensityFieldID);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (density != <span class="number">0</span> &amp;&amp; targetDensity != <span class="number">0</span> &amp;&amp; density != screenDensity) &#123;</span><br><span class="line"></span><br><span class="line">                scale = (<span class="type">float</span>) targetDensity / density;</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> scaledWidth = size.<span class="built_in">width</span>();</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> scaledHeight = size.<span class="built_in">height</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (scale != <span class="number">1.0f</span>) &#123;</span><br><span class="line"></span><br><span class="line">        willScale = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">        scaledWidth = <span class="built_in">static_cast</span>&lt;<span class="type">int</span>&gt;(scaledWidth * scale + <span class="number">0.5f</span>);</span><br><span class="line"></span><br><span class="line">        scaledHeight = <span class="built_in">static_cast</span>&lt;<span class="type">int</span>&gt;(scaledHeight * scale + <span class="number">0.5f</span>);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中 targetDensity 是设备屏幕像素密度，density 是图片所在目录对应的像素密度。如下表：</p>
+<p>density|0.75|1|1.5|2|3|4<br>:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:<br>dpi|120|160|240|320|480|560<br>folder|ldpi|mdpi|hdpi|xhdpi|xxhdpi|xxxhdpi</p>
+<p>因此计算公式为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Memory = width * height * 一个像素点占用的字节数 * (设备像素密度/图片目录对应的密度)^<span class="number">2</span></span><br></pre></td></tr></table></figure>
+
+<p>Android Bitmap 类中提供了一个方法获取 Bitmap 分配内存大小：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">fun</span> <span class="title">getBitmapSize</span><span class="params">(bitmap: <span class="type">Bitmap</span>)</span></span>: <span class="built_in">Float</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> bitmap.allocationByteCount / <span class="number">1024f</span> <span class="comment">// Kb</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="存储位置"><a href="#存储位置" class="headerlink" title="存储位置"></a>存储位置</h3><table>
+<thead>
+<tr>
+<th>-</th>
+<th>2.3(API 10)之前</th>
+<th>3.0-7.1(API 11-25)</th>
+<th>8.0(API 26)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Bitmap对象</td>
+<td>Java Heap</td>
+<td>Java Heap</td>
+<td>Java Heap</td>
+</tr>
+<tr>
+<td>像素数据</td>
+<td>Native Heap</td>
+<td>Java Heap</td>
+<td>Native Heap</td>
+</tr>
+<tr>
+<td>迁移原因</td>
+<td>-</td>
+<td>Bitmap生命周期不太可控，可能会内存泄漏</td>
+<td>优化了Bitmap生命周期管理，减轻 Java Heap 的压力，且只要 RAM 有剩余空间，则可以一直在Native heap上申请空间，当然如果 RAM 快耗尽了，系统就会杀进程释放RAM。</td>
+</tr>
+</tbody></table>
+<h3 id="编码"><a href="#编码" class="headerlink" title="编码"></a>编码</h3><p>可以通过改变编码格式来改变 Bitmap 占用的内存，Android 在 <a target="_blank" rel="noopener" href="https://developer.android.com/reference/android/graphics/Bitmap.Config">Bitmap.Config</a> 中提供了几种编码方式：</p>
+<table>
+<thead>
+<tr>
+<th>Bitmap.Config</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ALPHA_8</td>
+<td>A &#x3D; 8, 一个像素点占用 1 个字节，没有颜色，只有透明度</td>
+</tr>
+<tr>
+<td>ARGB_4444</td>
+<td>A&#x3D;4, R&#x3D;4, G&#x3D;4, B&#x3D;4, 每个像素占 2 个字节，在 API 29 中弃用，画质太差，建议使用 ARGB_8888 替代</td>
+</tr>
+<tr>
+<td>ARGB_8888</td>
+<td>A&#x3D;8, R&#x3D;8, G&#x3D;8, B&#x3D;8, 每个像素占 4 个字节，默认选项</td>
+</tr>
+<tr>
+<td>HARDWARE</td>
+<td>Special configuration, when bitmap is stored only in graphic memory.</td>
+</tr>
+<tr>
+<td>RGBA_F16</td>
+<td>A&#x3D;16, R&#x3D;16, G&#x3D;16, B&#x3D;16, 每个像素占 8 个字节</td>
+</tr>
+<tr>
+<td>RGB_565</td>
+<td>R&#x3D;5, G&#x3D;6, B&#x3D;5, 没有透明度，每个像素占 2 个字节</td>
+</tr>
+</tbody></table>
+<p>举例如下：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">click</span><span class="params">(view: <span class="type">View</span>)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    loadByConfig(<span class="string">&quot;/sdcard/head.png&quot;</span>, Bitmap.Config.RGB_565)</span><br><span class="line"></span><br><span class="line">    loadByConfig(<span class="string">&quot;/sdcard/head.png&quot;</span>, Bitmap.Config.ARGB_8888)</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">fun</span> <span class="title">loadByConfig</span><span class="params">(path: <span class="type">String</span>, config: <span class="type">Bitmap</span>.<span class="type">Config</span>)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> options = BitmapFactory.Options()</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 不加载到内存中，只返回图片属性</span></span><br><span class="line"></span><br><span class="line">    options.inJustDecodeBounds = <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">    BitmapFactory.decodeFile(path, options)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> outHeight = options.outHeight</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> outWidth = options.outWidth</span><br><span class="line"></span><br><span class="line">    Log.d(<span class="string">&quot;LLL&quot;</span>, <span class="string">&quot;width = <span class="variable">$outWidth</span>, height = <span class="variable">$outHeight</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">    options.inPreferredConfig = config</span><br><span class="line"></span><br><span class="line">    options.inJustDecodeBounds = <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> bitmap = BitmapFactory.decodeFile(path, options)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> size = getBitmapSize(bitmap)</span><br><span class="line"></span><br><span class="line">    Log.d(<span class="string">&quot;LLL&quot;</span>, <span class="string">&quot;size = <span class="subst">$&#123;size&#125;</span>Kb, width = <span class="subst">$&#123;bitmap.width&#125;</span>, height = <span class="subst">$&#123;bitmap.height&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 输出</span></span><br><span class="line"></span><br><span class="line">D/LLL: width = <span class="number">291</span>, height = <span class="number">290</span></span><br><span class="line"></span><br><span class="line">D/LLL: size = <span class="number">329.</span>64844Kb, width = <span class="number">291</span>, height = <span class="number">290</span></span><br><span class="line"></span><br><span class="line">D/LLL: width = <span class="number">291</span>, height = <span class="number">290</span></span><br><span class="line"></span><br><span class="line">D/LLL: size = <span class="number">164.</span>82422Kb, width = <span class="number">291</span>, height = <span class="number">290</span></span><br></pre></td></tr></table></figure>
+
+<p>可以看出宽高没变，但是占用内存变化了。</p>
+<h3 id="采样"><a href="#采样" class="headerlink" title="采样"></a>采样</h3><p>按照 Bitmap 占用内存的计算方式，可以减小其宽高达到减少内存占用的目的：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">click</span><span class="params">(view: <span class="type">View</span>)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    loadBySample(<span class="string">&quot;/sdcard/head.png&quot;</span>, <span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">    loadBySample(<span class="string">&quot;/sdcard/head.png&quot;</span>, <span class="number">2</span>)</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">fun</span> <span class="title">loadBySample</span><span class="params">(path: <span class="type">String</span>, sample:<span class="type">Int</span>)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> options = BitmapFactory.Options()</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 不加载到内存中，只返回图片属性</span></span><br><span class="line"></span><br><span class="line">    options.inJustDecodeBounds = <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">    BitmapFactory.decodeFile(path, options)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> outHeight = options.outHeight</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> outWidth = options.outWidth</span><br><span class="line"></span><br><span class="line">    Log.d(<span class="string">&quot;LLL&quot;</span>, <span class="string">&quot;width = <span class="variable">$outWidth</span>, height = <span class="variable">$outHeight</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 任何小于等于1的值都会置为1</span></span><br><span class="line"></span><br><span class="line">    options.inSampleSize = sample</span><br><span class="line"></span><br><span class="line">    options.inJustDecodeBounds = <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> bitmap = BitmapFactory.decodeFile(path, options)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> size = getBitmapSize(bitmap)</span><br><span class="line"></span><br><span class="line">    Log.d(<span class="string">&quot;LLL&quot;</span>, <span class="string">&quot;size = <span class="subst">$&#123;size&#125;</span>Kb, width = <span class="subst">$&#123;bitmap.width&#125;</span>, height = <span class="subst">$&#123;bitmap.height&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 输出</span></span><br><span class="line"></span><br><span class="line">D/LLL: width = <span class="number">291</span>, height = <span class="number">290</span></span><br><span class="line"></span><br><span class="line">D/LLL: size = <span class="number">329.</span>64844Kb, width = <span class="number">291</span>, height = <span class="number">290</span></span><br><span class="line"></span><br><span class="line">D/LLL: width = <span class="number">291</span>, height = <span class="number">290</span></span><br><span class="line"></span><br><span class="line">D/LLL: size = <span class="number">82.</span>12891Kb, width = <span class="number">145</span>, height = <span class="number">145</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="复用"><a href="#复用" class="headerlink" title="复用"></a>复用</h3><ul>
+<li>可以使用 inBitmap 复用 Bitmap 内存: <code>BitmapFactory.Options.inBitmap = Bitmap</code> 。图像解码时，会尝试复用该设置的 inBitmap 内存，在 Android 4.4 版本以上，只要被解码后的 Bitmap 对象字节大小小于等于 inBitmap 的字节大小就可以复用成功，编码不必相同，被复用的图像的像素格式 Config 会覆盖设置的 BitmapFactory.Options.inPreferredConfig 参数。</li>
+<li>可以使用 Lru 管理 Bitmap 池。</li>
+</ul>
+<h2 id="Android内存管理"><a href="#Android内存管理" class="headerlink" title="Android内存管理"></a>Android内存管理</h2><h3 id="进程分类"><a href="#进程分类" class="headerlink" title="进程分类"></a>进程分类</h3><p>按照重要性排序：</p>
+<ol>
+<li>前台进程：用户目前执行操作所需的进程，系统中只有少数此类进程，而且除非内存过低，导致连这些进程都无法继续运行，才会在最后一步终止这些进程。如果以下任一条件成立，则进程会被认为位于前台：<ul>
+<li>它正在用户的互动屏幕上运行一个 Activity（其 onResume() 方法已被调用）。</li>
+<li>它有一个 BroadcastReceiver 目前正在运行（其 BroadcastReceiver.onReceive() 方法正在执行）。</li>
+<li>它有一个 Service 目前正在执行其某个回调（Service.onCreate()、Service.onStart() 或 Service.onDestroy()）中的代码。</li>
+</ul>
+</li>
+<li>可见进程：正在进行用户当前知晓的任务，因此终止该进程会对用户体验造成明显的负面影响。相比前台进程，系统中运行的这些进程数量较不受限制，但仍相对受控。这些进程被认为非常重要，除非系统为了使所有前台进程保持运行而需要终止它们，否则不会这么做。在以下条件下，进程将被视为可见：<ul>
+<li>它正在运行的 Activity 在屏幕上对用户可见，但不在前台（其 onPause() 方法已被调用）。举例来说，如果前台 Activity 显示为一个对话框，而这个对话框允许在其后面看到上一个 Activity，则可能会出现这种情况。</li>
+<li>它有一个 Service 正在通过 Service.startForeground()（要求系统将该服务视为用户知晓或基本上对用户可见的服务）作为前台服务运行。</li>
+<li>系统正在使用其托管的服务实现用户知晓的特定功能，例如动态壁纸、输入法服务等。</li>
+</ul>
+</li>
+<li>服务进程：包含一个已使用 startService() 方法启动的 Service。虽然用户无法直接看到这些进程，但它们通常正在执行用户关心的任务（例如后台网络数据上传或下载），因此系统会始终使此类进程保持运行，除非没有足够的内存来保留所有前台和可见进程。已经运行了很长时间（例如 30 分钟或更长时间）的服务的重要性可能会降位，以使其进程降至缓存 LRU 列表。这有助于避免超长时间运行的服务因内存泄露或其他问题占用大量内存，进而妨碍系统有效利用缓存进程。</li>
+<li>缓存进程：目前不需要的进程，因此，如果其他地方需要内存，系统可以根据需要自由地终止该进程。运行良好的系统将始终有多个缓存进程可用（为了更高效地切换应用），并根据需要定期终止最早的进程。只有在非常危急（且具有不良影响）的情况下，系统中的所有缓存进程才会被终止，此时系统必须开始终止服务进程。这些进程通常包含用户当前不可见的一个或多个 Activity 实例（onStop() 方法已被调用并返回）。只要它们正确实现其 Activity 生命周期，那么当系统终止此类流程时，就不会影响用户返回该应用时的体验，因为当关联的 Activity 在新的进程中重新创建时，它可以恢复之前保存的状态。</li>
+</ol>
+<p>缓存进程保存在伪 LRU 列表中，列表中的最后一个进程是为了回收内存而终止的第一个进程。此列表的确切排序政策是平台的实现细节，但它通常会先尝试保留更多有用的进程（比如托管用户的主屏幕应用、用户最后看到的 Activity 的进程等），再保留其他类型的进程。还可以针对终止进程应用其他政策：比如对允许的进程数量的硬限制，对进程可持续保持缓存状态的时间长短的限制等。</p>
+<p>在 <code>com.android.server.am.ProcessList</code> 类中可以看到进程的 adj 值，用来表示进程的优先级，adj值越小，进程的优先级越高，越不容易被 kill 掉。</p>
+<h3 id="保活方案"><a href="#保活方案" class="headerlink" title="保活方案"></a>保活方案</h3><p>进程保活有两个方面的内容:</p>
+<ol>
+<li>使应用在后台的时候，提升其优先级而不致被系统杀死;</li>
+<li>应用被系统杀死后，也可以被拉起。</li>
+</ol>
+<p><strong>进程存活时间</strong></p>
+<p>提高进程的存活时间可以参考上述进程优先级相关的思想，具体做法网上已经有许多方案，有的有效有的由于Android版本的升级而失效。</p>
+<p><strong>拉起app</strong></p>
+<ul>
+<li>当app被强制杀死后，Android系统会杀掉其进程组，因此开启一个运行在子进程的service来重启主进程的方式，随着Android版本的升级已经失效了。</li>
+<li>可以采取app进程互相拉起的方式，这种的话需要有一个存活的app来拉取。</li>
+<li>一个有效的保活方案可以参考 <a target="_blank" rel="noopener" href="https://ljd1996.github.io/2019/12/20/Android%E6%9D%A5%E7%94%B5%E7%A7%80%E5%AE%9E%E8%B7%B5/">Android来电秀实践</a> ，该方案可以在用户强制杀掉进程后重启app。</li>
+<li>与手机厂商合作，将应用加入白名单。</li>
+</ul>
+<h3 id="onTrimMemory"><a href="#onTrimMemory" class="headerlink" title="onTrimMemory"></a>onTrimMemory</h3><p>Android 4.0(API 14) 中添加了 onTrimMemory() 回调，在早期版本有 onLowMemory() 回调，此回调大致相当于 TRIM_MEMORY_COMPLETE 事件，可以在 Application 中实现 <code>onTrimMemory(level: Int)</code> 回调以响应不同的与内存相关的事件，其中 level 表示事件等级。</p>
+<p>TRIM_MEMORY_UI_HIDDEN 比较常用，与其它等级独立开：</p>
+<ul>
+<li>TRIM_MEMORY_UI_HIDDEN: 表示应用的 UI 不可见了，此时应该释放一些资源。</li>
+</ul>
+<p>下面三个等级是应用真正运行时的回调：</p>
+<ul>
+<li>TRIM_MEMORY_RUNNING_MODERATE: 表示应用正常运行且不会被杀掉。但是目前设备内存已经有点低了，系统可能会开始根据 LRU 规则来杀死进程。开发者应该释放一些不必要的资源。</li>
+<li>TRIM_MEMORY_RUNNING_LOW: 表示应用正常运行且不会被杀掉。但是目前设备内存已经非常低了。</li>
+<li>TRIM_MEMORY_RUNNING_CRITICAL: 表示应用仍然正常运行，但是系统已经根据 LRU 规则杀掉了大部分缓存的进程了。开发者应当尽可能释放所有不必要的资源，否则系统可能会继续杀掉所有缓存中的进程，并且开始杀掉一些本来应当保持运行的进程，比如说后台运行的服务。</li>
+</ul>
+<p>当应用是缓存状态的，则会收到以下几种类型的回调：</p>
+<ul>
+<li>TRIM_MEMORY_BACKGROUND: 表示目前设备内存已经很低了，系统准备开始根据 LRU 缓存来清理进程。此时我们的程序在 LRU 缓存列表的最近位置，不太可能被清理，但这时去释放掉一些比较容易恢复的资源能够让手机的内存变得比较充足。</li>
+<li>TRIM_MEMORY_MODERATE: 表示目前设备内存已经很低了，且我们的程序处于 LRU 缓存列表的中间位置，如果手机内存还得不到进一步释放的话，那么我们的程序就有被系统杀掉的风险了。</li>
+<li>TRIM_MEMORY_COMPLETE: 表示目前设备内存已经很低了，且我们的程序处于 LRU 缓存列表的最边缘位置，系统会最优先考虑杀掉我们的程序，在这个时候应当尽可能地把一切可以释放的东西都进行释放。</li>
+</ul>
+<h3 id="查看内存状态"><a href="#查看内存状态" class="headerlink" title="查看内存状态"></a>查看内存状态</h3><ul>
+<li>使用 ActivityManager.getMemoryInfo(MemoryInfo) 方法获取系统内存的一些通用状态。</li>
+<li>使用 ActivityManager.getMemoryClass() 方法获取单个进程最大可用内存，单位为兆字节。</li>
+</ul>
+<p>MemoryInfo 中有几个可用的参数：</p>
+<ul>
+<li>availMem: 系统可用内存，由于内核的性质，该部分内存实际上可能正在使用中。</li>
+<li>totalMem: 内核可访问的总内存。</li>
+<li>threshold: 内存不足的阈值。</li>
+<li>lowMemory: 是否处于低内存状态。</li>
+</ul>
+<p>使用方法：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">getAvailableMemory</span><span class="params">(context: <span class="type">Context</span>)</span></span>: ActivityManager.MemoryInfo &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) <span class="keyword">as</span> ActivityManager</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ActivityManager.MemoryInfo().also &#123; memoryInfo -&gt;</span><br><span class="line"></span><br><span class="line">        activityManager.getMemoryInfo(memoryInfo)</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">getMemoryClass</span><span class="params">(context: <span class="type">Context</span>)</span></span>: <span class="built_in">Int</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) <span class="keyword">as</span> ActivityManager</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> activityManager.memoryClass</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="应用限制"><a href="#应用限制" class="headerlink" title="应用限制"></a>应用限制</h3><p>Android 对每个应用程序(进程)的堆(Dalvik heap)大小设置了限制，所以理论上可以将一些耗内存的操作放入一个单独的进程中，减小主进程的压力。</p>
+<p>这个限制不针对 Native heap，只要 RAM 有剩余空间，则可以一直在 Native heap 上申请空间，当然如果 RAM 快耗尽了，系统就会杀进程释放RAM。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>内存优化在于平时点点滴滴的开发习惯，不过通常情况下不一定非要追求某些优化，比如说枚举，如果用枚举时可读性和可扩展性更好，那么没必要避免使用它，它占用的内存相对于整个程序而言就是沧海一粟而言。高级语言诞生本身就是在硬件提升的背景之下的，牺牲某些性能来降低开发门槛，提高了开发效率也是可取的。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/clippings/" rel="tag"># clippings</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/613f8385/" rel="next" title="Android性能优化之包体积优化">
+                <i class="fa fa-chevron-left"></i> Android性能优化之包体积优化
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/58041fe5/" rel="prev" title="Android-WebView笔记">
+                Android-WebView笔记 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">439</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">47</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@qq.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F"><span class="nav-text">内存泄漏</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E6%8A%96%E5%8A%A8"><span class="nav-text">内存抖动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E4%BC%98%E5%8C%96%E6%95%B4%E7%90%86"><span class="nav-text">内存优化整理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Bitmap"><span class="nav-text">Bitmap</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0-1"><span class="nav-text">概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AD%98%E5%82%A8%E4%BD%8D%E7%BD%AE"><span class="nav-text">存储位置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%96%E7%A0%81"><span class="nav-text">编码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%87%87%E6%A0%B7"><span class="nav-text">采样</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%8D%E7%94%A8"><span class="nav-text">复用</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Android%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86"><span class="nav-text">Android内存管理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E5%88%86%E7%B1%BB"><span class="nav-text">进程分类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%9D%E6%B4%BB%E6%96%B9%E6%A1%88"><span class="nav-text">保活方案</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#onTrimMemory"><span class="nav-text">onTrimMemory</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E5%86%85%E5%AD%98%E7%8A%B6%E6%80%81"><span class="nav-text">查看内存状态</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E9%99%90%E5%88%B6"><span class="nav-text">应用限制</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

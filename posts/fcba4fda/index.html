@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="clippings," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="概述前段时间在读EventBus的源码，然后突然来了兴趣（闲的没事）就稍微修改了一下使其支持进程间订阅消息，实现原理很简单，其实就是进程内使用EventBus原生方式，进程间则通过Binder发送信息。实现比较简单，进程间Binder传递其实也可以不使用bindService，使用ContentProvider会更加灵活，后来就想着反正没事就试一试写个IPC框架（反正也不会有人用，练练手）。 大概">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android-IpcBridge原理">
+<meta property="og:url" content="http://shenbh.github.io/posts/fcba4fda/index.html">
+<meta property="og:site_name" content="积跬步">
+<meta property="og:description" content="概述前段时间在读EventBus的源码，然后突然来了兴趣（闲的没事）就稍微修改了一下使其支持进程间订阅消息，实现原理很简单，其实就是进程内使用EventBus原生方式，进程间则通过Binder发送信息。实现比较简单，进程间Binder传递其实也可以不使用bindService，使用ContentProvider会更加灵活，后来就想着反正没事就试一试写个IPC框架（反正也不会有人用，练练手）。 大概">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-07-03T07:54:23.701Z">
+<meta property="article:modified_time" content="2025-07-03T07:55:13.437Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="clippings">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/fcba4fda/"/>
+
+
+
+
+
+  <title>Android-IpcBridge原理 | 积跬步</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">积跬步</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just do IT Now.</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/fcba4fda/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="积跬步">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">Android-IpcBridge原理</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-07-03T15:54:23+08:00">
+                2025-07-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+              <div class="post-description">
+                  概述前段时间在读EventBus的源码，然后突然来了兴趣（闲的没事）就稍微修改了一下使其支持进程间订阅消息，实现原理很简单，其实就是进程内使用EventBus原生方式，进程间则通过Binder发送信息。实现比较简单，进程间Binder传递其实也可以不使用bindService，使用ContentProvider会更加灵活，后来就想着反正没事就试一试写个IPC框架（反正也不会有人用，练练手）。 大概
+              </div>
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>前段时间在读EventBus的源码，然后突然来了兴趣（闲的没事）就稍微修改了一下使其支持进程间订阅消息，实现原理很简单，其实就是进程内使用EventBus原生方式，进程间则通过Binder发送信息。实现比较简单，进程间Binder传递其实也可以不使用bindService，使用ContentProvider会更加灵活，后来就想着反正没事就试一试写个IPC框架（反正也不会有人用，练练手）。</p>
+<p>大概原理就是通过一个AIDL接口传递要调用的类和方法名，然后通过反射调用。进程间的Binder通过ContentProvider传递（ <a target="_blank" rel="noopener" href="https://ljd1996.github.io/2020/01/06/Android-IPC%E6%9C%BA%E5%88%B6/#ContentProvider-amp-Binder">Android-IPC机制-ContentProvider</a> ），不需要bindService，然后自定义了一个Gradle插件，用来动态修改Manifest信息以及生成ContentProvider类。</p>
+<p>项目地址： <a target="_blank" rel="noopener" href="https://github.com/ljd1996/IpcBridge">IpcBridge</a> ，ReadMe文档有使用方法。</p>
+<p>项目工程中包括三个模块，一个是IpcBridge的Kotlin源代码，一个是IpcBridge的Gradle插件源码，主模块是demo模块。</p>
+<h2 id="IpcBridge"><a href="#IpcBridge" class="headerlink" title="IpcBridge"></a>IpcBridge</h2><h3 id="AIDL接口"><a href="#AIDL接口" class="headerlink" title="AIDL接口"></a>AIDL接口</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> <span class="title class_">IBridgeInterface</span> &#123;</span><br><span class="line"></span><br><span class="line">    Bundle <span class="title function_">call</span><span class="params">(in Bundle args)</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里参数和返回值都是Bundle类型，具体的参数和返回值都约定在Bundle里，毕竟Bundle现成就实现了Parcelable接口。</p>
+<h3 id="ContentProvider基础类"><a href="#ContentProvider基础类" class="headerlink" title="ContentProvider基础类"></a>ContentProvider基础类</h3><figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">open</span> <span class="class"><span class="keyword">class</span> <span class="title">BaseProvider</span> : <span class="type">ContentProvider</span></span>() &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">query</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">        uri: <span class="type">Uri</span>, projection: <span class="type">Array</span>&lt;<span class="type">out</span> <span class="type">String</span>&gt;?, selection: <span class="type">String</span>?,</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">        selectionArgs: <span class="type">Array</span>&lt;<span class="type">out</span> <span class="type">String</span>&gt;?, sortOrder: <span class="type">String</span>?</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">    )</span></span>: Cursor? &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> BinderCursor(arrayOf(<span class="string">&quot;service&quot;</span>), BridgeBinder())</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>此处返回的BinderCursor是一个继承了MatrixCursor的特殊Cursor，有关MatrixCursor的信息可以看这里 <a target="_blank" rel="noopener" href="https://ljd1996.github.io/2020/01/06/Android-IPC%E6%9C%BA%E5%88%B6/#MatrixCursor">MatrixCursor</a> 。它的使用情景就是当我想得到一个Cursor，而此时又不需要数据库来返回一个Cursor时，可以通过MatrixCursor来返回一个伪造的Cursor，而这里的作用就是通过这个Cursor对象来携带Binder对象。然后通过后面讲到的Gradle插件中动态生成的ContentProvider，将其注册到要跨进程的进程中，那么就可以嘿嘿了。</p>
+<h3 id="IpcBridge-1"><a href="#IpcBridge-1" class="headerlink" title="IpcBridge"></a>IpcBridge</h3><p>IpcBridge是对外的接口，里面有三个集合：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 存储对应接口类的对应实现类：key-接口类；value-实现类</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">val</span> mClassMap = mutableMapOf&lt;Class&lt;*&gt;, Class&lt;*&gt;&gt;()</span><br><span class="line"></span><br><span class="line"><span class="comment">// 存储对应接口类的对应实例：key-接口类；value-实例</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">val</span> mInstanceMap = mutableMapOf&lt;Class&lt;*&gt;, Any&gt;()</span><br><span class="line"></span><br><span class="line"><span class="comment">// 缓存客户端需要调用的远程接口的代理</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">val</span> mProxyCache = mutableMapOf&lt;Class&lt;*&gt;, Any&gt;()</span><br></pre></td></tr></table></figure>
+
+<p>在服务端进程需要注册远程接口和实现类，注册方法如下：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">register</span><span class="params">(inter: <span class="type">Class</span>&lt;*&gt;, impl: <span class="type">Class</span>&lt;*&gt;)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    mClassMap[inter] = impl</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">register</span><span class="params">(inter: <span class="type">Class</span>&lt;<span class="type">Any</span>&gt;, instance: <span class="type">Any</span>)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    mInstanceMap[inter] = instance</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>客户端进程可以通过获取远程接口的代理类来调用服务器进程的接口，获取代理的方法如下：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">getProxy</span><span class="params">(context: <span class="type">Context</span>, inter: <span class="type">Class</span>&lt;*&gt;, authority: <span class="type">String</span>)</span></span>: Any? &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 首先从缓存中获取</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (mProxyCache.containsKey(inter)) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> mProxyCache[inter] ?: newProxy(context, inter, authority)</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> newProxy(context, inter, authority)</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">fun</span> <span class="title">newProxy</span><span class="params">(context: <span class="type">Context</span>, inter: <span class="type">Class</span>&lt;*&gt;, authority: <span class="type">String</span>)</span></span>: Any? &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (mBridgeInterface == <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 从前面提到的ContentProvider中拿到服务端进程的binder对象</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">val</span> cursor = context.contentResolver?.query(</span><br><span class="line"></span><br><span class="line">            Uri.parse(<span class="string">&quot;content://<span class="subst">$&#123;authority&#125;</span>&quot;</span>), <span class="literal">null</span>, <span class="literal">null</span>, <span class="literal">null</span>, <span class="literal">null</span></span><br><span class="line"></span><br><span class="line">        )</span><br><span class="line"></span><br><span class="line">        cursor?.let &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">val</span> binder = BinderCursor.getBinder(it)</span><br><span class="line"></span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line"></span><br><span class="line">                mBridgeInterface = IBridgeInterface.Stub.asInterface(binder)</span><br><span class="line"></span><br><span class="line">            &#125; <span class="keyword">catch</span> (e: Exception) &#123;</span><br><span class="line"></span><br><span class="line">                e.printStackTrace()</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        cursor?.close()</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 传入接口类对象和mBridgeInterface，返回接口的代理类</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> proxy = BridgeHandler.newProxyInstance(inter, mBridgeInterface ?: <span class="keyword">return</span> <span class="literal">null</span>)</span><br><span class="line"></span><br><span class="line">    mProxyCache[inter] = proxy</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> proxy</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>根据上面的注释，可以看看具体代理类的invoke逻辑。</p>
+<h3 id="代理类"><a href="#代理类" class="headerlink" title="代理类"></a>代理类</h3><p>通过jdk动态代理，当调用了代理类的方法时，会走invoke逻辑。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">invoke</span><span class="params">(proxy: <span class="type">Any</span>?, method: <span class="type">Method</span>?, args: <span class="type">Array</span>&lt;<span class="type">out</span> <span class="type">Any</span>&gt;?)</span></span>: Any? &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> methodName = method?.name</span><br><span class="line"></span><br><span class="line">    args?.<span class="keyword">get</span>(<span class="number">0</span>)?.let &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (it <span class="keyword">is</span> Bundle) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 通过mBridgeInterface调用服务端进程的方法，这里传入了要调用接口的类名和方法名</span></span><br><span class="line"></span><br><span class="line">            it.putString(<span class="string">&quot;clazzName&quot;</span>, mClass.name)</span><br><span class="line"></span><br><span class="line">            it.putString(<span class="string">&quot;methodName&quot;</span>, methodName)</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> mBridgeInterface.call(it)</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> method?.invoke(proxy, args)</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>接下来再看看服务端的Binder实现类。</p>
+<h3 id="BridgeBinder"><a href="#BridgeBinder" class="headerlink" title="BridgeBinder"></a>BridgeBinder</h3><figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">BridgeBinder</span> : <span class="type">IBridgeInterface.Stub</span></span>() &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">call</span><span class="params">(args: <span class="type">Bundle</span>?)</span></span>: Bundle? &#123;</span><br><span class="line"></span><br><span class="line">        args?.let &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">val</span> clazzName = it.getString(<span class="string">&quot;clazzName&quot;</span>) ?: <span class="string">&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">val</span> methodName = it.getString(<span class="string">&quot;methodName&quot;</span>) ?: <span class="string">&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">            Log.i(TAG, <span class="string">&quot;clazzName = <span class="variable">$clazzName</span>, methodName = <span class="variable">$methodName</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">val</span> clazz = Class.forName(clazzName)</span><br><span class="line"></span><br><span class="line">                <span class="keyword">val</span> method = clazz.getMethod(methodName, Bundle::<span class="keyword">class</span>.java)</span><br><span class="line"></span><br><span class="line">                <span class="comment">// 通过接口名查询之前注册的实例对象</span></span><br><span class="line"></span><br><span class="line">                <span class="keyword">val</span> instance = IpcBridge.getInstance(clazz)</span><br><span class="line"></span><br><span class="line">                instance?.let &#123; inst -&gt;</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">val</span> result = method.invoke(inst, it)</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">if</span> (result <span class="keyword">is</span> Bundle) result <span class="keyword">else</span> <span class="literal">null</span></span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">            &#125; <span class="keyword">catch</span> (e: Exception) &#123;</span><br><span class="line"></span><br><span class="line">                e.printStackTrace()</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">null</span></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的逻辑主要就是通过接收到客户端进程传入的方法和类名，反射调用对应的方法，并返回返回值。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>IpcBridge的整体逻辑其实挺简单的，客户端进程通过获取到指定接口的代理类，然后将要调用的方法和类名传给服务端进程，服务端通过反射调用相关的实现类。</p>
+<p>中间涉及到ContentProvider如何返回对应进程的Binder对象，以及服务端对实例对象的注册和查找。</p>
+<p>这里有个问题，就是每个服务端进程都需要有一个ContentProvider与之对应，而且无法手动创建以及Manifest注册，因此就需要开发一个Gradle插件来在编译期间帮助我们完成这个任务。</p>
+<h2 id="IpcBridge-Gradle"><a href="#IpcBridge-Gradle" class="headerlink" title="IpcBridge Gradle"></a>IpcBridge Gradle</h2><h3 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h3><p>在应用了IpcBridge gradle插件后，需要在Gradle脚本中进行配置，如下：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">IpcBridge &#123;</span><br><span class="line"></span><br><span class="line">    providerConfigs &#123;</span><br><span class="line"></span><br><span class="line">        BridgeProvider &#123;</span><br><span class="line"></span><br><span class="line">            authorities <span class="string">&quot;com.hearing.ipcbridge.provider&quot;</span></span><br><span class="line"></span><br><span class="line">            process <span class="string">&quot;:bridge&quot;</span></span><br><span class="line"></span><br><span class="line">            exported <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        TestProvider &#123;</span><br><span class="line"></span><br><span class="line">            authorities <span class="string">&quot;com.hearing.ipcbridge.test&quot;</span></span><br><span class="line"></span><br><span class="line">            process <span class="string">&quot;:test&quot;</span></span><br><span class="line"></span><br><span class="line">            exported <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面配置了两个ContentProvider：BridgeProvider和TestProvider，相关参数与Manifest参数对应。</p>
+<h3 id="BridgeExtension"><a href="#BridgeExtension" class="headerlink" title="BridgeExtension"></a>BridgeExtension</h3><p>BridgeExtension是一个Gradle自定义的扩展，可以新增一个类似于 <code>android &#123;&#125;</code> 的命名空间：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">BridgeExtension</span> &#123;</span><br><span class="line"></span><br><span class="line">    NamedDomainObjectContainer&lt;ProviderConfig&gt; providerConfigs</span><br><span class="line"></span><br><span class="line">    BridgeExtension(Project project) &#123;</span><br><span class="line"></span><br><span class="line">        providerConfigs = project.container(ProviderConfig)</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">void</span> providerConfigs(Action&lt;NamedDomainObjectContainer&lt;ProviderConfig&gt;&gt; action) &#123;</span><br><span class="line"></span><br><span class="line">        action.execute(providerConfigs)</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面的ProviderConfig类与Gradle脚本中的配置参数对应：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">ProviderConfig</span> &#123;</span><br><span class="line"></span><br><span class="line">    String name</span><br><span class="line"></span><br><span class="line">    String authorities</span><br><span class="line"></span><br><span class="line">    String process</span><br><span class="line"></span><br><span class="line">    <span class="type">boolean</span> exported = <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">    ProviderConfig(String name) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="variable language_">this</span>.name = name</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">void</span> authorities(String authorities) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="variable language_">this</span>.authorities = authorities</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">void</span> process(String process) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="variable language_">this</span>.process = process</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">void</span> exported(<span class="type">boolean</span> exported) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="variable language_">this</span>.exported = exported</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    String toString() &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;name: $name, authorities: $authorities, process: $process, exported: $exported&quot;</span></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后在自定义的插件中创建这个扩展：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">project.getExtensions().create(<span class="string">&quot;IpcBridge&quot;</span>, BridgeExtension, project)</span><br></pre></td></tr></table></figure>
+
+<p>要获取用户配置的扩展信息，可以这样：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">BridgeExtension extension = project.getExtensions().getByName(<span class="string">&quot;IpcBridge&quot;</span>)</span><br><span class="line"></span><br><span class="line">extension.providerConfigs.each &#123; ProviderConfig provider -&gt;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="创建ContentProvider"><a href="#创建ContentProvider" class="headerlink" title="创建ContentProvider"></a>创建ContentProvider</h3><p>接下来根据配置新建对应的ContentProvider类，在IpcBridge的源码中已经讲到了一个BaseProvider类，新创建的Provider只需要继承它即可，比如说：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.hearing.ipcbridge;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Automatically generated by IpcBridge.</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BridgeProvider</span> <span class="keyword">extends</span> <span class="title class_">BaseProvider</span> &#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>创建的Java文件很简单，因此不需要用到类似于JavaPoet的框架，这里生成的是Java源文件，而不是class字节码，因此需要在gradle编译Java代码的task执行之前创建，然后我们将生成的Java文件加入到sourceSets中，即可正常被Gralde构建系统所编译：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="type">void</span> init() &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> sourceSetPath = <span class="string">&quot;$&#123;project.buildDir&#125;/bridge&quot;</span></span><br><span class="line"></span><br><span class="line">    srcPath = <span class="string">&quot;$&#123;sourceSetPath&#125;/com/hearing/ipcbridge&quot;</span></span><br><span class="line"></span><br><span class="line">    project.android.sourceSets &#123;</span><br><span class="line"></span><br><span class="line">        main &#123;</span><br><span class="line"></span><br><span class="line">            java.srcDir <span class="string">&quot;$&#123;project.buildDir&#125;/bridge&quot;</span></span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> src = <span class="keyword">new</span> File(<span class="string">&quot;$srcPath/$&#123;provider.name&#125;.java&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (src.exists()) &#123;</span><br><span class="line"></span><br><span class="line">    println(<span class="string">&quot;java exists.&quot;</span>)</span><br><span class="line"></span><br><span class="line">    src.delete()</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">src.createNewFile()</span><br><span class="line"></span><br><span class="line">src.withWriter &#123; writer -&gt;</span><br><span class="line"></span><br><span class="line">    writer.write(<span class="string">&quot;package com.hearing.ipcbridge;\n\n&quot;</span>)</span><br><span class="line"></span><br><span class="line">    writer.write(<span class="string">&quot;// Automatically generated by IpcBridge.\n&quot;</span>)</span><br><span class="line"></span><br><span class="line">    writer.write(<span class="string">&quot;public class $&#123;provider.name&#125; extends BaseProvider &#123;\n&quot;</span>)</span><br><span class="line"></span><br><span class="line">    writer.write(<span class="string">&quot;&#125;&quot;</span>)</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在创建了ContentProvider源文件后，还需要在Manifest文件中注册它。</p>
+<h3 id="动态注册"><a href="#动态注册" class="headerlink" title="动态注册"></a>动态注册</h3><p>在Gralde构建过程中有一个task叫：processDebugManifest&#x2F;processReleaseManifest&#x2F;more flavor，可以在这个task执行后插入我们的动态注册代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line">project.android.applicationVariants.all &#123; variant -&gt;</span><br><span class="line"></span><br><span class="line">    <span class="type">String</span> <span class="variable">variantName</span> <span class="operator">=</span> variant.name.capitalize()</span><br><span class="line"></span><br><span class="line">    <span class="type">def</span> <span class="variable">processManifestTask</span> <span class="operator">=</span> project.tasks.getByName(<span class="string">&quot;process$&#123;variantName&#125;Manifest&quot;</span>)</span><br><span class="line"></span><br><span class="line">    processManifestTask.doLast &#123; pmt -&gt;</span><br><span class="line"></span><br><span class="line">        pmt.manifestOutputDirectory.getAsFileTree().getFiles().each &#123; File f -&gt;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (f.getName().endsWith(<span class="string">&quot;AndroidManifest.xml&quot;</span>)) &#123;</span><br><span class="line"></span><br><span class="line">                ensurePath()</span><br><span class="line"></span><br><span class="line">                println(<span class="string">&quot;&gt;&gt;&gt;manifestPath = $&#123;f.getAbsolutePath()&#125;&quot;</span>)</span><br><span class="line"></span><br><span class="line">                <span class="type">def</span> <span class="variable">manifest</span> <span class="operator">=</span> f.getText()</span><br><span class="line"></span><br><span class="line">                <span class="type">def</span> <span class="variable">xml</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">XmlParser</span>().parseText(manifest)</span><br><span class="line"></span><br><span class="line">                <span class="type">BridgeExtension</span> <span class="variable">extension</span> <span class="operator">=</span> project.getExtensions().getByName(<span class="string">&quot;IpcBridge&quot;</span>)</span><br><span class="line"></span><br><span class="line">                extension.providerConfigs.each &#123; ProviderConfig provider -&gt;</span><br><span class="line"></span><br><span class="line">                    println(<span class="string">&quot;&gt;&gt;----------------------------------------&lt;&lt;&quot;</span>)</span><br><span class="line"></span><br><span class="line">                    println(<span class="string">&quot;provider = $provider&quot;</span>)</span><br><span class="line"></span><br><span class="line">                    xml.application[<span class="number">0</span>].appendNode(</span><br><span class="line"></span><br><span class="line">                            <span class="string">&quot;provider&quot;</span>,</span><br><span class="line"></span><br><span class="line">                            [<span class="string">&quot;android:name&quot;</span>               : <span class="string">&quot;com.hearing.ipcbridge.$&#123;provider.name&#125;&quot;</span>,</span><br><span class="line"></span><br><span class="line">                                <span class="string">&quot;android:authorities&quot;</span>        : provider.authorities,</span><br><span class="line"></span><br><span class="line">                                <span class="string">&quot;android:grantUriPermissions&quot;</span>: <span class="literal">true</span>,</span><br><span class="line"></span><br><span class="line">                                <span class="string">&quot;android:process&quot;</span>            : provider.process,</span><br><span class="line"></span><br><span class="line">                                <span class="string">&quot;android:exported&quot;</span>           : provider.exported]</span><br><span class="line"></span><br><span class="line">                    )</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="type">def</span> <span class="variable">serialize</span> <span class="operator">=</span> XmlUtil.serialize(xml)</span><br><span class="line"></span><br><span class="line">                f.write(serialize)</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>build结束后便可看到最终的Manifest文件中包含了我们插入的代码。</p>
+<h3 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h3><p>Gradle插件主要有两个作用：</p>
+<ol>
+<li>创建ContentProvider源文件</li>
+<li>动态注册Provider</li>
+</ol>
+<h2 id="总结-2"><a href="#总结-2" class="headerlink" title="总结"></a>总结</h2><p>IpcBridge在配置上还有些麻烦，后面有时间会考虑优化一下，争取实现最少配置，同时优化下代码。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/clippings/" rel="tag"># clippings</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/940db163/" rel="next" title="AspectJ基本用法">
+                <i class="fa fa-chevron-left"></i> AspectJ基本用法
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/d16344e2/" rel="prev" title="Android-AOP-IOC概述">
+                Android-AOP-IOC概述 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">439</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">47</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@qq.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IpcBridge"><span class="nav-text">IpcBridge</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#AIDL%E6%8E%A5%E5%8F%A3"><span class="nav-text">AIDL接口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ContentProvider%E5%9F%BA%E7%A1%80%E7%B1%BB"><span class="nav-text">ContentProvider基础类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IpcBridge-1"><span class="nav-text">IpcBridge</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A3%E7%90%86%E7%B1%BB"><span class="nav-text">代理类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#BridgeBinder"><span class="nav-text">BridgeBinder</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IpcBridge-Gradle"><span class="nav-text">IpcBridge Gradle</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE"><span class="nav-text">配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#BridgeExtension"><span class="nav-text">BridgeExtension</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BAContentProvider"><span class="nav-text">创建ContentProvider</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8A%A8%E6%80%81%E6%B3%A8%E5%86%8C"><span class="nav-text">动态注册</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93-1"><span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93-2"><span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

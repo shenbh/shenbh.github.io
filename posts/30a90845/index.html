@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="clippings," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="概述本文基于Volley 1.1.1版本的源码。 Volley是Google官方出的一套小而巧的异步请求库，该框架封装的扩展性很强，支持HttpClient、HttpUrlConnection，甚至支持OkHttp。Volley不适用于下载大量内容的操作或流式传输操作，因为在解析过程中，Volley会将所有响应存储在内存中，因此Volley不适合上传和下载大文件。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Volley源码解析">
+<meta property="og:url" content="http://shenbh.github.io/posts/30a90845/index.html">
+<meta property="og:site_name" content="积跬步">
+<meta property="og:description" content="概述本文基于Volley 1.1.1版本的源码。 Volley是Google官方出的一套小而巧的异步请求库，该框架封装的扩展性很强，支持HttpClient、HttpUrlConnection，甚至支持OkHttp。Volley不适用于下载大量内容的操作或流式传输操作，因为在解析过程中，Volley会将所有响应存储在内存中，因此Volley不适合上传和下载大文件。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-07-03T07:50:20.587Z">
+<meta property="article:modified_time" content="2025-07-03T07:50:54.202Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="clippings">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/30a90845/"/>
+
+
+
+
+
+  <title>Volley源码解析 | 积跬步</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">积跬步</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just do IT Now.</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/30a90845/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="积跬步">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">Volley源码解析</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-07-03T15:50:20+08:00">
+                2025-07-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+              <div class="post-description">
+                  概述本文基于Volley 1.1.1版本的源码。 Volley是Google官方出的一套小而巧的异步请求库，该框架封装的扩展性很强，支持HttpClient、HttpUrlConnection，甚至支持OkHttp。Volley不适用于下载大量内容的操作或流式传输操作，因为在解析过程中，Volley会将所有响应存储在内存中，因此Volley不适合上传和下载大文件。
+              </div>
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>本文基于Volley 1.1.1版本的源码。</p>
+<p>Volley是Google官方出的一套小而巧的异步请求库，该框架封装的扩展性很强，支持HttpClient、HttpUrlConnection，甚至支持OkHttp。Volley不适用于下载大量内容的操作或流式传输操作，因为在解析过程中，Volley会将所有响应存储在内存中，因此Volley不适合上传和下载大文件。</p>
+<p><strong>添加依赖：</strong></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">implementation <span class="string">&#x27;com.android.volley:volley:1.1.1&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>使用：</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">RequestQueue</span> <span class="variable">queue</span> <span class="operator">=</span> Volley.newRequestQueue(context);</span><br><span class="line"></span><br><span class="line"><span class="type">String</span> <span class="variable">url</span> <span class="operator">=</span><span class="string">&quot;http://www.google.com&quot;</span>;</span><br><span class="line"></span><br><span class="line"><span class="type">StringRequest</span> <span class="variable">stringRequest</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">StringRequest</span>(Request.Method.GET, url,</span><br><span class="line"></span><br><span class="line">            <span class="keyword">new</span> <span class="title class_">Response</span>.Listener&lt;String&gt;() &#123;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onResponse</span><span class="params">(String response)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// in UI Thread</span></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;, <span class="keyword">new</span> <span class="title class_">Response</span>.ErrorListener() &#123;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onErrorResponse</span><span class="params">(VolleyError error)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// in UI Thread</span></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">stringRequest.setTag(TAG);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Add the request to the RequestQueue.</span></span><br><span class="line"></span><br><span class="line">queue.add(stringRequest);</span><br><span class="line"></span><br><span class="line"><span class="comment">// onStop</span></span><br><span class="line"></span><br><span class="line">queue.cancelAll(TAG);</span><br></pre></td></tr></table></figure>
+
+<h2 id="创建请求队列"><a href="#创建请求队列" class="headerlink" title="创建请求队列"></a>创建请求队列</h2><p>Volley类中有多个重载的newRequestQueue静态方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Volley</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">DEFAULT_CACHE_DIR</span> <span class="operator">=</span> <span class="string">&quot;volley&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> RequestQueue <span class="title function_">newRequestQueue</span><span class="params">(Context context)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> newRequestQueue(context, (BaseHttpStack) <span class="literal">null</span>);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> RequestQueue <span class="title function_">newRequestQueue</span><span class="params">(Context context, BaseHttpStack stack)</span> &#123;</span><br><span class="line"></span><br><span class="line">        BasicNetwork network;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (stack == <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (Build.VERSION.SDK_INT &gt;= <span class="number">9</span>) &#123;</span><br><span class="line"></span><br><span class="line">                network = <span class="keyword">new</span> <span class="title class_">BasicNetwork</span>(<span class="keyword">new</span> <span class="title class_">HurlStack</span>());</span><br><span class="line"></span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">                <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">            network = <span class="keyword">new</span> <span class="title class_">BasicNetwork</span>(stack);</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> newRequestQueue(context, network);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> RequestQueue <span class="title function_">newRequestQueue</span><span class="params">(Context context, Network network)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">final</span> <span class="type">Context</span> <span class="variable">appContext</span> <span class="operator">=</span> context.getApplicationContext();</span><br><span class="line"></span><br><span class="line">        DiskBasedCache.<span class="type">FileSupplier</span> <span class="variable">cacheSupplier</span> <span class="operator">=</span></span><br><span class="line"></span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">DiskBasedCache</span>.FileSupplier() &#123;</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">private</span> <span class="type">File</span> <span class="variable">cacheDir</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">                    </span><br><span class="line"></span><br><span class="line">                    <span class="keyword">public</span> File <span class="title function_">get</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">                        <span class="keyword">if</span> (cacheDir == <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">                            cacheDir = <span class="keyword">new</span> <span class="title class_">File</span>(appContext.getCacheDir(), DEFAULT_CACHE_DIR);</span><br><span class="line"></span><br><span class="line">                        &#125;</span><br><span class="line"></span><br><span class="line">                        <span class="keyword">return</span> cacheDir;</span><br><span class="line"></span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                &#125;;</span><br><span class="line"></span><br><span class="line">        <span class="type">RequestQueue</span> <span class="variable">queue</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RequestQueue</span>(<span class="keyword">new</span> <span class="title class_">DiskBasedCache</span>(cacheSupplier), network);</span><br><span class="line"></span><br><span class="line">        queue.start();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> queue;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>RequestQueue类构造方法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RequestQueue</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">DEFAULT_NETWORK_THREAD_POOL_SIZE</span> <span class="operator">=</span> <span class="number">4</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Cache mCache;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Network mNetwork;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ResponseDelivery mDelivery;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> NetworkDispatcher[] mDispatchers;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> CacheDispatcher mCacheDispatcher;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">RequestQueue</span><span class="params">(</span></span><br><span class="line"><span class="params"></span></span><br><span class="line"><span class="params">            Cache cache, Network network, <span class="type">int</span> threadPoolSize, ResponseDelivery delivery)</span> &#123;</span><br><span class="line"></span><br><span class="line">        mCache = cache;</span><br><span class="line"></span><br><span class="line">        mNetwork = network;</span><br><span class="line"></span><br><span class="line">        mDispatchers = <span class="keyword">new</span> <span class="title class_">NetworkDispatcher</span>[threadPoolSize];</span><br><span class="line"></span><br><span class="line">        mDelivery = delivery;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">RequestQueue</span><span class="params">(Cache cache, Network network, <span class="type">int</span> threadPoolSize)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">this</span>(cache, network, threadPoolSize, <span class="keyword">new</span> <span class="title class_">ExecutorDelivery</span>(<span class="keyword">new</span> <span class="title class_">Handler</span>(Looper.getMainLooper())));</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">RequestQueue</span><span class="params">(Cache cache, Network network)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">this</span>(cache, network, DEFAULT_NETWORK_THREAD_POOL_SIZE);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>RequestQueue#start()</code> 方法如下，可以看出就是启动了一个Cache Dispatcher和指定数目的Network Dispatcher：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** Starts the dispatchers in this queue. */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">start</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Make sure any currently running dispatchers are stopped.</span></span><br><span class="line"></span><br><span class="line">    stop();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Create the cache dispatcher and start it.</span></span><br><span class="line"></span><br><span class="line">    mCacheDispatcher = <span class="keyword">new</span> <span class="title class_">CacheDispatcher</span>(mCacheQueue, mNetworkQueue, mCache, mDelivery);</span><br><span class="line"></span><br><span class="line">    mCacheDispatcher.start();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Create network dispatchers (and corresponding threads) up to the pool size.</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; mDispatchers.length; i++) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="type">NetworkDispatcher</span> <span class="variable">networkDispatcher</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">NetworkDispatcher</span>(mNetworkQueue, mNetwork, mCache, mDelivery);</span><br><span class="line"></span><br><span class="line">        mDispatchers[i] = networkDispatcher;</span><br><span class="line"></span><br><span class="line">        networkDispatcher.start();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/** Stops the cache and network dispatchers. */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">stop</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (mCacheDispatcher != <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">        mCacheDispatcher.quit();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">final</span> NetworkDispatcher mDispatcher : mDispatchers) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (mDispatcher != <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">            mDispatcher.quit();</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="RequestQueue事件"><a href="#RequestQueue事件" class="headerlink" title="RequestQueue事件"></a>RequestQueue事件</h2><p>在RequestQueue类中定义了一些事件：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span>  RequestEvent &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** The request was added to the queue. */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">REQUEST_QUEUED</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** Cache lookup started for the request. */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">REQUEST_CACHE_LOOKUP_STARTED</span> <span class="operator">=</span> <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** Cache lookup finished for the request and cached response is delivered or request is queued for network dispatching. */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">REQUEST_CACHE_LOOKUP_FINISHED</span> <span class="operator">=</span> <span class="number">2</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** Network dispatch started for the request. */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">REQUEST_NETWORK_DISPATCH_STARTED</span> <span class="operator">=</span> <span class="number">3</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** The network dispatch finished for the request and response (if any) is delivered. */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">REQUEST_NETWORK_DISPATCH_FINISHED</span> <span class="operator">=</span> <span class="number">4</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** All the work associated with the request is finished and request is removed from all the queues. */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">REQUEST_FINISHED</span> <span class="operator">=</span> <span class="number">5</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">RequestEventListener</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">onRequestEvent</span><span class="params">(Request&lt;?&gt; request,  <span class="type">int</span> event)</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> List&lt;RequestEventListener&gt; mEventListeners = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br></pre></td></tr></table></figure>
+
+<p>可以通过下面几个方法操作这些事件：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">sendRequestEvent</span><span class="params">(Request&lt;?&gt; request,  <span class="type">int</span> event)</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">synchronized</span> (mEventListeners) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (RequestEventListener listener : mEventListeners) &#123;</span><br><span class="line"></span><br><span class="line">            listener.onRequestEvent(request, event);</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addRequestEventListener</span><span class="params">(RequestEventListener listener)</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">synchronized</span> (mEventListeners) &#123;</span><br><span class="line"></span><br><span class="line">        mEventListeners.add(listener);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">removeRequestEventListener</span><span class="params">(RequestEventListener listener)</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">synchronized</span> (mEventListeners) &#123;</span><br><span class="line"></span><br><span class="line">        mEventListeners.remove(listener);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="发送请求"><a href="#发送请求" class="headerlink" title="发送请求"></a>发送请求</h2><p><code>RequestQueue#add()</code> 方法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> <span class="type">AtomicInteger</span> <span class="variable">mSequenceGenerator</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">AtomicInteger</span>();</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Set&lt;Request&lt;?&gt;&gt; mCurrentRequests = <span class="keyword">new</span> <span class="title class_">HashSet</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> PriorityBlockingQueue&lt;Request&lt;?&gt;&gt; mCacheQueue = <span class="keyword">new</span> <span class="title class_">PriorityBlockingQueue</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> PriorityBlockingQueue&lt;Request&lt;?&gt;&gt; mNetworkQueue = <span class="keyword">new</span> <span class="title class_">PriorityBlockingQueue</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> &lt;T&gt; Request&lt;T&gt; <span class="title function_">add</span><span class="params">(Request&lt;T&gt; request)</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Tag the request as belonging to this queue and add it to the set of current requests.</span></span><br><span class="line"></span><br><span class="line">    request.setRequestQueue(<span class="built_in">this</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">synchronized</span> (mCurrentRequests) &#123;</span><br><span class="line"></span><br><span class="line">        mCurrentRequests.add(request);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Process requests in the order they are added.</span></span><br><span class="line"></span><br><span class="line">    request.setSequence(getSequenceNumber());</span><br><span class="line"></span><br><span class="line">    request.addMarker(<span class="string">&quot;add-to-queue&quot;</span>);</span><br><span class="line"></span><br><span class="line">    sendRequestEvent(request, RequestEvent.REQUEST_QUEUED);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果请求不需要缓存的话，直接交给网络请求队列去执行，默认是需要缓存的</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!request.shouldCache()) &#123;</span><br><span class="line"></span><br><span class="line">        mNetworkQueue.add(request);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> request;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    mCacheQueue.add(request);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> request;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在这个方法中把请求交给了缓存队列或者网络队列去处理。</p>
+<h2 id="CacheDispatcher"><a href="#CacheDispatcher" class="headerlink" title="CacheDispatcher"></a>CacheDispatcher</h2><p>CacheDispatcher继承自Thread，在 <code>RequestQueue#start()</code> 方法中已经将其启动了，因此直接看run方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CacheDispatcher</span> <span class="keyword">extends</span> <span class="title class_">Thread</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> BlockingQueue&lt;Request&lt;?&gt;&gt; mCacheQueue;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> BlockingQueue&lt;Request&lt;?&gt;&gt; mNetworkQueue;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Cache mCache;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ResponseDelivery mDelivery;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> <span class="type">boolean</span> <span class="variable">mQuit</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** Manage list of waiting requests and de-duplicate requests with same cache key. */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> WaitingRequestManager mWaitingRequestManager;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">CacheDispatcher</span><span class="params">(</span></span><br><span class="line"><span class="params"></span></span><br><span class="line"><span class="params">            BlockingQueue&lt;Request&lt;?&gt;&gt; cacheQueue,</span></span><br><span class="line"><span class="params"></span></span><br><span class="line"><span class="params">            BlockingQueue&lt;Request&lt;?&gt;&gt; networkQueue,</span></span><br><span class="line"><span class="params"></span></span><br><span class="line"><span class="params">            Cache cache,</span></span><br><span class="line"><span class="params"></span></span><br><span class="line"><span class="params">            ResponseDelivery delivery)</span> &#123;</span><br><span class="line"></span><br><span class="line">        mCacheQueue = cacheQueue;</span><br><span class="line"></span><br><span class="line">        mNetworkQueue = networkQueue;</span><br><span class="line"></span><br><span class="line">        mCache = cache;</span><br><span class="line"></span><br><span class="line">        mDelivery = delivery;</span><br><span class="line"></span><br><span class="line">        mWaitingRequestManager = <span class="keyword">new</span> <span class="title class_">WaitingRequestManager</span>(<span class="built_in">this</span>);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">quit</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">        mQuit = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">        interrupt();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (DEBUG) VolleyLog.v(<span class="string">&quot;start new dispatcher&quot;</span>);</span><br><span class="line"></span><br><span class="line">        Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Make a blocking call to initialize the cache.</span></span><br><span class="line"></span><br><span class="line">        mCache.initialize();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line"></span><br><span class="line">                processRequest();</span><br><span class="line"></span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line"></span><br><span class="line">                <span class="comment">// We may have been interrupted because it was time to quit.</span></span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (mQuit) &#123;</span><br><span class="line"></span><br><span class="line">                    Thread.currentThread().interrupt();</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                VolleyLog.e(<span class="string">&quot;Ignoring spurious interrupt of CacheDispatcher thread; &quot;</span> + <span class="string">&quot;use quit() to terminate it&quot;</span>);</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">processRequest</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 阻塞式队列</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">final</span> Request&lt;?&gt; request = mCacheQueue.take();</span><br><span class="line"></span><br><span class="line">        processRequest(request);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">processRequest</span><span class="params">(<span class="keyword">final</span> Request&lt;?&gt; request)</span> <span class="keyword">throws</span> InterruptedException &#123;</span><br><span class="line"></span><br><span class="line">        request.addMarker(<span class="string">&quot;cache-queue-take&quot;</span>);</span><br><span class="line"></span><br><span class="line">        request.sendEvent(RequestQueue.RequestEvent.REQUEST_CACHE_LOOKUP_STARTED);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// If the request has been canceled, don&#x27;t bother dispatching it.</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (request.isCanceled()) &#123;</span><br><span class="line"></span><br><span class="line">                request.finish(<span class="string">&quot;cache-discard-canceled&quot;</span>);</span><br><span class="line"></span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// Attempt to retrieve this item from cache.</span></span><br><span class="line"></span><br><span class="line">            Cache.<span class="type">Entry</span> <span class="variable">entry</span> <span class="operator">=</span> mCache.get(request.getCacheKey());</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (entry == <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">                request.addMarker(<span class="string">&quot;cache-miss&quot;</span>);</span><br><span class="line"></span><br><span class="line">                <span class="comment">// Cache miss; send off to the network dispatcher.</span></span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (!mWaitingRequestManager.maybeAddToWaitingRequests(request)) &#123;</span><br><span class="line"></span><br><span class="line">                    mNetworkQueue.put(request);</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// If it is completely expired, just send it to the network.</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (entry.isExpired()) &#123;</span><br><span class="line"></span><br><span class="line">                request.addMarker(<span class="string">&quot;cache-hit-expired&quot;</span>);</span><br><span class="line"></span><br><span class="line">                request.setCacheEntry(entry);</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (!mWaitingRequestManager.maybeAddToWaitingRequests(request)) &#123;</span><br><span class="line"></span><br><span class="line">                    mNetworkQueue.put(request);</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// We have a cache hit; parse its data for delivery back to the request.</span></span><br><span class="line"></span><br><span class="line">            request.addMarker(<span class="string">&quot;cache-hit&quot;</span>);</span><br><span class="line"></span><br><span class="line">            Response&lt;?&gt; response = request.parseNetworkResponse(<span class="keyword">new</span> <span class="title class_">NetworkResponse</span>(entry.data, entry.responseHeaders));</span><br><span class="line"></span><br><span class="line">            request.addMarker(<span class="string">&quot;cache-hit-parsed&quot;</span>);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (!response.isSuccess()) &#123;</span><br><span class="line"></span><br><span class="line">                request.addMarker(<span class="string">&quot;cache-parsing-failed&quot;</span>);</span><br><span class="line"></span><br><span class="line">                mCache.invalidate(request.getCacheKey(), <span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">                request.setCacheEntry(<span class="literal">null</span>);</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (!mWaitingRequestManager.maybeAddToWaitingRequests(request)) &#123;</span><br><span class="line"></span><br><span class="line">                    mNetworkQueue.put(request);</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (!entry.refreshNeeded()) &#123;</span><br><span class="line"></span><br><span class="line">                <span class="comment">// 缓存不需要刷新，直接交给ResponseDelivery去处理</span></span><br><span class="line"></span><br><span class="line">                mDelivery.postResponse(request, response);</span><br><span class="line"></span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">                <span class="comment">// 软过期的缓存命中，可以分发缓存的response，但是我们还需要将请求发送到网络以进行刷新。</span></span><br><span class="line"></span><br><span class="line">                request.addMarker(<span class="string">&quot;cache-hit-refresh-needed&quot;</span>);</span><br><span class="line"></span><br><span class="line">                request.setCacheEntry(entry);</span><br><span class="line"></span><br><span class="line">                <span class="comment">// Mark the response as intermediate.</span></span><br><span class="line"></span><br><span class="line">                response.intermediate = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (!mWaitingRequestManager.maybeAddToWaitingRequests(request)) &#123;</span><br><span class="line"></span><br><span class="line">                    <span class="comment">// 将intermediate响应发回给用户，然后将请求转发到网络。</span></span><br><span class="line"></span><br><span class="line">                    mDelivery.postResponse(</span><br><span class="line"></span><br><span class="line">                            request,</span><br><span class="line"></span><br><span class="line">                            response,</span><br><span class="line"></span><br><span class="line">                            <span class="keyword">new</span> <span class="title class_">Runnable</span>() &#123;</span><br><span class="line"></span><br><span class="line">                                </span><br><span class="line"></span><br><span class="line">                                <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">                                    <span class="keyword">try</span> &#123;</span><br><span class="line"></span><br><span class="line">                                        <span class="comment">// 如果缓存需要刷新，这个地方还需要再重新请求网络</span></span><br><span class="line"></span><br><span class="line">                                        mNetworkQueue.put(request);</span><br><span class="line"></span><br><span class="line">                                    &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line"></span><br><span class="line">                                        <span class="comment">// Restore the interrupted status</span></span><br><span class="line"></span><br><span class="line">                                        Thread.currentThread().interrupt();</span><br><span class="line"></span><br><span class="line">                                    &#125;</span><br><span class="line"></span><br><span class="line">                                &#125;</span><br><span class="line"></span><br><span class="line">                            &#125;);</span><br><span class="line"></span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">                    <span class="comment">// 该请求已添加到等待请求的列表中，以便在第一个请求返回时从第一个请求接收网络响应。</span></span><br><span class="line"></span><br><span class="line">                    mDelivery.postResponse(request, response);</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line"></span><br><span class="line">            request.sendEvent(RequestQueue.RequestEvent.REQUEST_CACHE_LOOKUP_FINISHED);</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果有缓存，就取出来去处理，没有或者过期等，就加入到网络请求队列中去请求，需要网络请求的有几个地方：</p>
+<ol>
+<li>请求不需要缓存</li>
+<li>请求在缓存中没有找到</li>
+<li>请求的缓存过期</li>
+<li>请求的缓存需要刷新</li>
+</ol>
+<h2 id="NetworkDispatcher"><a href="#NetworkDispatcher" class="headerlink" title="NetworkDispatcher"></a>NetworkDispatcher</h2><p>NetworkDispatcher也继承自Thread，它们在 <code>RequestQueue#start()</code> 方法中已经被启动了，因此直接看run方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">NetworkDispatcher</span> <span class="keyword">extends</span> <span class="title class_">Thread</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> BlockingQueue&lt;Request&lt;?&gt;&gt; mQueue;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Network mNetwork;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Cache mCache;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ResponseDelivery mDelivery;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> <span class="type">boolean</span> <span class="variable">mQuit</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">NetworkDispatcher</span><span class="params">(</span></span><br><span class="line"><span class="params"></span></span><br><span class="line"><span class="params">            BlockingQueue&lt;Request&lt;?&gt;&gt; queue,</span></span><br><span class="line"><span class="params"></span></span><br><span class="line"><span class="params">            Network network,</span></span><br><span class="line"><span class="params"></span></span><br><span class="line"><span class="params">            Cache cache,</span></span><br><span class="line"><span class="params"></span></span><br><span class="line"><span class="params">            ResponseDelivery delivery)</span> &#123;</span><br><span class="line"></span><br><span class="line">        mQueue = queue;</span><br><span class="line"></span><br><span class="line">        mNetwork = network;</span><br><span class="line"></span><br><span class="line">        mCache = cache;</span><br><span class="line"></span><br><span class="line">        mDelivery = delivery;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">quit</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">        mQuit = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">        interrupt();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">        Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line"></span><br><span class="line">                processRequest();</span><br><span class="line"></span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line"></span><br><span class="line">                <span class="comment">// We may have been interrupted because it was time to quit.</span></span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (mQuit) &#123;</span><br><span class="line"></span><br><span class="line">                    Thread.currentThread().interrupt();</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                VolleyLog.e(<span class="string">&quot;Ignoring spurious interrupt of NetworkDispatcher thread; &quot;</span> + <span class="string">&quot;use quit() to terminate it&quot;</span>);</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">processRequest</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException &#123;</span><br><span class="line"></span><br><span class="line">        Request&lt;?&gt; request = mQueue.take();</span><br><span class="line"></span><br><span class="line">        processRequest(request);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">processRequest</span><span class="params">(Request&lt;?&gt; request)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="type">long</span> <span class="variable">startTimeMs</span> <span class="operator">=</span> SystemClock.elapsedRealtime();</span><br><span class="line"></span><br><span class="line">        request.sendEvent(RequestQueue.RequestEvent.REQUEST_NETWORK_DISPATCH_STARTED);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line"></span><br><span class="line">            request.addMarker(<span class="string">&quot;network-queue-take&quot;</span>);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (request.isCanceled()) &#123;</span><br><span class="line"></span><br><span class="line">                request.finish(<span class="string">&quot;network-discard-cancelled&quot;</span>);</span><br><span class="line"></span><br><span class="line">                request.notifyListenerResponseNotUsable();</span><br><span class="line"></span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            addTrafficStatsTag(request);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 执行网络请求</span></span><br><span class="line"></span><br><span class="line">            <span class="type">NetworkResponse</span> <span class="variable">networkResponse</span> <span class="operator">=</span> mNetwork.performRequest(request);</span><br><span class="line"></span><br><span class="line">            request.addMarker(<span class="string">&quot;network-http-complete&quot;</span>);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// If the server returned 304 AND we delivered a response already,</span></span><br><span class="line"></span><br><span class="line">            <span class="comment">// we&#x27;re done -- don&#x27;t deliver a second identical response.</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (networkResponse.notModified &amp;&amp; request.hasHadResponseDelivered()) &#123;</span><br><span class="line"></span><br><span class="line">                request.finish(<span class="string">&quot;not-modified&quot;</span>);</span><br><span class="line"></span><br><span class="line">                request.notifyListenerResponseNotUsable();</span><br><span class="line"></span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// Parse the response here on the worker thread.</span></span><br><span class="line"></span><br><span class="line">            Response&lt;?&gt; response = request.parseNetworkResponse(networkResponse);</span><br><span class="line"></span><br><span class="line">            request.addMarker(<span class="string">&quot;network-parse-complete&quot;</span>);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// Write to cache if applicable.</span></span><br><span class="line"></span><br><span class="line">            <span class="comment">// <span class="doctag">TODO:</span> Only update cache metadata instead of entire record for 304s.</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (request.shouldCache() &amp;&amp; response.cacheEntry != <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">                mCache.put(request.getCacheKey(), response.cacheEntry);</span><br><span class="line"></span><br><span class="line">                request.addMarker(<span class="string">&quot;network-cache-written&quot;</span>);</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// Post the response back.</span></span><br><span class="line"></span><br><span class="line">            request.markDelivered();</span><br><span class="line"></span><br><span class="line">            mDelivery.postResponse(request, response);</span><br><span class="line"></span><br><span class="line">            request.notifyListenerResponseReceived(response);</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">catch</span> (VolleyError volleyError) &#123;</span><br><span class="line"></span><br><span class="line">            volleyError.setNetworkTimeMs(SystemClock.elapsedRealtime() - startTimeMs);</span><br><span class="line"></span><br><span class="line">            parseAndDeliverNetworkError(request, volleyError);</span><br><span class="line"></span><br><span class="line">            request.notifyListenerResponseNotUsable();</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line"></span><br><span class="line">            VolleyLog.e(e, <span class="string">&quot;Unhandled exception %s&quot;</span>, e.toString());</span><br><span class="line"></span><br><span class="line">            <span class="type">VolleyError</span> <span class="variable">volleyError</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">VolleyError</span>(e);</span><br><span class="line"></span><br><span class="line">            volleyError.setNetworkTimeMs(SystemClock.elapsedRealtime() - startTimeMs);</span><br><span class="line"></span><br><span class="line">            mDelivery.postError(request, volleyError);</span><br><span class="line"></span><br><span class="line">            request.notifyListenerResponseNotUsable();</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line"></span><br><span class="line">            request.sendEvent(RequestQueue.RequestEvent.REQUEST_NETWORK_DISPATCH_FINISHED);</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，在NetworkDispatcher中，最主要的就是调用了 <code>mNetwork.performRequest(request)</code> 执行网络请求，而在Network是个接口，具体实现类是BasicNetwork。</p>
+<h3 id="BasicNetwork"><a href="#BasicNetwork" class="headerlink" title="BasicNetwork"></a>BasicNetwork</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> NetworkResponse <span class="title function_">performRequest</span><span class="params">(Request&lt;?&gt; request)</span> <span class="keyword">throws</span> VolleyError &#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">long</span> <span class="variable">requestStart</span> <span class="operator">=</span> SystemClock.elapsedRealtime();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">            httpResponse = mBaseHttpStack.executeRequest(request, additionalRequestHeaders);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// return NetworkResponse</span></span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">catch</span> (SocketTimeoutException e) &#123;</span><br><span class="line"></span><br><span class="line">            attemptRetryOnException(<span class="string">&quot;socket&quot;</span>, request, <span class="keyword">new</span> <span class="title class_">TimeoutError</span>());</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">catch</span> (MalformedURLException e) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(<span class="string">&quot;Bad URL &quot;</span> + request.getUrl(), e);</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="type">int</span> statusCode;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (httpResponse != <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">                statusCode = httpResponse.getStatusCode();</span><br><span class="line"></span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">NoConnectionError</span>(e);</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            VolleyLog.e(<span class="string">&quot;Unexpected response code %d for %s&quot;</span>, statusCode, request.getUrl());</span><br><span class="line"></span><br><span class="line">            NetworkResponse networkResponse;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (responseContents != <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">                networkResponse =</span><br><span class="line"></span><br><span class="line">                        <span class="keyword">new</span> <span class="title class_">NetworkResponse</span>(</span><br><span class="line"></span><br><span class="line">                                statusCode,</span><br><span class="line"></span><br><span class="line">                                responseContents,</span><br><span class="line"></span><br><span class="line">                                <span class="comment">/* notModified= */</span> <span class="literal">false</span>,</span><br><span class="line"></span><br><span class="line">                                SystemClock.elapsedRealtime() - requestStart,</span><br><span class="line"></span><br><span class="line">                                responseHeaders);</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (statusCode == HttpURLConnection.HTTP_UNAUTHORIZED</span><br><span class="line"></span><br><span class="line">                        || statusCode == HttpURLConnection.HTTP_FORBIDDEN) &#123;</span><br><span class="line"></span><br><span class="line">                    attemptRetryOnException(</span><br><span class="line"></span><br><span class="line">                            <span class="string">&quot;auth&quot;</span>, request, <span class="keyword">new</span> <span class="title class_">AuthFailureError</span>(networkResponse));</span><br><span class="line"></span><br><span class="line">                &#125; <span class="keyword">else</span> <span class="keyword">if</span> (statusCode &gt;= <span class="number">400</span> &amp;&amp; statusCode &lt;= <span class="number">499</span>) &#123;</span><br><span class="line"></span><br><span class="line">                    <span class="comment">// Don&#x27;t retry other client errors.</span></span><br><span class="line"></span><br><span class="line">                    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ClientError</span>(networkResponse);</span><br><span class="line"></span><br><span class="line">                &#125; <span class="keyword">else</span> <span class="keyword">if</span> (statusCode &gt;= <span class="number">500</span> &amp;&amp; statusCode &lt;= <span class="number">599</span>) &#123;</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (request.shouldRetryServerErrors()) &#123;</span><br><span class="line"></span><br><span class="line">                        attemptRetryOnException(</span><br><span class="line"></span><br><span class="line">                                <span class="string">&quot;server&quot;</span>, request, <span class="keyword">new</span> <span class="title class_">ServerError</span>(networkResponse));</span><br><span class="line"></span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">                        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ServerError</span>(networkResponse);</span><br><span class="line"></span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">                    <span class="comment">// 3xx? No reason to retry.</span></span><br><span class="line"></span><br><span class="line">                    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ServerError</span>(networkResponse);</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">                attemptRetryOnException(<span class="string">&quot;network&quot;</span>, request, <span class="keyword">new</span> <span class="title class_">NetworkError</span>());</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 请求重试</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">attemptRetryOnException</span><span class="params">(</span></span><br><span class="line"><span class="params"></span></span><br><span class="line"><span class="params">        String logPrefix, Request&lt;?&gt; request, VolleyError exception)</span> <span class="keyword">throws</span> VolleyError &#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">RetryPolicy</span> <span class="variable">retryPolicy</span> <span class="operator">=</span> request.getRetryPolicy();</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> <span class="variable">oldTimeout</span> <span class="operator">=</span> request.getTimeoutMs();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line"></span><br><span class="line">        retryPolicy.retry(exception);</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">catch</span> (VolleyError e) &#123;</span><br><span class="line"></span><br><span class="line">        request.addMarker(String.format(<span class="string">&quot;%s-timeout-giveup [timeout=%s]&quot;</span>, logPrefix, oldTimeout));</span><br><span class="line"></span><br><span class="line">        <span class="keyword">throw</span> e;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    request.addMarker(String.format(<span class="string">&quot;%s-retry [timeout=%s]&quot;</span>, logPrefix, oldTimeout));</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DefaultRetryPolicy</span> <span class="keyword">implements</span> <span class="title class_">RetryPolicy</span> &#123;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">retry</span><span class="params">(VolleyError error)</span> <span class="keyword">throws</span> VolleyError &#123;</span><br><span class="line"></span><br><span class="line">        mCurrentRetryCount++;</span><br><span class="line"></span><br><span class="line">        mCurrentTimeoutMs += (<span class="type">int</span>) (mCurrentTimeoutMs * mBackoffMultiplier);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (!hasAttemptRemaining()) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">throw</span> error;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** Returns true if this policy has attempts remaining, false otherwise. */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">protected</span> <span class="type">boolean</span> <span class="title function_">hasAttemptRemaining</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> mCurrentRetryCount &lt;= mMaxNumRetries;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在BasicNetwork#performRequest()中调用了 <code>httpResponse = mBaseHttpStack.executeRequest(request, additionalRequestHeaders);</code>，这里的mBaseHttpStack就是前面创建RequestQueue时新建的HurlStack和HttpClientStack(@Deprecated，上面RequestQueue的构造函数中还有个新建了HttpClientStack对象的方法，不过已经废弃了，不做解析)。因此在 HttpStack的executeRequest()中就是具体的网络请求。</p>
+<h3 id="HurlStack"><a href="#HurlStack" class="headerlink" title="HurlStack"></a>HurlStack</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">HurlStack</span> <span class="keyword">extends</span> <span class="title class_">BaseHttpStack</span> &#123;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> HttpResponse <span class="title function_">executeRequest</span><span class="params">(Request&lt;?&gt; request, Map&lt;String, String&gt; additionalHeaders)</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">throws</span> IOException, AuthFailureError &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 这个类是使用HttpURLConnection来实现真的的网络请求，可以自定义</span></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="ResponseDelivery"><a href="#ResponseDelivery" class="headerlink" title="ResponseDelivery"></a>ResponseDelivery</h2><p>ResponseDelivery是一个接口：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">ResponseDelivery</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** Parses a response from the network or cache and delivers it. */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">postResponse</span><span class="params">(Request&lt;?&gt; request, Response&lt;?&gt; response)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">     * Parses a response from the network or cache and delivers it. The provided Runnable will be</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">     * executed after delivery.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">postResponse</span><span class="params">(Request&lt;?&gt; request, Response&lt;?&gt; response, Runnable runnable)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** Posts an error for the given request. */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">postError</span><span class="params">(Request&lt;?&gt; request, VolleyError error)</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>具体实现类是ExecutorDelivery，它保证了客户端调用的回调运行在UI线程：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ExecutorDelivery</span> <span class="keyword">implements</span> <span class="title class_">ResponseDelivery</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Executor mResponsePoster;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 在上面的分析中可以看到这里的handle = new Handler(Looper.getMainLooper())</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">ExecutorDelivery</span><span class="params">(<span class="keyword">final</span> Handler handler)</span> &#123;</span><br><span class="line"></span><br><span class="line">        mResponsePoster = <span class="keyword">new</span> <span class="title class_">Executor</span>() &#123;</span><br><span class="line"></span><br><span class="line">                </span><br><span class="line"></span><br><span class="line">                <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">execute</span><span class="params">(Runnable command)</span> &#123;</span><br><span class="line"></span><br><span class="line">                    handler.post(command);</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">            &#125;;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">ExecutorDelivery</span><span class="params">(Executor executor)</span> &#123;</span><br><span class="line"></span><br><span class="line">        mResponsePoster = executor;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">postResponse</span><span class="params">(Request&lt;?&gt; request, Response&lt;?&gt; response)</span> &#123;</span><br><span class="line"></span><br><span class="line">        postResponse(request, response, <span class="literal">null</span>);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">postResponse</span><span class="params">(Request&lt;?&gt; request, Response&lt;?&gt; response, Runnable runnable)</span> &#123;</span><br><span class="line"></span><br><span class="line">        request.markDelivered();</span><br><span class="line"></span><br><span class="line">        request.addMarker(<span class="string">&quot;post-response&quot;</span>);</span><br><span class="line"></span><br><span class="line">        mResponsePoster.execute(<span class="keyword">new</span> <span class="title class_">ResponseDeliveryRunnable</span>(request, response, runnable));</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">postError</span><span class="params">(Request&lt;?&gt; request, VolleyError error)</span> &#123;</span><br><span class="line"></span><br><span class="line">        request.addMarker(<span class="string">&quot;post-error&quot;</span>);</span><br><span class="line"></span><br><span class="line">        Response&lt;?&gt; response = Response.error(error);</span><br><span class="line"></span><br><span class="line">        mResponsePoster.execute(<span class="keyword">new</span> <span class="title class_">ResponseDeliveryRunnable</span>(request, response, <span class="literal">null</span>));</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">ResponseDeliveryRunnable</span> <span class="keyword">implements</span> <span class="title class_">Runnable</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">final</span> Request mRequest;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">final</span> Response mResponse;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">final</span> Runnable mRunnable;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> <span class="title function_">ResponseDeliveryRunnable</span><span class="params">(Request request, Response response, Runnable runnable)</span> &#123;</span><br><span class="line"></span><br><span class="line">            mRequest = request;</span><br><span class="line"></span><br><span class="line">            mResponse = response;</span><br><span class="line"></span><br><span class="line">            mRunnable = runnable;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        </span><br><span class="line"></span><br><span class="line">        </span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (mRequest.isCanceled()) &#123;</span><br><span class="line"></span><br><span class="line">                mRequest.finish(<span class="string">&quot;canceled-at-delivery&quot;</span>);</span><br><span class="line"></span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 这里会调用在创建Request时传入的回调</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (mResponse.isSuccess()) &#123;</span><br><span class="line"></span><br><span class="line">                mRequest.deliverResponse(mResponse.result);</span><br><span class="line"></span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">                mRequest.deliverError(mResponse.error);</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (mResponse.intermediate) &#123;</span><br><span class="line"></span><br><span class="line">                mRequest.addMarker(<span class="string">&quot;intermediate-response&quot;</span>);</span><br><span class="line"></span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">                mRequest.finish(<span class="string">&quot;done&quot;</span>);</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 如果有需要执行的任务，如前面缓存需要刷新等，就会在这个地方进行调用</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (mRunnable != <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">                mRunnable.run();</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>Volley中主要的类有这些：</p>
+<ul>
+<li>Volley: 提供了构建RequestQueue的统一方法，我们也可以不通过Volley类而是自己构建RequestQueue；</li>
+<li>RequestQueue: 负责分发请求到不同的请求队列中；</li>
+<li>CacheDispatcher: 处理缓存请求；</li>
+<li>NetworkDispatcher: 处理网络请求；</li>
+<li>ResponseDelivery: 获取请求后进行处理，具体实现类为ExecutorDelivery；</li>
+<li>Cache: 缓存接口，具体实现类有DiskBasedCache；</li>
+<li>Network: 网络接口，具体实现类有BasicNetwork；</li>
+<li>HttpStack: 真正执行请求，具体实现类有HttpClientStack(已废弃)，BaseHttpStack(子类有HurlStack，AdaptedHttpStack等)；</li>
+<li>Request: 封装请求信息并处理回调，具体实现类有StringRequest，JsonRequest，ImageRequest等；</li>
+<li>NetworkResponse：请求网络时的返回的response；</li>
+<li>Response: 定义了一些回调接口，用来封装返回给客户端的数据。</li>
+</ul>
+<p>Volley框架的拆装性很强，可以使用许多我们自定义的类来扩展其功能：</p>
+<ul>
+<li>Request：框架默认提供了StringRequest，JsonRequest和ImageRequest等，我们可以继承Request并重写deliverResponse()和parseNetworkResponse()来自定义请求。</li>
+<li>Cache：框架默认提供了DiskBasedCache类来处理缓存，我们可以继承Cache接口来自定义缓存策略。</li>
+<li>HttpStack：框架默认使用的HurlStack类是通过HttpUrlConnection和HttpClient来实现网络请求，我们可以换成其它的比如说OkHttp，只需要继承HttpStack并重写performRequest()来处理请求就可以了。</li>
+</ul>
+<p>总结一下Volley网络请求的流程：</p>
+<ul>
+<li>首先创建请求队列RequestQueue，其中可以自定义相关类，在这里会启动了一个Cache Dispatcher和指定数目的Network Dispatcher；</li>
+<li>然后在CacheDispatcher中处理请求，若缓存可用，则直接返回缓存，否则请求网络；</li>
+<li>接着在NetworkDispatcher中处理网络请求，真正起作用的是HttpStack实现类；</li>
+<li>最后通过ResponseDelivery实现类返回请求结果。</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/clippings/" rel="tag"># clippings</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/1712aabc/" rel="next" title="RePlugin原理解析">
+                <i class="fa fa-chevron-left"></i> RePlugin原理解析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/6cf2e7d7/" rel="prev" title="Retrofit源码解析">
+                Retrofit源码解析 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">439</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">47</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@qq.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E8%AF%B7%E6%B1%82%E9%98%9F%E5%88%97"><span class="nav-text">创建请求队列</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RequestQueue%E4%BA%8B%E4%BB%B6"><span class="nav-text">RequestQueue事件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%91%E9%80%81%E8%AF%B7%E6%B1%82"><span class="nav-text">发送请求</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CacheDispatcher"><span class="nav-text">CacheDispatcher</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NetworkDispatcher"><span class="nav-text">NetworkDispatcher</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#BasicNetwork"><span class="nav-text">BasicNetwork</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HurlStack"><span class="nav-text">HurlStack</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ResponseDelivery"><span class="nav-text">ResponseDelivery</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

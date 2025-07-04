@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="clippings," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="概述关于协程的创建，以及挂起和恢复，之前有写过一篇文章 Kotlin协程之深入理解协程工作原理 整理这个流程，最近再看这篇文章的时候，感觉看起来比较费劲，不是说写得有问题，只是看起来比较臃肿。如果想再复习这块的知识，可能需要看几遍后才能懂，所以想另外再整理一篇文章写写协程启动，挂起和恢复的原理，适合在读完上篇文章后再看看，这篇文章的目的在于希望读完后能够清晰明了地了解 Kotlin 这部分的原理，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kotlin笔记之再看协程工作原理">
+<meta property="og:url" content="http://shenbh.github.io/posts/98c20fce/index.html">
+<meta property="og:site_name" content="积跬步">
+<meta property="og:description" content="概述关于协程的创建，以及挂起和恢复，之前有写过一篇文章 Kotlin协程之深入理解协程工作原理 整理这个流程，最近再看这篇文章的时候，感觉看起来比较费劲，不是说写得有问题，只是看起来比较臃肿。如果想再复习这块的知识，可能需要看几遍后才能懂，所以想另外再整理一篇文章写写协程启动，挂起和恢复的原理，适合在读完上篇文章后再看看，这篇文章的目的在于希望读完后能够清晰明了地了解 Kotlin 这部分的原理，">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://shenbh.github.io/posts/98c20fce/Kotlin%E5%8D%8F%E7%A8%8B.jpg">
+<meta property="article:published_time" content="2025-07-03T09:01:08.850Z">
+<meta property="article:modified_time" content="2025-07-03T09:25:44.369Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="clippings">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/98c20fce/Kotlin%E5%8D%8F%E7%A8%8B.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/98c20fce/"/>
+
+
+
+
+
+  <title>Kotlin笔记之再看协程工作原理 | 积跬步</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">积跬步</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just do IT Now.</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/98c20fce/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="积跬步">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">Kotlin笔记之再看协程工作原理</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-07-03T17:01:08+08:00">
+                2025-07-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+              <div class="post-description">
+                  概述关于协程的创建，以及挂起和恢复，之前有写过一篇文章 Kotlin协程之深入理解协程工作原理 整理这个流程，最近再看这篇文章的时候，感觉看起来比较费劲，不是说写得有问题，只是看起来比较臃肿。如果想再复习这块的知识，可能需要看几遍后才能懂，所以想另外再整理一篇文章写写协程启动，挂起和恢复的原理，适合在读完上篇文章后再看看，这篇文章的目的在于希望读完后能够清晰明了地了解 Kotlin 这部分的原理，
+              </div>
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>关于协程的创建，以及挂起和恢复，之前有写过一篇文章 <a target="_blank" rel="noopener" href="https://juejin.cn/post/6890348438873964551">Kotlin协程之深入理解协程工作原理</a> 整理这个流程，最近再看这篇文章的时候，感觉看起来比较费劲，不是说写得有问题，只是看起来比较臃肿。如果想再复习这块的知识，可能需要看几遍后才能懂，所以想另外再整理一篇文章写写协程启动，挂起和恢复的原理，适合在读完上篇文章后再看看，这篇文章的目的在于希望读完后能够清晰明了地了解 Kotlin 这部分的原理，提高效率。Kotlin 协程系列：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://juejin.cn/post/6901956626324914184">Kotlin协程之基础使用</a></li>
+<li><a target="_blank" rel="noopener" href="https://juejin.cn/post/6890348438873964551">Kotlin协程之深入理解协程工作原理</a></li>
+<li><a target="_blank" rel="noopener" href="https://juejin.cn/post/6909276222895685640">Kotlin协程之协程取消与异常处理</a></li>
+</ul>
+<blockquote>
+<p>Kotlin 由于本身灵活的语法和特性，导致有些时候跟踪它的源码时，容易跟着跟着就迷路了，记得我刚开始尝试阅读协程源码的时候，也是头大了一圈，后面 Kotlin 用的看的多了，现在再阅读就显得轻松了不少。</p>
+</blockquote>
+<h2 id="前置知识"><a href="#前置知识" class="headerlink" title="前置知识"></a>前置知识</h2><p>在阅读 Kotlin 源码之前，可以先了解一些前置知识。</p>
+<h3 id="Function"><a href="#Function" class="headerlink" title="Function"></a>Function</h3><p>Function 是 Kotlin 对函数类型的封装，对于函数类型，它会被编译成 FunctionX 系列的类：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 0 个参数</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Function0</span>&lt;<span class="type">out R</span>&gt; : <span class="type">Function</span>&lt;<span class="type">R</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">operator</span> <span class="function"><span class="keyword">fun</span> <span class="title">invoke</span><span class="params">()</span></span>: R</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 1 个参数</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Function1</span>&lt;<span class="type">in P1, out R</span>&gt; : <span class="type">Function</span>&lt;<span class="type">R</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">operator</span> <span class="function"><span class="keyword">fun</span> <span class="title">invoke</span><span class="params">(p1: <span class="type">P1</span>)</span></span>: R</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// X 个参数</span></span><br></pre></td></tr></table></figure>
+
+<p>Kotlin 提供了从 Function0 到 Function22 之间的接口， <strong>这意味着我们的 lambda 函数最多可以支持 22 个参数</strong> ，另外 Function 接口有一个 invoke 操作符重载，因此我们可以直接通过 <code>()</code> 调用 lambda 函数：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> sum = &#123; a: <span class="built_in">Int</span>, b: <span class="built_in">Int</span> -&gt;</span><br><span class="line"></span><br><span class="line">    a + b</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">sum(<span class="number">10</span>, <span class="number">12</span>)</span><br><span class="line"></span><br><span class="line">sum.invoke(<span class="number">10</span>, <span class="number">12</span>)</span><br></pre></td></tr></table></figure>
+
+<p>编译成 Java 代码后：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Function2</span> <span class="variable">sum</span> <span class="operator">=</span> (Function2)<span class="literal">null</span>.INSTANCE;</span><br><span class="line"></span><br><span class="line">sum.invoke(<span class="number">10</span>, <span class="number">12</span>);</span><br><span class="line"></span><br><span class="line">sum.invoke(<span class="number">10</span>, <span class="number">12</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// lambda 编译后的类</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">KotlinTest$main$sum$1</span> <span class="keyword">extends</span> <span class="title class_">Lambda</span> <span class="keyword">implements</span> <span class="title class_">Function2</span>&lt;Integer, Integer, Integer&gt; &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">KotlinTest$main$sum$1</span> <span class="variable">INSTANCE</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">KotlinTest$main$sum$1</span>();</span><br><span class="line"></span><br><span class="line">    KotlinTest$main$sum$<span class="number">1</span>() &#123;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">super</span>(<span class="number">2</span>);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">     <span class="comment">// kotlin.jvm.functions.Function2</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="comment">/* bridge */</span> <span class="comment">/* synthetic */</span> Integer <span class="title function_">invoke</span><span class="params">(Integer num, Integer num2)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> invoke(num.intValue(), num2.intValue());</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> Integer <span class="title function_">invoke</span><span class="params">(<span class="type">int</span> a, <span class="type">int</span> b)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> Integer.valueOf(a + b);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>可以看到对于 lambda 函数，在编译后会生成一个实现 Function 接口的类，并在使用 lambda 函数时创建一个单例对象来调用，创建对象的过程是编译器自动生成的代码</strong> 。</p>
+<p>而对于协程里的 lambda 代码块，也会为其创建一个对象，它实现 FunctionX 接口，并继承 SuspendLambda 类，不一样的地方在于它会自动增加一个 Continuation 类型的参数。</p>
+<h3 id="Continuation-Passing-Style-CPS"><a href="#Continuation-Passing-Style-CPS" class="headerlink" title="Continuation Passing Style(CPS)"></a>Continuation Passing Style(CPS)</h3><blockquote>
+<p>Continuation Passing Style(续体传递风格): 约定一种编程规范，函数不直接返回结果值，而是在函数最后一个参数位置传入一个 callback 函数参数，并在函数执行完成时通过 callback 来处理结果。回调函数 callback 被称为续体(Continuation)，它决定了程序接下来的行为，整个程序的逻辑通过一个个 Continuation 拼接在一起。</p>
+</blockquote>
+<p><strong>Kotlin 协程本质就是利用 CPS 来实现对过程的控制，并解决了 CPS 会产生的问题(如回调地狱，栈空间占用)</strong></p>
+<ul>
+<li>Kotlin suspend 挂起函数写法与普通函数一样，但编译器会对 suspend 关键字的函数做 CPS 变换，这就是咱们常说的用看起来同步的方式写出异步的代码，消除回调地狱(callback hell)。</li>
+<li>另外为了避免栈空间过大的问题, Kotlin 编译器并没有把代码转换成函数回调的形式，而是利用状态机模型。每两个挂起点之间可以看为一个状态，每次进入状态机时都有一个当前的状态，然后执行该状态对应的代码；如果程序执行完毕则返回结果值，否则返回一个特殊值，表示从这个状态退出并等待下次进入。相当于创建了一个可复用的回调，每次都使用这同一个回调，根据不同状态来执行不同的代码。</li>
+</ul>
+<h3 id="Continuation"><a href="#Continuation" class="headerlink" title="Continuation"></a>Continuation</h3><p>Kotlin 续体有两个接口: Continuation 和 CancellableContinuation, 顾名思义 CancellableContinuation 是一个可以取消的 Continuation。</p>
+<p><strong>Continuation 成员</strong> ：</p>
+<ul>
+<li><code>val context: CoroutineContext</code>: 当前协程的 CoroutineContext 上下文</li>
+<li><code>fun resumeWith(result: Result&lt;T&gt;)</code>: 传递 result 恢复协程</li>
+</ul>
+<p><strong>CancellableContinuation 成员</strong> ：</p>
+<ul>
+<li><code>isActive, isCompleted, isCancelled</code>: 表示当前 Continuation 的状态</li>
+<li><code>fun cancel(cause: Throwable? = null)</code>: 可选通过一个异常 cause 来取消当前 Continuation 的执行</li>
+</ul>
+<p>可以将 Continuation 看成是在挂起点恢复后需要执行的代码封装(通过之前的文章可以知道是通过状态机实现的)，比如说对如下逻辑：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">request</span><span class="params">()</span></span> = suspendCoroutine&lt;Response&gt; &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> response = doRequest()</span><br><span class="line"></span><br><span class="line">    it.resume(response)</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">test</span><span class="params">()</span></span> = runBlocking &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> response = request()</span><br><span class="line"></span><br><span class="line">    handle(response)</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>用下面的伪代码简单描述 Continuation 的工作：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 假装是 Continuation 接口</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">Continuation</span>&lt;<span class="type">T</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">resume</span><span class="params">(t: <span class="type">T</span>)</span></span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">request</span><span class="params">(continuation: <span class="type">Continuation</span>&lt;<span class="type">Response</span>&gt;)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> response = doRequest()</span><br><span class="line"></span><br><span class="line">    continuation.resume(response)</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">test</span><span class="params">()</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    request(<span class="keyword">object</span> :Continuation&lt;Response&gt;&#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">resume</span><span class="params">(response: <span class="type">Response</span>)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">            handle(response)</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>对于 suspend 关键词修饰的挂起函数，编译器会为其增加一个 Continuation 续体类型的参数(相当于 CPS 中的回调)，可以通过这个 Continuation 续体对象的 resume 方法返回结果值来恢复协程的执行</strong> 。</p>
+<h2 id="协程创建与启动"><a href="#协程创建与启动" class="headerlink" title="协程创建与启动"></a>协程创建与启动</h2><h3 id="SuspendLambda"><a href="#SuspendLambda" class="headerlink" title="SuspendLambda"></a>SuspendLambda</h3><p>Kotlin 编译时会将 lambda 协程代码块编译成 SuspendLambda 的子类：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    GlobalScope.launch &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">val</span> id = getId()</span><br><span class="line"></span><br><span class="line">        <span class="keyword">val</span> avatar = getAvatar(id)</span><br><span class="line"></span><br><span class="line">        println(<span class="string">&quot;<span class="subst">$&#123;Thread.currentThread().name&#125;</span> - <span class="variable">$id</span> - <span class="variable">$avatar</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对应的字节码可以看到：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">Main$main$1</span> <span class="keyword">extends</span> <span class="title class_">kotlin</span>/coroutines/jvm/internal/SuspendLambda <span class="keyword">implements</span> <span class="title class_">kotlin</span>/jvm/functions/Function2</span><br></pre></td></tr></table></figure>
+
+<p><strong>SuspendLambda 实现了 Continuation 续体接口，其 resume 方法可以恢复协程的执行；另外它将协程体封装成 SuspendLambda 对象，其内以状态机的形式消除回调地狱，并实现逻辑的顺序执行</strong> 。</p>
+<h3 id="继承关系"><a href="#继承关系" class="headerlink" title="继承关系"></a>继承关系</h3><figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">- Continuation: 续体，恢复协程的执行</span><br><span class="line"></span><br><span class="line">    - BaseContinuationImpl: 实现 resumeWith(Result) 方法，控制状态机的执行，定义了 invokeSuspend 抽象方法</span><br><span class="line"></span><br><span class="line">        - ContinuationImpl: 增加 intercepted 拦截器，实现线程调度等</span><br><span class="line"></span><br><span class="line">            - SuspendLambda: 封装协程体代码块</span><br><span class="line"></span><br><span class="line">                - 协程体代码块生成的子类: 实现 invokeSuspend 方法，其内实现状态机流转逻辑</span><br></pre></td></tr></table></figure>
+
+<p>这下子，是不是就清晰了许多？那我们接下来看协程是怎么开始启动的。</p>
+<h3 id="协程启动流程"><a href="#协程启动流程" class="headerlink" title="协程启动流程"></a>协程启动流程</h3><h4 id="CoroutineScope-launch"><a href="#CoroutineScope-launch" class="headerlink" title="CoroutineScope.launch"></a>CoroutineScope.launch</h4><p>从 <code>CoroutineScope.launch</code> 开始跟踪协程启动流程：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">fun</span> CoroutineScope.<span class="title">launch</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">    context: <span class="type">CoroutineContext</span> = EmptyCoroutineContext,</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">    start: <span class="type">CoroutineStart</span> = CoroutineStart.DEFAULT,</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">    block: <span class="type">suspend</span> <span class="type">CoroutineScope</span>.() -&gt; <span class="type">Unit</span></span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">)</span></span>: Job &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// newContext = scope作用域上下文 + context参数上下文 + Dispatchers.Default(未指定则添加)</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> newContext = newCoroutineContext(context)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 创建协程对象</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> coroutine = <span class="keyword">if</span> (start.isLazy) &#123;</span><br><span class="line"></span><br><span class="line">        LazyStandaloneCoroutine(newContext, block)</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">        StandaloneCoroutine(newContext, active = <span class="literal">true</span>)</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 启动协程</span></span><br><span class="line"></span><br><span class="line">    coroutine.start(start, coroutine, block)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> coroutine</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 启动协程</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;R&gt;</span> <span class="title">start</span><span class="params">(start: <span class="type">CoroutineStart</span>, receiver: <span class="type">R</span>, block: <span class="type">suspend</span> <span class="type">R</span>.() -&gt; <span class="type">T</span>)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    start(block, receiver, <span class="keyword">this</span>)</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面 <code>coroutine.start</code> 的调用涉及到运算符重载，实际上会调到 <code>CoroutineStart.invoke()</code> 方法：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">operator</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;R, T&gt;</span> <span class="title">invoke</span><span class="params">(block: <span class="type">suspend</span> <span class="type">R</span>.() -&gt; <span class="type">T</span>, receiver: <span class="type">R</span>, completion: <span class="type">Continuation</span>&lt;<span class="type">T</span>&gt;)</span></span>: <span class="built_in">Unit</span> =</span><br><span class="line"></span><br><span class="line">    <span class="keyword">when</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line"></span><br><span class="line">        DEFAULT -&gt; block.startCoroutineCancellable(receiver, completion)</span><br><span class="line"></span><br><span class="line">        ATOMIC -&gt; block.startCoroutine(receiver, completion)</span><br><span class="line"></span><br><span class="line">        UNDISPATCHED -&gt; block.startCoroutineUndispatched(receiver, completion)</span><br><span class="line"></span><br><span class="line">        LAZY -&gt; <span class="built_in">Unit</span> <span class="comment">// will start lazily</span></span><br><span class="line"></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>我们可以注意下 completion 参数，它是一个续体 Continuation 类型，此时传入的实参为 StandaloneCoroutine&#x2F;LazyStandaloneCoroutine 对象，在协程体的逻辑执行完后会调用到其 resume 方法(CPS)，做一些收尾工作，比如说修改状态等</strong> 。</p>
+<p>此时 receiver 和 completion 都是 launch() 中创建的 StandaloneCoroutine 协程对象。接着往下看：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">internal</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;R, T&gt;</span> <span class="params">(<span class="keyword">suspend</span> (R)</span></span> -&gt; T).startCoroutineCancellable(</span><br><span class="line"></span><br><span class="line">    receiver: R, completion: Continuation&lt;T&gt;,</span><br><span class="line"></span><br><span class="line">    onCancellation: ((cause: Throwable) -&gt; <span class="built_in">Unit</span>)? = <span class="literal">null</span></span><br><span class="line"></span><br><span class="line">) = runSafely(completion) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 重新创建 SuspendLambda 子类对象</span></span><br><span class="line"></span><br><span class="line">    createCoroutineUnintercepted(receiver, completion)</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 调用拦截器逻辑，进行线程调度等</span></span><br><span class="line"></span><br><span class="line">        .intercepted()</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 真正执行协程逻辑</span></span><br><span class="line"></span><br><span class="line">        .resumeCancellableWith(Result.success(<span class="built_in">Unit</span>), onCancellation)</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="创建SuspendLambda"><a href="#创建SuspendLambda" class="headerlink" title="创建SuspendLambda"></a>创建SuspendLambda</h4><p>看看上面 createCoroutineUnintercepted 中的代码：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">actual</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;R, T&gt;</span> <span class="params">(<span class="keyword">suspend</span> R.()</span></span> -&gt; T).createCoroutineUnintercepted(</span><br><span class="line"></span><br><span class="line">    receiver: R,</span><br><span class="line"></span><br><span class="line">    completion: Continuation&lt;T&gt;</span><br><span class="line"></span><br><span class="line">): Continuation&lt;<span class="built_in">Unit</span>&gt; &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> probeCompletion = probeCoroutineCreated(completion)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">if</span> (<span class="keyword">this</span> <span class="keyword">is</span> BaseContinuationImpl)</span><br><span class="line"></span><br><span class="line">        create(receiver, probeCompletion)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">        createCoroutineFromSuspendFunction(probeCompletion) &#123;</span><br><span class="line"></span><br><span class="line">            (<span class="keyword">this</span> <span class="keyword">as</span> Function2&lt;R, Continuation&lt;T&gt;, Any?&gt;).invoke(receiver, it)</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>我们在前面说过，这个协程体会被编译成 SuspendLambda 的子类，其也是 BaseContinuationImpl 的子类对象，因此会走上面的 create() 方法，通过 completion 续体参数创建一个新的 SuspendLambda 对象，这是之前说的 <a target="_blank" rel="noopener" href="https://juejin.cn/post/6890348438873964551#heading-5">协程的三层包装</a> 里的第二层包装，它持有的 completion 对象是第一层封装(AbstractCoroutine)。</p>
+</blockquote>
+<p>所以在协程启动过程中针对一个协程体会创建两个 SuspendLambda 的子类对象：</p>
+<ol>
+<li>调用 <code>launch()</code> 时创建第一个，传入 null 作为参数，作为一个普通的 Function 对象使用</li>
+<li>调用 <code>create()</code> 时创建第二个，传入 completion 续体作为参数<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">BuildersKt.launch$<span class="keyword">default</span>(<span class="comment">/*...*/</span> (Function2)(<span class="keyword">new</span> <span class="title class_">Function2</span>((Continuation)<span class="literal">null</span>))</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h4 id="线程调度"><a href="#线程调度" class="headerlink" title="线程调度"></a>线程调度</h4><blockquote>
+<p>接着调用 <code>SuspendLambda.intercepted()</code> 方法执行拦截器逻辑，从上下文中获取拦截器(Dispatcher调度器)拦截当前 continuation 对象，将其包装成 DispatchedContinuation 类型，这就是协程的第三层包装，封装了线程调度等逻辑，其 continuation 参数就是第二层包装(SuspendLambda)实例。</p>
+</blockquote>
+<p>关于线程调度的具体逻辑，后面再单独写篇文章整理，此处略过。</p>
+<h4 id="启动协程"><a href="#启动协程" class="headerlink" title="启动协程"></a>启动协程</h4><p>在通过 SuspendLambda 对象创建了 DispatchedContinuation 续体后，接着执行其 resumeCancellableWith() 方法，具体执行代码不贴出了，最终会调用到 <code>continuation.resumeWith(result)</code> 方法，而这个 continuation 就是之前传入的第二层封装 SuspendLambda 对象，其 resumeWith() 方法在父类 BaseContinuationImpl 中：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// BaseContinuationImpl</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">resumeWith</span><span class="params">(result: <span class="type">Result</span>&lt;<span class="type">Any</span>?&gt;)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> outcome = invokeSuspend(param)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面的 invokeSuspend() 是一个抽象方法，它的实现在编译器生成的 SuspendLambda 子类中，具体逻辑是通过状态机来执行协程体中的逻辑，具体见下章解析。</p>
+<p>到这里我们 launch() 里的协程体逻辑就开始真正执行了。</p>
+<h2 id="协程挂起与恢复"><a href="#协程挂起与恢复" class="headerlink" title="协程挂起与恢复"></a>协程挂起与恢复</h2><p>协程的启动，挂起和恢复有两个 <strong>关键方法</strong>: <code>invokeSuspend()</code> 和 <code>resumeWith(Result)</code> 。 <strong>invokeSuspend() 方法是对协程代码块的封装，内部加入状态机机制将整个逻辑分为多块，分隔点就是每个挂起点。协程启动时会先调用一次 invokeSuspend() 函数触发协程体的开始执行，后面每当调用到一个挂起函数时，挂起函数会返回 COROUTINE_SUSPENDED 标识，从而 return 停掉 invokeSuspend() 函数的执行，即非阻塞挂起。编译器会为挂起函数自动添加一个 continuation 续体对象参数，表示调用它的那个协程代码块，在该挂起函数执行完成后，就会调用到续体 continuation.resumeWith() 方法来返回结果(或异常)，而在 resumeWith() 中又调用了 invokeSuspend() 方法，其内根据状态机的状态来恢复协程的执行</strong> 。这就是整个协程的挂起和恢复过程。</p>
+<p>接下来看具体解析。</p>
+<h3 id="协程的状态机"><a href="#协程的状态机" class="headerlink" title="协程的状态机"></a>协程的状态机</h3><p>在之前 <a target="_blank" rel="noopener" href="https://juejin.cn/post/6890348438873964551#heading-1">协程的状态机</a> 一文里曾经分析过协程的状态机，并且贴出了对应的 Java 代码，分析其状态的流转过程，这次换个思路来看看，对如下代码：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span> = CoroutineScope(Dispatchers.Main).launch &#123;</span><br><span class="line"></span><br><span class="line">    println(<span class="string">&quot;label 0&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> isLogin = checkLogin() <span class="comment">// suspend</span></span><br><span class="line"></span><br><span class="line">    println(<span class="string">&quot;label 1&quot;</span>)</span><br><span class="line"></span><br><span class="line">    println(isLogin)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> login = login() <span class="comment">// suspend</span></span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    println(<span class="string">&quot;label 2&quot;</span>)</span><br><span class="line"></span><br><span class="line">    println(login)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> id = getId() <span class="comment">// suspend</span></span><br><span class="line"></span><br><span class="line">    println(<span class="string">&quot;label 3&quot;</span>)</span><br><span class="line"></span><br><span class="line">    println(id)</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对于协程体中的代码，首个挂起点前的代码可看为初始状态, 其后每两个挂起点之间都是一个新的状态，最后一个挂起点到结束是最终的状态。其对应的状态机伪代码如下，协程体被编译成 SuspendLambda 子类，它实现父类中的 invokeSuspend() 方法，是协程的真正执行逻辑：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">KotlinTest$main$1</span> <span class="keyword">extends</span> <span class="title class_">SuspendLambda</span> <span class="keyword">implements</span> <span class="title class_">Function2</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> <span class="variable">label</span> <span class="operator">=</span> <span class="number">0</span>;  <span class="comment">// 状态码</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> Object <span class="title function_">invokeSuspend</span><span class="params">(Object result)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">switch</span>(<span class="built_in">this</span>.label) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> <span class="number">0</span>:</span><br><span class="line"></span><br><span class="line">                println(<span class="string">&quot;label 0&quot;</span>);</span><br><span class="line"></span><br><span class="line">                label = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">                result = checkLogin(<span class="built_in">this</span>); <span class="comment">// this 是编译器添加的续体参数</span></span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (result == COROUTINE_SUSPENDED) &#123;</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">return</span> COROUTINE_SUSPENDED;</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> <span class="number">1</span>:</span><br><span class="line"></span><br><span class="line">                <span class="comment">// 此时传入的 result 是 checkLogin() 的结果</span></span><br><span class="line"></span><br><span class="line">                println(<span class="string">&quot;label 1&quot;</span>)</span><br><span class="line"></span><br><span class="line">                <span class="type">val</span> <span class="variable">isLogin</span> <span class="operator">=</span> result;</span><br><span class="line"></span><br><span class="line">                println(isLogin)</span><br><span class="line"></span><br><span class="line">                label = <span class="number">2</span>;</span><br><span class="line"></span><br><span class="line">                result = login(<span class="built_in">this</span>); <span class="comment">// this 是编译器添加的续体参数</span></span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (result == COROUTINE_SUSPENDED) &#123;</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">return</span> COROUTINE_SUSPENDED;</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> <span class="number">2</span>:</span><br><span class="line"></span><br><span class="line">                <span class="comment">// 此时传入的 result 是 login() 的结果</span></span><br><span class="line"></span><br><span class="line">                println(<span class="string">&quot;label 2&quot;</span>)</span><br><span class="line"></span><br><span class="line">                <span class="type">val</span> <span class="variable">login</span> <span class="operator">=</span> result;</span><br><span class="line"></span><br><span class="line">                println(login)</span><br><span class="line"></span><br><span class="line">                label = <span class="number">3</span>;</span><br><span class="line"></span><br><span class="line">                result = getId(<span class="built_in">this</span>); <span class="comment">// this 是编译器添加的续体参数</span></span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (result == COROUTINE_SUSPENDED) &#123;</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">return</span> COROUTINE_SUSPENDED;</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">case</span> <span class="number">3</span>:</span><br><span class="line"></span><br><span class="line">                <span class="comment">// 此时传入的 result 是 getId() 的结果</span></span><br><span class="line"></span><br><span class="line">                println(<span class="string">&quot;label 3&quot;</span>)</span><br><span class="line"></span><br><span class="line">                <span class="type">val</span> <span class="variable">id</span> <span class="operator">=</span> result;</span><br><span class="line"></span><br><span class="line">                println(id)</span><br><span class="line"></span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>看上面每次调用 suspend 函数时都会传一个 this 参数(continuation)，这个参数是编译器添加的续体参数，表示的是协程体自身，在 suspend 挂起函数执行完毕后会调用 <code>continuation.resumeWith() -&gt; invokeSuspend(result)</code> 来恢复该状态机的执行。</p>
+<h3 id="协程挂起"><a href="#协程挂起" class="headerlink" title="协程挂起"></a>协程挂起</h3><p>上面给出了协程体 SuspendLambda.invokeSuspend() 方法的状态机伪代码，那再看下 SuspendLambda 父类 BaseContinuationImpl 中的 resumeWith() 方法：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">internal</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">BaseContinuationImpl</span></span>(</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">val</span> completion: Continuation&lt;Any?&gt;?</span><br><span class="line"></span><br><span class="line">) : Continuation&lt;Any?&gt;, CoroutineStackFrame, Serializable &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">resumeWith</span><span class="params">(result: <span class="type">Result</span>&lt;<span class="type">Any</span>?&gt;)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">var</span> current = <span class="keyword">this</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">var</span> param = result</span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line"></span><br><span class="line">            with(current) &#123;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">val</span> outcome: Result&lt;Any?&gt; = <span class="keyword">try</span> &#123;</span><br><span class="line"></span><br><span class="line">                    <span class="comment">// invokeSuspend() 执行续体下一个状态的逻辑</span></span><br><span class="line"></span><br><span class="line">                    <span class="keyword">val</span> outcome = invokeSuspend(param)</span><br><span class="line"></span><br><span class="line">                    <span class="comment">// 如果续体里调用到了挂起函数，则直接 return</span></span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (outcome === COROUTINE_SUSPENDED) <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">                    Result.success(outcome)</span><br><span class="line"></span><br><span class="line">                &#125; <span class="keyword">catch</span> (exception: Throwable) &#123;</span><br><span class="line"></span><br><span class="line">                    Result.failure(exception)</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (completion <span class="keyword">is</span> BaseContinuationImpl) &#123;</span><br><span class="line"></span><br><span class="line">                    current = completion</span><br><span class="line"></span><br><span class="line">                    param = outcome</span><br><span class="line"></span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">                    <span class="comment">// top-level completion reached -- invoke and return</span></span><br><span class="line"></span><br><span class="line">                    <span class="comment">// 对于 launch 启动的协程体，传入的 completion 是 AbstractCoroutine 子类对象</span></span><br><span class="line"></span><br><span class="line">                    completion.resumeWith(outcome)</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们说过协程启动后会调用到上面这个 resumeWith() 方法，接着调用其 invokeSuspend() 方法：</p>
+<ol>
+<li>当 invokeSuspend() 返回 COROUTINE_SUSPENDED 后，就直接 return 终止执行了，此时协程被挂起。</li>
+<li>当 invokeSuspend() 返回非 COROUTINE_SUSPENDED 后，说明协程体执行完毕了，对于 launch 启动的协程体，传入的 completion 是 AbstractCoroutine 子类对象，最终会调用其 AbstractCoroutine.resumeWith() 方法做一些状态改变之类的收尾逻辑。至此协程便执行完毕了。</li>
+</ol>
+<h3 id="协程恢复"><a href="#协程恢复" class="headerlink" title="协程恢复"></a>协程恢复</h3><p>这里我们接着看上面第一条：协程执行到挂起函数被挂起后，当这个挂起函数执行完毕后是怎么恢复协程的，以下面挂起函数为例：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">login</span><span class="params">()</span></span> = withContext(Dispatchers.IO) &#123;</span><br><span class="line"></span><br><span class="line">    Thread.sleep(<span class="number">1000</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span><span class="symbol">@withContext</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过反编译可以看到上面挂起函数中的函数体也被编译成了 SuspendLambda 的子类，创建其实例时也需要传入 Continuation 续体参数(调用该挂起函数的协程所在续体)。贴下 withContext 的源码：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> <span class="title">withContext</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">    context: <span class="type">CoroutineContext</span>,</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">    block: <span class="type">suspend</span> <span class="type">CoroutineScope</span>.() -&gt; <span class="type">T</span></span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">)</span></span>: T &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> suspendCoroutineUninterceptedOrReturn <span class="symbol">sc@</span> &#123; uCont -&gt;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// compute new context</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">val</span> oldContext = uCont.context</span><br><span class="line"></span><br><span class="line">        <span class="keyword">val</span> newContext = oldContext + context</span><br><span class="line"></span><br><span class="line">        <span class="comment">// always check for cancellation of new context</span></span><br><span class="line"></span><br><span class="line">        newContext.ensureActive()</span><br><span class="line"></span><br><span class="line">        <span class="comment">// FAST PATH #1 -- new context is the same as the old one</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (newContext === oldContext) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">val</span> coroutine = ScopeCoroutine(newContext, uCont)</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span><span class="symbol">@sc</span> coroutine.startUndispatchedOrReturn(coroutine, block)</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// FAST PATH #2 -- the new dispatcher is the same as the old one (something else changed)</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// \`equals\` is used by design (see equals implementation is wrapper context like ExecutorCoroutineDispatcher)</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (newContext[ContinuationInterceptor] == oldContext[ContinuationInterceptor]) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">val</span> coroutine = UndispatchedCoroutine(newContext, uCont)</span><br><span class="line"></span><br><span class="line">            <span class="comment">// There are changes in the context, so this thread needs to be updated</span></span><br><span class="line"></span><br><span class="line">            withCoroutineContext(newContext, <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">return</span><span class="symbol">@sc</span> coroutine.startUndispatchedOrReturn(coroutine, block)</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// SLOW PATH -- use new dispatcher</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">val</span> coroutine = DispatchedCoroutine(newContext, uCont)</span><br><span class="line"></span><br><span class="line">        block.startCoroutineCancellable(coroutine, coroutine)</span><br><span class="line"></span><br><span class="line">        coroutine.getResult()</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>首先调用了 suspendCoroutineUninterceptedOrReturn 方法，看注释知道可以通过它来获取到当前的续体对象 uCont, 接着有几条分支调用，但最终都是会通过续体对象来创建挂起函数体对应的 SuspendLambda 对象，并执行其 invokeSuspend() 方法，在其执行完毕后调用 uCont.resume() 来恢复协程，具体逻辑大家感兴趣可以自己跟代码，与前面大同小异</strong> 。</p>
+<p>至于其他的顶层挂起函数如 <code>await()</code>, <code>suspendCoroutine()</code>, <code>suspendCancellableCoroutine()</code> 等，其内部也是通过 suspendCoroutineUninterceptedOrReturn() 来获取到当前的续体对象，以便在挂起函数体执行完毕后，能通过这个续体对象恢复协程执行。</p>
+<blockquote>
+<p>协程库没有直接提供创建续体对象的方式，一般都是通过 <strong>suspendCoroutineUninterceptedOrReturn()</strong> 函数获取的，感兴趣的同学可以看看这个方法的注释: <code>Obtains the current continuation instance inside suspend functions and either suspends currently running coroutine or returns result immediately without suspension...</code>。</p>
+</blockquote>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>Kotlin 协程本质就是利用 CPS 来实现对过程的控制，并解决了 CPS 会产生的问题(如回调地狱，栈空间占用)。</p>
+<p>Kotlin suspend 挂起函数写法与普通函数一样，但编译器会对 suspend 关键字的函数做 CPS 变换；Kotlin 编译器并没有把代码转换成函数回调的形式，而是利用状态机模型，消除 callback hell, 解决栈空间占用问题。</p>
+<p>即将协程代码块编译成 SuspendLambda 子类，实现 invokeSuspend() 方法。</p>
+<blockquote>
+<p>invokeSuspend() 方法是对协程代码块的封装，内部加入状态机机制将整个逻辑分为多块，分隔点就是每个挂起点。协程启动时会先调用一次 invokeSuspend() 函数触发协程体的开始执行，后面每当调用到一个挂起函数时，挂起函数会返回 COROUTINE_SUSPENDED 标识，从而 return 停掉 invokeSuspend() 函数的执行，即非阻塞挂起。编译器会为挂起函数自动添加一个 continuation 续体对象参数，表示调用它的那个协程代码块，在该挂起函数执行完成后，就会调用到续体 continuation.resumeWith() 方法来返回结果(或异常)，而在 resumeWith() 中又调用了 invokeSuspend() 方法，其内根据状态机的状态来恢复协程的执行。</p>
+</blockquote>
+<p>Kotlin 协程中存在三层包装，每层包装都持有上层包装的引用，用来执行其 resumeWith() 方法做一些处理：</p>
+<ul>
+<li>第一层包装: launch &amp; async 返回的 Job, Deferred 继承自 AbstractCoroutine, 里面封装了协程的状态，提供了 cancel 等接口；</li>
+<li>第二层包装: 编译器生成的 SuspendLambda 子类，封装了协程的真正执行逻辑，其继承关系为 SuspendLambda -&gt; ContinuationImpl -&gt; BaseContinuationImpl, 它的 completion 参数就是第一层包装实例；</li>
+<li>第三层包装: DispatchedContinuation, 封装了线程调度逻辑，它的 continuation 参数就是第二层包装实例。</li>
+</ul>
+<p>这三层包装都实现了 Continuation 续体接口，通过代理模式将协程的各层包装组合在一起，每层负责不同的功能。</p>
+<p>下图的 resumeWith() 可能表示 resume(), 也可能表示 resumeCancellableWith() 等系列方法：</p>
+<p><img src="/posts/98c20fce/Kotlin%E5%8D%8F%E7%A8%8B.jpg" alt="Kotlin协程"></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/clippings/" rel="tag"># clippings</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/416e95f7/" rel="next" title="Android-记一次线上OOM问题处理">
+                <i class="fa fa-chevron-left"></i> Android-记一次线上OOM问题处理
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/c092b730/" rel="prev" title="Kotlin笔记之StateFlow和SharedFlow">
+                Kotlin笔记之StateFlow和SharedFlow <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">439</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">47</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@qq.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86"><span class="nav-text">前置知识</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Function"><span class="nav-text">Function</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Continuation-Passing-Style-CPS"><span class="nav-text">Continuation Passing Style(CPS)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Continuation"><span class="nav-text">Continuation</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%8F%E7%A8%8B%E5%88%9B%E5%BB%BA%E4%B8%8E%E5%90%AF%E5%8A%A8"><span class="nav-text">协程创建与启动</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#SuspendLambda"><span class="nav-text">SuspendLambda</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%A7%E6%89%BF%E5%85%B3%E7%B3%BB"><span class="nav-text">继承关系</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%8F%E7%A8%8B%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B"><span class="nav-text">协程启动流程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#CoroutineScope-launch"><span class="nav-text">CoroutineScope.launch</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BASuspendLambda"><span class="nav-text">创建SuspendLambda</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E8%B0%83%E5%BA%A6"><span class="nav-text">线程调度</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E5%8D%8F%E7%A8%8B"><span class="nav-text">启动协程</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%8F%E7%A8%8B%E6%8C%82%E8%B5%B7%E4%B8%8E%E6%81%A2%E5%A4%8D"><span class="nav-text">协程挂起与恢复</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%8F%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E6%9C%BA"><span class="nav-text">协程的状态机</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%8F%E7%A8%8B%E6%8C%82%E8%B5%B7"><span class="nav-text">协程挂起</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%8F%E7%A8%8B%E6%81%A2%E5%A4%8D"><span class="nav-text">协程恢复</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

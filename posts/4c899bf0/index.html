@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="clippings," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="概述Glide是一个快速高效的Android图片加载库，提供了易用的API，高性能、可扩展的图片解码管道（decode pipeline），以及自动的资源池技术。 Glide 支持拉取，解码和展示视频快照，图片，和GIF动画，开发者可以将 Glide 网络请求从 HttpUrlConnection 替换成如 Google Volley 和 Square OkHttp 这样的工具库。Glide 提供">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Glide源码解析">
+<meta property="og:url" content="http://shenbh.github.io/posts/4c899bf0/index.html">
+<meta property="og:site_name" content="积跬步">
+<meta property="og:description" content="概述Glide是一个快速高效的Android图片加载库，提供了易用的API，高性能、可扩展的图片解码管道（decode pipeline），以及自动的资源池技术。 Glide 支持拉取，解码和展示视频快照，图片，和GIF动画，开发者可以将 Glide 网络请求从 HttpUrlConnection 替换成如 Google Volley 和 Square OkHttp 这样的工具库。Glide 提供">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://shenbh.github.io/posts/4c899bf0/cache_process.webp">
+<meta property="og:image" content="http://shenbh.github.io/posts/4c899bf0/%E5%8A%A0%E8%BD%BD%E6%B5%81%E7%A8%8B.webp">
+<meta property="article:published_time" content="2025-07-03T07:14:34.432Z">
+<meta property="article:modified_time" content="2025-07-03T09:22:46.851Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="clippings">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/4c899bf0/cache_process.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/4c899bf0/"/>
+
+
+
+
+
+  <title>Glide源码解析 | 积跬步</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">积跬步</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just do IT Now.</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/4c899bf0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="积跬步">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">Glide源码解析</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-07-03T15:14:34+08:00">
+                2025-07-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+              <div class="post-description">
+                  概述Glide是一个快速高效的Android图片加载库，提供了易用的API，高性能、可扩展的图片解码管道（decode pipeline），以及自动的资源池技术。 Glide 支持拉取，解码和展示视频快照，图片，和GIF动画，开发者可以将 Glide 网络请求从 HttpUrlConnection 替换成如 Google Volley 和 Square OkHttp 这样的工具库。Glide 提供
+              </div>
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>Glide是一个快速高效的Android图片加载库，提供了易用的API，高性能、可扩展的图片解码管道（decode pipeline），以及自动的资源池技术。</p>
+<p>Glide 支持拉取，解码和展示视频快照，图片，和GIF动画，开发者可以将 Glide 网络请求从 HttpUrlConnection 替换成如 Google Volley 和 Square OkHttp 这样的工具库。Glide 提供了多种图片格式的缓存，可以感知Activity&#x2F;Fragment的生命周期。能够复用和主动回收Bitmap，以及带有高效的缓存策略，减小了内存的开销。</p>
+<p>本文基于 Glide 4.11.0 版本，参考网上一些解析，结合源码对 Glide 的机制做一个分析。</p>
+<h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><p>具体用法见 <a target="_blank" rel="noopener" href="https://github.com/bumptech/glide">Glide Github</a> 。</p>
+<h3 id="基本用法"><a href="#基本用法" class="headerlink" title="基本用法"></a>基本用法</h3><p>使用Glide加载图片非常简单：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Glide.with(fragment).load(myUrl).into(imageView);</span><br></pre></td></tr></table></figure>
+
+<p>取消加载同样很简单：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Glide.with(fragment).clear(imageView);</span><br></pre></td></tr></table></figure>
+
+<p>及时取消不必要的加载不是必须的操作，因为当 Glide.with() 中传入的 Activity 或 Fragment 实例销毁时，Glide 会自动取消加载并回收资源。</p>
+<h3 id="定制请求"><a href="#定制请求" class="headerlink" title="定制请求"></a>定制请求</h3><p>Glide 提供了许多可应用于单一请求的选项，包括变换、过渡、缓存选项等。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">RequestOptions</span> <span class="variable">sharedOptions</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RequestOptions</span>().placeholder(placeholder).fitCenter();</span><br><span class="line"></span><br><span class="line">Glide.with(fragment).load(myUrl).apply(sharedOptions).into(imageView1);</span><br><span class="line"></span><br><span class="line">Glide.with(fragment).load(myUrl).apply(sharedOptions).into(imageView2);</span><br></pre></td></tr></table></figure>
+
+<h3 id="ListView-x2F-RecyclerView"><a href="#ListView-x2F-RecyclerView" class="headerlink" title="ListView&#x2F;RecyclerView"></a>ListView&#x2F;RecyclerView</h3><p>在 ListView 或 RecyclerView 中加载图片的代码和在单独的 View 中加载完全一样。Glide 已经自动处理了 View 的复用和请求的取消：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onBindViewHolder</span><span class="params">(ViewHolder holder, <span class="type">int</span> position)</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="type">String</span> <span class="variable">url</span> <span class="operator">=</span> urls.get(position);</span><br><span class="line"></span><br><span class="line">  Glide.with(fragment).load(url).into(holder.imageView);</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对 View 调用 clear() 或 into(view) 后在此之前的加载操作会被取消，并且在方法调用完成后，Glide 不会改变 view 的内容。如果忘记调用 clear()，而又没有开启新的加载操作，那么就会出现这种情况：已经为一个 view 设置好了一个 Drawable，但该 view 在之前的位置上使用 Glide 进行过加载图片的操作，Glide 加载完毕后可能会将这个 view 改回成原来的内容。</p>
+<h3 id="Target-目标"><a href="#Target-目标" class="headerlink" title="Target 目标"></a>Target 目标</h3><p>可以将图片异步加载到自定义 Target 中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Glide.with(context).load(url).into(<span class="keyword">new</span> <span class="title class_">CustomTarget</span>&lt;Drawable&gt;() &#123;</span><br><span class="line"></span><br><span class="line">  </span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onResourceReady</span><span class="params">( Drawable resource,  Transition&lt;? <span class="built_in">super</span> Drawable&gt; transition)</span> &#123;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  </span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onLoadCleared</span><span class="params">( Drawable placeholder)</span> &#123;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h2 id="调用逻辑解析"><a href="#调用逻辑解析" class="headerlink" title="调用逻辑解析"></a>调用逻辑解析</h2><p>先看两个接口：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">Target</span>&lt;R&gt; <span class="keyword">extends</span> <span class="title class_">LifecycleListener</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">onLoadStarted</span><span class="params">( Drawable placeholder)</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">onLoadFailed</span><span class="params">( Drawable errorDrawable)</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">onResourceReady</span><span class="params">( R resource,  Transition&lt;? <span class="built_in">super</span> R&gt; transition)</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">onLoadCleared</span><span class="params">( Drawable placeholder)</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">getSize</span><span class="params">( SizeReadyCallback cb)</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">removeCallback</span><span class="params">( SizeReadyCallback cb)</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">setRequest</span><span class="params">( Request request)</span>;</span><br><span class="line"></span><br><span class="line">  Request <span class="title function_">getRequest</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">Request</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">begin</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">clear</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">pause</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">  <span class="type">boolean</span> <span class="title function_">isRunning</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">  <span class="type">boolean</span> <span class="title function_">isComplete</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">  <span class="type">boolean</span> <span class="title function_">isCleared</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">  <span class="type">boolean</span> <span class="title function_">isAnyResourceSet</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">  <span class="type">boolean</span> <span class="title function_">isEquivalentTo</span><span class="params">(Request other)</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="with-context"><a href="#with-context" class="headerlink" title="with(context)"></a>with(context)</h3><p>返回一个RequestManager对象，RequestManager是一个用于管理和启动对Glide的请求的类。可以感知activity, fragment等生命周期事件来自动停止，启动和重新启动请求。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Glide.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> RequestManager <span class="title function_">with</span><span class="params">( Activity activity)</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> getRetriever(activity).get(activity);</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 一系列重载方法</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> RequestManagerRetriever <span class="title function_">getRetriever</span><span class="params">( Context context)</span> &#123;</span><br><span class="line"></span><br><span class="line">  Preconditions.checkNotNull(context, <span class="string">&quot;...&quot;</span>);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Glide单例</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> Glide.get(context).getRequestManagerRetriever();</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> Glide <span class="title function_">get</span><span class="params">( Context context)</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (glide == <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">GeneratedAppGlideModule</span> <span class="variable">annotationGeneratedModule</span> <span class="operator">=</span> getAnnotationGeneratedGlideModules(context.getApplicationContext());</span><br><span class="line"></span><br><span class="line">    <span class="keyword">synchronized</span> (Glide.class) &#123;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">if</span> (glide == <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">        checkAndInitializeGlide(context, annotationGeneratedModule);</span><br><span class="line"></span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> glide;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>with方法的内容都是获取一个 RequestManager 对象并返回。这些with方法关键的不同在于传入的参数不一致，可以是Context、Activity、Fragment等等。Glide在加载图片的时候会绑定 with(context) 方法中传入的 context 的生命周期，这样避免消耗多余的资源，也避免了在Activity销毁之后加载图片从而导致的空指针问题。</p>
+<p>RequestManagerRetriever.get 方法在后面生命周期解析的时候再看。</p>
+<p><strong>注意上面的 getAnnotationGeneratedGlideModules 方法，它用来处理开发者通过 @GlideModule 注解自定义的 AppGlideModule 类。在编译期间如果存在通过 @GlideModule 注解修饰的类，那么 Glide 会通过注解处理器生成一个继承自 GeneratedAppGlideModule 的类，里面有自定义的一些配置或者 ModelLoader 等，这样通过 Glide.get() 获取到的 Glide 实例便会自动应用这些配置。</strong></p>
+<h3 id="load-url"><a href="#load-url" class="headerlink" title="load(url)"></a>load(url)</h3><p>返回一个RequestBuilder对象，RequestBuilder类是一个处理通用资源类型的设置选项和启动负载的通用类。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// RequestManager.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> RequestBuilder&lt;Drawable&gt; <span class="title function_">load</span><span class="params">( String string)</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> asDrawable().load(string);</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> RequestBuilder&lt;Drawable&gt; <span class="title function_">asDrawable</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> as(Drawable.class);</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> &lt;ResourceType&gt; RequestBuilder&lt;ResourceType&gt; <span class="title function_">as</span><span class="params">( Class&lt;ResourceType&gt; resourceClass)</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">RequestBuilder</span>&lt;&gt;(glide, <span class="built_in">this</span>, resourceClass, context);</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>asDrawable() 调用返回了一个 <code>RequestBuilder&lt;Drawable&gt;</code> 对象，接下来看看 RequestBuilder.load 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> RequestBuilder&lt;TranscodeType&gt; <span class="title function_">load</span><span class="params">( String string)</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> loadGeneric(string);</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> RequestBuilder&lt;TranscodeType&gt; <span class="title function_">loadGeneric</span><span class="params">( Object model)</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="built_in">this</span>.model = model;</span><br><span class="line"></span><br><span class="line">  isModelSet = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">this</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在调用load()后可以进行一些设置，调用的是 RequestBuilder 父类 BaseRequestOptions 中的方法。如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Glide.with(context).load(url).placeholder(R.drawable.place_image).error(R.drawable.error_image).into(imageView);</span><br></pre></td></tr></table></figure>
+
+<h3 id="into-imageView"><a href="#into-imageView" class="headerlink" title="into(imageView)"></a>into(imageView)</h3><h4 id="RequestBuilder-into"><a href="#RequestBuilder-into" class="headerlink" title="RequestBuilder.into"></a>RequestBuilder.into</h4><p>Glide中的前两步是创建了一个 RequestBuilder, 这个Request可以理解为对图片加载的配置请求，而并没有去执行。在Glide的最后一步into方法中，这个请求才会真正执行。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// RequestBuilder.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> ViewTarget&lt;ImageView, TranscodeType&gt; <span class="title function_">into</span><span class="params">( ImageView view)</span> &#123;</span><br><span class="line"></span><br><span class="line">  Util.assertMainThread();</span><br><span class="line"></span><br><span class="line">  Preconditions.checkNotNull(view);</span><br><span class="line"></span><br><span class="line">  BaseRequestOptions&lt;?&gt; requestOptions = <span class="built_in">this</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 根据 View 的 scaleType 创建新的 requestOptions</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (!requestOptions.isTransformationSet() &amp;&amp; requestOptions.isTransformationAllowed() &amp;&amp; view.getScaleType() != <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">switch</span> (view.getScaleType()) &#123;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> CENTER_CROP:</span><br><span class="line"></span><br><span class="line">        requestOptions = requestOptions.clone().optionalCenterCrop();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> CENTER_INSIDE:</span><br><span class="line"></span><br><span class="line">        requestOptions = requestOptions.clone().optionalCenterInside();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> FIT_CENTER:</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> FIT_START:</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> FIT_END:</span><br><span class="line"></span><br><span class="line">        requestOptions = requestOptions.clone().optionalFitCenter();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> FIT_XY:</span><br><span class="line"></span><br><span class="line">        requestOptions = requestOptions.clone().optionalCenterInside();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> CENTER:</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> MATRIX:</span><br><span class="line"></span><br><span class="line">      <span class="keyword">default</span>: <span class="comment">// Do nothing.</span></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> into(glideContext.buildImageViewTarget(view, transcodeClass), <span class="literal">null</span>, requestOptions, Executors.mainThreadExecutor());</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在处理了 scale type 后，该方法又调用了 <code>glideContext.buildImageViewTarget(view, transcodeClass)</code> 方法创建了一个 Target 对象，然后传递给了into方法。接下来看一看这个方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// GlideContext.java</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// transcodeClass参数在上述解析中，可以看到传入的是Drawable.class</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> &lt;X&gt; ViewTarget&lt;ImageView, X&gt; <span class="title function_">buildImageViewTarget</span><span class="params">( ImageView imageView,  Class&lt;X&gt; transcodeClass)</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> imageViewTargetFactory.buildTarget(imageView, transcodeClass);</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> &lt;Z&gt; ViewTarget&lt;ImageView, Z&gt; <span class="title function_">buildTarget</span><span class="params">( ImageView view,  Class&lt;Z&gt; clazz)</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (Bitmap.class.equals(clazz)) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> (ViewTarget&lt;ImageView, Z&gt;) <span class="keyword">new</span> <span class="title class_">BitmapImageViewTarget</span>(view);</span><br><span class="line"></span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (Drawable.class.isAssignableFrom(clazz)) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> (ViewTarget&lt;ImageView, Z&gt;) <span class="keyword">new</span> <span class="title class_">DrawableImageViewTarget</span>(view);</span><br><span class="line"></span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;Unhandled class: &quot;</span> + clazz + <span class="string">&quot;, try .as*(Class).transcode(ResourceTranscoder)&quot;</span>);</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个方法的的本质是：通过对图片来源类型的判断，创建并返回与图片来源对应的ImageViewTarget。接下来继续看into方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> &lt;Y <span class="keyword">extends</span> <span class="title class_">Target</span>&lt;TranscodeType&gt;&gt; Y <span class="title function_">into</span><span class="params">( Y target,</span></span><br><span class="line"><span class="params"></span></span><br><span class="line"><span class="params">   RequestListener&lt;TranscodeType&gt; targetListener, BaseRequestOptions&lt;?&gt; options, Executor callbackExecutor)</span> &#123;</span><br><span class="line"></span><br><span class="line">  Preconditions.checkNotNull(target);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (!isModelSet) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;You must call #load() before calling #into()&quot;</span>);</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 创建 Request</span></span><br><span class="line"></span><br><span class="line">  <span class="type">Request</span> <span class="variable">request</span> <span class="operator">=</span> buildRequest(target, targetListener, options, callbackExecutor);</span><br><span class="line"></span><br><span class="line">  <span class="type">Request</span> <span class="variable">previous</span> <span class="operator">=</span> target.getRequest();</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (request.isEquivalentTo(previous) &amp;&amp; !isSkipMemoryCacheWithCompletePreviousRequest(options, previous)) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!Preconditions.checkNotNull(previous).isRunning()) &#123;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 使用上一个请求而不是新请求来进行优化</span></span><br><span class="line"></span><br><span class="line">      previous.begin();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> target;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 清空并终止target的request的执行</span></span><br><span class="line"></span><br><span class="line">  requestManager.clear(target);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 设置新的request</span></span><br><span class="line"></span><br><span class="line">  target.setRequest(request);</span><br><span class="line"></span><br><span class="line">  requestManager.track(target, request);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> target;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Glide处理 ListView 或者 Recyclerview 中的直接正常使用加载图片即可，因为 Glide 处理了复用，看一下Glide内部是如何处理的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> Request <span class="title function_">getRequest</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="type">Object</span> <span class="variable">tag</span> <span class="operator">=</span> getTag();</span><br><span class="line"></span><br><span class="line">  <span class="type">Request</span> <span class="variable">request</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (tag != <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (tag <span class="keyword">instanceof</span> Request) &#123;</span><br><span class="line"></span><br><span class="line">      request = (Request) tag;</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;You must not call setTag() on a view Glide is targeting&quot;</span>);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> request;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setRequest</span><span class="params">( Request request)</span> &#123;</span><br><span class="line"></span><br><span class="line">  setTag(request);</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，target.getRequest() 和 target.setRequest(Request request) 本质上还是通过 setTag 和 getTag 来做的处理。</p>
+<h4 id="RequestManager-track"><a href="#RequestManager-track" class="headerlink" title="RequestManager.track"></a>RequestManager.track</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">track</span><span class="params">( Target&lt;?&gt; target,  Request request)</span> &#123;</span><br><span class="line"></span><br><span class="line">  targetTracker.track(target);</span><br><span class="line"></span><br><span class="line">  requestTracker.runRequest(request);</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">TargetTracker</span> <span class="keyword">implements</span> <span class="title class_">LifecycleListener</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> Set&lt;Target&lt;?&gt;&gt; targets = Collections.newSetFromMap(<span class="keyword">new</span> <span class="title class_">WeakHashMap</span>&lt;Target&lt;?&gt;, Boolean&gt;());</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">track</span><span class="params">( Target&lt;?&gt; target)</span> &#123;</span><br><span class="line"></span><br><span class="line">    targets.add(target);</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RequestTracker</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> Set&lt;Request&gt; requests = Collections.newSetFromMap(<span class="keyword">new</span> <span class="title class_">WeakHashMap</span>&lt;Request, Boolean&gt;());</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 防止Activity/Fragment没有启动时，clear的request被回收，见 https://github.com/bumptech/glide/issues/346</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> List&lt;Request&gt; pendingRequests = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">runRequest</span><span class="params">( Request request)</span> &#123;</span><br><span class="line"></span><br><span class="line">    requests.add(request);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!isPaused) &#123;</span><br><span class="line"></span><br><span class="line">      request.begin();</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">      request.clear();</span><br><span class="line"></span><br><span class="line">      pendingRequests.add(request);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面 Request 是 SingleRequest 类型：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// SingleRequest.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">begin</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">synchronized</span> (requestLock) &#123;</span><br><span class="line"></span><br><span class="line">    assertNotCallingCallbacks();</span><br><span class="line"></span><br><span class="line">    stateVerifier.throwIfRecycled();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (model == <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">      onLoadFailed(<span class="keyword">new</span> <span class="title class_">GlideException</span>(<span class="string">&quot;Received null model&quot;</span>), logLevel);</span><br><span class="line"></span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (status == Status.RUNNING) &#123;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;Cannot restart a running request&quot;</span>);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 通常是通过诸如notifyDataSetChanged之类的操作，它会向相同的Target或View启动相同的请求，</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 简单地使用上次获取的资源和大小，这意味着要重新加载的用户需要在开始新的加载之前显式清除View或Target</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (status == Status.COMPLETE) &#123;</span><br><span class="line"></span><br><span class="line">      onResourceReady(resource, DataSource.MEMORY_CACHE);</span><br><span class="line"></span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    status = Status.WAITING_FOR_SIZE;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (Util.isValidDimensions(overrideWidth, overrideHeight)) &#123;</span><br><span class="line"></span><br><span class="line">      onSizeReady(overrideWidth, overrideHeight);</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">      target.getSize(<span class="built_in">this</span>);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ((status == Status.RUNNING || status == Status.WAITING_FOR_SIZE) &amp;&amp; canNotifyStatusChanged()) &#123;</span><br><span class="line"></span><br><span class="line">      target.onLoadStarted(getPlaceholderDrawable());</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>方法的逻辑大致如下：</p>
+<ul>
+<li>获取图片尺寸，如果长宽已经确定，则 <code>onSizeReady(overrideWidth, overrideHeight)</code> ；如果未确定，先获取长宽，再 <code> onSizeReady(overrideWidth, overrideHeight)</code></li>
+<li>图片开始加载，首先提供占位图</li>
+</ul>
+<p>主要的逻辑在 <code>onSizeReady()</code> 方法中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// SingleRequest.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onSizeReady</span><span class="params">(<span class="type">int</span> width, <span class="type">int</span> height)</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">synchronized</span> (requestLock) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (status != Status.WAITING_FOR_SIZE) &#123;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    status = Status.RUNNING;</span><br><span class="line"></span><br><span class="line">    <span class="type">float</span> <span class="variable">sizeMultiplier</span> <span class="operator">=</span> requestOptions.getSizeMultiplier();</span><br><span class="line"></span><br><span class="line">    <span class="built_in">this</span>.width = maybeApplySizeMultiplier(width, sizeMultiplier);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">this</span>.height = maybeApplySizeMultiplier(height, sizeMultiplier);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 真正执行加载工作的代码</span></span><br><span class="line"></span><br><span class="line">    loadStatus = engine.load(glideContext, model, requestOptions.getSignature(),</span><br><span class="line"></span><br><span class="line">      <span class="built_in">this</span>.width, <span class="built_in">this</span>.height, requestOptions.getResourceClass(), transcodeClass,</span><br><span class="line"></span><br><span class="line">      priority, requestOptions.getDiskCacheStrategy(), requestOptions.getTransformations(),</span><br><span class="line"></span><br><span class="line">      requestOptions.isTransformationRequired(), requestOptions.isScaleOnlyOrNoTransform(),</span><br><span class="line"></span><br><span class="line">      requestOptions.getOptions(), requestOptions.isMemoryCacheable(),</span><br><span class="line"></span><br><span class="line">      requestOptions.getUseUnlimitedSourceGeneratorsPool(), requestOptions.getUseAnimationPool(),</span><br><span class="line"></span><br><span class="line">      requestOptions.getOnlyRetrieveFromCache(), <span class="built_in">this</span>, callbackExecutor);</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="Engine-load"><a href="#Engine-load" class="headerlink" title="Engine.load"></a>Engine.load</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Engine.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> &lt;R&gt; LoadStatus <span class="title function_">load</span><span class="params">(GlideContext glideContext, Object model, Key signature,</span></span><br><span class="line"><span class="params"></span></span><br><span class="line"><span class="params">    <span class="type">int</span> width, <span class="type">int</span> height, Class&lt;?&gt; resourceClass, Class&lt;R&gt; transcodeClass, Priority priority,</span></span><br><span class="line"><span class="params"></span></span><br><span class="line"><span class="params">    DiskCacheStrategy diskCacheStrategy, Map&lt;Class&lt;?&gt;, Transformation&lt;?&gt;&gt; transformations,</span></span><br><span class="line"><span class="params"></span></span><br><span class="line"><span class="params">    <span class="type">boolean</span> isTransformationRequired, <span class="type">boolean</span> isScaleOnlyOrNoTransform, Options options,</span></span><br><span class="line"><span class="params"></span></span><br><span class="line"><span class="params">    <span class="type">boolean</span> isMemoryCacheable, <span class="type">boolean</span> useUnlimitedSourceExecutorPool, <span class="type">boolean</span> useAnimationPool,</span></span><br><span class="line"><span class="params"></span></span><br><span class="line"><span class="params">    <span class="type">boolean</span> onlyRetrieveFromCache, ResourceCallback cb, Executor callbackExecutor)</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="type">EngineKey</span> <span class="variable">key</span> <span class="operator">=</span> keyFactory.buildKey(model, signature, width, height, transformations, resourceClass, transcodeClass, options);</span><br><span class="line"></span><br><span class="line">  EngineResource&lt;?&gt; memoryResource;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">synchronized</span> (<span class="built_in">this</span>) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 从内存缓存中获取</span></span><br><span class="line"></span><br><span class="line">    memoryResource = loadFromMemory(key, isMemoryCacheable, startTime);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (memoryResource == <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">return</span> waitForExistingOrStartNewJob(glideContext, model, signature, width, height, resourceClass,</span><br><span class="line"></span><br><span class="line">        transcodeClass, priority, diskCacheStrategy, transformations, isTransformationRequired,</span><br><span class="line"></span><br><span class="line">        isScaleOnlyOrNoTransform, options, isMemoryCacheable, useUnlimitedSourceExecutorPool,</span><br><span class="line"></span><br><span class="line">        useAnimationPool, onlyRetrieveFromCache, cb, callbackExecutor, key, startTime);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 避免在持有引擎锁的同时回调，这样做更容易死锁。</span></span><br><span class="line"></span><br><span class="line">  cb.onResourceReady(memoryResource, DataSource.MEMORY_CACHE);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>首先尝试从内存中获取缓存，获取到了则直接返回使用，否则调用 waitForExistingOrStartNewJob 方法获取磁盘缓存或从数据源获取资源：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> &lt;R&gt; LoadStatus <span class="title function_">waitForExistingOrStartNewJob</span><span class="params">(<span class="comment">/*...*/</span>)</span> &#123;</span><br><span class="line"></span><br><span class="line">  EngineJob&lt;?&gt; current = jobs.get(key, onlyRetrieveFromCache);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (current != <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">    current.addCallback(cb, callbackExecutor);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">LoadStatus</span>(cb, current);</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  EngineJob&lt;R&gt; engineJob = engineJobFactory.build(key, isMemoryCacheable, useUnlimitedSourceExecutorPool,</span><br><span class="line"></span><br><span class="line">          useAnimationPool, onlyRetrieveFromCache);</span><br><span class="line"></span><br><span class="line">  DecodeJob&lt;R&gt; decodeJob = decodeJobFactory.build(glideContext, model, key, signature, width, height,</span><br><span class="line"></span><br><span class="line">          resourceClass, transcodeClass, priority, diskCacheStrategy, transformations, isTransformationRequired,</span><br><span class="line"></span><br><span class="line">          isScaleOnlyOrNoTransform, onlyRetrieveFromCache, options, engineJob);</span><br><span class="line"></span><br><span class="line">  jobs.put(key, engineJob);</span><br><span class="line"></span><br><span class="line">  engineJob.addCallback(cb, callbackExecutor);</span><br><span class="line"></span><br><span class="line">  engineJob.start(decodeJob);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">LoadStatus</span>(cb, engineJob);</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="生命周期控制"><a href="#生命周期控制" class="headerlink" title="生命周期控制"></a>生命周期控制</h2><p>Glide加载图片时，通过在所在的 Activity&#x2F;Fragment 中添加一个空的 Fragment： <code>RequestManagerFragment/SupportRequestManagerFragment</code> ，然后通过其生命周期的回调去控制Glide图片的加载动作。其代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RequestManagerFragment</span> <span class="keyword">extends</span> <span class="title class_">Fragment</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> ActivityFragmentLifecycle lifecycle;</span><br><span class="line"></span><br><span class="line">   <span class="keyword">private</span> RequestManager requestManager;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">RequestManagerFragment</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">this</span>(<span class="keyword">new</span> <span class="title class_">ActivityFragmentLifecycle</span>());</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  RequestManagerFragment( ActivityFragmentLifecycle lifecycle) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">this</span>.lifecycle = lifecycle;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">  ActivityFragmentLifecycle <span class="title function_">getGlideLifecycle</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> lifecycle;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  </span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onStart</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">super</span>.onStart();</span><br><span class="line"></span><br><span class="line">    lifecycle.onStart();</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  </span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onStop</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">super</span>.onStop();</span><br><span class="line"></span><br><span class="line">    lifecycle.onStop();</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  </span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onDestroy</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">super</span>.onDestroy();</span><br><span class="line"></span><br><span class="line">    lifecycle.onDestroy();</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，当 Fragment 回调生命周期时，会调用 ActivityFragmentLifecycle 中对应的方法，因此我们看看 ActivityFragmentLifecycle 中的逻辑：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">ActivityFragmentLifecycle</span> <span class="keyword">implements</span> <span class="title class_">Lifecycle</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> Set&lt;LifecycleListener&gt; lifecycleListeners = Collections.newSetFromMap(<span class="keyword">new</span> <span class="title class_">WeakHashMap</span>&lt;LifecycleListener, Boolean&gt;());</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="type">boolean</span> isStarted;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="type">boolean</span> isDestroyed;</span><br><span class="line"></span><br><span class="line">  </span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addListener</span><span class="params">( LifecycleListener listener)</span> &#123;</span><br><span class="line"></span><br><span class="line">    lifecycleListeners.add(listener);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 当LifecycleListener一注册则先设置其当前状态</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (isDestroyed) &#123;</span><br><span class="line"></span><br><span class="line">      listener.onDestroy();</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (isStarted) &#123;</span><br><span class="line"></span><br><span class="line">      listener.onStart();</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">      listener.onStop();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  </span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">removeListener</span><span class="params">( LifecycleListener listener)</span> &#123;</span><br><span class="line"></span><br><span class="line">    lifecycleListeners.remove(listener);</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">onStart</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">    isStarted = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (LifecycleListener lifecycleListener : Util.getSnapshot(lifecycleListeners)) &#123;</span><br><span class="line"></span><br><span class="line">      lifecycleListener.onStart();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">onStop</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">    isStarted = <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (LifecycleListener lifecycleListener : Util.getSnapshot(lifecycleListeners)) &#123;</span><br><span class="line"></span><br><span class="line">      lifecycleListener.onStop();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">onDestroy</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">    isDestroyed = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (LifecycleListener lifecycleListener : Util.getSnapshot(lifecycleListeners)) &#123;</span><br><span class="line"></span><br><span class="line">      lifecycleListener.onDestroy();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>再看看 LifecycleListener 监听是何时添加的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// RequestManager</span></span><br><span class="line"></span><br><span class="line">RequestManager(<span class="comment">/*...*/</span>) &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (Util.isOnBackgroundThread()) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 在主线程调用lifecycle.addListener(this)</span></span><br><span class="line"></span><br><span class="line">    mainHandler.post(addSelfToLifecycle);</span><br><span class="line"></span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">    lifecycle.addListener(<span class="built_in">this</span>);</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可知在 RequestManager 构造方法中，会将自己注册到 RequestManagerFragment 的生命周期监听中。而 RequestManager 实例的创建，从 Glide.with 方法中可知，会调用 RequestManagerRetriever.get 方法来获取一个 RequestManager 实例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> RequestManagerFactory factory;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> RequestManager <span class="title function_">get</span><span class="params">( Activity activity)</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (Util.isOnBackgroundThread()) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 非主线程，传入的Context是Application实例</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> get(activity.getApplicationContext());</span><br><span class="line"></span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">    assertNotDestroyed(activity);</span><br><span class="line"></span><br><span class="line">    android.app.<span class="type">FragmentManager</span> <span class="variable">fm</span> <span class="operator">=</span> activity.getFragmentManager();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> fragmentGet(activity, fm, <span class="comment">/*parentHint=*/</span> <span class="literal">null</span>, isActivityVisible(activity));</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当 context 是 Application 时，创建的 RequestManager 如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> RequestManager <span class="title function_">get</span><span class="params">( Context context)</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> getApplicationManager(context);</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> RequestManager <span class="title function_">getApplicationManager</span><span class="params">( Context context)</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (applicationManager == <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">synchronized</span> (<span class="built_in">this</span>) &#123;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">if</span> (applicationManager == <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="type">Glide</span> <span class="variable">glide</span> <span class="operator">=</span> Glide.get(context.getApplicationContext());</span><br><span class="line"></span><br><span class="line">        applicationManager = factory.build(glide, <span class="keyword">new</span> <span class="title class_">ApplicationLifecycle</span>(),</span><br><span class="line"></span><br><span class="line">          <span class="keyword">new</span> <span class="title class_">EmptyRequestManagerTreeNode</span>(), context.getApplicationContext());</span><br><span class="line"></span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> applicationManager;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">ApplicationLifecycle</span> <span class="keyword">implements</span> <span class="title class_">Lifecycle</span> &#123;</span><br><span class="line"></span><br><span class="line">  </span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addListener</span><span class="params">( LifecycleListener listener)</span> &#123;</span><br><span class="line"></span><br><span class="line">    listener.onStart();</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  </span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">removeListener</span><span class="params">( LifecycleListener listener)</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Do nothing.</span></span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>由上可知，当 Glide 传入的 Context 是 Application 时，RequestManager 中的 lifecycle 是 ApplicationLifecycle 实例，没有生命周期的感知功能。当 Context 是 activity 实例时，则会通过 fragmentGet 方法创建一个用来感知生命周期变化的 Fragment:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> RequestManager <span class="title function_">fragmentGet</span><span class="params">( Context context,  android.app.FragmentManager fm,</span></span><br><span class="line"><span class="params"></span></span><br><span class="line"><span class="params">   android.app.Fragment parentHint, <span class="type">boolean</span> isParentVisible)</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="type">RequestManagerFragment</span> <span class="variable">current</span> <span class="operator">=</span> getRequestManagerFragment(fm, parentHint, isParentVisible);</span><br><span class="line"></span><br><span class="line">  <span class="type">RequestManager</span> <span class="variable">requestManager</span> <span class="operator">=</span> current.getRequestManager();</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (requestManager == <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">Glide</span> <span class="variable">glide</span> <span class="operator">=</span> Glide.get(context);</span><br><span class="line"></span><br><span class="line">    requestManager = factory.build(glide, current.getGlideLifecycle(), current.getRequestManagerTreeNode(), context);</span><br><span class="line"></span><br><span class="line">    current.setRequestManager(requestManager);</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> requestManager;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> RequestManagerFragment <span class="title function_">getRequestManagerFragment</span><span class="params">( <span class="keyword">final</span> android.app.FragmentManager fm,</span></span><br><span class="line"><span class="params"></span></span><br><span class="line"><span class="params">     android.app.Fragment parentHint, <span class="type">boolean</span> isParentVisible)</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="type">RequestManagerFragment</span> <span class="variable">current</span> <span class="operator">=</span> (RequestManagerFragment) fm.findFragmentByTag(FRAGMENT_TAG);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (current == <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">    current = pendingRequestManagerFragments.get(fm);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (current == <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">      current = <span class="keyword">new</span> <span class="title class_">RequestManagerFragment</span>();</span><br><span class="line"></span><br><span class="line">      current.setParentFragmentHint(parentHint);</span><br><span class="line"></span><br><span class="line">      <span class="keyword">if</span> (isParentVisible) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 如果可见，则直接回调onStart</span></span><br><span class="line"></span><br><span class="line">        current.getGlideLifecycle().onStart();</span><br><span class="line"></span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      pendingRequestManagerFragments.put(fm, current);</span><br><span class="line"></span><br><span class="line">      fm.beginTransaction().add(current, FRAGMENT_TAG).commitAllowingStateLoss();</span><br><span class="line"></span><br><span class="line">      handler.obtainMessage(ID_REMOVE_FRAGMENT_MANAGER, fm).sendToTarget();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> current;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>至此，完成了Glide与Fragment生命周期的绑定。当 Fragment 中生命周期发生变化时，则会回调 RequestManager 中的方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// RequestManager</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">onStart</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">  resumeRequests();</span><br><span class="line"></span><br><span class="line">  targetTracker.onStart();</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">onStop</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">  pauseRequests();</span><br><span class="line"></span><br><span class="line">  targetTracker.onStop();</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">onDestroy</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">  targetTracker.onDestroy();</span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span> (Target&lt;?&gt; target : targetTracker.getAll()) &#123;</span><br><span class="line"></span><br><span class="line">    clear(target);</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  targetTracker.clear();</span><br><span class="line"></span><br><span class="line">  requestTracker.clearRequests();</span><br><span class="line"></span><br><span class="line">  lifecycle.removeListener(<span class="built_in">this</span>);</span><br><span class="line"></span><br><span class="line">  lifecycle.removeListener(connectivityMonitor);</span><br><span class="line"></span><br><span class="line">  mainHandler.removeCallbacks(addSelfToLifecycle);</span><br><span class="line"></span><br><span class="line">  glide.unregisterRequestManager(<span class="built_in">this</span>);</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="缓存"><a href="#缓存" class="headerlink" title="缓存"></a>缓存</h2><p>一般来说，Glide 存在着多级缓存： <code>Active Resources(另一个 View 正在展示这张图片) -&gt; Memory cache(LruCache) -&gt; Disk cache(DiskLruCache) -&gt; Network</code></p>
+<p><img src="/posts/4c899bf0/cache_process.webp" alt="cache_process"></p>
+<h2 id="自定义加载"><a href="#自定义加载" class="headerlink" title="自定义加载"></a>自定义加载</h2><p>Glide 自定义加载流程如下：</p>
+<ol>
+<li>定义一个 Model 类用于包装需要加载的数据；</li>
+<li>定义一个 Key 实现类，用于实现 Model 中的数据的签名用于区分缓存，可以直接让 Model 来实现 Key 中的接口；</li>
+<li>定义一个 DataFetcher 的实现类，用于告诉 Glide 资源该如何加载，并把加载结果回调出去；</li>
+<li>定义一个 ModelLoader 的实现类用于包装 DataFetcher；</li>
+<li>定义一个 ModelLoaderFactory 的实现类用于生成 ModelLoader 实例；</li>
+<li>将自定义加载配置到 AppGlideModule 中。</li>
+</ol>
+<p>代码实例：</p>
+<p><strong>定义Model并实现Key接口</strong></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyModel</span></span>(<span class="keyword">val</span> path: String) : Key &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">updateDiskCacheKey</span><span class="params">(messageDigest: <span class="type">MessageDigest</span>)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">        messageDigest.update(path.toByteArray())</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>实现DataFetcher用来加载数据</strong></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyModelFetcher</span></span>(<span class="keyword">private</span> <span class="keyword">val</span> model: MyModel) : DataFetcher&lt;InputStream&gt; &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">var</span> inputStream: InputStream? = <span class="literal">null</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">var</span> isCancelled = <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">loadData</span><span class="params">(priority: <span class="type">Priority</span>, callback: <span class="type">DataFetcher</span>.<span class="type">DataCallback</span>&lt;<span class="type">in</span> <span class="type">InputStream</span>&gt;)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (!isCancelled) &#123;</span><br><span class="line"></span><br><span class="line">                inputStream = FileInputStream(model.path)</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            callback.onDataReady(inputStream)</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">catch</span> (e: Exception) &#123;</span><br><span class="line"></span><br><span class="line">            callback.onLoadFailed(e)</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">cleanup</span><span class="params">()</span></span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line"></span><br><span class="line">            inputStream?.close()</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">catch</span> (e: IOException) &#123;</span><br><span class="line"></span><br><span class="line">            e.printStackTrace()</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">cancel</span><span class="params">()</span></span> &#123;</span><br><span class="line"></span><br><span class="line">        isCancelled = <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">getDataClass</span><span class="params">()</span></span>: Class&lt;InputStream&gt; &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> InputStream::<span class="keyword">class</span>.java</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">getDataSource</span><span class="params">()</span></span>: DataSource &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> DataSource.LOCAL</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>定义ModelLoader和ModelLoaderFactory</strong></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyModelLoader</span> : <span class="type">ModelLoader</span>&lt;<span class="type">MyModel, InputStream</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">buildLoadData</span><span class="params">(model: <span class="type">MyModel</span>, width: <span class="type">Int</span>, height: <span class="type">Int</span>, options: <span class="type">Options</span>)</span></span>: ModelLoader.LoadData&lt;InputStream&gt; &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> ModelLoader.LoadData(model, MyModelFetcher(model))</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">handles</span><span class="params">(model: <span class="type">MyModel</span>)</span></span>: <span class="built_in">Boolean</span> = <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">class</span> <span class="title">MyLoaderFactory</span>: <span class="type">ModelLoaderFactory</span>&lt;<span class="type">MyModel, InputStream</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">build</span><span class="params">(multiFactory: <span class="type">MultiModelLoaderFactory</span>)</span></span>: ModelLoader&lt;MyModel, InputStream&gt; &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> MyModelLoader()</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">teardown</span><span class="params">()</span></span> &#123;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>定义AppGlideModule</strong></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyGlideModule</span> : <span class="type">AppGlideModule</span></span>() &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">registerComponents</span><span class="params">(context: <span class="type">Context</span>, glide: <span class="type">Glide</span>, registry: <span class="type">Registry</span>)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">super</span>.registerComponents(context, glide, registry)</span><br><span class="line"></span><br><span class="line">        registry.append(MyModel::<span class="keyword">class</span>.java, InputStream::<span class="keyword">class</span>.java, MyModelLoader.MyLoaderFactory())</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>Glide加载图片的流程：</p>
+<p><img src="/posts/4c899bf0/%E5%8A%A0%E8%BD%BD%E6%B5%81%E7%A8%8B.webp" alt="加载流程"></p>
+<p>开发一个图片加载框架必要的需求：</p>
+<ul>
+<li>异步加载：最少两个线程池(读磁盘&#x2F;网络请求)</li>
+<li>切换到主线程：Handler</li>
+<li>缓存：LruCache、DiskLruCache</li>
+<li>防止OOM：软引用，弱引用，LruCache，Bitmap像素存储位置等</li>
+<li>内存泄露：生命周期管理</li>
+<li>列表滑动加载的问题：RecycleView加载图片错乱可以设置Tag(url)</li>
+</ul>
+<p>参考: <a target="_blank" rel="noopener" href="https://juejin.im/post/6844903986412126216">https://juejin.im/post/6844903986412126216</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/clippings/" rel="tag"># clippings</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/98660684/" rel="next" title="App_process使用">
+                <i class="fa fa-chevron-left"></i> App_process使用
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/5bbc595f/" rel="prev" title="操作系统-概论">
+                操作系统-概论 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">439</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">47</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@qq.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8"><span class="nav-text">使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E7%94%A8%E6%B3%95"><span class="nav-text">基本用法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9A%E5%88%B6%E8%AF%B7%E6%B1%82"><span class="nav-text">定制请求</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ListView-x2F-RecyclerView"><span class="nav-text">ListView&#x2F;RecyclerView</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Target-%E7%9B%AE%E6%A0%87"><span class="nav-text">Target 目标</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B0%83%E7%94%A8%E9%80%BB%E8%BE%91%E8%A7%A3%E6%9E%90"><span class="nav-text">调用逻辑解析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#with-context"><span class="nav-text">with(context)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#load-url"><span class="nav-text">load(url)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#into-imageView"><span class="nav-text">into(imageView)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#RequestBuilder-into"><span class="nav-text">RequestBuilder.into</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#RequestManager-track"><span class="nav-text">RequestManager.track</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Engine-load"><span class="nav-text">Engine.load</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E6%8E%A7%E5%88%B6"><span class="nav-text">生命周期控制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%93%E5%AD%98"><span class="nav-text">缓存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E5%8A%A0%E8%BD%BD"><span class="nav-text">自定义加载</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

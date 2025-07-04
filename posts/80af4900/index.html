@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="clippings," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="概述 Android Studio 用于构建原生库的默认工具是 CMake，需要提供 CmakeList.txt 用于构建原生代码。 Android Studio 还支持 ndk-build 构建原生库，需要提供 Android.mk 构建脚本。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android-NDK开发之概述">
+<meta property="og:url" content="http://shenbh.github.io/posts/80af4900/index.html">
+<meta property="og:site_name" content="积跬步">
+<meta property="og:description" content="概述 Android Studio 用于构建原生库的默认工具是 CMake，需要提供 CmakeList.txt 用于构建原生代码。 Android Studio 还支持 ndk-build 构建原生库，需要提供 Android.mk 构建脚本。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://shenbh.github.io/posts/80af4900/ABI%E5%88%86%E7%B1%BB.png">
+<meta property="article:published_time" content="2025-07-03T08:53:39.031Z">
+<meta property="article:modified_time" content="2025-07-03T09:10:37.282Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="clippings">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/80af4900/ABI%E5%88%86%E7%B1%BB.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/80af4900/"/>
+
+
+
+
+
+  <title>Android-NDK开发之概述 | 积跬步</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">积跬步</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just do IT Now.</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/80af4900/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="积跬步">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">Android-NDK开发之概述</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-07-03T16:53:39+08:00">
+                2025-07-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+              <div class="post-description">
+                  概述 Android Studio 用于构建原生库的默认工具是 CMake，需要提供 CmakeList.txt 用于构建原生代码。 Android Studio 还支持 ndk-build 构建原生库，需要提供 Android.mk 构建脚本。
+              </div>
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><ul>
+<li>Android Studio 用于构建原生库的默认工具是 CMake，需要提供 CmakeList.txt 用于构建原生代码。</li>
+<li>Android Studio 还支持 ndk-build 构建原生库，需要提供 Android.mk 构建脚本。</li>
+</ul>
+<h2 id="ndk-build"><a href="#ndk-build" class="headerlink" title="ndk-build"></a>ndk-build</h2><p><a target="_blank" rel="noopener" href="https://developer.android.com/ndk/guides/ndk-build">ndk-build 脚本</a> 可用于编译采用 NDK 基于 Make 的编译系统的项目，包含 <a target="_blank" rel="noopener" href="https://developer.android.com/ndk/guides/application_mk.html">Application.mk</a> 和 <a target="_blank" rel="noopener" href="https://developer.android.com/ndk/guides/android_mk.html">Android.mk</a> 脚本。</p>
+<p>运行 ndk-build 脚本相当于运行以下命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">export GNUMAKE=/usr/local/bin/gmake</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"> $</span><span class="language-bash">GNUMAKE -f &lt;ndk&gt;/build/core/build-local.mk &lt;parameters&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>使用方法：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ndk-build &lt;option&gt;</span><br></pre></td></tr></table></figure>
+
+<p>可选options：</p>
+<ul>
+<li>clean：移除之前生成的所有二进制文件。</li>
+<li>V&#x3D;1：启动编译，并显示编译命令。</li>
+<li>-B：强制执行完整的重新编译。</li>
+<li>-B V&#x3D;1：强制执行完整的重新编译，并显示编译命令。</li>
+<li>NDK_LOG&#x3D;1：显示内部 NDK 日志消息（用于调试 NDK 本身）。</li>
+<li>NDK_DEBUG&#x3D;1：强制执行可调试的编译。</li>
+<li>NDK_DEBUG&#x3D;0：强制执行发布版编译。</li>
+<li>NDK_HOST_32BIT&#x3D;1：始终使用 32 位模式下的工具链。</li>
+<li><code>NDK_APPLICATION_MK=&lt;file&gt;</code>：使用 NDK_APPLICATION_MK 变量指向的特定 Application.mk 文件进行编译。</li>
+<li><code>-C &lt;project&gt;</code>：编译位于 <code>&lt;project&gt;</code> 的项目路径的原生代码。如果您不想在终端通过 cd 切换到该路径，此选项会非常有用。</li>
+</ul>
+<p><strong>Android.mk</strong></p>
+<p>Android.mk 文件位于项目 jni&#x2F; 目录的子目录中，用于向编译系统描述源文件和共享库。它实际上是编译系统解析一次或多次的微小 GNU makefile 片段。Android.mk 文件用于定义 Application.mk、编译系统和环境变量所未定义的项目范围设置。它还可替换特定模块的项目范围设置。</p>
+<p>Android.mk 的语法支持将源文件分组为模块。模块是静态库、共享库或独立的可执行文件。您可在每个 Android.mk 文件中定义一个或多个模块，也可在多个模块中使用同一个源文件。编译系统只将共享库放入您的应用软件包。此外，静态库可生成共享库。</p>
+<p>除了封装库之外，编译系统还可为您处理各种其他事项。例如，您无需在 Android.mk 文件中列出头文件或生成的文件之间的显式依赖关系。NDK 编译系统会自动计算这些关系。因此，您应该能够享受到未来 NDK 版本中新工具链&#x2F;平台支持带来的益处，而无需处理 Android.mk 文件。</p>
+<p>详见： <a target="_blank" rel="noopener" href="https://developer.android.com/ndk/guides/android_mk.html">Android.mk</a></p>
+<p>简单示例：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">LOCAL_PATH:= $(call my-dir)</span><br><span class="line"></span><br><span class="line">include $(CLEAR_VARS)</span><br><span class="line"></span><br><span class="line">LOCAL_MODULE:= libtermux</span><br><span class="line"></span><br><span class="line">LOCAL_SRC_FILES:= termux.c</span><br><span class="line"></span><br><span class="line">include $(BUILD_SHARED_LIBRARY)</span><br></pre></td></tr></table></figure>
+
+<p><strong>Application.mk</strong></p>
+<p>Application.mk 指定了 ndk-build 的项目范围设置。默认情况下，它位于应用项目目录中的 jni&#x2F;Application.mk 下。</p>
+<p>注意：其中许多参数也具有模块等效项。例如，APP_CFLAGS 对应于 LOCAL_CFLAGS。无论何种情况下，特定于模块的选项都将优先于应用范围选项。对于标记，两者都使用，但特定于模块的标记将后出现在命令行中，因此它们可能会替换项目范围设置。</p>
+<p>详见： <a target="_blank" rel="noopener" href="https://developer.android.com/ndk/guides/application_mk.html">Application.mk</a></p>
+<p>简单示例：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">APP_ABI := armeabi-v7a arm64-v8a x86</span><br><span class="line"></span><br><span class="line"> 或者</span><br><span class="line"></span><br><span class="line">APP_ABI := all</span><br></pre></td></tr></table></figure>
+
+<h2 id="CMake"><a href="#CMake" class="headerlink" title="CMake"></a>CMake</h2><p>Android Studio 创建 Native 项目完成后，默认使用 Cmake 构建原生库，目录结构如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">├─app</span><br><span class="line"></span><br><span class="line">│  ├─libs</span><br><span class="line"></span><br><span class="line">│  └─src</span><br><span class="line"></span><br><span class="line">│      ├─main</span><br><span class="line"></span><br><span class="line">│      │  ├─cpp</span><br><span class="line"></span><br><span class="line">│      │  │  └─CMakeLists.txt</span><br><span class="line"></span><br><span class="line">│      │  │  └─native-lib.cpp</span><br><span class="line"></span><br><span class="line">│      │  ├─java</span><br><span class="line"></span><br><span class="line">│      │  │  └─com</span><br><span class="line"></span><br><span class="line">│      │  │      └─hearing</span><br><span class="line"></span><br><span class="line">│      │  │          └─jnidemo</span><br><span class="line"></span><br><span class="line">│      │  └─res</span><br><span class="line"></span><br><span class="line">│      │      ├─drawable</span><br><span class="line"></span><br><span class="line">│      │      ├─drawable-v24</span><br><span class="line"></span><br><span class="line">│      │      ├─layout</span><br><span class="line"></span><br><span class="line">│      │      ├─mipmap-anydpi-v26</span><br><span class="line"></span><br><span class="line">│      │      ├─mipmap-hdpi</span><br><span class="line"></span><br><span class="line">│      │      ├─mipmap-mdpi</span><br><span class="line"></span><br><span class="line">│      │      ├─mipmap-xhdpi</span><br><span class="line"></span><br><span class="line">│      │      ├─mipmap-xxhdpi</span><br><span class="line"></span><br><span class="line">│      │      ├─mipmap-xxxhdpi</span><br><span class="line"></span><br><span class="line">│      │      └─values</span><br></pre></td></tr></table></figure>
+
+<p><strong>build.gradle</strong>:</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">android &#123;</span><br><span class="line"></span><br><span class="line">  ...</span><br><span class="line"></span><br><span class="line">  defaultConfig &#123;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="comment">// This block is different from the one you use to link Gradle</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// to your CMake build script.</span></span><br><span class="line"></span><br><span class="line">    externalNativeBuild &#123;</span><br><span class="line"></span><br><span class="line">        cmake &#123;</span><br><span class="line"></span><br><span class="line">            cppFlags <span class="string">&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  buildTypes &#123;...&#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Use this block to link Gradle to your CMake build script.</span></span><br><span class="line"></span><br><span class="line">  externalNativeBuild &#123;</span><br><span class="line"></span><br><span class="line">      cmake &#123;</span><br><span class="line"></span><br><span class="line">          path <span class="string">&quot;src/main/cpp/CMakeLists.txt&quot;</span></span><br><span class="line"></span><br><span class="line">          version <span class="string">&quot;3.10.2&quot;</span></span><br><span class="line"></span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>CmakeLists.txt</strong>:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cmake_minimum_required</span>(VERSION <span class="number">3.10</span><span class="number">.2</span>)</span><br><span class="line"></span><br><span class="line"># Declares <span class="keyword">and</span> names the project.</span><br><span class="line"></span><br><span class="line"><span class="built_in">project</span>(<span class="string">&quot;nativedemo&quot;</span>)</span><br><span class="line"></span><br><span class="line"># Creates <span class="keyword">and</span> names a library, sets it as either STATIC</span><br><span class="line"></span><br><span class="line"># You can define multiple libraries, <span class="keyword">and</span> CMake builds them <span class="keyword">for</span> you.</span><br><span class="line"></span><br><span class="line"># Gradle automatically packages shared libraries with your APK.</span><br><span class="line"></span><br><span class="line"><span class="built_in">add_library</span>( # Sets the name of the library.</span><br><span class="line"></span><br><span class="line">             native-lib</span><br><span class="line"></span><br><span class="line">             # Sets the library as a shared library.</span><br><span class="line"></span><br><span class="line">             SHARED</span><br><span class="line"></span><br><span class="line">             # Provides a relative path to your source <span class="built_in">file</span>(s).</span><br><span class="line"></span><br><span class="line">             native-lib.cpp )</span><br><span class="line"></span><br><span class="line"># <span class="function">Searches <span class="keyword">for</span> a specified prebuilt library <span class="keyword">and</span> stores the path as a</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="title">find_library</span><span class="params">( # Sets the name of the path variable.</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">              log-lib</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">              # Specifies the name of the NDK library that</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">              # you want CMake to locate.</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">              log )</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"># Specifies libraries CMake should link to your target library. You</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="title">target_link_libraries</span><span class="params">( # Specifies the target library.</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">                       native-lib</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">                       # Links the target library to the log library</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">                       # included in the NDK.</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">                       $&#123;log-lib&#125; )</span></span></span><br></pre></td></tr></table></figure>
+
+<p><strong>native-lib.cpp</strong>:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">extern</span> <span class="string">&quot;C&quot;</span> <span class="function">JNIEXPORT jstring JNICALL</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="title">Java_com_hearing_jnidemo_MainActivity_stringFromJNI</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">        JNIEnv *env,</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">        jobject <span class="comment">/* this */</span>)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    std::string hello = <span class="string">&quot;Hello from C++&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> env-&gt;<span class="built_in">NewStringUTF</span>(hello.<span class="built_in">c_str</span>());</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="ABI"><a href="#ABI" class="headerlink" title="ABI"></a>ABI</h2><h3 id="概述-1"><a href="#概述-1" class="headerlink" title="概述"></a>概述</h3><p>不同的 Android 手机使用不同的 CPU，而不同的 CPU 支持不同的指令集。CPU 与指令集的每种组合都有专属的应用二进制接口，即 ABI。ABI 可以非常精确地定义应用的机器代码在运行时如何与系统交互。您必须为应用要使用的每个 CPU 架构指定 ABI。</p>
+<p><img src="/posts/80af4900/ABI%E5%88%86%E7%B1%BB.png"></p>
+<table>
+<thead>
+<tr>
+<th>CPU（纵向）&#x2F;ABI（横向）</th>
+<th>armeabi</th>
+<th>armeabi-v7a</th>
+<th>arm64-v8a</th>
+<th>x86</th>
+<th>x86_64</th>
+<th>mips</th>
+<th>mips64</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ARMv5</td>
+<td>支持</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>ARMv7</td>
+<td>支持</td>
+<td>支持</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>ARMv8</td>
+<td>支持</td>
+<td>支持</td>
+<td>支持</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>x86</td>
+<td>支持</td>
+<td>支持</td>
+<td></td>
+<td>支持</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>x86_64</td>
+<td>支持</td>
+<td>支持</td>
+<td></td>
+<td>支持</td>
+<td>支持</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>MIPS</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>支持</td>
+<td></td>
+</tr>
+<tr>
+<td>MIPS64</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>支持</td>
+<td>支持</td>
+</tr>
+</tbody></table>
+<p>Android 系统在运行时知道它支持哪些 ABI，因为 build 特定的系统属性会指示：</p>
+<ul>
+<li>设备的主要 ABI，与系统映像本身使用的机器代码对应。</li>
+<li>（可选）与系统映像也支持的其他 ABI 对应的辅助 ABI。</li>
+</ul>
+<p>此机制确保系统在安装时从软件包提取最佳机器代码。</p>
+<p>为实现最佳性能，应直接针对主要 ABI 进行编译。例如，基于 ARMv5TE 的典型设备只会定义主 ABI：armeabi。相反，基于 ARMv7 的典型设备将主 ABI 定义为 armeabi-v7a，并将辅助 ABI 定义为 armeabi，因为它可以运行为每个 ABI 生成的应用原生二进制文件。</p>
+<p>64 位设备也支持其 32 位变体。以 arm64-v8a 设备为例，该设备也可以运行 armeabi 和 armeabi-v7a 代码。但请注意，如果应用以 arm64-v8a 为目标，而非依赖于运行 armeabi-v7a 版应用的设备，则应用在 64 位设备上的性能要好得多。</p>
+<p>许多基于 x86 的设备也可运行 armeabi-v7a 和 armeabi NDK 二进制文件。对于这些设备，主 ABI 将是 x86，辅助 ABI 是 armeabi-v7a。</p>
+<p>您可以为特定 ABI 强制安装 apk。这在测试时非常有用。请使用以下命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">adb install --abi abi-identifier path_to_apk</span><br></pre></td></tr></table></figure>
+
+<p>安装应用时，软件包管理器服务将扫描 APK，并查找以下形式的任何共享库：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lib/&lt;primary-abi&gt;/lib&lt;name&gt;.so</span><br></pre></td></tr></table></figure>
+
+<p>如果未找到，并且您已定义辅助 ABI，该服务将扫描以下形式的共享库：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lib/&lt;secondary-abi&gt;/lib&lt;name&gt;.so</span><br></pre></td></tr></table></figure>
+
+<p>找到所需的库时，软件包管理器会将它们复制到应用的原生库目录 (<code>&lt;nativeLibraryDir&gt;/</code>) 下的 <code>/lib/lib&lt;name&gt;.so</code> 。以下代码段会收到 nativeLibraryDir(<code>/data/app/com.hearing.test-b4Q3jAne7emB6ypXB6AHtQ==/lib/arm64</code>)：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> ainfo = <span class="keyword">this</span>.applicationContext.packageManager.getApplicationInfo(</span><br><span class="line"></span><br><span class="line">        <span class="string">&quot;com.hearing.test&quot;</span>,</span><br><span class="line"></span><br><span class="line">        PackageManager.GET_SHARED_LIBRARY_FILES</span><br><span class="line"></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">Log.v(TAG, <span class="string">&quot;native library dir <span class="subst">$&#123;ainfo.nativeLibraryDir&#125;</span>&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>如果根本没有共享对象文件，应用也会构建并安装，但在运行时会崩溃。</p>
+<h3 id="Android中的so库"><a href="#Android中的so库" class="headerlink" title="Android中的so库"></a>Android中的so库</h3><ul>
+<li>so库的名称可任意，如hearing。</li>
+<li>so库的文件名必须以lib开头。如libhearing.so，其中lib是必要前缀，hearing才是这个库的名称。</li>
+<li>System.loadLibrary(“so库的名称”)：如System.loadLibrary(“hearing”)，会加载该应用下的libhearing.so文件。</li>
+<li>System.load(“so库文件的全路径”)：如System.load(“&#x2F;data&#x2F;data&#x2F;com.hearing.app.demo&#x2F;libhearing.so”)，会加载包名为com.hearing.app.demo的应用的libhearing.so文件。</li>
+<li>so库在Android Studio中的路径：默认要放在模块 <code>/src/&lt;SourceSet&gt;/jniLibs/&lt;ABI&gt;/</code> 下。如：将so库放在 <code>app/src/main/jniLibs/armeabi</code> 。可在模块的build.gradle中修改配置指定so库的路径。如，将so库放在app&#x2F;libs&#x2F;armeabi下，并修改配置如下：  <figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">android &#123;</span><br><span class="line">  ...</span><br><span class="line">  sourceSets &#123;</span><br><span class="line">    main &#123;</span><br><span class="line">      jniLibs.srcDirs = [<span class="string">&#x27;libs&#x27;</span>]</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>so库在Android系统中的路径： <code>/data/data/&lt;应用包名&gt;/lib/</code> 下。</li>
+<li>so库在aar包中的路径： <code>jni/&lt;ABI&gt;</code> 下。</li>
+</ul>
+<h3 id="so库的使用建议"><a href="#so库的使用建议" class="headerlink" title="so库的使用建议"></a>so库的使用建议</h3><ul>
+<li>理论上应该为每个ABI目录提供对应的so库。但是Android支持7种ABI，若全部支持，必然导致APK包过大。</li>
+<li>一般只保留arm64-v8a、armeabi-v7a这两个ABI的so库。</li>
+<li>mips&#x2F;mips64：极少用于手机，可忽略。</li>
+<li>x86&#x2F;x86_64：x86架构的手机的市场占有率很低，约为1%左右。而且x86架构都包含ARM模拟层，兼容ARM类型的ABI。注意，模拟器大为x86架构，平板很多也是x86。</li>
+<li>arm64-v8a：64位ARM架构。可用32位模式运行armeabi-v7a和armeabi。</li>
+<li>armeabi-v7a：32位。</li>
+<li>armeabi：老版本ARMv5。</li>
+</ul>
+<p>不难发现，只要提供armeabi便可兼容新&#x2F;旧设备。但armeabi缺少对浮点数机器的支持，存在性能瓶颈。应该将armeabi目录中的so库拷贝一份到armeabi-v7a目录中。</p>
+<p>默认情况下，Gradle 会针对 NDK 支持的 ABI 将您的原生库构建到单独的.so 文件中，并将其全部打包到您的 APK 中。如果您希望 Gradle 仅构建和打包原生库的特定 ABI 配置，您可以在模块级 build.gradle 文件中使用 ndk.abiFilters 标志指定这些配置，如下所示：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">android &#123;</span><br><span class="line"></span><br><span class="line">  ...</span><br><span class="line"></span><br><span class="line">  defaultConfig &#123;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    externalNativeBuild &#123;</span><br><span class="line"></span><br><span class="line">      cmake &#123;...&#125;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// or ndkBuild &#123;...&#125;</span></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ndk &#123;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// Specifies the ABI configurations of your native</span></span><br><span class="line"></span><br><span class="line">      <span class="comment">// libraries Gradle should build and package with your APK.</span></span><br><span class="line"></span><br><span class="line">      abiFilters <span class="string">&#x27;x86&#x27;</span>, <span class="string">&#x27;x86_64&#x27;</span>, <span class="string">&#x27;armeabi&#x27;</span>, <span class="string">&#x27;armeabi-v7a&#x27;</span>,</span><br><span class="line"></span><br><span class="line">                   <span class="string">&#x27;arm64-v8a&#x27;</span></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  buildTypes &#123;...&#125;</span><br><span class="line"></span><br><span class="line">  externalNativeBuild &#123;...&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在大多数情况下，您只需要在 ndk {} 块中指定 abiFilters（如上所示），因为它会指示 Gradle 构建和打包原生库的这些版本。不过，如果您希望控制 Gradle 应当构建的配置，并独立于您希望其打包到 APK 中的配置，请在 defaultConfig.externalNativeBuild.cmake {} 块（或 defaultConfig.externalNativeBuild.ndkBuild {} 块中）配置另一个 abiFilters 标志。Gradle 会构建这些 ABI 配置，不过仅会打包您在 defaultConfig.ndk{} 块中指定的配置。</p>
+<p>为了进一步降低 APK 的大小，请考虑 <a target="_blank" rel="noopener" href="https://developer.android.com/studio/build/configure-apk-splits.html#configure-abi-split">配置 ABI APK 拆分</a> ，而不是创建一个包含原生库所有版本的大型 APK，Gradle 会为您想要支持的每个 ABI 创建单独的 APK，并且仅打包每个 ABI 需要的文件。如果您配置 ABI 拆分，但没有像上面的代码示例一样指定 abiFilters 标志，Gradle 会构建原生库的所有受支持 ABI 版本，不过仅会打包您在 ABI 拆分配置中指定的版本。为了避免构建您不想要的原生库版本，请为 abiFilters 标志和 ABI 拆分配置提供相同的 ABI 列表。</p>
+<h2 id="静态库和动态库"><a href="#静态库和动态库" class="headerlink" title="静态库和动态库"></a>静态库和动态库</h2><p>本质上来说库是可执行代码的二进制形式，可以被操作系统载入内存执行。库可以分为两种：静态库(.a&#x2F;.lib)和动态库(.so&#x2F;.dll)。</p>
+<p>我们知道将一个程序编译成可执行程序的步骤是: <code>cpp, h... -&gt; 预编译 -&gt; 编译 -&gt; 汇编 -&gt; 链接 -&gt; 可执行文件</code> ，动态库和静态库的区别在于链接阶段如何处理库。</p>
+<p><strong>静态库</strong></p>
+<p>链接阶段会将汇编生成的目标文件.o 与引用的静态库一起链接打包到可执行文件中，其特点：</p>
+<ul>
+<li>对静态库的链接是在编译时期完成的。</li>
+<li>程序在运行时与函数库没有关系，移植方便。</li>
+<li>浪费空间和资源，因为所有相关的目标文件与牵涉到的函数库被链接合成一个可执行文件。</li>
+<li>静态库更新时，使用它的程序需要重新编译。</li>
+</ul>
+<p><strong>动态库</strong></p>
+<p>动态库在程序编译时不会被链接到目标代码中，直到程序运行到时才会被载入，其特点：</p>
+<ul>
+<li>动态库在程序运行时才链接载入。</li>
+<li>可以实现进程之间的资源共享(因此动态库也称为共享库)。</li>
+<li>简化某些程序升级过程，增量更新。</li>
+</ul>
+<h2 id="打印Android日志"><a href="#打印Android日志" class="headerlink" title="打印Android日志"></a>打印Android日志</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Log.i</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Log.d</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Log.e</span></span><br></pre></td></tr></table></figure>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/clippings/" rel="tag"># clippings</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/204980a1/" rel="next" title="Kotlin笔记之flow工作原理">
+                <i class="fa fa-chevron-left"></i> Kotlin笔记之flow工作原理
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/7b36d5c7/" rel="prev" title="Android-NDK开发之JNI">
+                Android-NDK开发之JNI <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">439</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">47</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@qq.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ndk-build"><span class="nav-text">ndk-build</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CMake"><span class="nav-text">CMake</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ABI"><span class="nav-text">ABI</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0-1"><span class="nav-text">概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Android%E4%B8%AD%E7%9A%84so%E5%BA%93"><span class="nav-text">Android中的so库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#so%E5%BA%93%E7%9A%84%E4%BD%BF%E7%94%A8%E5%BB%BA%E8%AE%AE"><span class="nav-text">so库的使用建议</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%99%E6%80%81%E5%BA%93%E5%92%8C%E5%8A%A8%E6%80%81%E5%BA%93"><span class="nav-text">静态库和动态库</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%93%E5%8D%B0Android%E6%97%A5%E5%BF%97"><span class="nav-text">打印Android日志</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>
