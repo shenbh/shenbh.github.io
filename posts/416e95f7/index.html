@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="clippings," />
+  <meta name="keywords" content="private,clippings," />
 
 
 
@@ -79,16 +79,17 @@
 
 
 
-<meta name="description" content="概述最近线上监控发现 OOM 涨幅较大，因此去尝试定位和修复这个问题，在修复了一些内存泄漏和大对象占用问题后, OOM 依旧未达到正常标准，在这些新上报的 hprof 文件中，发现几乎所有 case 中都有个叫 FinalizerReference 的对象，数量巨多，内存占用高居首位，因此判断它就是引起本次 OOM 上涨的罪魁祸首。">
+<meta name="description" content="概述最近线上监控发现 OOM 涨幅较大，因此去尝试定位和修复这个问题，在修复了一些内存泄漏和大对象占用问题后, OOM 依旧未达到正常标准，在这些新上报的 hprof 文件中，发现几乎所有 case 中都有个叫 FinalizerReference 的对象，数量巨多，内存占用高居首位，因此判断它就是引起本次 OOM 上涨的罪魁祸首。 ReferenceQueue首先前置了解下 ReferenceQ">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Android-记一次线上OOM问题处理">
 <meta property="og:url" content="http://shenbh.github.io/posts/416e95f7/index.html">
 <meta property="og:site_name" content="积跬步">
-<meta property="og:description" content="概述最近线上监控发现 OOM 涨幅较大，因此去尝试定位和修复这个问题，在修复了一些内存泄漏和大对象占用问题后, OOM 依旧未达到正常标准，在这些新上报的 hprof 文件中，发现几乎所有 case 中都有个叫 FinalizerReference 的对象，数量巨多，内存占用高居首位，因此判断它就是引起本次 OOM 上涨的罪魁祸首。">
+<meta property="og:description" content="概述最近线上监控发现 OOM 涨幅较大，因此去尝试定位和修复这个问题，在修复了一些内存泄漏和大对象占用问题后, OOM 依旧未达到正常标准，在这些新上报的 hprof 文件中，发现几乎所有 case 中都有个叫 FinalizerReference 的对象，数量巨多，内存占用高居首位，因此判断它就是引起本次 OOM 上涨的罪魁祸首。 ReferenceQueue首先前置了解下 ReferenceQ">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-07-03T09:00:35.590Z">
-<meta property="article:modified_time" content="2025-07-03T09:00:58.371Z">
+<meta property="article:modified_time" content="2025-07-04T01:22:20.677Z">
 <meta property="article:author" content="阿炳">
+<meta property="article:tag" content="private">
 <meta property="article:tag" content="clippings">
 <meta name="twitter:card" content="summary">
 
@@ -126,7 +127,7 @@
 
 
 
-  <title>Android-记一次线上OOM问题处理 | 积跬步</title>
+  <title>Android-记一次线上OOM问题处理 | 积跬步</title><meta name="robots" content="noindex">
   
 
 
@@ -345,10 +346,6 @@
           
 
           
-              <div class="post-description">
-                  概述最近线上监控发现 OOM 涨幅较大，因此去尝试定位和修复这个问题，在修复了一些内存泄漏和大对象占用问题后, OOM 依旧未达到正常标准，在这些新上报的 hprof 文件中，发现几乎所有 case 中都有个叫 FinalizerReference 的对象，数量巨多，内存占用高居首位，因此判断它就是引起本次 OOM 上涨的罪魁祸首。
-              </div>
-          
 
         </div>
       </header>
@@ -433,7 +430,7 @@
 </ul>
 <p>因此尽量不要重载 finalize() 方法，而是通过一些逻辑上的接口去释放内存，如果一定要重载它的话，也不要让一些需要频繁创建的对象或者大对象去通过 finalize() 释放，不然总有一天会出现问题的。</p>
 <p>与此相关的守护线程有四个，感兴趣的同学可以深入看看相关源码：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// libcore/libart/src/main/java/java/lang/Daemons.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Daemon[] DAEMONS = <span class="keyword">new</span> <span class="title class_">Daemon</span>[] &#123;</span><br><span class="line"></span><br><span class="line">        HeapTaskDaemon.INSTANCE,</span><br><span class="line"></span><br><span class="line">        ReferenceQueueDaemon.INSTANCE,</span><br><span class="line"></span><br><span class="line">        FinalizerDaemon.INSTANCE,</span><br><span class="line"></span><br><span class="line">        FinalizerWatchdogDaemon.INSTANCE,</span><br><span class="line"></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// libcore/libart/src/main/java/java/lang/Daemons.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Daemon[] DAEMONS = <span class="keyword">new</span> <span class="title class_">Daemon</span>[] &#123;</span><br><span class="line"></span><br><span class="line">        HeapTaskDaemon.INSTANCE,</span><br><span class="line"></span><br><span class="line">        ReferenceQueueDaemon.INSTANCE,</span><br><span class="line"></span><br><span class="line">        FinalizerDaemon.INSTANCE,</span><br><span class="line"></span><br><span class="line">        FinalizerWatchdogDaemon.INSTANCE,</span><br><span class="line"></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure><!-- flag of hidden posts -->
       
     </div>
     
@@ -450,6 +447,8 @@
       
         <div class="post-tags">
           
+            <a href="/tags/private/" rel="tag"># private</a>
+          
             <a href="/tags/clippings/" rel="tag"># clippings</a>
           
         </div>
@@ -459,26 +458,6 @@
       
       
 
-      
-        <div class="post-nav">
-          <div class="post-nav-next post-nav-item">
-            
-              <a href="/posts/e4bbbef8/" rel="next" title="Android架构学习之路-待续">
-                <i class="fa fa-chevron-left"></i> Android架构学习之路-待续
-              </a>
-            
-          </div>
-
-          <span class="post-nav-divider"></span>
-
-          <div class="post-nav-prev post-nav-item">
-            
-              <a href="/posts/98c20fce/" rel="prev" title="Kotlin笔记之再看协程工作原理">
-                Kotlin笔记之再看协程工作原理 <i class="fa fa-chevron-right"></i>
-              </a>
-            
-          </div>
-        </div>
       
 
       
@@ -556,7 +535,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">439</span>
+                  <span class="site-state-item-count">276</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

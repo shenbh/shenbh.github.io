@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="clippings," />
+  <meta name="keywords" content="Hexo, NexT" />
 
 
 
@@ -79,20 +79,17 @@
 
 
 
-<meta name="description" content="概述 运行时注解：通过反射在运行时动态处理注解的逻辑 编译时注解：通过注解处理器在编译期动态处理相关逻辑  使用代码自动生成，一是为了提高编码的效率，二是避免在运行期大量使用反射，通过在编译期利用反射生成辅助类和方法以供运行时使用。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Java注解">
 <meta property="og:url" content="http://shenbh.github.io/posts/7039576b/index.html">
 <meta property="og:site_name" content="积跬步">
-<meta property="og:description" content="概述 运行时注解：通过反射在运行时动态处理注解的逻辑 编译时注解：通过注解处理器在编译期动态处理相关逻辑  使用代码自动生成，一是为了提高编码的效率，二是避免在运行期大量使用反射，通过在编译期利用反射生成辅助类和方法以供运行时使用。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://shenbh.github.io/posts/7039576b/Element.webp">
-<meta property="article:published_time" content="2025-07-03T07:03:31.690Z">
-<meta property="article:modified_time" content="2025-07-03T09:27:38.468Z">
+<meta property="og:image" content="http://shenbh.github.io/posts/7039576b/Java%E6%B3%A8%E8%A7%A3.png">
+<meta property="article:published_time" content="2024-04-10T01:27:00.000Z">
+<meta property="article:modified_time" content="2025-05-15T01:36:31.988Z">
 <meta property="article:author" content="阿炳">
-<meta property="article:tag" content="clippings">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://shenbh.github.io/posts/7039576b/Element.webp">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/7039576b/Java%E6%B3%A8%E8%A7%A3.png">
 
 
 
@@ -318,8 +315,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-07-03T15:03:31+08:00">
-                2025-07-03
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2024-04-10T09:27:00+08:00">
+                2024-04-10
               </time>
             
 
@@ -328,6 +325,28 @@
             
           </span>
 
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index">
+                    <span itemprop="name">Java</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
           
 
           
@@ -347,10 +366,6 @@
           
 
           
-              <div class="post-description">
-                  概述 运行时注解：通过反射在运行时动态处理注解的逻辑 编译时注解：通过注解处理器在编译期动态处理相关逻辑  使用代码自动生成，一是为了提高编码的效率，二是避免在运行期大量使用反射，通过在编译期利用反射生成辅助类和方法以供运行时使用。
-              </div>
-          
 
         </div>
       </header>
@@ -365,389 +380,7 @@
       
 
       
-        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><ul>
-<li>运行时注解：通过反射在运行时动态处理注解的逻辑</li>
-<li>编译时注解：通过注解处理器在编译期动态处理相关逻辑</li>
-</ul>
-<p>使用代码自动生成，一是为了提高编码的效率，二是避免在运行期大量使用反射，通过在编译期利用反射生成辅助类和方法以供运行时使用。</p>
-<h2 id="基础知识"><a href="#基础知识" class="headerlink" title="基础知识"></a>基础知识</h2><p>Java 提供了 4 种注解负责新注解的创建：</p>
-<ol>
-<li>@Target: 表示该注解可以用于什么地方，可选的ElementType参数有：<ul>
-<li>CONSTRUCTOR：构造器的声明</li>
-<li>FIELD：域声明（包括enum实例）</li>
-<li>LOCAL_VARIABLE：局部变量声明</li>
-<li>METHOD：方法声明</li>
-<li>PACKAGE：包声明</li>
-<li>PARAMETER：参数声明</li>
-<li>TYPE：类、接口（包括注解类型）或enum声明</li>
-</ul>
-</li>
-<li>@Retention: 表示需要在什么级别保存该注解信息。可选的RetentionPolicy参数包括：<ul>
-<li>SOURCE：注解将被编译器丢弃</li>
-<li>CLASS：注解在class文件中可用，但会被VM丢弃</li>
-<li>RUNTIME：VM将在运行期间保留注解，因此可以通过反射机制读取注解的信息。</li>
-</ul>
-</li>
-<li>@Document: 将注解包含在Javadoc中</li>
-<li>@Inherited: 允许子类继承父类中的注解</li>
-</ol>
-<p>元素要么有默认值，要么在使用注解的时候提供元素的值，且元素不能使用 null 作为默认值，注解在只有一个元素且该元素的名称是value的情况下，在使用注解的时候可以省略“value&#x3D;”，直接写需要的值即可。</p>
-<p><strong>实例</strong></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span>  Status &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 注解类的成员变量默认被 public static final 修饰</span></span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> <span class="variable">STATUS_1</span> <span class="operator">=</span> <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> <span class="variable">STATUS_2</span> <span class="operator">=</span> <span class="number">2</span>;</span><br><span class="line"></span><br><span class="line">    String <span class="title function_">value</span><span class="params">()</span> <span class="keyword">default</span> <span class="string">&quot;hearing&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> <span class="title function_">status</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="注解处理器"><a href="#注解处理器" class="headerlink" title="注解处理器"></a>注解处理器</h2><p>注解处理器的处理步骤：</p>
-<ol>
-<li>在java编译器中构建；</li>
-<li>编译器开始执行未执行过的注解处理器；</li>
-<li>循环处理注解元素(Element)，找到被该注解所修饰的类，方法，或者属性；</li>
-<li>生成对应的类，并写入文件；</li>
-<li>判断是否所有的注解处理器都已执行完毕，如果没有，继续下一个注解处理器的执行(回到步骤1)。</li>
-</ol>
-<p>自定义注解在一些优秀的三方库（如：EventBus，ButterKnife等）中很常见，用于简化我们的代码，可以通过编译时解析注解生成.class类，统一去处理，所以学习自定义注解还是很有必要的。示例代码如下：</p>
-<p><strong>CustomAnnotation注解：</strong></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span>  CustomAnnotation &#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><strong>CustomProcessor注解处理器：</strong></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CustomProcessor</span> <span class="keyword">extends</span> <span class="title class_">AbstractProcessor</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">CUSTOM_OPTION</span> <span class="operator">=</span> <span class="string">&quot;CustomAnnotation&quot;</span>;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Types typeUtils;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Elements elementUtils;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Filer filer;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Messager messager;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 执行一些初始化逻辑</span></span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">init</span><span class="params">(ProcessingEnvironment processingEnv)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">super</span>.init(processingEnv);</span><br><span class="line"></span><br><span class="line">        typeUtils = processingEnv.getTypeUtils();</span><br><span class="line"></span><br><span class="line">        elementUtils = processingEnv.getElementUtils();</span><br><span class="line"></span><br><span class="line">        filer = processingEnv.getFiler();</span><br><span class="line"></span><br><span class="line">        messager = processingEnv.getMessager();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 得到注解处理器可以支持的注解类型</span></span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> Set&lt;String&gt; <span class="title function_">getSupportedAnnotationTypes</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> Collections.singleton(Builder.class.getCanonicalName());</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 返回注解处理器可处理的注解操作</span></span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> Set&lt;String&gt; <span class="title function_">getSupportedOptions</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> Collections.singleton(CUSTOM_OPTION);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> SourceVersion <span class="title function_">getSupportedSourceVersion</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> SourceVersion.RELEASE_8;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 核心方法，扫描，解析并处理自定义注解，生成***.java文件</span></span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">process</span><span class="params">(Set&lt;? extends TypeElement&gt; annotations, RoundEnvironment roundEnvironment)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//...</span></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>注册注解处理器：</p>
-<ol>
-<li>方式一：<ul>
-<li>新建res文件夹，目录下新建META-INF文件夹，目录下新建services文件夹，目录下新建javax.annotation.processing.Processor文件，然后将自定义注解处理器的全类名写到此文件。</li>
-</ul>
-</li>
-<li>方式二：<ul>
-<li>添加依赖： <code>com.google.auto.service:auto-service:xxx</code></li>
-<li>在注解处理器上添加 <code>@AutoService(Processor.class)</code> 注解</li>
-</ul>
-</li>
-</ol>
-<h2 id="ProcessingEnvironment"><a href="#ProcessingEnvironment" class="headerlink" title="ProcessingEnvironment"></a>ProcessingEnvironment</h2><p>抽象类中有一个init方法，这是Processor接口中提供的一个方法，当我们编译程序时注解处理器工具会调用此方法并且提供实现ProcessingEnvironment接口的对象作为参数。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">init</span><span class="params">(ProcessingEnvironment processingEnvironment)</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">super</span>.init(processingEnvironment);</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>可以使用ProcessingEnvironment获取一些实用类以及获取选项参数等：</p>
-<table>
-<thead>
-<tr>
-<th>方法</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>Elements getElementUtils()</td>
-<td>返回实现Elements接口的对象，用于操作元素的工具类。</td>
-</tr>
-<tr>
-<td>Filer getFiler()</td>
-<td>返回实现Filer接口的对象，用于创建文件、类和辅助文件。</td>
-</tr>
-<tr>
-<td>Messager getMessager()</td>
-<td>返回实现Messager接口的对象，用于报告错误信息、警告提醒。</td>
-</tr>
-<tr>
-<td>Map&lt;String,String&gt; getOptions()</td>
-<td>返回指定的参数选项。</td>
-</tr>
-<tr>
-<td>Types getTypeUtils()</td>
-<td>返回实现Types接口的对象，用于操作类型的工具类。</td>
-</tr>
-</tbody></table>
-<h2 id="Element"><a href="#Element" class="headerlink" title="Element"></a>Element</h2><h3 id="概述-1"><a href="#概述-1" class="headerlink" title="概述"></a>概述</h3><p>Element元素是一个接口，表示一个程序元素，比如包、类或者方法。</p>
-<p><img src="/posts/7039576b/Element.webp" alt="Element"></p>
-<p>Element所代表的元素只在编译期可见，用于保存元素在编译期的各种状态，而 <a target="_blank" rel="noopener" href="https://ljd1996.github.io/2018/06/10/Java%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/#Type">Type</a> 所代表的元素是运行期可见，用于保存元素在运行期的各种状态。以下元素类型接口全部继承自Element接口：</p>
-<table>
-<thead>
-<tr>
-<th>类型</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>ExecutableElement</td>
-<td>表示某个类或接口的方法、构造方法或初始化程序（静态或实例），包括注解类型元素。</td>
-</tr>
-<tr>
-<td>PackageElement</td>
-<td>表示一个包程序元素。提供对有关包及其成员的信息的访问。</td>
-</tr>
-<tr>
-<td>TypeElement</td>
-<td>表示一个类或接口程序元素。提供对有关类型及其成员的信息的访问。注意，枚举类型是一种类，而注解类型是一种接口。</td>
-</tr>
-<tr>
-<td>TypeParameterElement</td>
-<td>表示一般类、接口、方法或构造方法元素的形式类型参数。</td>
-</tr>
-<tr>
-<td>VariableElement</td>
-<td>表示一个字段、enum 常量、方法或构造方法参数、局部变量或异常参数。</td>
-</tr>
-</tbody></table>
-<h3 id="方法"><a href="#方法" class="headerlink" title="方法"></a>方法</h3><p><strong>accept</strong></p>
-<p><code>&lt;R, P&gt; R accept(ElementVisitor&lt;R, P&gt; v, P p)</code> ：接收一个ElementVisitor类，它的作用类似于一个 <code>if(element instanceof ExecutableElement)</code> 则调用 <code>visitExecutable(ExecutableElement executableElement, Void aVoid)</code> 。如果需要接收accept方法的返回值，则根据返回值的类型定义R，P基本上是用不到的，写Void就行。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">element.accept(<span class="keyword">new</span> <span class="title class_">SimpleElementVisitor7</span>&lt;Void, Void&gt;() &#123;</span><br><span class="line"></span><br><span class="line">            </span><br><span class="line"></span><br><span class="line">            <span class="keyword">public</span> Void <span class="title function_">visitType</span><span class="params">(TypeElement typeElement, Void aVoid)</span> &#123;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">return</span> <span class="built_in">super</span>.visitType(typeElement, aVoid);</span><br><span class="line"></span><br><span class="line">                <span class="comment">//这是一个TypeElement</span></span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            </span><br><span class="line"></span><br><span class="line">            <span class="keyword">public</span> Void <span class="title function_">visitExecutable</span><span class="params">(ExecutableElement executableElement, Void aVoid)</span> &#123;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">return</span> <span class="built_in">super</span>.visitExecutable(executableElement, aVoid);</span><br><span class="line"></span><br><span class="line">                <span class="comment">//这是一个executableElement</span></span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            </span><br><span class="line"></span><br><span class="line">            <span class="keyword">public</span> Void <span class="title function_">visitPackage</span><span class="params">(PackageElement packageElement, Void aVoid)</span> &#123;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">return</span> <span class="built_in">super</span>.visitPackage(packageElement, aVoid);</span><br><span class="line"></span><br><span class="line">                <span class="comment">//这是一个PackageElement</span></span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;, <span class="literal">null</span>);</span><br></pre></td></tr></table></figure>
-
-<p><strong>asType</strong></p>
-<p><code>TypeMirror asType()</code> ：返回一个TypeMirror是元素的类型信息，包括包名，类(或方法，或参数)名&#x2F;类型，在生成动态代码的时候，我们往往需要知道变量&#x2F;方法参数的类型，以便写入正确的类型声明。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (Element element : elements) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (element <span class="keyword">instanceof</span> TypeElement) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="type">TypeName</span> <span class="variable">typeName</span> <span class="operator">=</span> ClassName.get(element.asType());</span><br><span class="line"></span><br><span class="line">        <span class="type">TypeSpec</span> <span class="variable">typeSpec</span> <span class="operator">=</span> TypeSpec.classBuilder(<span class="string">&quot;GenerateTest&quot;</span>)</span><br><span class="line"></span><br><span class="line">                .addField(typeName, <span class="string">&quot;test&quot;</span>)</span><br><span class="line"></span><br><span class="line">                <span class="comment">// 添加泛型信息</span></span><br><span class="line"></span><br><span class="line">                .addTypeVariable(TypeVariableName.get(((TypeElement) element).getTypeParameters().get(<span class="number">0</span>)))</span><br><span class="line"></span><br><span class="line">                .build();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line"></span><br><span class="line">            JavaFile.builder(<span class="string">&quot;com.test&quot;</span>, typeSpec)</span><br><span class="line"></span><br><span class="line">                    .build()</span><br><span class="line"></span><br><span class="line">                    .writeTo(processingEnv.getFiler());</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line"></span><br><span class="line">            e.printStackTrace();</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 生成代码</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">package</span> com.hearing;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 通过ClassName包装之后，在生成对应代码中会自动导入类型的包</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.hearing.Test;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">GenerateTest</span>&lt;T&gt; &#123;</span><br><span class="line"></span><br><span class="line">    Test&lt;T&gt; test;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><strong>getAnnotation</strong></p>
-<p><code>&lt;A extends Annotation&gt; A getAnnotation(Class&lt;A&gt; annotationType)</code> ：根据传入的注解类型获取该元素上的注解。</p>
-<p><strong>getAnnotationMirrors</strong></p>
-<p><code>List&lt;? extends AnnotationMirror&gt; getAnnotationMirrors()</code>：获取该元素上的注解的类型信息，AnnotationMirror类似于TypeMirror。</p>
-<p><strong>getEnclosedElements</strong></p>
-<p><code>List&lt;? extends Element&gt; getEnclosedElements()</code> ：返回该元素直接包含的子元素，通常对一个PackageElement而言，它可以包含TypeElement；对于一个TypeElement而言，它可能包含属性VariableElement，方法ExecutableElement。</p>
-<p><strong>getEnclosingElement</strong></p>
-<p><code>Element getEnclosingElement()</code> ：返回包含该Element的父Element，与上一个方法相反，VariableElement，方法ExecutableElement的父级是TypeElemnt，而TypeElemnt的父级是PackageElment等。</p>
-<p><strong>getSimpleName</strong></p>
-<p><code>Name getSimpleName()</code> ：获取名字，不带包名</p>
-<p><strong>getModifiers</strong></p>
-<p><code>Set&lt;Modifier&gt; getModifiers()</code> ：获取修饰关键字，public static final等关键字。</p>
-<p><strong>getKind</strong></p>
-<p><code>ElementKind getKind()</code> ：返回Element的类型，判断是哪种Element。如果我们要判断一个元素的类型，应该使用Element.getKind()方法配合ElementKind枚举类进行判断。尽量避免使用instanceof进行判断，因为比如TypeElement既表示类又表示一个接口，这样判断的结果可能不是你想要的。例如我们判断一个元素是不是一个类：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (element <span class="keyword">instanceof</span> TypeElement) &#123; <span class="comment">//错误，也有可能是一个接口</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (element.getKind() == ElementKind.CLASS) &#123; <span class="comment">//正确</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//doSomething</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>下表为ElementKind枚举类中的部分常量:</p>
-<table>
-<thead>
-<tr>
-<th>类型</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>PACKAGE</td>
-<td>一个包。</td>
-</tr>
-<tr>
-<td>ENUM</td>
-<td>一个枚举类型。</td>
-</tr>
-<tr>
-<td>CLASS</td>
-<td>没有用更特殊的种类（如 ENUM）描述的类。</td>
-</tr>
-<tr>
-<td>ANNOTATION_TYPE</td>
-<td>一个注解类型。</td>
-</tr>
-<tr>
-<td>INTERFACE</td>
-<td>没有用更特殊的种类（如 ANNOTATION_TYPE）描述的接口。</td>
-</tr>
-<tr>
-<td>ENUM_CONSTANT</td>
-<td>一个枚举常量。</td>
-</tr>
-<tr>
-<td>FIELD</td>
-<td>没有用更特殊的种类（如 ENUM_CONSTANT）描述的字段。</td>
-</tr>
-<tr>
-<td>PARAMETER</td>
-<td>方法或构造方法的参数。</td>
-</tr>
-<tr>
-<td>LOCAL_VARIABLE</td>
-<td>局部变量。</td>
-</tr>
-<tr>
-<td>METHOD</td>
-<td>一个方法。</td>
-</tr>
-<tr>
-<td>CONSTRUCTOR</td>
-<td>一个构造方法。</td>
-</tr>
-<tr>
-<td>TYPE_PARAMETER</td>
-<td>一个类型参数。</td>
-</tr>
-</tbody></table>
-<h2 id="TypeMirror"><a href="#TypeMirror" class="headerlink" title="TypeMirror"></a>TypeMirror</h2><h3 id="概述-2"><a href="#概述-2" class="headerlink" title="概述"></a>概述</h3><p>Element.asType()返回一个TypeMirror类型。</p>
-<p>TypeMirror是一个接口，表示 Java 编程语言中的类型。这些类型包括基本类型、声明类型（类和接口类型）、数组类型、类型变量和 null 类型。还可以表示通配符类型参数、executable 的签名和返回类型，以及对应于包和关键字 void 的伪类型。以下类型接口全部继承自TypeMirror接口：</p>
-<table>
-<thead>
-<tr>
-<th>类型</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>ArrayType</td>
-<td>表示一个数组类型。多维数组类型被表示为组件类型也是数组类型的数组类型。</td>
-</tr>
-<tr>
-<td>DeclaredType</td>
-<td>表示某一声明类型，是一个类 (class) 类型或接口 (interface) 类型。这包括参数化的类型（比如 <code>java.util.Set&lt;String&gt;</code> ）和原始类型。TypeElement 表示一个类或接口元素，而 DeclaredType 表示一个类或接口类型，后者将成为前者的一种使用（或调用）。</td>
-</tr>
-<tr>
-<td>ErrorType</td>
-<td>表示无法正常建模的类或接口类型。</td>
-</tr>
-<tr>
-<td>ExecutableType</td>
-<td>表示 executable 的类型。executable 是一个方法、构造方法或初始化程序。</td>
-</tr>
-<tr>
-<td>NoType</td>
-<td>在实际类型不适合的地方使用的伪类型。</td>
-</tr>
-<tr>
-<td>NullType</td>
-<td>表示 null 类型。</td>
-</tr>
-<tr>
-<td>PrimitiveType</td>
-<td>表示一个基本类型。这些类型包括 boolean、byte、short、int、long、char、float 和 double。</td>
-</tr>
-<tr>
-<td>ReferenceType</td>
-<td>表示一个引用类型。这些类型包括类和接口类型、数组类型、类型变量和 null 类型。</td>
-</tr>
-<tr>
-<td>TypeVariable</td>
-<td>表示一个类型变量。</td>
-</tr>
-<tr>
-<td>WildcardType</td>
-<td>表示通配符类型参数。</td>
-</tr>
-</tbody></table>
-<p>同样，如果我们想判断一个TypeMirror的类型，应该使用TypeMirror.getKind()方法配合TypeKind枚举类进行判断。尽量避免使用instanceof进行判断，因为比如DeclaredType既表示类 (class) 类型又表示接口 (interface) 类型，这样判断的结果可能不是你想要的。</p>
-<p>TypeKind枚举类中的部分常量:</p>
-<table>
-<thead>
-<tr>
-<th>类型</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>BOOLEAN</td>
-<td>基本类型 boolean。</td>
-</tr>
-<tr>
-<td>INT</td>
-<td>基本类型 int。</td>
-</tr>
-<tr>
-<td>LONG</td>
-<td>基本类型 long。</td>
-</tr>
-<tr>
-<td>FLOAT</td>
-<td>基本类型 float。</td>
-</tr>
-<tr>
-<td>DOUBLE</td>
-<td>基本类型 double。</td>
-</tr>
-<tr>
-<td>VOID</td>
-<td>对应于关键字 void 的伪类型。</td>
-</tr>
-<tr>
-<td>NULL</td>
-<td>null 类型。</td>
-</tr>
-<tr>
-<td>ARRAY</td>
-<td>数组类型。</td>
-</tr>
-<tr>
-<td>PACKAGE</td>
-<td>对应于包元素的伪类型。</td>
-</tr>
-<tr>
-<td>EXECUTABLE</td>
-<td>方法、构造方法或初始化程序。</td>
-</tr>
-</tbody></table>
-<h2 id="Filer"><a href="#Filer" class="headerlink" title="Filer"></a>Filer</h2><p>Filer支持通过注解处理器创建新文件。</p>
-<p>对于生成Java文件，还可以使用Square公司的开源类库JavaPoet。</p>
-<h2 id="Messager"><a href="#Messager" class="headerlink" title="Messager"></a>Messager</h2><p>Messager接口提供注解处理器用来报告错误消息、警告和其他通知的方式。</p>
-<h2 id="Options"><a href="#Options" class="headerlink" title="Options"></a>Options</h2><p>getSupportedOptions方法用于设置一些可以被注解处理器支持的选项。</p>
-<ul>
-<li>可以在javac命令后通过-A参数指定选项；</li>
-<li>对于Android工程，可以在gradle文件中配置选项参数值  <figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">android &#123;</span><br><span class="line">    defaultConfig &#123;</span><br><span class="line">        javaCompileOptions &#123;</span><br><span class="line">            annotationProcessorOptions &#123;</span><br><span class="line">                arguments = [ <span class="attr">hearingCustomAnnotation :</span> <span class="string">&#x27;xxx&#x27;</span> ]</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-</ul>
-<p>在注解处理器中重写getSupportedOptions方法指定支持的选项参数名称。通过getOptions方法获取选项参数值。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">CUSTOM_ANNOTATION</span> <span class="operator">=</span> <span class="string">&quot;hearingCustomAnnotation&quot;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">process</span><span class="params">(Set&lt;? extends TypeElement&gt; annotations, RoundEnvironment roundEnv)</span> &#123;</span><br><span class="line"></span><br><span class="line">   <span class="keyword">try</span> &#123;</span><br><span class="line"></span><br><span class="line">       <span class="type">String</span> <span class="variable">resultPath</span> <span class="operator">=</span> processingEnv.getOptions().get(CUSTOM_ANNOTATION);</span><br><span class="line"></span><br><span class="line">       <span class="keyword">if</span> (resultPath == <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">           <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">           <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">       <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">   &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line"></span><br><span class="line">       e.printStackTrace();</span><br><span class="line"></span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> Set&lt;String&gt; <span class="title function_">getSupportedOptions</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">   <span class="keyword">return</span> Collections.singleton(CUSTOM_ANNOTATION);</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="process"><a href="#process" class="headerlink" title="process"></a>process</h2><p>process方法提供了两个参数，第一个是我们请求处理注解类型的集合（也就是我们通过重写getSupportedAnnotationTypes方法所指定的注解类型），第二个是有关当前和上一次循环的信息的环境。返回值表示这些注解是否由此 Processor 声明，如果返回 true，则这些注解已声明并且不要求后续 Processor 处理它们；如果返回 false，则这些注解未声明并且可能要求后续 Processor 处理它们。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="type">boolean</span> <span class="title function_">process</span><span class="params">(Set&lt;? extends TypeElement&gt; annotations,</span></span><br><span class="line"><span class="params"></span></span><br><span class="line"><span class="params">                                RoundEnvironment roundEnv)</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="RoundEnvironment"><a href="#RoundEnvironment" class="headerlink" title="RoundEnvironment"></a>RoundEnvironment</h2><p>我们可以通过RoundEnvironment接口获取注解元素。process方法会提供一个实现RoundEnvironment接口的对象。</p>
-<table>
-<thead>
-<tr>
-<th>方法</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>Set&lt;? extends Element&gt; getElementsAnnotatedWith(Class&lt;? extends Annotation&gt; a)</code></td>
-<td>返回被指定注解类型注解的元素集合。</td>
-</tr>
-<tr>
-<td><code>Set&lt;? extends Element&gt; getElementsAnnotatedWith(TypeElement a)</code></td>
-<td>返回被指定注解类型注解的元素集合。</td>
-</tr>
-<tr>
-<td><code>processingOver()</code></td>
-<td>如果循环处理完成返回true，否则返回false。</td>
-</tr>
-</tbody></table>
-<h2 id="JavaPoet"><a href="#JavaPoet" class="headerlink" title="JavaPoet"></a>JavaPoet</h2><p><strong>依赖：</strong></p>
-<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">implementation <span class="string">&#x27;com.squareup:javapoet:1.12.0&#x27;</span></span><br></pre></td></tr></table></figure>
-
-<p><strong>使用：</strong></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">MethodSpec</span> <span class="variable">main</span> <span class="operator">=</span> MethodSpec.methodBuilder(<span class="string">&quot;main&quot;</span>)</span><br><span class="line"></span><br><span class="line">    .addModifiers(Modifier.PUBLIC, Modifier.STATIC)</span><br><span class="line"></span><br><span class="line">    .returns(<span class="keyword">void</span>.class)</span><br><span class="line"></span><br><span class="line">    .addParameter(String[].class, <span class="string">&quot;args&quot;</span>)</span><br><span class="line"></span><br><span class="line">    .addStatement(<span class="string">&quot;$T.out.println($S)&quot;</span>, System.class, <span class="string">&quot;Hello, JavaPoet!&quot;</span>)</span><br><span class="line"></span><br><span class="line">    .build();</span><br><span class="line"></span><br><span class="line"><span class="type">TypeSpec</span> <span class="variable">helloWorld</span> <span class="operator">=</span> TypeSpec.classBuilder(<span class="string">&quot;HelloWorld&quot;</span>)</span><br><span class="line"></span><br><span class="line">    .addModifiers(Modifier.PUBLIC, Modifier.FINAL)</span><br><span class="line"></span><br><span class="line">    .addMethod(main)</span><br><span class="line"></span><br><span class="line">    .build();</span><br><span class="line"></span><br><span class="line"><span class="type">JavaFile</span> <span class="variable">javaFile</span> <span class="operator">=</span> JavaFile.builder(<span class="string">&quot;com.example.helloworld&quot;</span>, helloWorld)</span><br><span class="line"></span><br><span class="line">    .build();</span><br><span class="line"></span><br><span class="line">javaFile.writeTo(System.out);</span><br></pre></td></tr></table></figure>
-
-<p><strong>生成结果：</strong></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.example.helloworld;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">HelloWorld</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line"></span><br><span class="line">        System.out.println(<span class="string">&quot;Hello, JavaPoet!&quot;</span>);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><strong>相关类：</strong></p>
-<ul>
-<li>JavaFile：对应一个包含顶层类的Java源文件</li>
-<li>TypeSpec：对应类，接口或是枚举</li>
-<li>MethodSpec：对应方法或构造函数</li>
-<li>FieldSpec：对应属性</li>
-<li>AnnotationSpec：对应注解</li>
-<li>ParameterSpec：对应参数</li>
-</ul>
-<h2 id="实例一：反射"><a href="#实例一：反射" class="headerlink" title="实例一：反射"></a>实例一：反射</h2><p>反射获取方法中的参数名(Java代码在编译阶段方法名会被默认替换成无实际意义的变量名):</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span>  Parameter &#123;</span><br><span class="line"></span><br><span class="line">    String <span class="title function_">value</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> List&lt;String&gt; <span class="title function_">getParameterName</span><span class="params">(Method method)</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (method == <span class="literal">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    List&lt;String&gt; result = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    Annotation parameterAnnotations[][] = method.getParameterAnnotations();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; parameterAnnotations.length; i++) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (Annotation annotation : parameterAnnotations[i]) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (Parameter.class.equals(annotation.annotationType())) &#123;</span><br><span class="line"></span><br><span class="line">                result.add(((Parameter) annotation).value());</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Log.d(<span class="string">&quot;LLL&quot;</span>, <span class="string">&quot;method = &quot;</span> + method.getName() + result);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="实例二：Processor"><a href="#实例二：Processor" class="headerlink" title="实例二：Processor"></a>实例二：Processor</h2><h3 id="annotation模块"><a href="#annotation模块" class="headerlink" title="annotation模块"></a>annotation模块</h3><p><strong>gradle脚本：</strong></p>
-<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">plugins &#123;</span><br><span class="line"></span><br><span class="line">    id <span class="string">&#x27;java&#x27;</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">group <span class="string">&#x27;com.hearing&#x27;</span></span><br><span class="line"></span><br><span class="line">version <span class="string">&#x27;1.0-SNAPSHOT&#x27;</span></span><br><span class="line"></span><br><span class="line">sourceCompatibility = <span class="string">&quot;8&quot;</span></span><br><span class="line"></span><br><span class="line">targetCompatibility = <span class="string">&quot;8&quot;</span></span><br><span class="line"></span><br><span class="line">repositories &#123;</span><br><span class="line"></span><br><span class="line">    mavenCentral()</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><strong>注解类：</strong></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span>  Builder &#123;</span><br><span class="line"></span><br><span class="line">    String <span class="title function_">name</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="processor模块"><a href="#processor模块" class="headerlink" title="processor模块"></a>processor模块</h3><p><strong>gradle脚本：</strong></p>
-<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">plugins &#123;</span><br><span class="line"></span><br><span class="line">    id <span class="string">&#x27;java&#x27;</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">group <span class="string">&#x27;com.hearing&#x27;</span></span><br><span class="line"></span><br><span class="line">version <span class="string">&#x27;1.0-SNAPSHOT&#x27;</span></span><br><span class="line"></span><br><span class="line">sourceCompatibility = <span class="number">1.8</span></span><br><span class="line"></span><br><span class="line">repositories &#123;</span><br><span class="line"></span><br><span class="line">    mavenCentral()</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">dependencies &#123;</span><br><span class="line"></span><br><span class="line">    implementation project(<span class="string">&#x27;:annotation&#x27;</span>)</span><br><span class="line"></span><br><span class="line">    implementation <span class="string">&#x27;com.google.auto.service:auto-service:1.0-rc7&#x27;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 在gradle 5上需添加</span></span><br><span class="line"></span><br><span class="line">    annotationProcessor <span class="string">&#x27;com.google.auto.service:auto-service:1.0-rc7&#x27;</span></span><br><span class="line"></span><br><span class="line">    implementation <span class="string">&#x27;com.squareup:javapoet:1.12.0&#x27;</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><strong>注解处理器：</strong></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BuilderProcessor</span> <span class="keyword">extends</span> <span class="title class_">AbstractProcessor</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> <span class="variable">round</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Types typeUtils;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Elements elementUtils;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Filer filer;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Messager messager;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">init</span><span class="params">(ProcessingEnvironment processingEnv)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">super</span>.init(processingEnv);</span><br><span class="line"></span><br><span class="line">        typeUtils = processingEnv.getTypeUtils();</span><br><span class="line"></span><br><span class="line">        elementUtils = processingEnv.getElementUtils();</span><br><span class="line"></span><br><span class="line">        filer = processingEnv.getFiler();</span><br><span class="line"></span><br><span class="line">        messager = processingEnv.getMessager();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">process</span><span class="params">(Set&lt;? extends TypeElement&gt; annotations, RoundEnvironment roundEnvironment)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line"></span><br><span class="line">            <span class="type">String</span> <span class="variable">option</span> <span class="operator">=</span> processingEnv.getOptions().get(<span class="string">&quot;name&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">//            if (option == null) &#123;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//                messager.printMessage(Diagnostic.Kind.NOTE, &quot;No option &quot; + CUSTOM_OPTION + &quot; passed to annotation processor&quot;);</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//                return false;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//            &#125;</span></span><br><span class="line"></span><br><span class="line">            messager.printMessage(Diagnostic.Kind.NOTE, <span class="string">&quot;Option found: &quot;</span> + option);</span><br><span class="line"></span><br><span class="line">            round++;</span><br><span class="line"></span><br><span class="line">            messager.printMessage(Diagnostic.Kind.NOTE, <span class="string">&quot;Round &quot;</span> + round + <span class="string">&quot; process over &quot;</span> + roundEnvironment.processingOver());</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (roundEnvironment.processingOver()) &#123;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (!annotations.isEmpty()) &#123;</span><br><span class="line"></span><br><span class="line">                    messager.printMessage(Diagnostic.Kind.ERROR,</span><br><span class="line"></span><br><span class="line">                            <span class="string">&quot;Unexpected processing state: annotations still available after processing over&quot;</span>);</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (annotations.isEmpty()) &#123;</span><br><span class="line"></span><br><span class="line">                messager.printMessage(Diagnostic.Kind.NOTE, <span class="string">&quot;Annotations is empty&quot;</span>);</span><br><span class="line"></span><br><span class="line">                <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">for</span> (TypeElement annotation : annotations) &#123;</span><br><span class="line"></span><br><span class="line">                messager.printMessage(Diagnostic.Kind.NOTE, <span class="string">&quot;Name is &quot;</span> + annotation.getSimpleName().toString());</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            </span><br><span class="line"></span><br><span class="line">            <span class="keyword">for</span> (Element element : roundEnvironment.getElementsAnnotatedWith(Builder.class)) &#123;</span><br><span class="line"></span><br><span class="line">                messager.printMessage(Diagnostic.Kind.NOTE, <span class="string">&quot;Current element: &quot;</span> + element.getSimpleName());</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (element.getKind() != ElementKind.CLASS) &#123;</span><br><span class="line"></span><br><span class="line">                    messager.printMessage(</span><br><span class="line"></span><br><span class="line">                            Diagnostic.Kind.ERROR,</span><br><span class="line"></span><br><span class="line">                            String.format(<span class="string">&quot;Only class can be annotated with @%s&quot;</span>, Builder.class.getSimpleName()),</span><br><span class="line"></span><br><span class="line">                            element);</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (!element.getModifiers().contains(Modifier.PUBLIC)) &#123;</span><br><span class="line"></span><br><span class="line">                    messager.printMessage(Diagnostic.Kind.ERROR, <span class="string">&quot;Subscriber class must be public&quot;</span>, element);</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="type">String</span> <span class="variable">packageName</span> <span class="operator">=</span> elementUtils.getPackageOf(element).getQualifiedName().toString();</span><br><span class="line"></span><br><span class="line">                <span class="type">String</span> <span class="variable">elementName</span> <span class="operator">=</span> element.getSimpleName().toString();</span><br><span class="line"></span><br><span class="line">                <span class="type">ClassName</span> <span class="variable">builderClassName</span> <span class="operator">=</span> ClassName.get(packageName, String.format(<span class="string">&quot;%sBuilder&quot;</span>, elementName));</span><br><span class="line"></span><br><span class="line">                <span class="type">TypeSpec</span> <span class="variable">typeSpec</span> <span class="operator">=</span> createTypeSpec(element, builderClassName, elementName);</span><br><span class="line"></span><br><span class="line">                <span class="type">JavaFile</span> <span class="variable">javaFile</span> <span class="operator">=</span> JavaFile.builder(packageName, typeSpec).build();</span><br><span class="line"></span><br><span class="line">                javaFile.writeTo(filer);</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line"></span><br><span class="line">            messager.printMessage(Diagnostic.Kind.ERROR, <span class="string">&quot;Exception occur: &quot;</span> + e.getMessage());</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 从element中获取全部类型为ElementKind.FIELD的元素并返回</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Set&lt;Element&gt; <span class="title function_">getFields</span><span class="params">(Element element)</span> &#123;</span><br><span class="line"></span><br><span class="line">        Set&lt;Element&gt; fields = <span class="keyword">new</span> <span class="title class_">LinkedHashSet</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (Element enclosedElement : element.getEnclosedElements()) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (enclosedElement.getKind() == ElementKind.FIELD) &#123;</span><br><span class="line"></span><br><span class="line">                fields.add(enclosedElement);</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> fields;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 生成FieldSpec和MethodSpec</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> TypeSpec <span class="title function_">createTypeSpec</span><span class="params">(Element element, ClassName builderClassName, String elementName)</span> &#123;</span><br><span class="line"></span><br><span class="line">        Set&lt;Element&gt; fieldElements = getFields(element);</span><br><span class="line"></span><br><span class="line">        List&lt;FieldSpec&gt; fieldSpecs = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;(fieldElements.size());</span><br><span class="line"></span><br><span class="line">        List&lt;MethodSpec&gt; setterSpecs = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;(fieldElements.size());</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (Element field : fieldElements) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="type">TypeName</span> <span class="variable">fieldType</span> <span class="operator">=</span> TypeName.get(field.asType());</span><br><span class="line"></span><br><span class="line">            <span class="type">String</span> <span class="variable">fieldName</span> <span class="operator">=</span> field.getSimpleName().toString();</span><br><span class="line"></span><br><span class="line">            <span class="type">FieldSpec</span> <span class="variable">fieldSpec</span> <span class="operator">=</span> FieldSpec.builder(fieldType, fieldName, Modifier.PRIVATE).build();</span><br><span class="line"></span><br><span class="line">            fieldSpecs.add(fieldSpec);</span><br><span class="line"></span><br><span class="line">            <span class="type">MethodSpec</span> <span class="variable">setterSpec</span> <span class="operator">=</span> MethodSpec</span><br><span class="line"></span><br><span class="line">                    .methodBuilder(fieldName)</span><br><span class="line"></span><br><span class="line">                    .addModifiers(Modifier.PUBLIC)</span><br><span class="line"></span><br><span class="line">                    .returns(builderClassName)</span><br><span class="line"></span><br><span class="line">                    .addParameter(fieldType, fieldName)</span><br><span class="line"></span><br><span class="line">                    .addStatement(<span class="string">&quot;this.$N = $N&quot;</span>, fieldName, fieldName)</span><br><span class="line"></span><br><span class="line">                    .addStatement(<span class="string">&quot;return this&quot;</span>)</span><br><span class="line"></span><br><span class="line">                    .build();</span><br><span class="line"></span><br><span class="line">            setterSpecs.add(setterSpec);</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="type">TypeName</span> <span class="variable">elementType</span> <span class="operator">=</span> TypeName.get(element.asType());</span><br><span class="line"></span><br><span class="line">        <span class="type">String</span> <span class="variable">instanceName</span> <span class="operator">=</span> instanceName(elementName);</span><br><span class="line"></span><br><span class="line">        MethodSpec.<span class="type">Builder</span> <span class="variable">buildMethodBuilder</span> <span class="operator">=</span> MethodSpec</span><br><span class="line"></span><br><span class="line">                .methodBuilder(<span class="string">&quot;build&quot;</span>)</span><br><span class="line"></span><br><span class="line">                .addModifiers(Modifier.PUBLIC)</span><br><span class="line"></span><br><span class="line">                .returns(elementType)</span><br><span class="line"></span><br><span class="line">                .addStatement(<span class="string">&quot;$1T $2N = new $1T()&quot;</span>, elementType, instanceName);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (FieldSpec fieldSpec : fieldSpecs) &#123;</span><br><span class="line"></span><br><span class="line">            buildMethodBuilder.addStatement(<span class="string">&quot;$1N.$2N = $2N&quot;</span>, instanceName, fieldSpec);</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        buildMethodBuilder.addStatement(<span class="string">&quot;return $N&quot;</span>, instanceName);</span><br><span class="line"></span><br><span class="line">        <span class="type">MethodSpec</span> <span class="variable">buildMethod</span> <span class="operator">=</span> buildMethodBuilder.build();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> TypeSpec</span><br><span class="line"></span><br><span class="line">                .classBuilder(builderClassName)</span><br><span class="line"></span><br><span class="line">                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)</span><br><span class="line"></span><br><span class="line">                .addFields(fieldSpecs)</span><br><span class="line"></span><br><span class="line">                .addMethods(setterSpecs)</span><br><span class="line"></span><br><span class="line">                .addMethod(buildMethod)</span><br><span class="line"></span><br><span class="line">                .build();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String <span class="title function_">instanceName</span><span class="params">(String type)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (type == <span class="literal">null</span> || type.isEmpty()) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> <span class="string">&quot;&quot;</span>;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (type.length() == <span class="number">1</span>) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> type.toLowerCase();</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> type.substring(<span class="number">0</span>, <span class="number">1</span>).toLowerCase() + type.substring(<span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="app模块"><a href="#app模块" class="headerlink" title="app模块"></a>app模块</h3><p><strong>gradle脚本：</strong></p>
-<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">plugins &#123;</span><br><span class="line"></span><br><span class="line">    id <span class="string">&#x27;java&#x27;</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">group <span class="string">&#x27;com.hearing&#x27;</span></span><br><span class="line"></span><br><span class="line">version <span class="string">&#x27;1.0-SNAPSHOT&#x27;</span></span><br><span class="line"></span><br><span class="line">sourceCompatibility = <span class="string">&quot;8&quot;</span></span><br><span class="line"></span><br><span class="line">targetCompatibility = <span class="string">&quot;8&quot;</span></span><br><span class="line"></span><br><span class="line">repositories &#123;</span><br><span class="line"></span><br><span class="line">    mavenCentral()</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">dependencies &#123;</span><br><span class="line"></span><br><span class="line">    implementation project(<span class="string">&#x27;:annotation&#x27;</span>)</span><br><span class="line"></span><br><span class="line">    annotationProcessor project(<span class="string">&#x27;:processor&#x27;</span>)</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><strong>User类：</strong></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">User</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> id;</span><br><span class="line"></span><br><span class="line">    String name;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><strong>构建后生成的类：</strong></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.hearing.app;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.lang.String;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">UserBuilder</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> id;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> UserBuilder <span class="title function_">id</span><span class="params">(<span class="type">int</span> id)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">this</span>.id = id;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> UserBuilder <span class="title function_">name</span><span class="params">(String name)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">this</span>.name = name;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> User <span class="title function_">build</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="type">User</span> <span class="variable">user</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">User</span>();</span><br><span class="line"></span><br><span class="line">        user.id = id;</span><br><span class="line"></span><br><span class="line">        user.name = name;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> user;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h2><ul>
-<li>注解和注解处理器是单独的module：注解处理器只需要在编译的时候使用，并不需要打包到APK中。因此我们需要将注解处理器分离为单独的module。</li>
-<li>自定义Processor类最终是通过打包成jar，在编译过程中调用的。</li>
-</ul>
+        <p><img src="/posts/7039576b/Java%E6%B3%A8%E8%A7%A3.png"></p>
 
       
     </div>
@@ -763,12 +396,6 @@
 
     <footer class="post-footer">
       
-        <div class="post-tags">
-          
-            <a href="/tags/clippings/" rel="tag"># clippings</a>
-          
-        </div>
-      
 
       
       
@@ -778,8 +405,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/posts/80de84f7/" rel="next" title="CMake笔记">
-                <i class="fa fa-chevron-left"></i> CMake笔记
+              <a href="/posts/8403a0bc/" rel="next" title="Java对象初始化详细过程">
+                <i class="fa fa-chevron-left"></i> Java对象初始化详细过程
               </a>
             
           </div>
@@ -788,8 +415,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/posts/bdd9972/" rel="prev" title="Java-Android-Collection">
-                Java-Android-Collection <i class="fa fa-chevron-right"></i>
+              <a href="/posts/3dc6a08/" rel="prev" title="Java中四种引用">
+                Java中四种引用 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -842,17 +469,8 @@
       
 
       
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            Table of Contents
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
-            Overview
-          </li>
-        </ul>
-      
 
-      <section class="site-overview-wrap sidebar-panel">
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -871,7 +489,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">439</span>
+                  <span class="site-state-item-count">276</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -932,22 +550,6 @@
         </div>
       </section>
 
-      
-      <!--noindex-->
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
-            
-              
-            
-
-            
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86"><span class="nav-text">基础知识</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B3%A8%E8%A7%A3%E5%A4%84%E7%90%86%E5%99%A8"><span class="nav-text">注解处理器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ProcessingEnvironment"><span class="nav-text">ProcessingEnvironment</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Element"><span class="nav-text">Element</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0-1"><span class="nav-text">概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%B3%95"><span class="nav-text">方法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TypeMirror"><span class="nav-text">TypeMirror</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0-2"><span class="nav-text">概述</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Filer"><span class="nav-text">Filer</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Messager"><span class="nav-text">Messager</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Options"><span class="nav-text">Options</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#process"><span class="nav-text">process</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RoundEnvironment"><span class="nav-text">RoundEnvironment</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#JavaPoet"><span class="nav-text">JavaPoet</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E4%BE%8B%E4%B8%80%EF%BC%9A%E5%8F%8D%E5%B0%84"><span class="nav-text">实例一：反射</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E4%BE%8B%E4%BA%8C%EF%BC%9AProcessor"><span class="nav-text">实例二：Processor</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#annotation%E6%A8%A1%E5%9D%97"><span class="nav-text">annotation模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#processor%E6%A8%A1%E5%9D%97"><span class="nav-text">processor模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#app%E6%A8%A1%E5%9D%97"><span class="nav-text">app模块</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B3%A8%E6%84%8F"><span class="nav-text">注意</span></a></li></ol></div>
-            
-
-          </div>
-        </section>
-      <!--/noindex-->
       
 
       
