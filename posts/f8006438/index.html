@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="private,clippings," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="鸿蒙实现一个带表头的横向和纵向滑动的列表实现思路： 头部表头使用一个横向的list展示表头列表信息   左边固定列用一个纵向的list展示固定信息   右边使用垂直list展示数据项，横向list展示每条数据项的内容  设计一个草图： 基本布局开始实现： 定义数据结构：  123456789101112131415161718192021222324252627@ObservedV2class L">
+<meta property="og:type" content="article">
+<meta property="og:title" content="鸿蒙实现一个带表头的横向和纵向滑动的列表">
+<meta property="og:url" content="http://shenbh.github.io/posts/f8006438/index.html">
+<meta property="og:site_name" content="积跬步">
+<meta property="og:description" content="鸿蒙实现一个带表头的横向和纵向滑动的列表实现思路： 头部表头使用一个横向的list展示表头列表信息   左边固定列用一个纵向的list展示固定信息   右边使用垂直list展示数据项，横向list展示每条数据项的内容  设计一个草图： 基本布局开始实现： 定义数据结构：  123456789101112131415161718192021222324252627@ObservedV2class L">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://shenbh.github.io/posts/f8006438/640.webp">
+<meta property="og:image" content="http://shenbh.github.io/posts/f8006438/640.gif">
+<meta property="og:image" content="http://shenbh.github.io/posts/f8006438/640-17513491359012.gif">
+<meta property="og:image" content="http://shenbh.github.io/posts/f8006438/640-17513493278054.gif">
+<meta property="og:image" content="http://shenbh.github.io/posts/f8006438/640-17513493314846.gif">
+<meta property="og:image" content="http://shenbh.github.io/posts/f8006438/640-17513493352378.gif">
+<meta property="article:published_time" content="2025-07-01T03:53:35.717Z">
+<meta property="article:modified_time" content="2025-07-01T06:06:05.420Z">
+<meta property="article:author" content="阿炳">
+<meta property="article:tag" content="private">
+<meta property="article:tag" content="clippings">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://shenbh.github.io/posts/f8006438/640.webp">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shenbh.github.io/posts/f8006438/"/>
+
+
+
+
+
+  <title>鸿蒙实现一个带表头的横向和纵向滑动的列表 | 积跬步</title><meta name="robots" content="noindex">
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">积跬步</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just do IT Now.</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shenbh.github.io/posts/f8006438/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="积跬步">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">鸿蒙实现一个带表头的横向和纵向滑动的列表</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-07-01T11:53:35+08:00">
+                2025-07-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="鸿蒙实现一个带表头的横向和纵向滑动的列表"><a href="#鸿蒙实现一个带表头的横向和纵向滑动的列表" class="headerlink" title="鸿蒙实现一个带表头的横向和纵向滑动的列表"></a><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/BY9S8YyiI_Yasg3o4t4DLw">鸿蒙实现一个带表头的横向和纵向滑动的列表</a></h1><h2 id="实现思路："><a href="#实现思路：" class="headerlink" title="实现思路："></a>实现思路：</h2><ol>
+<li>头部表头使用一个横向的list展示表头列表信息  </li>
+<li>左边固定列用一个纵向的list展示固定信息  </li>
+<li>右边使用垂直list展示数据项，横向list展示每条数据项的内容</li>
+</ol>
+<p>设计一个草图：<br><img src="/posts/f8006438/640.webp" alt="图片"></p>
+<h3 id="基本布局开始实现："><a href="#基本布局开始实现：" class="headerlink" title="基本布局开始实现："></a>基本布局开始实现：</h3><ol>
+<li>定义数据结构：</li>
+</ol>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ObservedV2</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">ListItemData</span> &#123;</span><br><span class="line">    <span class="meta">@Trace</span> <span class="attr">text</span>: <span class="built_in">string</span> = <span class="string">&#x27;&#x27;</span>;</span><br><span class="line">    <span class="meta">@Trace</span> <span class="attr">id</span>: <span class="built_in">string</span> = <span class="string">&#x27;&#x27;</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">@ObservedV2</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">ListData</span> &#123;</span><br><span class="line">    <span class="meta">@Trace</span> <span class="attr">id</span>: <span class="built_in">string</span> = <span class="string">&#x27;&#x27;</span>;</span><br><span class="line">    <span class="meta">@Trace</span> <span class="attr">fundName</span>: <span class="built_in">string</span> = <span class="string">&#x27;&#x27;</span>;</span><br><span class="line">    <span class="meta">@Trace</span> <span class="attr">textDataSource</span>: <span class="title class_">ListItemData</span>[] = []</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">@ObservedV2</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">ListViewModel</span> &#123;</span><br><span class="line">    <span class="meta">@Trace</span> <span class="attr">datas</span>: <span class="title class_">ListData</span>[] = []  </span><br><span class="line">    <span class="title function_">loadData</span>(<span class="params"></span>) &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">let</span> index = <span class="number">0</span>; index &lt; <span class="number">20</span>; index++) &#123;</span><br><span class="line">            <span class="keyword">let</span> listData = <span class="keyword">new</span> <span class="title class_">ListData</span>();</span><br><span class="line">            listData.<span class="property">fundName</span> = <span class="string">&#x27;名称&#x27;</span> + index </span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">let</span> index = <span class="number">0</span>; index &lt; <span class="number">10</span>; index++) &#123;</span><br><span class="line">                <span class="keyword">let</span> item = <span class="keyword">new</span> <span class="title class_">ListItemData</span>();</span><br><span class="line">                item.<span class="property">text</span> = <span class="string">&#x27;内容&#x27;</span> + index</span><br><span class="line">                item.<span class="property">id</span> == index + <span class="string">&#x27;&#x27;</span>   </span><br><span class="line">                listData.<span class="property">textDataSource</span>.<span class="title function_">push</span>(item)</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>使用Text+List绘制顶部视图</li>
+</ol>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Builder</span>  </span><br><span class="line"><span class="title function_">titleBuilder</span>(<span class="params"></span>) &#123;  </span><br><span class="line">    <span class="title class_">Row</span>() &#123;   </span><br><span class="line">        <span class="title class_">Column</span>() &#123;  </span><br><span class="line">            <span class="title class_">Text</span>(<span class="string">&#x27;名称&#x27;</span>) </span><br><span class="line">        &#125; </span><br><span class="line">        .<span class="title function_">width</span>(<span class="number">100</span>)  </span><br><span class="line">        .<span class="title function_">height</span>(<span class="number">48</span>)  </span><br><span class="line">        .<span class="title function_">backgroundColor</span>(<span class="title class_">Color</span>.<span class="property">White</span>)</span><br><span class="line">        .<span class="title function_">justifyContent</span>(<span class="title class_">FlexAlign</span>.<span class="property">Center</span>)   </span><br><span class="line">        .<span class="title function_">alignItems</span>(<span class="title class_">HorizontalAlign</span>.<span class="property">Start</span>) </span><br><span class="line">        .<span class="title function_">padding</span>(&#123; <span class="attr">left</span>: <span class="number">16</span> &#125;)  </span><br><span class="line">        <span class="comment">// 头部标题列表      </span></span><br><span class="line">        <span class="title class_">List</span>() &#123;     </span><br><span class="line">            <span class="title class_">ForEach</span>(<span class="variable language_">this</span>.<span class="property">titleList</span>, <span class="function">(<span class="params">item: <span class="built_in">string</span></span>) =&gt;</span> &#123;</span><br><span class="line">                <span class="title class_">ListItem</span>() &#123;  </span><br><span class="line">                    <span class="title class_">Text</span>(item)    </span><br><span class="line">                        .<span class="title function_">height</span>(<span class="number">48</span>)     </span><br><span class="line">                        .<span class="title function_">width</span>(<span class="number">100</span>)    </span><br><span class="line">                        .<span class="title function_">textAlign</span>(<span class="title class_">TextAlign</span>.<span class="property">Start</span>) </span><br><span class="line">                        .<span class="title function_">padding</span>(&#123; <span class="attr">left</span>: <span class="number">16</span> &#125;)</span><br><span class="line">                        .<span class="title function_">backgroundColor</span>(<span class="number">0xFFFFFF</span>)</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;)   </span><br><span class="line">        &#125;</span><br><span class="line">        .<span class="title function_">listDirection</span>(<span class="title class_">Axis</span>.<span class="property">Horizontal</span>)</span><br><span class="line">        .<span class="title function_">edgeEffect</span>(<span class="title class_">EdgeEffect</span>.<span class="property">None</span>) </span><br><span class="line">        .<span class="title function_">scrollBar</span>(<span class="title class_">BarState</span>.<span class="property">Off</span>)   </span><br><span class="line">        .<span class="title function_">layoutWeight</span>(<span class="number">1</span>)   </span><br><span class="line">    &#125;    </span><br><span class="line">    .<span class="title function_">height</span>(<span class="number">48</span>)</span><br><span class="line">    .<span class="title function_">width</span>(<span class="string">&#x27;100%&#x27;</span>)  </span><br><span class="line">    .<span class="title function_">justifyContent</span>(<span class="title class_">FlexAlign</span>.<span class="property">Start</span>)  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>效果如下：</p>
+<p><img src="/posts/f8006438/640.gif" alt="图片"></p>
+<ol start="3">
+<li>添加左侧布局，使用垂直list实现</li>
+</ol>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Builder</span>  </span><br><span class="line"><span class="title function_">leftBuilder</span>(<span class="params"></span>) &#123;  </span><br><span class="line">    <span class="title class_">List</span>() &#123;      </span><br><span class="line">        <span class="title class_">ForEach</span>(<span class="variable language_">this</span>.<span class="property">listViewModel</span>.<span class="property">datas</span>, <span class="function">(<span class="params">item: ListData</span>) =&gt;</span> &#123;    </span><br><span class="line">            <span class="title class_">ListItem</span>() &#123;      </span><br><span class="line">                <span class="title class_">Column</span>() &#123;      </span><br><span class="line">                    <span class="title class_">Text</span>(item.<span class="property">fundName</span>)    </span><br><span class="line">                        .<span class="title function_">height</span>(<span class="string">&#x27;100%&#x27;</span>)    </span><br><span class="line">                        .<span class="title function_">backgroundColor</span>(<span class="number">0xFFFFFF</span>)   </span><br><span class="line">                        .<span class="title function_">layoutWeight</span>(<span class="number">1</span>)          </span><br><span class="line">                        .<span class="title function_">margin</span>(&#123; <span class="attr">left</span>: <span class="number">16</span> &#125;)     </span><br><span class="line">                    <span class="title class_">Divider</span>()            </span><br><span class="line">                        .<span class="title function_">strokeWidth</span>(<span class="string">&#x27;100%&#x27;</span>) </span><br><span class="line">                        .<span class="title function_">color</span>(<span class="number">0xeeeeee</span>)      </span><br><span class="line">                &#125;        </span><br><span class="line">                .<span class="title function_">justifyContent</span>(<span class="title class_">FlexAlign</span>.<span class="property">Center</span>)   </span><br><span class="line">                .<span class="title function_">alignItems</span>(<span class="title class_">HorizontalAlign</span>.<span class="property">Start</span>)    </span><br><span class="line">            &#125;     </span><br><span class="line">            .<span class="title function_">height</span>(<span class="number">60</span>)   </span><br><span class="line">        &#125;)   </span><br><span class="line">    &#125;   </span><br><span class="line">    .<span class="title function_">listDirection</span>(<span class="title class_">Axis</span>.<span class="property">Vertical</span>)  </span><br><span class="line">    .<span class="title function_">scrollBar</span>(<span class="title class_">BarState</span>.<span class="property">Off</span>)   </span><br><span class="line">    .<span class="title function_">edgeEffect</span>(<span class="title class_">EdgeEffect</span>.<span class="property">None</span>) </span><br><span class="line">    .<span class="title function_">width</span>(<span class="number">100</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>效果如下：</p>
+<p><img src="/posts/f8006438/640-17513491359012.gif" alt="图片"></p>
+<ol start="4">
+<li>添加右侧布局，使用垂直list包裹多个横向list</li>
+</ol>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Builder</span></span><br><span class="line"><span class="title function_">rightBuilder</span>(<span class="params"></span>) &#123; </span><br><span class="line">    <span class="title class_">List</span>() &#123; </span><br><span class="line">        <span class="title class_">ForEach</span>(<span class="variable language_">this</span>.<span class="property">listViewModel</span>.<span class="property">datas</span>, <span class="function">(<span class="params">item: ListData, index: <span class="built_in">number</span></span>) =&gt;</span> &#123;   </span><br><span class="line">            <span class="title class_">ListItem</span>() &#123;      </span><br><span class="line">                <span class="title class_">Column</span>() &#123;      </span><br><span class="line">                    <span class="title class_">List</span>() &#123;         </span><br><span class="line">                        <span class="title class_">ForEach</span>(item.<span class="property">textDataSource</span>, <span class="function">(<span class="params">item: ListItemData</span>) =&gt;</span> &#123;   </span><br><span class="line">                            <span class="title class_">ListItem</span>() &#123;             </span><br><span class="line">                                <span class="title class_">Text</span>(item.<span class="property">text</span>)              </span><br><span class="line">                                    .<span class="title function_">height</span>(<span class="string">&#x27;100%&#x27;</span>)         </span><br><span class="line">                                    .<span class="title function_">width</span>(<span class="string">&#x27;100%&#x27;</span>)           </span><br><span class="line">                                    .<span class="title function_">textAlign</span>(<span class="title class_">TextAlign</span>.<span class="property">Start</span>) </span><br><span class="line">                                    .<span class="title function_">padding</span>(&#123; <span class="attr">left</span>: <span class="number">16</span> &#125;)         </span><br><span class="line">                                    .<span class="title function_">backgroundColor</span>(<span class="number">0xFFFFFF</span>)        </span><br><span class="line">                                    .<span class="title function_">fontColor</span>(<span class="string">&#x27;#ffe72929&#x27;</span>)            </span><br><span class="line">                                    .<span class="title function_">maxLines</span>(<span class="number">1</span>)              </span><br><span class="line">                                    .<span class="title function_">textOverflow</span>(&#123; <span class="attr">overflow</span>: <span class="title class_">TextOverflow</span>.<span class="property">Ellipsis</span> &#125;) </span><br><span class="line">                            &#125;           </span><br><span class="line">                            .<span class="title function_">width</span>(<span class="number">100</span>)      </span><br><span class="line">                        &#125;)      </span><br><span class="line">                    &#125;          </span><br><span class="line">                    .<span class="title function_">cachedCount</span>(<span class="number">4</span>)     </span><br><span class="line">                    .<span class="title function_">height</span>(<span class="string">&#x27;100%&#x27;</span>)        </span><br><span class="line">                    .<span class="title function_">width</span>(<span class="string">&#x27;100%&#x27;</span>)          </span><br><span class="line">                    .<span class="title function_">layoutWeight</span>(<span class="number">1</span>)        </span><br><span class="line">                    .<span class="title function_">listDirection</span>(<span class="title class_">Axis</span>.<span class="property">Horizontal</span>)    </span><br><span class="line">                    .<span class="title function_">scrollBar</span>(<span class="title class_">BarState</span>.<span class="property">Off</span>)        </span><br><span class="line">                    .<span class="title function_">nestedScroll</span>(&#123;           </span><br><span class="line">                        <span class="attr">scrollForward</span>: <span class="title class_">NestedScrollMode</span>.<span class="property">PARENT_FIRST</span>,     </span><br><span class="line">                        <span class="attr">scrollBackward</span>: <span class="title class_">NestedScrollMode</span>.<span class="property">PARENT_FIRST</span>   </span><br><span class="line">                    &#125;)     </span><br><span class="line">                    .<span class="title function_">edgeEffect</span>(<span class="title class_">EdgeEffect</span>.<span class="property">None</span>)</span><br><span class="line">                    </span><br><span class="line">                    <span class="title class_">Divider</span>()        </span><br><span class="line">                        .<span class="title function_">strokeWidth</span>(<span class="string">&#x27;100%&#x27;</span>)     </span><br><span class="line">                        .<span class="title function_">color</span>(<span class="number">0xeeeeee</span>)     </span><br><span class="line">                &#125;     </span><br><span class="line">                .<span class="title function_">height</span>(<span class="number">60</span>) </span><br><span class="line">            &#125;   </span><br><span class="line">        &#125;) </span><br><span class="line">    &#125; </span><br><span class="line">    .<span class="title function_">height</span>(<span class="string">&#x27;100%&#x27;</span>)  </span><br><span class="line">    .<span class="title function_">cachedCount</span>(<span class="number">2</span>)  </span><br><span class="line">    .<span class="title function_">flingSpeedLimit</span>(<span class="number">1600</span>)  </span><br><span class="line">    .<span class="title function_">listDirection</span>(<span class="title class_">Axis</span>.<span class="property">Vertical</span>)  </span><br><span class="line">    .<span class="title function_">scrollBar</span>(<span class="title class_">BarState</span>.<span class="property">Off</span>)  </span><br><span class="line">    .<span class="title function_">edgeEffect</span>(<span class="title class_">EdgeEffect</span>.<span class="property">None</span>) </span><br><span class="line">    .<span class="title function_">nestedScroll</span>(&#123; <span class="attr">scrollForward</span>: <span class="title class_">NestedScrollMode</span>.<span class="property">PARENT_FIRST</span>, <span class="attr">scrollBackward</span>: <span class="title class_">NestedScrollMode</span>.<span class="property">PARENT_FIRST</span> &#125;) </span><br><span class="line">    &#125;)  </span><br><span class="line">    .<span class="title function_">layoutWeight</span>(<span class="number">1</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>效果如下：</p>
+<p><img src="/posts/f8006438/640-17513493278054.gif" alt="图片"></p>
+<h3 id="数据展示完了，但是滑动毫无关联。。。接下来将滑动关联起来"><a href="#数据展示完了，但是滑动毫无关联。。。接下来将滑动关联起来" class="headerlink" title="数据展示完了，但是滑动毫无关联。。。接下来将滑动关联起来"></a>数据展示完了，但是滑动毫无关联。。。接下来将滑动关联起来</h3><h3 id="滑动处理："><a href="#滑动处理：" class="headerlink" title="滑动处理："></a>滑动处理：</h3><ol>
+<li>实现左侧名称列表和右侧数据列表垂直滚动关联,分别给两个list定义两个控制器，通过事件<code>onScrollFrameBegin(event: (offset: number, state: ScrollState) =&gt; &#123; offsetRemain: number &#125;)</code>获取 <strong>即将发生的滑动量</strong> 和 <strong>实际滑动量</strong></li>
+</ol>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 右侧垂直滚动列表  </span></span><br><span class="line"><span class="attr">verticalScroller</span>: <span class="title class_">Scroller</span> = <span class="keyword">new</span> <span class="title class_">Scroller</span>(); </span><br><span class="line"><span class="comment">// 左侧名称列滚动  </span></span><br><span class="line"><span class="attr">leftScroller</span>: <span class="title class_">Scroller</span> = <span class="keyword">new</span> <span class="title class_">Scroller</span>();</span><br><span class="line"><span class="comment">//左侧list添加滑动回调给右侧垂直list赋值，右侧同理给左侧赋值 </span></span><br><span class="line"><span class="title function_">onScrollFrameBegin</span>(<span class="function">(<span class="params">offset: <span class="built_in">number</span>, state: ScrollState</span>) =&gt;</span>&#123;  </span><br><span class="line">    <span class="comment">//通过offset保证两个垂直list滑动同步，即两个list的滑动回调分别给另一个赋值 </span></span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">verticalScroller</span>.<span class="title function_">scrollTo</span>(&#123; </span><br><span class="line">        <span class="attr">xOffset</span>:<span class="number">0</span>,      </span><br><span class="line">        <span class="attr">yOffset</span>:<span class="variable language_">this</span>.<span class="property">leftScroller</span>.<span class="title function_">currentOffset</span>().<span class="property">yOffset</span>+offset,  </span><br><span class="line">        <span class="attr">animation</span>:<span class="literal">false</span>   </span><br><span class="line">    &#125;)     </span><br><span class="line">    <span class="keyword">return</span> &#123;<span class="attr">offsetRemain</span>:offset&#125;  </span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>实现头部标题和右侧横向list关联滑动，方法和垂直方向同步一样，只不过，右侧的横向list有多条数据，因此 <strong>每一个横向的list都需要绑定一个控制器</strong></li>
+</ol>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 维护一个list控制器数组，用于保存所有横向列表的 ListScroller </span></span><br><span class="line"><span class="meta">@Local</span> listScrollerArr: ListScroller[] = [];  </span><br><span class="line"><span class="comment">// 右侧垂直list显示到屏幕起始坐标 </span></span><br><span class="line"><span class="meta">@Local</span> startIndex: number = <span class="number">0</span>;  </span><br><span class="line"><span class="comment">//右侧垂直list显示到屏幕结束坐标  </span></span><br><span class="line"><span class="meta">@Local</span> endIndex: number = <span class="number">0</span>;</span><br><span class="line"><span class="comment">//顶部list滑动监听</span></span><br><span class="line">onScrollFrameBegin((offset: number) =&gt; &#123; </span><br><span class="line"><span class="comment">//刷新当前显示的横向滑动的list  </span></span><br><span class="line">    <span class="keyword">for</span> (let i = <span class="keyword">this</span>.startIndex; i &lt;= <span class="keyword">this</span>.endIndex; i++) &#123;   </span><br><span class="line">        <span class="keyword">this</span>.listScrollerArr[i].scrollTo(&#123;     </span><br><span class="line">            xOffset: <span class="keyword">this</span>.topScroller.currentOffset().xOffset + offset,  </span><br><span class="line">            yOffset: <span class="number">0</span>,    </span><br><span class="line">            animation: <span class="literal">false</span>   </span><br><span class="line">        &#125;); </span><br><span class="line">    &#125; </span><br><span class="line">    <span class="keyword">return</span> &#123; offsetRemain: offset &#125;;</span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">//水平list滑动监听</span></span><br><span class="line">onScrollFrameBegin((offset: number) =&gt; &#123; </span><br><span class="line">    <span class="keyword">this</span>.topScroller.scrollTo(&#123;  </span><br><span class="line">        xOffset:<span class="keyword">this</span>.listScrollerArr[index].currentOffset().xOffset + offset,  </span><br><span class="line">        yOffset: <span class="number">0</span>,   </span><br><span class="line">        animation: <span class="literal">false</span>  &#125;);</span><br><span class="line">    <span class="comment">//需要将其他横向list也同步关联滑动 </span></span><br><span class="line">    <span class="keyword">for</span> (let i = <span class="keyword">this</span>.startIndex; i &lt;= <span class="keyword">this</span>.endIndex; i++) &#123;  </span><br><span class="line">        <span class="keyword">if</span> (i !== index) &#123;   </span><br><span class="line">            <span class="keyword">this</span>.listScrollerArr[i].scrollTo(&#123;   </span><br><span class="line">                xOffset: <span class="keyword">this</span>.listScrollerArr[index]!.currentOffset().xOffset + offset,    </span><br><span class="line">                yOffset: <span class="number">0</span>,     </span><br><span class="line">                animation: <span class="literal">false</span>  </span><br><span class="line">            &#125;);  </span><br><span class="line">        &#125; </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> &#123; offsetRemain: offset &#125;;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>实现效果：</p>
+<p><img src="/posts/f8006438/640-17513493314846.gif" alt="图片"></p>
+<p>可以发现，左右滑动只是当前展示的同步了，如果是新加载出来的数据没有实现同步滑动，因此还需要处理一下新添加的数据，保持和上面滑动后的状态一致。  </p>
+<ol start="3">
+<li>当右侧垂直list有新的item滑入时，保持滑动距离和之前滑动的一样，这样就可以保证所有数据左右滑动的位置时一样的。</li>
+</ol>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 记录右侧横向列表滚动的距离 </span></span><br><span class="line"><span class="meta">@Local</span> <span class="attr">remainOffset</span>: <span class="built_in">number</span> = <span class="number">0</span>;</span><br><span class="line"><span class="comment">//右侧横向list增加，滚动组件滑动时触发，记录滑动偏移量</span></span><br><span class="line"><span class="title function_">onDidScroll</span>(<span class="function">() =&gt;</span> &#123; </span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">remainOffset</span> = <span class="variable language_">this</span>.<span class="property">listScrollerArr</span>[index]!.<span class="title function_">currentOffset</span>().<span class="property">xOffset</span>;</span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">//右侧垂直list增加滚动回调，当有新的item出现时，保持所有可见范围的item</span></span><br><span class="line"><span class="title function_">onScrollIndex</span>(<span class="function">(<span class="params">start: <span class="built_in">number</span>, end: <span class="built_in">number</span></span>) =&gt;</span> &#123; </span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">startIndex</span> = start; </span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">endIndex</span> = end; </span><br><span class="line">    <span class="comment">// 只滚动当前显示范围内的item  </span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">let</span> i = start; i &lt;= end; i++) &#123;  </span><br><span class="line">        <span class="variable language_">this</span>.<span class="property">listScrollerArr</span>[i].<span class="title function_">scrollTo</span>(&#123; <span class="attr">xOffset</span>: <span class="variable language_">this</span>.<span class="property">remainOffset</span>, <span class="attr">yOffset</span>: <span class="number">0</span>, <span class="attr">animation</span>: <span class="literal">false</span> &#125;); </span><br><span class="line">    &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>最终效果：</p>
+<p><img src="/posts/f8006438/640-17513493352378.gif" alt="图片"></p>
+<p>全部代码：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ObservedV2</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ListItemData</span> </span>&#123;  </span><br><span class="line">    <span class="meta">@Trace</span> text: string = <span class="string">&#x27;&#x27;</span>; </span><br><span class="line">    <span class="meta">@Trace</span> id: string = <span class="string">&#x27;&#x27;</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">@ObservedV2</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ListData</span> </span>&#123; </span><br><span class="line">    <span class="meta">@Trace</span> id: string = <span class="string">&#x27;&#x27;</span>;  </span><br><span class="line">    <span class="meta">@Trace</span> fundName: string = <span class="string">&#x27;&#x27;</span>;  </span><br><span class="line">    <span class="meta">@Trace</span> textDataSource: ListItemData[] = []</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">@ObservedV2</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ListViewModel</span> </span>&#123; </span><br><span class="line">    <span class="meta">@Trace</span> datas: ListData[] = []</span><br><span class="line">    async  loadData() &#123;   </span><br><span class="line">        <span class="keyword">for</span> (let index = <span class="number">0</span>; index &lt; <span class="number">20</span>; index++) &#123;   </span><br><span class="line">            let listData = new ListData();   </span><br><span class="line">            listData.fundName = <span class="string">&#x27;名称&#x27;</span> + index    </span><br><span class="line">            <span class="keyword">for</span> (let index = <span class="number">0</span>; index &lt; <span class="number">10</span>; index++) &#123; </span><br><span class="line">                let item = new ListItemData();    </span><br><span class="line">                item.text = <span class="string">&#x27;内容&#x27;</span> + index      </span><br><span class="line">                item.id == index + <span class="string">&#x27;&#x27;</span>       </span><br><span class="line">                listData.textDataSource.push(item)  </span><br><span class="line">            &#125;    </span><br><span class="line">            <span class="keyword">this</span>.datas.push(listData)   </span><br><span class="line">        &#125; </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Entry</span></span><br><span class="line"><span class="meta">@ComponentV2</span></span><br><span class="line">struct ScrollList &#123;  </span><br><span class="line">    <span class="meta">@Local</span> listViewModel: ListViewModel = new ListViewModel() </span><br><span class="line">    <span class="comment">// 头部标题列表，每一列的标题  </span></span><br><span class="line">    <span class="meta">@Local</span> titleList: string[] = [];  </span><br><span class="line">    <span class="comment">// 左侧名称列滚动  </span></span><br><span class="line">    leftScroller: Scroller = new Scroller(); </span><br><span class="line">    <span class="comment">// 列表数据垂直滚动  </span></span><br><span class="line">    verticalScroller: Scroller = new Scroller();  </span><br><span class="line">    <span class="comment">// 列表数据横向滚动  </span></span><br><span class="line">    horizontalScroller: Scroller = new Scroller();  </span><br><span class="line">    <span class="comment">// 头部标题列滚动  </span></span><br><span class="line">    topScroller: Scroller = new Scroller();  </span><br><span class="line">    <span class="comment">// 维护一个list控制器数组，用于保存所有横向列表的 ListScroller </span></span><br><span class="line">    <span class="meta">@Local</span> listScrollerArr: ListScroller[] = [];  </span><br><span class="line">    <span class="comment">// 右侧垂直list显示到屏幕起始坐标 </span></span><br><span class="line">    <span class="meta">@Local</span> startIndex: number = <span class="number">0</span>; </span><br><span class="line">    <span class="comment">//右侧垂直list显示到屏幕结束坐标  </span></span><br><span class="line">    <span class="meta">@Local</span> endIndex: number = <span class="number">0</span>;  </span><br><span class="line">    <span class="comment">// 记录右侧横向列表滚动的距离 </span></span><br><span class="line">    <span class="meta">@Local</span> remainOffset: number = <span class="number">0</span>;  </span><br><span class="line">    async aboutToAppear() &#123;   </span><br><span class="line">        await <span class="keyword">this</span>.listViewModel.loadData()</span><br><span class="line">        <span class="keyword">for</span> (let index = <span class="number">0</span>; index &lt; <span class="number">10</span>; index++) &#123;  </span><br><span class="line">            <span class="comment">//增加list的控制器      </span></span><br><span class="line">            <span class="keyword">this</span>.titleList.push(<span class="string">&#x27;标题&#x27;</span> + index)  </span><br><span class="line">        &#125;   </span><br><span class="line">        <span class="keyword">for</span> (let index = <span class="number">0</span>; index &lt; <span class="keyword">this</span>.listViewModel.datas.length; index++) &#123; </span><br><span class="line">            <span class="keyword">this</span>.listScrollerArr.push(new ListScroller());   </span><br><span class="line">        &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="meta">@Builder</span></span><br><span class="line">    titleBuilder() &#123;</span><br><span class="line">        Row() &#123;   </span><br><span class="line">            Column() &#123; </span><br><span class="line">                Text(<span class="string">&#x27;名称&#x27;</span>)</span><br><span class="line">            &#125;    </span><br><span class="line">            .width(<span class="number">100</span>)     </span><br><span class="line">            .height(<span class="number">48</span>)  </span><br><span class="line">            .backgroundColor(Color.White)    </span><br><span class="line">            .justifyContent(FlexAlign.Center) </span><br><span class="line">            .alignItems(HorizontalAlign.Start)  </span><br><span class="line">            .padding(&#123; left: <span class="number">16</span> &#125;)     </span><br><span class="line">            <span class="comment">// 头部标题列表   </span></span><br><span class="line">            List(&#123; scroller: <span class="keyword">this</span>.topScroller &#125;) &#123; </span><br><span class="line">                ForEach(<span class="keyword">this</span>.titleList, (item: string) =&gt; &#123;  </span><br><span class="line">                    ListItem() &#123;        </span><br><span class="line">                        Text(item)         </span><br><span class="line">                        .height(<span class="number">48</span>)            </span><br><span class="line">                        .width(<span class="number">100</span>)             </span><br><span class="line">                        .textAlign(TextAlign.Start) </span><br><span class="line">                        .padding(&#123; left: <span class="number">16</span> &#125;)      </span><br><span class="line">                        .backgroundColor(<span class="number">0xFFFFFF</span>)  </span><br><span class="line">                    &#125;      </span><br><span class="line">                &#125;)   </span><br><span class="line">            &#125;    </span><br><span class="line">            .listDirection(Axis.Horizontal)   </span><br><span class="line">            .edgeEffect(EdgeEffect.None)    </span><br><span class="line">            .scrollBar(BarState.Off)    </span><br><span class="line">            .layoutWeight(<span class="number">1</span>)    </span><br><span class="line">            .onScrollFrameBegin((offset: number) =&gt; &#123;   </span><br><span class="line">                <span class="comment">//刷新当前显示的横向滑动的list  </span></span><br><span class="line">                <span class="keyword">for</span> (let i = <span class="keyword">this</span>.startIndex; i &lt;= <span class="keyword">this</span>.endIndex; i++) &#123; </span><br><span class="line">                    <span class="keyword">this</span>.listScrollerArr[i].scrollTo(&#123;         </span><br><span class="line">                        xOffset: <span class="keyword">this</span>.topScroller.currentOffset().xOffset + offset,    </span><br><span class="line">                        yOffset: <span class="number">0</span>,         </span><br><span class="line">                        animation: <span class="literal">false</span>      </span><br><span class="line">                    &#125;);      </span><br><span class="line">                &#125;      </span><br><span class="line">                <span class="keyword">return</span> &#123; offsetRemain: offset &#125;;  </span><br><span class="line">            &#125;)  </span><br><span class="line">        &#125;    </span><br><span class="line">        .height(<span class="number">48</span>)</span><br><span class="line">        .width(<span class="string">&#x27;100%&#x27;</span>) </span><br><span class="line">        .justifyContent(FlexAlign.Start) </span><br><span class="line">    &#125; </span><br><span class="line">    <span class="meta">@Builder</span> </span><br><span class="line">    leftBuilder() &#123;   </span><br><span class="line">        List(&#123; scroller: <span class="keyword">this</span>.leftScroller &#125;) &#123;   </span><br><span class="line">            ForEach(<span class="keyword">this</span>.listViewModel.datas, (item: ListData) =&gt; &#123;   </span><br><span class="line">                ListItem() &#123;     </span><br><span class="line">                    Column() &#123;      </span><br><span class="line">                        Text(item.fundName)   </span><br><span class="line">                        .height(<span class="string">&#x27;100%&#x27;</span>)         </span><br><span class="line">                        .backgroundColor(<span class="number">0xFFFFFF</span>)     </span><br><span class="line">                        .layoutWeight(<span class="number">1</span>)            </span><br><span class="line">                        .margin(&#123; left: <span class="number">16</span> &#125;)     </span><br><span class="line">                        Divider()          </span><br><span class="line">                        .strokeWidth(<span class="string">&#x27;100%&#x27;</span>)   </span><br><span class="line">                        .color(<span class="number">0xeeeeee</span>)       </span><br><span class="line">                    &#125;        </span><br><span class="line">                    .justifyContent(FlexAlign.Center)    </span><br><span class="line">                    .alignItems(HorizontalAlign.Start) </span><br><span class="line">                &#125;      </span><br><span class="line">                .height(<span class="number">60</span>)    </span><br><span class="line">            &#125;)  </span><br><span class="line">        &#125;   </span><br><span class="line">        .listDirection(Axis.Vertical)  </span><br><span class="line">        .scrollBar(BarState.Off)    </span><br><span class="line">        .edgeEffect(EdgeEffect.None)  </span><br><span class="line">        .width(<span class="number">100</span>)   </span><br><span class="line">        .onScrollFrameBegin((offset: number, state: ScrollState) =&gt;&#123;  </span><br><span class="line">            <span class="comment">//通过offset保证两个垂直list滑动同步，即两个list的滑动回调分别给另一个赋值  </span></span><br><span class="line">            <span class="keyword">this</span>.verticalScroller.scrollTo(&#123;       </span><br><span class="line">                xOffset:<span class="number">0</span>,       </span><br><span class="line">                yOffset:<span class="keyword">this</span>.leftScroller.currentOffset().yOffset+offset,     </span><br><span class="line">                animation:<span class="literal">false</span>  </span><br><span class="line">            &#125;)      </span><br><span class="line">            <span class="keyword">return</span> &#123;offsetRemain:offset&#125;  </span><br><span class="line">        &#125;) </span><br><span class="line">    &#125; </span><br><span class="line">    <span class="meta">@Builder</span>  </span><br><span class="line">    rightBuilder() &#123; </span><br><span class="line">        List(&#123; scroller: <span class="keyword">this</span>.verticalScroller &#125;) &#123;  </span><br><span class="line">            ForEach(<span class="keyword">this</span>.listViewModel.datas, (item: ListData, index: number) =&gt; &#123; </span><br><span class="line">                ListItem() &#123;     </span><br><span class="line">                    Column() &#123;   </span><br><span class="line">                        List(&#123;scroller:<span class="keyword">this</span>.listScrollerArr[index]&#125;) &#123;    </span><br><span class="line">                            ForEach(item.textDataSource, (item: ListItemData) =&gt; &#123;   </span><br><span class="line">                                ListItem() &#123;         </span><br><span class="line">                                    Text(item.text)   </span><br><span class="line">                                    .height(<span class="string">&#x27;100%&#x27;</span>)         </span><br><span class="line">                                    .width(<span class="string">&#x27;100%&#x27;</span>)        </span><br><span class="line">                                    .textAlign(TextAlign.Start)  </span><br><span class="line">                                    .padding(&#123; left: <span class="number">16</span> &#125;)       </span><br><span class="line">                                    .backgroundColor(<span class="number">0xFFFFFF</span>)   </span><br><span class="line">                                    .fontColor(<span class="string">&#x27;#ffe72929&#x27;</span>)       </span><br><span class="line">                                    .maxLines(<span class="number">1</span>)               </span><br><span class="line">                                    .textOverflow(&#123; overflow: TextOverflow.Ellipsis &#125;)  </span><br><span class="line">                                &#125;           </span><br><span class="line">                                .width(<span class="number">100</span>)    </span><br><span class="line">                            &#125;)          </span><br><span class="line">                        &#125;        </span><br><span class="line">                        .cachedCount(<span class="number">4</span>)     </span><br><span class="line">                        .height(<span class="string">&#x27;100%&#x27;</span>)     </span><br><span class="line">                        .width(<span class="string">&#x27;100%&#x27;</span>)      </span><br><span class="line">                        .layoutWeight(<span class="number">1</span>)   </span><br><span class="line">                        .listDirection(Axis.Horizontal) </span><br><span class="line">                        .scrollBar(BarState.Off)      </span><br><span class="line">                        .nestedScroll(&#123;             </span><br><span class="line">                            scrollForward: NestedScrollMode.PARENT_FIRST,   </span><br><span class="line">                            scrollBackward: NestedScrollMode.PARENT_FIRST  </span><br><span class="line">                        &#125;)  </span><br><span class="line">                        .edgeEffect(EdgeEffect.None)    </span><br><span class="line">                        .onScrollFrameBegin((offset: number) =&gt; &#123;   </span><br><span class="line">                            <span class="keyword">this</span>.topScroller.scrollTo(&#123;      </span><br><span class="line">                                xOffset:<span class="keyword">this</span>.listScrollerArr[index].currentOffset().xOffset + offset,   </span><br><span class="line">                                yOffset: <span class="number">0</span>,       </span><br><span class="line">                                animation: <span class="literal">false</span>  </span><br><span class="line">                            &#125;);            </span><br><span class="line">                            <span class="keyword">for</span> (let i = <span class="keyword">this</span>.startIndex; i &lt;= <span class="keyword">this</span>.endIndex; i++) &#123;    </span><br><span class="line">                                <span class="keyword">if</span> (i !== index) &#123;     </span><br><span class="line">                                    <span class="keyword">this</span>.listScrollerArr[i].scrollTo(&#123;      </span><br><span class="line">                                        xOffset: <span class="keyword">this</span>.listScrollerArr[index]!.currentOffset().xOffset + offset,    </span><br><span class="line">                                        yOffset: <span class="number">0</span>,    </span><br><span class="line">                                        animation: <span class="literal">false</span>   </span><br><span class="line">                                    &#125;);             </span><br><span class="line">                                &#125;          </span><br><span class="line">                            &#125;         </span><br><span class="line">                            <span class="keyword">return</span> &#123; offsetRemain: offset &#125;;   </span><br><span class="line">                        &#125;)    </span><br><span class="line">                        <span class="comment">//滚动组件滑动时触发      </span></span><br><span class="line">                        .onDidScroll(() =&gt; &#123;   </span><br><span class="line">                            <span class="keyword">this</span>.remainOffset = <span class="keyword">this</span>.listScrollerArr[index]!.currentOffset().xOffset;   </span><br><span class="line">                        &#125;)       </span><br><span class="line">                        Divider()   </span><br><span class="line">                        .strokeWidth(<span class="string">&#x27;100%&#x27;</span>)      </span><br><span class="line">                        .color(<span class="number">0xeeeeee</span>)        </span><br><span class="line">                    &#125;      </span><br><span class="line">                    .height(<span class="number">60</span>)  </span><br><span class="line">                &#125;     </span><br><span class="line">            &#125;)  </span><br><span class="line">        &#125;  </span><br><span class="line">        .height(<span class="string">&#x27;100%&#x27;</span>)   </span><br><span class="line">        .cachedCount(<span class="number">2</span>)  </span><br><span class="line">        .flingSpeedLimit(<span class="number">1600</span>)  </span><br><span class="line">        .listDirection(Axis.Vertical)  </span><br><span class="line">        .scrollBar(BarState.Off)</span><br><span class="line">        .edgeEffect(EdgeEffect.None)   </span><br><span class="line">        .nestedScroll(&#123; scrollForward: NestedScrollMode.PARENT_FIRST, scrollBackward: NestedScrollMode.PARENT_FIRST &#125;)    </span><br><span class="line">        .onScrollFrameBegin((offset: number) =&gt; &#123;  </span><br><span class="line">            <span class="keyword">this</span>.leftScroller.scrollTo(&#123;     </span><br><span class="line">                xOffset: <span class="number">0</span>,      </span><br><span class="line">                yOffset: <span class="keyword">this</span>.verticalScroller.currentOffset().yOffset + offset,  </span><br><span class="line">                animation: <span class="literal">false</span>     </span><br><span class="line">            &#125;);     </span><br><span class="line">            <span class="keyword">return</span> &#123; offsetRemain: offset &#125;;  </span><br><span class="line">        &#125;)   </span><br><span class="line">        .onScrollIndex((start: number, end: number) =&gt; &#123; </span><br><span class="line">            <span class="keyword">this</span>.startIndex = start;   </span><br><span class="line">            <span class="keyword">this</span>.endIndex = end;    </span><br><span class="line">            <span class="comment">// 只滚动当前显示范围内的item  </span></span><br><span class="line">            <span class="keyword">for</span> (let i = start; i &lt;= end; i++) &#123; </span><br><span class="line">                <span class="keyword">this</span>.listScrollerArr[i].scrollTo(&#123; xOffset: <span class="keyword">this</span>.remainOffset, yOffset: <span class="number">0</span>, animation: <span class="literal">false</span> &#125;); </span><br><span class="line">            &#125;   </span><br><span class="line">        &#125;)  </span><br><span class="line">        .layoutWeight(<span class="number">1</span>) </span><br><span class="line">    &#125;  </span><br><span class="line">    </span><br><span class="line">    build() &#123;    </span><br><span class="line">        Column() &#123;    </span><br><span class="line">            <span class="comment">// 头部标题   </span></span><br><span class="line">            <span class="keyword">this</span>.titleBuilder()  </span><br><span class="line">            <span class="comment">// 分割线    </span></span><br><span class="line">            Divider()    </span><br><span class="line">            .strokeWidth(<span class="string">&#x27;100%&#x27;</span>) </span><br><span class="line">            .color(<span class="number">0xeeeeee</span>)     </span><br><span class="line">            Row() &#123;      </span><br><span class="line">                <span class="comment">// 左侧列      </span></span><br><span class="line">                <span class="keyword">this</span>.leftBuilder()   </span><br><span class="line">                <span class="comment">// 右侧列      </span></span><br><span class="line">                <span class="keyword">this</span>.rightBuilder()  </span><br><span class="line">            &#125;  </span><br><span class="line">        &#125;  </span><br><span class="line">        .height(<span class="string">&#x27;100%&#x27;</span>)    </span><br><span class="line">        .alignItems(HorizontalAlign.Start) </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<!-- flag of hidden posts -->
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/private/" rel="tag"># private</a>
+          
+            <a href="/tags/clippings/" rel="tag"># clippings</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">292</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">47</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shenbh@qq.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://blog.csdn.net/ptwenzi?spm=1010.2135.3001.5113" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-clone"></i>CSDN</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%B8%BF%E8%92%99%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E5%B8%A6%E8%A1%A8%E5%A4%B4%E7%9A%84%E6%A8%AA%E5%90%91%E5%92%8C%E7%BA%B5%E5%90%91%E6%BB%91%E5%8A%A8%E7%9A%84%E5%88%97%E8%A1%A8"><span class="nav-text">鸿蒙实现一个带表头的横向和纵向滑动的列表</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E6%80%9D%E8%B7%AF%EF%BC%9A"><span class="nav-text">实现思路：</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E5%B8%83%E5%B1%80%E5%BC%80%E5%A7%8B%E5%AE%9E%E7%8E%B0%EF%BC%9A"><span class="nav-text">基本布局开始实现：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%B1%95%E7%A4%BA%E5%AE%8C%E4%BA%86%EF%BC%8C%E4%BD%86%E6%98%AF%E6%BB%91%E5%8A%A8%E6%AF%AB%E6%97%A0%E5%85%B3%E8%81%94%E3%80%82%E3%80%82%E3%80%82%E6%8E%A5%E4%B8%8B%E6%9D%A5%E5%B0%86%E6%BB%91%E5%8A%A8%E5%85%B3%E8%81%94%E8%B5%B7%E6%9D%A5"><span class="nav-text">数据展示完了，但是滑动毫无关联。。。接下来将滑动关联起来</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%BB%91%E5%8A%A8%E5%A4%84%E7%90%86%EF%BC%9A"><span class="nav-text">滑动处理：</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿炳</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('-1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('Copied')
+          else $(this).text('Copy failed')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('Copy')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>
